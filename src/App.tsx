@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import ClientsPage from './pages/ClientsPage';
+import PipelinePage from './pages/PipelinePage';
 import ProtectedRoute from './core/guards/ProtectedRoute';
 
 const App: React.FC = () => (
@@ -13,6 +14,14 @@ const App: React.FC = () => (
                 element={
                     <ProtectedRoute>
                         <ClientsPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/pipeline"
+                element={
+                    <ProtectedRoute>
+                        <PipelinePage />
                     </ProtectedRoute>
                 }
             />

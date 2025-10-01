@@ -8,6 +8,9 @@ export const CLIENTS = {
     CLIENTS: urlBase + 'clients'
 };
 
+export const Opportunities = {
+    OPPORTUNITIES: urlBase + 'opportunities'
+};
 /*export const ENDPOINTS = {
     LOGIN: '/auth/login',
     CLIENTS: 'http://localhost:3090/clients',

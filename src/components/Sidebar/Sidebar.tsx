@@ -17,6 +17,9 @@ const Sidebar: React.FC = () => {
                     <li>
                         <Link to="/clients" className="hover:text-blue-300">Clientes</Link>
                     </li>
+                    <li>
+                        <Link to="/pipeline" className="hover:text-blue-300">Pipeline</Link>
+                    </li>
                     {/* Agrega más enlaces aquí si tienes más páginas */}
                 </ul>
             </nav>
