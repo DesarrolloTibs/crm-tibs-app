@@ -13,21 +13,23 @@ interface DecodedToken {
 
 export const useAuth = () => {
   const [user, setUser] = useState<DecodedToken | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
         const decodedToken = jwtDecode<DecodedToken>(token);
-        // Si el token ha expirado, no establecemos el usuario
         if (decodedToken.exp * 1000 > Date.now()) {
           setUser(decodedToken);
         }
       } catch (error) {
         console.error('Error al decodificar el token:', error);
+        // En caso de error, el token es inválido, así que dejamos el usuario como null
       }
     }
+    setLoading(false);
   }, []);
 
-  return { user, isAdmin: user?.role === 'admin', isEjecutivo: user?.role === 'executive' };
+  return { user, isAdmin: user?.role === 'admin', isEjecutivo: user?.role === 'executive', loading };
 };

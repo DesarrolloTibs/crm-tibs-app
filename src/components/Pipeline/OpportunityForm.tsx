@@ -1,19 +1,26 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Opportunity} from '../../core/models/Opportunity';
 import { OpportunityStage, Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
-import Select from 'react-select';
+import Select, { type SingleValue, type ActionMeta } from 'react-select';
 import type { Client } from '../../core/models/Client';
 import { getActiveClients } from '../../services/clientsService';
 
-import { getActiveUsers } from '../../services/usersService';
+
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../core/models/User';
+import { getActiveUsers } from '../../services/usersService';
 
 
 interface Props {
   initialData?: Opportunity;
   onSubmit: (opportunity: Partial<Opportunity>) => void;
   onCancel: () => void;
+}
+
+// Definir el tipo para las opciones del selector
+interface SelectOption {
+  value: string | undefined;
+  label: string;
 }
 
 const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
@@ -89,7 +96,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     label: `${client.nombre} ${client.apellido} (${client.empresa})`
   })), [clients]);
 
-  const handleClientChange = (selectedOption: { value: string; label: string } | null) => {
+  const handleClientChange = (selectedOption: SingleValue<{ value: string; label: string }>) => {
     const clientId = selectedOption ? selectedOption.value : '';
     const selectedClient = clients.find(c => c.id === clientId);
     setOpportunity({
@@ -99,15 +106,15 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     });
   };
 
-  const executiveOptions = useMemo(() => executives.map(exec => ({
+  const executiveOptions: SelectOption[] = useMemo(() => executives.map(exec => ({
     value: exec.id,
-    label:exec.email
+    label: exec.email
   })), [executives]);
 
-  const handleExecutiveChange = (selectedOption: { value: string; label: string } | null) => {
+  const handleExecutiveChange = (selectedOption: SingleValue<SelectOption>) => {
     setOpportunity({
       ...opportunity,
-      ejecutivo_id: selectedOption ? selectedOption.value : '',
+      ejecutivo_id: selectedOption ? selectedOption.value || '' : '',
     });
   };
 

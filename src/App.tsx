@@ -4,11 +4,20 @@ import LoginPage from './pages/LoginPage';
 import ClientsPage from './pages/ClientsPage';
 import PipelinePage from './pages/PipelinePage';
 import ProtectedRoute from './core/guards/ProtectedRoute';
+import UsersPage from './pages/UsersPage';
 
 const App: React.FC = () => (
     <BrowserRouter>
         <Routes>
             <Route path="/login" element={<LoginPage />} />
+                <Route
+                path="/users"
+                element={
+                    <ProtectedRoute>
+                        <UsersPage />
+                    </ProtectedRoute>
+                }
+            />
             <Route
                 path="/clients"
                 element={
@@ -25,7 +34,7 @@ const App: React.FC = () => (
                     </ProtectedRoute>
                 }
             />
-            <Route path="*" element={<Navigate to="/clients" />} />
+            <Route path="*" element={<Navigate to="/pipeline" />} />
         </Routes>
     </BrowserRouter>
 );

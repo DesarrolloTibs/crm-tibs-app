@@ -14,6 +14,9 @@ const Sidebar: React.FC = () => {
             <div className="p-6 font-bold text-xl border-b border-gray-700">CRM TIBS</div>
             <nav className="flex-1 p-4">
                 <ul className="space-y-4">
+                     <li>
+                        <Link to="/users" className="hover:text-blue-300">Usuario</Link>
+                    </li>
                     <li>
                         <Link to="/clients" className="hover:text-blue-300">Clientes</Link>
                     </li>

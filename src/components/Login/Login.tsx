@@ -15,7 +15,7 @@ const Login: React.FC = () => {
         setError('');
         try {
             await login(email, password);
-            navigate('/clients');
+            navigate('/pipeline');
         } catch (err: any) {
             setError(err.message || 'Error al iniciar sesión');
         } finally {
