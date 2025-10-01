@@ -1,22 +1,22 @@
 import axiosInstance from '../core/axios/axiosInstance';
-import { ENDPOINTS } from '../global/endpoints';
+import { CLIENTS } from '../global/endpoints';
 import type { Client } from '../core/models/Client';
 
 export async function getClients(): Promise<Client[]> {
-    const response = await axiosInstance.get(ENDPOINTS.CLIENTS);
+    const response = await axiosInstance.get(CLIENTS.CLIENTS);
     return response.data;
 }
 
 export async function createClient(client: Client): Promise<Client> {
-    const response = await axiosInstance.post(ENDPOINTS.CLIENTS, client);
+    const response = await axiosInstance.post(CLIENTS.CLIENTS, client);
     return response.data;
 }
 
 export async function updateClient(id: string, client: Client): Promise<Client> {
-    const response = await axiosInstance.patch(`${ENDPOINTS.CLIENTS}/${id}`, client);
+    const response = await axiosInstance.patch(`${CLIENTS.CLIENTS}/${id}`, client);
     return response.data;
 }
 
 export async function deleteClient(id: string): Promise<void> {
-    await axiosInstance.delete(`${ENDPOINTS.CLIENTS}/${id}`);
+    await axiosInstance.delete(`${CLIENTS.CLIENTS}/${id}`);
 }
