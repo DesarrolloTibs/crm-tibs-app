@@ -8,10 +8,12 @@ import ConfirmModal from '../components/Modal/ConfirmModal';
 import Loader from '../components/Loader/Loader';
 import Swal from 'sweetalert2';
 import { Edit, Trash2, User } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 const PAGE_SIZE = 6;
 
 const ClientsPage: React.FC = () => {
+    const { isAdmin } = useAuth();
     const [clients, setClients] = useState<Client[]>([]);
     const [editing, setEditing] = useState<Client | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -210,13 +212,15 @@ const ClientsPage: React.FC = () => {
                                         >
                                             <Edit size={16} className="mr-1" /> Editar
                                         </button>
-                                        <button
-                                            className="flex items-center bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
-                                            onClick={() => openDeleteConfirm(client)}
-                                            title="Eliminar"
-                                        >
-                                            <Trash2 size={16} className="mr-1" /> Eliminar
-                                        </button>
+                                        {isAdmin && (
+                                            <button
+                                                className="flex items-center bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+                                                onClick={() => openDeleteConfirm(client)}
+                                                title="Eliminar"
+                                            >
+                                                <Trash2 size={16} className="mr-1" /> Eliminar
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}

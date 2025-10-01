@@ -16,6 +16,7 @@ import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';
 import RemindersTab from '../Reminder/RemindersTab';
 import InteractionsTab from '../Interaction/InteractionsTab';
+import { useAuth } from '../../hooks/useAuth';
 
 
 
@@ -29,6 +30,7 @@ const STAGES: OpportunityStageType[] = [
 ];
 
 const PipelinePage: React.FC = () => {
+  const { isAdmin } = useAuth();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
@@ -73,7 +75,7 @@ const PipelinePage: React.FC = () => {
     if (!opportunity.id) return;
     try {
       // Desestructuramos para quitar los campos que no se deben enviar en el update.
-      const { id, cliente, proposalDocumentPath, ...updateData } = opportunity as any;
+      const { id, cliente, proposalDocumentPath,ejecutivo, ...updateData } = opportunity as any;
       console.log("Updating opportunity:", id, updateData);
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
@@ -143,7 +145,7 @@ const PipelinePage: React.FC = () => {
 
       if (opportunityToUpdate) {
         // Desestructuramos para quitar los campos que no se deben enviar en el update.
-        const { id, cliente, proposalDocumentPath, ...rest } = opportunityToUpdate as any;
+        const { id, cliente, proposalDocumentPath,ejecutivo, ...rest } = opportunityToUpdate as any;
         const updateData = {
           ...rest,
           monto_licenciamiento: Number(rest.monto_licenciamiento) || 0,
@@ -212,6 +214,7 @@ const PipelinePage: React.FC = () => {
                 opportunities={opportunities.filter(opp => opp.etapa === stage)}
                 onEdit={openEditModal}
                 onDelete={openDeleteConfirm}
+                isAdmin={isAdmin}
               />
             ))}
           </div>

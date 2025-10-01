@@ -17,9 +17,15 @@ export const useAuth = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      const decodedToken = jwtDecode<DecodedToken>(token);
-      console.log('Decoded Token:', decodedToken);
-      setUser(decodedToken);
+      try {
+        const decodedToken = jwtDecode<DecodedToken>(token);
+        // Si el token ha expirado, no establecemos el usuario
+        if (decodedToken.exp * 1000 > Date.now()) {
+          setUser(decodedToken);
+        }
+      } catch (error) {
+        console.error('Error al decodificar el token:', error);
+      }
     }
   }, []);
 

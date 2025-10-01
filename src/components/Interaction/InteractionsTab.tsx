@@ -3,12 +3,14 @@ import Swal from 'sweetalert2';
 import { getInteractionsByOpportunity, createInteraction, deleteInteraction } from '../../services/interactionsService'; // Asumiendo que se movió a src/services
 import { Plus, Trash2 } from 'lucide-react';
 import type { Interaction } from '../../core/models/Interaction';
+import { useAuth } from '../../hooks/useAuth';
 interface InteractionsTabProps {
   opportunityId: string;
 }
 
 const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [newInteractionComment, setNewInteractionComment] = useState('');
 
@@ -88,13 +90,15 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
               <p className="text-sm text-gray-800">{interaction.comment}</p>
               <p className="text-xs text-gray-500 mt-1">{new Date(interaction.createdAt).toLocaleString()}</p>
             </div>
-            <button
-              onClick={() => handleDeleteInteraction(interaction.id)}
-              className="text-red-500 hover:text-red-700 p-2 rounded-full transition-colors duration-200"
-              aria-label="Eliminar interacción"
-            >
-              <Trash2 size={18} />
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => handleDeleteInteraction(interaction.id)}
+                className="text-red-500 hover:text-red-700 p-2 rounded-full transition-colors duration-200"
+                aria-label="Eliminar interacción"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
           </li>
         ))}
         {interactions.length === 0 && <p className="text-gray-500">No hay interacciones para esta oportunidad.</p>}

@@ -9,13 +9,14 @@ interface Props {
   opportunities: Opportunity[];
   onEdit: (opportunity: Opportunity) => void;
   onDelete: (opportunity: Opportunity) => void;
+  isAdmin: boolean;
 }
 
-const PipelineColumn: React.FC<Props> = ({ stage, opportunities,onEdit,onDelete }) => {
+const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelete, isAdmin }) => {
   const { setNodeRef } = useDroppable({ id: stage });
 
   const count = opportunities.length;
-  const total = opportunities.reduce((acc, opp) => acc + opp.monto_total, 0);
+  const total = opportunities.reduce((acc, opp) => acc + Number(opp.monto_total), 0);
 
   return (
     <div ref={setNodeRef} className="bg-gray-100 p-4 rounded-md w-80">
@@ -32,6 +33,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities,onEdit,onDelete 
               opportunity={opportunity}
               onEdit={onEdit}
               onDelete={onDelete}
+              isAdmin={isAdmin}
             />
           ))}
         </div>

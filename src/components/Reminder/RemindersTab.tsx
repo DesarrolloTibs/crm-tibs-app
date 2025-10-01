@@ -3,12 +3,14 @@ import Swal from 'sweetalert2';
 import { getRemindersByOpportunity, createReminder, deleteReminder } from '../../services/remindersService';
 import { Plus, Trash2 } from 'lucide-react';
 import type { Reminder } from '../../core/models/Reminder';
+import { useAuth } from '../../hooks/useAuth';
 
 interface RemindersTabProps {
   opportunityId: string;
 }
 
 const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
+  const { isAdmin } = useAuth();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [newReminderTitle, setNewReminderTitle] = useState('');
@@ -99,7 +101,9 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
               <p className="font-semibold">{reminder.title}</p>
               <p className="text-sm text-gray-500">{new Date(reminder.date).toLocaleString()}</p>
             </div>
-            <button onClick={() => handleDeleteReminder(reminder.id)} className="text-red-500 hover:text-red-700"><Trash2 size={18} /></button>
+            {isAdmin && (
+              <button onClick={() => handleDeleteReminder(reminder.id)} className="text-red-500 hover:text-red-700"><Trash2 size={18} /></button>
+            )}
           </li>
         ))}
         {reminders.length === 0 && <p className="text-gray-500">No hay recordatorios para esta oportunidad.</p>}

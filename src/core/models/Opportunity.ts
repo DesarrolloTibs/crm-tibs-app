@@ -5,6 +5,7 @@ export interface Opportunity {
   cliente: any; // You might want to create a Client model as well
   empresa: string;
   ejecutivo_id: string;
+  ejecutivo: any; 
   etapa: OpportunityStageType;
   monto_licenciamiento: number;
   monto_servicios: number;

@@ -8,9 +8,10 @@ interface Props {
   opportunity: Opportunity;
   onEdit: (opportunity: Opportunity) => void;
   onDelete: (opportunity: Opportunity) => void;
+  isAdmin: boolean;
 }
 
-const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete }) => {
+const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, isAdmin }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: opportunity.id });
 
   const style = {
@@ -25,10 +26,10 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete }) => 
       className="bg-white p-4 mb-4 rounded-md shadow-md flex justify-between items-start"
     >
       <div className="flex-grow">
-        <h4 className="font-bold">{opportunity.nombre_proyecto}</h4>
-        <p className="text-sm text-gray-600">{opportunity.empresa}</p>
-        <p className="text-sm text-gray-500">Ejecutivo: {opportunity.ejecutivo_id}</p>
-        <p className="text-right font-bold mt-2">{opportunity.monto_total.toLocaleString('en-US', { style: 'currency', currency: opportunity.moneda })}</p>
+        <h4 className="font-bold">Proyecto:{opportunity.nombre_proyecto}</h4>
+        <p className="text-sm text-gray-600">Empresa:{opportunity.empresa}</p>
+        <p className="text-sm text-gray-500">Ejecutivo: {opportunity.ejecutivo?.username}</p>
+        <p className="text-sm font-bold mt-2">Monto:{opportunity.monto_total.toLocaleString('en-US', { style: 'currency', currency: opportunity.moneda })}</p>
         <div className="mt-4 flex space-x-2 justify-end">
           <button
             className="flex items-center bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition text-xs"
@@ -37,13 +38,15 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete }) => 
           >
             <Edit size={14} className="mr-1" /> Editar
           </button>
-          <button
-            className="flex items-center bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-xs"
-            onClick={() => onDelete(opportunity)}
-            title="Eliminar"
-          >
-            <Trash2 size={14} className="mr-1" /> Eliminar
-          </button>
+          {isAdmin && (
+            <button
+              className="flex items-center bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-xs"
+              onClick={() => onDelete(opportunity)}
+              title="Eliminar"
+            >
+              <Trash2 size={14} className="mr-1" /> Eliminar
+            </button>
+          )}
         </div>
       </div>
       <div {...attributes} {...listeners} className="p-2 cursor-grab touch-none text-gray-400 hover:text-gray-600">
