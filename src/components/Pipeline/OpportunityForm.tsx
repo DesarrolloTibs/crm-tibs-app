@@ -1,14 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { Opportunity} from '../../core/models/Opportunity';
 import { OpportunityStage, Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
+import Select from 'react-select';
+import type { Client } from '../../core/models/Client';
+import { getActiveClients } from '../../services/clientsService';
+
+import { getActiveUsers } from '../../services/usersService';
+import { useAuth } from '../../hooks/useAuth';
+import type { User } from '../../core/models/User';
+
 
 interface Props {
   initialData?: Opportunity;
-  onSubmit: (opportunity: Opportunity) => void;
+  onSubmit: (opportunity: Partial<Opportunity>) => void;
   onCancel: () => void;
 }
 
 const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
+  const { user, isAdmin, isEjecutivo } = useAuth();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [executives, setExecutives] = useState<User[]>([]);
   const [opportunity, setOpportunity] = useState<Partial<Opportunity>>(
     initialData || {
       nombre_proyecto: '',
@@ -25,6 +36,41 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   );
 
   useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const activeClients = await getActiveClients();
+        setClients(activeClients);
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+        // Opcional: Mostrar una alerta al usuario
+      }
+    };
+    fetchClients();
+  }, []);
+  
+  useEffect(() => {
+    const fetchExecutives = async () => {
+      if (isAdmin) {
+        try {
+          const activeUsers = await getActiveUsers();
+          setExecutives(activeUsers.filter(u => u.role === 'executive'));
+        } catch (error) {
+          console.error("Error fetching executives:", error);
+        }
+      }
+    };
+    fetchExecutives();
+  }, [isAdmin]);
+
+  useEffect(() => {
+    // Si el usuario es un ejecutivo y se está creando una nueva oportunidad,
+    // asignarle su ID por defecto.
+    if (isEjecutivo && user && !initialData) {
+      setOpportunity(o => ({ ...o, ejecutivo_id: user.sub }));
+    }
+  }, [user, isEjecutivo, initialData]);
+
+  useEffect(() => {
     const licenciamiento = Number(opportunity.monto_licenciamiento) || 0;
     const servicios = Number(opportunity.monto_servicios) || 0;
     const total = licenciamiento + servicios;
@@ -38,6 +84,36 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     setOpportunity({ ...opportunity, [name]: parsedValue });
   };
 
+  const clientOptions = useMemo(() => clients.map(client => ({
+    value: client.id!,
+    label: `${client.nombre} ${client.apellido} (${client.empresa})`
+  })), [clients]);
+
+  const handleClientChange = (selectedOption: { value: string; label: string } | null) => {
+    const clientId = selectedOption ? selectedOption.value : '';
+    const selectedClient = clients.find(c => c.id === clientId);
+    setOpportunity({
+      ...opportunity,
+      cliente_id: clientId,
+      empresa: selectedClient ? selectedClient.empresa : '',
+    });
+  };
+
+  const executiveOptions = useMemo(() => executives.map(exec => ({
+    value: exec.id,
+    label:exec.email
+  })), [executives]);
+
+  const handleExecutiveChange = (selectedOption: { value: string; label: string } | null) => {
+    setOpportunity({
+      ...opportunity,
+      ejecutivo_id: selectedOption ? selectedOption.value : '',
+    });
+  };
+
+  // Encuentra el objeto de opción completo para el valor actual
+  const selectedClientValue = clientOptions.find(option => option.value === opportunity.cliente_id);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Añadir validación más robusta
@@ -50,7 +126,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       monto_licenciamiento: Number(opportunity.monto_licenciamiento) || 0,
       monto_servicios: Number(opportunity.monto_servicios) || 0,
     };
-    onSubmit(finalOpportunity as Opportunity);
+    onSubmit(finalOpportunity);
   };
 
   return (
@@ -59,10 +135,29 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       
       <input name="nombre_proyecto" value={opportunity.nombre_proyecto} onChange={handleChange} placeholder="Nombre del Proyecto" required className="w-full border rounded px-3 py-2" />
       
-      {/* TODO: Reemplazar con un selector de Clientes y Ejecutivos */}
-      <input name="empresa" value={opportunity.empresa} onChange={handleChange} placeholder="Empresa (Cliente)" required className="w-full border rounded px-3 py-2" />
-      <input name="ejecutivo_id" value={opportunity.ejecutivo_id} onChange={handleChange} placeholder="ID Ejecutivo" required className="w-full border rounded px-3 py-2" />
-      <input name="cliente_id" value={opportunity.cliente_id} onChange={handleChange} placeholder="ID Cliente" required className="w-full border rounded px-3 py-2" />
+      <Select
+        name="cliente_id"
+        options={clientOptions}
+        value={selectedClientValue}
+        onChange={handleClientChange}
+        placeholder="-- Seleccione un Cliente --"
+        isClearable
+        isSearchable
+        required
+      />
+      {isAdmin && (
+        <Select
+          name="ejecutivo_id"
+          options={executiveOptions}
+          value={executiveOptions.find(option => option.value === opportunity.ejecutivo_id)}
+          onChange={handleExecutiveChange}
+          placeholder="-- Asignar a un Ejecutivo --"
+          isClearable
+          isSearchable
+          required
+        />
+      )}
+      {/* Para el ejecutivo, el campo está oculto pero su valor se asigna en el useEffect */}
 
       <div className="grid grid-cols-2 gap-4">
         <input type="number" name="monto_licenciamiento" value={opportunity.monto_licenciamiento} onChange={handleChange} placeholder="Monto Licenciamiento" className="w-full border rounded px-3 py-2" />

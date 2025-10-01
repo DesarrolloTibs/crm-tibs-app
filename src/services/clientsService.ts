@@ -20,3 +20,8 @@ export async function updateClient(id: string, client: Client): Promise<Client> 
 export async function deleteClient(id: string): Promise<void> {
     await axiosInstance.delete(`${CLIENTS.CLIENTS}/${id}`);
 }
+
+export const getActiveClients = async (): Promise<Client[]> => {
+  const response = await axiosInstance.get(`${CLIENTS.CLIENTS}/active`);
+  return response.data;
+};

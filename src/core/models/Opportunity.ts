@@ -14,7 +14,6 @@ export interface Opportunity {
   tipo_entrega: DeliveryTypeType;
   licenciamiento?: LicensingType;
   interactions: any[]; // You might want to create an Interaction model
-  proposalDocumentPath?: string;
   reminders: any[]; // You might want to create a Reminder model
 }
 

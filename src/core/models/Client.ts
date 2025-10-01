@@ -6,4 +6,5 @@ export interface Client {
     empresa: string;
     puesto: string;
     telefono: string;
+    estatus?: boolean;
 }

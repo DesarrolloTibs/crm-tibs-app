@@ -13,6 +13,11 @@ import ConfirmModal from '../Modal/ConfirmModal';
 
 import { Plus } from 'lucide-react';
 import OpportunityForm from './OpportunityForm';
+import Tabs from '../Tabs/Tabs';
+import RemindersTab from '../Reminder/RemindersTab';
+import InteractionsTab from '../Interaction/InteractionsTab';
+
+
 
 const STAGES: OpportunityStageType[] = [
   OpportunityStage.NUEVO,
@@ -51,8 +56,10 @@ const PipelinePage: React.FC = () => {
     fetchOpportunities();
   }, []);
 
-  const handleCreate = async (opportunity: Opportunity) => {
+  const handleCreate = async (opportunity: Partial<Opportunity>) => {
     try {
+
+      console.log("Creating opportunity:", opportunity);
       await createOpportunity(opportunity);
       setIsFormModalOpen(false);
       Swal.fire('¡Éxito!', 'Oportunidad creada correctamente', 'success');
@@ -62,10 +69,12 @@ const PipelinePage: React.FC = () => {
     }
   };
 
-  const handleUpdate = async (opportunity: Opportunity) => {
+  const handleUpdate = async (opportunity: Partial<Opportunity>) => {
     if (!opportunity.id) return;
     try {
-      const { id, cliente, proposalDocumentPath, ...updateData } = opportunity;
+      // Desestructuramos para quitar los campos que no se deben enviar en el update.
+      const { id, cliente, proposalDocumentPath, ...updateData } = opportunity as any;
+      console.log("Updating opportunity:", id, updateData);
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
       setIsFormModalOpen(false);
@@ -133,13 +142,16 @@ const PipelinePage: React.FC = () => {
       const opportunityToUpdate = updatedOpportunities.find(o => o.id === activeId);
 
       if (opportunityToUpdate) {
-        const { id, cliente, proposalDocumentPath, ...rest } = opportunityToUpdate;
+        // Desestructuramos para quitar los campos que no se deben enviar en el update.
+        const { id, cliente, proposalDocumentPath, ...rest } = opportunityToUpdate as any;
         const updateData = {
           ...rest,
           monto_licenciamiento: Number(rest.monto_licenciamiento) || 0,
           monto_servicios: Number(rest.monto_servicios) || 0,
              monto_total: Number(rest.monto_total) || 0,
         };
+
+        console.log("Updating opportunity:", id, updateData);
         updateOpportunity(id, updateData).catch(() => {
           Swal.fire('Error', 'No se pudo mover la oportunidad', 'error');
           // Revertimos al estado original si falla la actualización
@@ -157,6 +169,27 @@ const PipelinePage: React.FC = () => {
       </div>
     );
   }
+
+  const getModalContent = () => {
+    // Si estamos creando, solo mostramos el formulario
+    if (!editingOpportunity) {
+      return (
+        <OpportunityForm
+          initialData={undefined}
+          onSubmit={handleCreate}
+          onCancel={() => setIsFormModalOpen(false)}
+        />
+      );
+    }
+
+    // Si estamos editando, mostramos las pestañas
+    const tabs = [
+      { label: 'Datos de Oportunidad', content: <OpportunityForm initialData={editingOpportunity} onSubmit={handleUpdate} onCancel={() => setIsFormModalOpen(false)} /> },
+      { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> },
+      { label: 'Interacciones', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
+    ];
+    return <Tabs tabs={tabs} />;
+  };
 
   return (
     <div className="flex">
@@ -191,11 +224,7 @@ const PipelinePage: React.FC = () => {
         message={`¿Seguro que deseas eliminar la oportunidad "${opportunityToDelete?.nombre_proyecto}"?`}
       />
       <Modal open={isFormModalOpen} onClose={() => setIsFormModalOpen(false)}>
-        <OpportunityForm
-          initialData={editingOpportunity || undefined}
-          onSubmit={editingOpportunity ? handleUpdate : handleCreate}
-          onCancel={() => setIsFormModalOpen(false)}
-        />
+        {getModalContent()}
       </Modal>
     </div>
   );
