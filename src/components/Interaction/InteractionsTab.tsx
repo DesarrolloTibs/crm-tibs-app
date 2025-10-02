@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { getInteractionsByOpportunity, createInteraction, deleteInteraction } from '../../services/interactionsService'; // Asumiendo que se movió a src/services
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Search, Trash2 } from 'lucide-react';
 import type { Interaction } from '../../core/models/Interaction';
 import { useAuth } from '../../hooks/useAuth';
 interface InteractionsTabProps {
@@ -13,6 +13,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [newInteractionComment, setNewInteractionComment] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchInteractions = async () => {
     setLoading(true);
@@ -74,34 +75,77 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
     }
   };
 
+  const filteredInteractions = interactions.filter(interaction =>
+    interaction.comment.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) return <p>Cargando interacciones...</p>;
 
   return (
-    <div>
-      <form onSubmit={handleAddInteraction} className="flex gap-4 mb-6 items-end">
-        <textarea value={newInteractionComment} onChange={e => setNewInteractionComment(e.target.value)} placeholder="Añadir un comentario..." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm flex-grow" rows={2}></textarea>
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2 self-start"><Plus size={18} /> Añadir</button>
+    <div className="p-4 flex flex-col h-full max-h-[70vh]">
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">Historial de Interacciones</h3>
+
+      <form onSubmit={handleAddInteraction} className="space-y-4 mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+        <div>
+          <label htmlFor="newInteractionComment" className="block text-sm font-medium text-gray-700 mb-1">Nuevo Comentario</label>
+          <textarea 
+            id="newInteractionComment"
+            value={newInteractionComment} 
+            onChange={e => setNewInteractionComment(e.target.value)} 
+            placeholder="Añadir un comentario o registrar una interacción..." 
+            className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
+            rows={3}
+          ></textarea>
+        </div>
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2 mt-2">
+          <Plus size={18} /> Añadir Interacción
+        </button>
       </form>
 
-      <ul className="space-y-3">
-        {interactions.map(interaction => (
-          <li key={interaction.id} className="p-3 bg-gray-50 rounded-md flex justify-between items-center">
+      <div className="relative mb-4">
+        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+          <Search size={20} />
+        </span>
+        <input
+          type="text"
+          placeholder="Buscar en interacciones..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="w-full border rounded pl-10 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+      </div>
+
+      <ul className="space-y-4 overflow-y-auto flex-grow pr-2">
+        {filteredInteractions.map(interaction => (
+          <li key={interaction.id} className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 flex justify-between items-center transition-shadow hover:shadow-md">
             <div className="flex-grow mr-4">
-              <p className="text-sm text-gray-800">{interaction.comment}</p>
-              <p className="text-xs text-gray-500 mt-1">{new Date(interaction.createdAt).toLocaleString()}</p>
+              <p className="text-base text-gray-800">{interaction.comment}</p>
+              <p className="text-sm text-gray-500 mt-1">{new Date(interaction.createdAt).toLocaleString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
             </div>
             {isAdmin && (
               <button
                 onClick={() => handleDeleteInteraction(interaction.id)}
-                className="text-red-500 hover:text-red-700 p-2 rounded-full transition-colors duration-200"
+                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full transition-colors ml-4"
                 aria-label="Eliminar interacción"
+                title="Eliminar interacción"
               >
-                <Trash2 size={18} />
+                <Trash2 size={20} />
               </button>
             )}
           </li>
         ))}
-        {interactions.length === 0 && <p className="text-gray-500">No hay interacciones para esta oportunidad.</p>}
+        {filteredInteractions.length === 0 && (
+          interactions.length > 0 ? (
+            <div className="p-4 text-center text-gray-500">
+              <p>No se encontraron interacciones que coincidan con la búsqueda.</p>
+            </div>
+          ) : (
+            <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+              <p>No hay interacciones registradas para esta oportunidad.</p>
+              <p className="text-sm mt-1">¡Añade una para mantener el historial!</p>
+            </div>
+          )
+        )}
       </ul>
     </div>
   );

@@ -137,68 +137,93 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-xl font-bold">{initialData ? 'Editar' : 'Nueva'} Oportunidad</h2>
-      
-      <input name="nombre_proyecto" value={opportunity.nombre_proyecto} onChange={handleChange} placeholder="Nombre del Proyecto" required className="w-full border rounded px-3 py-2" />
-      
-      <Select
-        name="cliente_id"
-        options={clientOptions}
-        value={selectedClientValue}
-        onChange={handleClientChange}
-        placeholder="-- Seleccione un Cliente --"
-        isClearable
-        isSearchable
-        required
-      />
-      {isAdmin && (
-        <Select
-          name="ejecutivo_id"
-          options={executiveOptions}
-          value={executiveOptions.find(option => option.value === opportunity.ejecutivo_id)}
-          onChange={handleExecutiveChange}
-          placeholder="-- Asignar a un Ejecutivo --"
-          isClearable
-          isSearchable
-          required
-        />
-      )}
-      {/* Para el ejecutivo, el campo está oculto pero su valor se asigna en el useEffect */}
+    <form onSubmit={handleSubmit} className="space-y-8 p-2">
+      <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Nueva'} Oportunidad</h2>
 
-      <div className="grid grid-cols-2 gap-4">
-        <input type="number" name="monto_licenciamiento" value={opportunity.monto_licenciamiento} onChange={handleChange} placeholder="Monto Licenciamiento" className="w-full border rounded px-3 py-2" />
-        <input type="number" name="monto_servicios" value={opportunity.monto_servicios} onChange={handleChange} placeholder="Monto Servicios" className="w-full border rounded px-3 py-2" />
-      </div>
+      <fieldset className="space-y-4">
+        <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Datos del Proyecto</legend>
+        
+        <div>
+          <label htmlFor="nombre_proyecto" className="block text-sm font-medium text-gray-700 mb-1">Nombre del Proyecto</label>
+          <input id="nombre_proyecto" name="nombre_proyecto" value={opportunity.nombre_proyecto} onChange={handleChange} placeholder="Ej: Implementación de CRM para Acme Corp" required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+        </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <select name="moneda" value={opportunity.moneda} onChange={handleChange} className="w-full border rounded px-3 py-2">
-          {Object.values(Currency).map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select name="etapa" value={opportunity.etapa} onChange={handleChange} className="w-full border rounded px-3 py-2">
-          {Object.values(OpportunityStage).map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+            <Select inputId="cliente_id" name="cliente_id" options={clientOptions} value={selectedClientValue} onChange={handleClientChange} placeholder="-- Seleccione un Cliente --" isClearable isSearchable required />
+          </div>
+          {isAdmin && (
+            <div>
+              <label htmlFor="ejecutivo_id" className="block text-sm font-medium text-gray-700 mb-1">Ejecutivo Asignado</label>
+              <Select inputId="ejecutivo_id" name="ejecutivo_id" options={executiveOptions} value={executiveOptions.find(option => option.value === opportunity.ejecutivo_id)} onChange={handleExecutiveChange} placeholder="-- Asignar a un Ejecutivo --" isClearable isSearchable required />
+            </div>
+          )}
+        </div>
+      </fieldset>
 
-      <div className="grid grid-cols-2 gap-4">
-        <select name="linea_negocio" value={opportunity.linea_negocio} onChange={handleChange} className="w-full border rounded px-3 py-2">
-          {Object.values(BusinessLine).map(bl => <option key={bl} value={bl}>{bl}</option>)}
-        </select>
-        <select name="tipo_entrega" value={opportunity.tipo_entrega} onChange={handleChange} className="w-full border rounded px-3 py-2">
-          {Object.values(DeliveryType).map(dt => <option key={dt} value={dt}>{dt}</option>)}
-        </select>
-      </div>
+      <fieldset className="space-y-4">
+        <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Detalles Financieros</legend>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="monto_licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Monto Licenciamiento</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+              <input id="monto_licenciamiento" type="number" name="monto_licenciamiento" value={opportunity.monto_licenciamiento} onChange={handleChange} placeholder="0.00" step="0.01" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="monto_servicios" className="block text-sm font-medium text-gray-700 mb-1">Monto Servicios</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+              <input id="monto_servicios" type="number" name="monto_servicios" value={opportunity.monto_servicios} onChange={handleChange} placeholder="0.00" step="0.01" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="moneda" className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+            <select id="moneda" name="moneda" value={opportunity.moneda} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+              {Object.values(Currency).map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        </div>
+      </fieldset>
 
-      <select name="licenciamiento" value={opportunity.licenciamiento} onChange={handleChange} className="w-full border rounded px-3 py-2">
-        <option value="">N/A</option>
-        {Object.values(Licensing).map(l => <option key={l} value={l}>{l}</option>)}
-      </select>
+      <fieldset className="space-y-4">
+        <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Clasificación</legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="etapa" className="block text-sm font-medium text-gray-700 mb-1">Etapa</label>
+            <select id="etapa" name="etapa" value={opportunity.etapa} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+              {Object.values(OpportunityStage).map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="linea_negocio" className="block text-sm font-medium text-gray-700 mb-1">Línea de Negocio</label>
+            <select id="linea_negocio" name="linea_negocio" value={opportunity.linea_negocio} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+              {Object.values(BusinessLine).map(bl => <option key={bl} value={bl}>{bl}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="tipo_entrega" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Entrega</label>
+            <select id="tipo_entrega" name="tipo_entrega" value={opportunity.tipo_entrega} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+              {Object.values(DeliveryType).map(dt => <option key={dt} value={dt}>{dt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Licenciamiento</label>
+            <select id="licenciamiento" name="licenciamiento" value={opportunity.licenciamiento} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+              <option value="">N/A</option>
+              {Object.values(Licensing).map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </div>
+        </div>
+      </fieldset>
 
       <div className="flex justify-end space-x-2">
         <button type="button" onClick={onCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
           Cancelar
         </button>
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
           Guardar
         </button>
       </div>

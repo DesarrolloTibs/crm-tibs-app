@@ -242,6 +242,7 @@ const PipelinePage: React.FC = () => {
         onConfirm={handleDelete}
         message={`¿Seguro que deseas eliminar la oportunidad "${opportunityToDelete?.nombre_proyecto}"?`}
       />
+      {/* Hacemos el modal más grande cuando se está editando para acomodar las pestañas */}
       <Modal open={isFormModalOpen} onClose={() => setIsFormModalOpen(false)}>
         {getModalContent()}
       </Modal>
