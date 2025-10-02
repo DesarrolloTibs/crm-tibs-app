@@ -9,6 +9,7 @@ interface Props {
   opportunities: Opportunity[];
   onEdit: (opportunity: Opportunity) => void;
   onDelete: (opportunity: Opportunity) => void;
+  onArchive: (opportunity: Opportunity) => void;
   isAdmin: boolean;
 }
 
@@ -23,7 +24,7 @@ const stageColors: Record<OpportunityStageType, string> = {
   'Cancelada': 'border-red-500',
 };
 
-const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelete, isAdmin }) => {
+const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelete, onArchive, isAdmin }) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
 
   const count = opportunities.length;
@@ -60,6 +61,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
               opportunity={opportunity}
               onEdit={onEdit}
               onDelete={onDelete}
+              onArchive={onArchive}
               isAdmin={isAdmin}
             />
           ))}

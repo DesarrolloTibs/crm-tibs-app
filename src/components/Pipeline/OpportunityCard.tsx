@@ -2,12 +2,13 @@ import React from 'react';
 import type { Opportunity, OpportunityStageType} from '../../core/models/Opportunity';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Edit, Trash2, GripVertical, Building2 } from 'lucide-react';
+import { Edit, Trash2, GripVertical, Building2, Archive, ArchiveRestore } from 'lucide-react';
 
 interface Props {
   opportunity: Opportunity;
   onEdit: (opportunity: Opportunity) => void;
   onDelete: (opportunity: Opportunity) => void;
+  onArchive: (opportunity: Opportunity) => void;
   isAdmin: boolean;
 }
 
@@ -46,7 +47,7 @@ const Avatar: React.FC<{ username?: string }> = ({ username }) => (
   </div>
 );
 
-const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, isAdmin }) => {
+const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArchive, isAdmin }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: opportunity.id });
 
   const style = {
@@ -82,6 +83,15 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, isAdm
                   title="Eliminar"
                 >
                   <Trash2 size={16} />
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  className="p-1.5 text-gray-500 hover:text-yellow-600 hover:bg-yellow-100 rounded-full"
+                  onClick={() => onArchive(opportunity)}
+                  title={opportunity.archived ? 'Desarchivar' : 'Archivar'}
+                >
+                  {opportunity.archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
                 </button>
               )}
             </div>

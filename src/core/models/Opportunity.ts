@@ -16,6 +16,7 @@ export interface Opportunity {
   licenciamiento?: LicensingType;
   interactions: any[]; // You might want to create an Interaction model
   reminders: any[]; // You might want to create a Reminder model
+  archived?: boolean;
 }
 
 export const OpportunityStage = {

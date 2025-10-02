@@ -2,8 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import type { Opportunity, OpportunityStageType } from '../../core/models/Opportunity';
-import { OpportunityStage } from '../../core/models/Opportunity';
-import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity } from '../../services/opportunitiesService';
+import { OpportunityStage, BusinessLine } from '../../core/models/Opportunity';
+import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity, archiveOpportunity } from '../../services/opportunitiesService';
 import Swal from 'sweetalert2';
 import Loader from '../Loader/Loader';
 import PipelineColumn from './PipelineColumn';
@@ -11,7 +11,7 @@ import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
 import OpportunityCard from './OpportunityCard';
-import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square } from 'lucide-react';
+import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square, Archive } from 'lucide-react';
 import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';
 import RemindersTab from '../Reminder/RemindersTab';
@@ -46,6 +46,7 @@ const PipelinePage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showStageSelector, setShowStageSelector] = useState(false);
   const [visibleStages, setVisibleStages] = useState<OpportunityStageType[]>(STAGES);
+  const [showArchived, setShowArchived] = useState(false);
 
   const fetchOpportunities = async () => {
     setLoading(true);
@@ -84,7 +85,7 @@ const PipelinePage: React.FC = () => {
     if (!opportunity.id) return;
     try {
       // Desestructuramos para quitar los campos que no se deben enviar en el update.
-      const { id, cliente, proposalDocumentPath,ejecutivo, ...updateData } = opportunity as any;
+      const { id, cliente, proposalDocumentPath,ejecutivo,archived, ...updateData } = opportunity as any;
       console.log("Updating opportunity:", id, updateData);
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
@@ -123,6 +124,24 @@ const PipelinePage: React.FC = () => {
   const openDeleteConfirm = (opportunity: Opportunity) => {
     setOpportunityToDelete(opportunity);
     setIsConfirmModalOpen(true);
+  };
+
+  const handleArchive = async (opportunity: Opportunity) => {
+    const isArchiving = !opportunity.archived;
+    const result = await Swal.fire({
+      title: `¿Seguro que deseas ${isArchiving ? 'archivar' : 'desarchivar'} la oportunidad?`,
+      text: isArchiving ? 'La oportunidad se ocultará de la vista principal.' : 'La oportunidad volverá a estar visible.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: `Sí, ${isArchiving ? 'archivar' : 'desarchivar'}`,
+      cancelButtonText: 'Cancelar',
+    });
+
+    if (result.isConfirmed) {
+      await archiveOpportunity(opportunity.id, isArchiving);
+      Swal.fire('¡Éxito!', `Oportunidad ${isArchiving ? 'archivada' : 'desarchivada'} correctamente.`, 'success');
+      fetchOpportunities();
+    }
   };
 
   const findStageForOpportunity = (id: string) => {
@@ -195,7 +214,8 @@ const PipelinePage: React.FC = () => {
     const matchesSearch = opp.nombre_proyecto.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
     const matchesStatus = statusFilter ? opp.etapa === statusFilter : true;
-    return matchesSearch && matchesExecutive && matchesStatus;
+    const matchesArchived = showArchived ? opp.archived === true : opp.archived === false || opp.archived === undefined;
+    return matchesSearch && matchesExecutive && matchesStatus && matchesArchived;
   });
 
   const handleClearFilters = () => {
@@ -318,7 +338,19 @@ const PipelinePage: React.FC = () => {
                 Limpiar filtros
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-4 flex items-center justify-end">
+                <label htmlFor="showArchived" className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="showArchived"
+                    checked={showArchived}
+                    onChange={() => setShowArchived(!showArchived)}
+                    className="mr-2"
+                  />
+                  <Archive size={16} className="mr-1" /> Mostrar archivados
+                </label>
+              </div>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
                   <Search size={20} />
@@ -372,6 +404,7 @@ const PipelinePage: React.FC = () => {
                 opportunities={filteredOpportunities.filter(opp => opp.etapa === stage)}
                 onEdit={openEditModal}
                 onDelete={openDeleteConfirm}
+                onArchive={handleArchive}
                 isAdmin={isAdmin}
               />
             ))}
@@ -382,6 +415,7 @@ const PipelinePage: React.FC = () => {
                 opportunity={activeOpportunity}
                 onEdit={() => {}} // No-op durante el drag
                 onDelete={() => {}} // No-op durante el drag
+                onArchive={() => {}} // No-op durante el drag
                 isAdmin={isAdmin}
               />
             ) : null}

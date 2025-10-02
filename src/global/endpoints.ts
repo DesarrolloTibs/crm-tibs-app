@@ -8,7 +8,7 @@ export const CLIENTS = {
     CLIENTS: urlBase + 'clients'
 };
 
-export const Opportunities = {
+export const OPPORTUNITIES = {
     OPPORTUNITIES: urlBase + 'opportunities'
 };
 export const REMINDERS = {
