@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import Navbar from '../Navbar/Navbar';
 
@@ -7,24 +7,48 @@ interface Props {
 }
 
 const Layout: React.FC<Props> = ({ children }) => {
-    // Inicia abierto en pantallas grandes, cerrado en pequeñas
+    // Hook para manejar el estado del sidebar y su comportamiento en diferentes tamaños de pantalla
     const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth <= 1024) {
+                setSidebarOpen(false);
+            } else {
+                setSidebarOpen(true);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        // Limpieza del event listener al desmontar el componente
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const toggleSidebar = () => {
         setSidebarOpen(!isSidebarOpen);
     };
 
     return (
-        <div className="flex h-screen bg-gray-200 font-sans">
+        <div className="min-h-screen bg-gray-100 font-sans">
             <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-            {/* El contenido principal se desplaza a la derecha cuando el sidebar está abierto en pantallas grandes */}
-            <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
+
+            {/* Overlay para pantallas pequeñas */}
+            {isSidebarOpen && (
+                <div 
+                    onClick={toggleSidebar} 
+                    className="fixed inset-0 z-30 bg-black opacity-50"
+                ></div>
+            )}
+
+            {/* Contenedor del Contenido Principal */}
+            <div className="relative flex flex-col flex-1">
                 {/* Navbar */}
                 <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
 
                 {/* Contenido de la página */}
-                <main className="flex-1 overflow-x-hidden overflow-y-auto">
-                    <div className=" mx-4 px-2 py-4">
+                <main className=" mx-4 flex-grow overflow-y-auto">
+                    {/* Ajustamos el padding del contenedor del children */}
+                    <div className="p-4 md:p-6">
                         {children}
                     </div>
                 </main>

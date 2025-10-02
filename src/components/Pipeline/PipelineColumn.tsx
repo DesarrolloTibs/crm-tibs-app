@@ -25,7 +25,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
     rounded-xl
     bg-gray-100
     transition-colors duration-200 ease-in-out
-    border-2 border-transparent
+    border-2 
     ${isOver ? 'bg-blue-50 border-blue-400 shadow-lg' : 'shadow-md'}
   `;
 
