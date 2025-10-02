@@ -1,38 +1,41 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { Users, Briefcase, BarChart3, LogOut } from 'lucide-react';
 
-const Sidebar: React.FC = () => {
-    const navigate = useNavigate();
+interface Props {
+    isSidebarOpen: boolean;
+    toggleSidebar: () => void;
+}
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/login');
-    };
+const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
+    const { logout, isAdmin } = useAuth();
+
+    const sidebarClasses = `
+        fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 text-white 
+        transform transition-transform duration-300 ease-in-out 
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}        
+    `;
 
     return (
-        <aside className="w-64 h-screen bg-gray-800 text-white flex flex-col">
-            <div className="p-6 font-bold text-xl border-b border-gray-700">CRM TIBS</div>
-            <nav className="flex-1 p-4">
-                <ul className="space-y-4">
-                     <li>
-                        <Link to="/users" className="hover:text-blue-300">Usuario</Link>
-                    </li>
-                    <li>
-                        <Link to="/clients" className="hover:text-blue-300">Clientes</Link>
-                    </li>
-                    <li>
-                        <Link to="/pipeline" className="hover:text-blue-300">Pipeline</Link>
-                    </li>
-                    {/* Agrega más enlaces aquí si tienes más páginas */}
-                </ul>
-            </nav>
-            <button
-                onClick={handleLogout}
-                className="m-4 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
-            >
-                Logout
-            </button>
-        </aside>
+        <>
+            {/* Overlay for mobile */}
+            {isSidebarOpen && <div className="fixed inset-0 bg-black opacity-50 z-20 lg:hidden" onClick={toggleSidebar}></div>}
+
+            <aside className={sidebarClasses}>
+                <div className="p-6 font-bold text-xl border-b border-gray-700">CRM TIBS</div>
+                <nav className="flex-1 p-4">
+                    <ul className="space-y-2">
+                        <li><NavLink to="/clients" className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}><Briefcase size={20} /> Clientes</NavLink></li>
+                        <li><NavLink to="/pipeline" className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}><BarChart3 size={20} /> Pipeline</NavLink></li>
+                        {isAdmin && <li><NavLink to="/users" className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}><Users size={20} /> Usuarios</NavLink></li>}
+                    </ul>
+                </nav>
+                <div className="p-4 border-t border-gray-700">
+                    <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-2 rounded-md text-red-400 hover:bg-red-500 hover:text-white"><LogOut size={20} /> Cerrar Sesión</button>
+                </div>
+            </aside>
+        </>
     );
 };
 

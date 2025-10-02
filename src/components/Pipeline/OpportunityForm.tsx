@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Opportunity} from '../../core/models/Opportunity';
 import { OpportunityStage, Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
-import Select, { type SingleValue, type ActionMeta } from 'react-select';
+import Select, { type SingleValue } from 'react-select';
 import type { Client } from '../../core/models/Client';
 import { getActiveClients } from '../../services/clientsService';
 

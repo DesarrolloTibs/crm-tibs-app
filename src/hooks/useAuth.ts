@@ -31,5 +31,12 @@ export const useAuth = () => {
     setLoading(false);
   }, []);
 
-  return { user, isAdmin: user?.role === 'admin', isEjecutivo: user?.role === 'executive', loading };
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    // Redirigimos al usuario a la página de login
+    window.location.href = '/login';
+  };
+
+  return { user, logout, isAdmin: user?.role === 'admin', isEjecutivo: user?.role === 'executive', loading };
 };

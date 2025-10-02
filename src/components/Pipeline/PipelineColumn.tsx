@@ -26,7 +26,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
         <span>${total.toLocaleString()}</span>
       </div>
       <SortableContext items={opportunities.map(o => o.id)}>
-        <div className="min-h-[200px]">
+        <div className="min-h-[600px]">
           {opportunities.map(opportunity => (
             <OpportunityCard 
               key={opportunity.id} 

@@ -7,7 +7,6 @@ import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportuni
 import Swal from 'sweetalert2';
 import Loader from '../Loader/Loader';
 import PipelineColumn from './PipelineColumn';
-import Sidebar from '../Sidebar/Sidebar';
 import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
@@ -22,11 +21,13 @@ import { useAuth } from '../../hooks/useAuth';
 
 const STAGES: OpportunityStageType[] = [
   OpportunityStage.NUEVO,
-  OpportunityStage.CANCELADA,
   OpportunityStage.DESCUBRIMIENTO,
   OpportunityStage.ESTIMACION,
   OpportunityStage.PROPUESTA,
   OpportunityStage.NEGOCIACION,
+    OpportunityStage.GANADA,
+     OpportunityStage.PERDIDA,
+    OpportunityStage.CANCELADA,
 ];
 
 const PipelinePage: React.FC = () => {
@@ -165,10 +166,7 @@ const PipelinePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex">
-        <Sidebar />
-        <div className="p-8 flex-1"><Loader /></div>
-      </div>
+        <Loader />
     );
   }
 
@@ -194,9 +192,7 @@ const PipelinePage: React.FC = () => {
   };
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <div className="p-8 flex-1">
+    <>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Pipeline de Oportunidades</h1>
           <button
@@ -207,7 +203,7 @@ const PipelinePage: React.FC = () => {
           </button>
         </div>
         <DndContext onDragEnd={handleDragEnd}>
-          <div className="flex space-x-4 p-4 overflow-x-auto">
+          <div className="flex space-x-4 p-4 ">
             {STAGES.map(stage => (
               <PipelineColumn key={stage}
                 stage={stage}
@@ -218,8 +214,7 @@ const PipelinePage: React.FC = () => {
               />
             ))}
           </div>
-        </DndContext>
-      </div>
+      </DndContext>
       <ConfirmModal
         open={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
@@ -229,8 +224,8 @@ const PipelinePage: React.FC = () => {
       <Modal open={isFormModalOpen} onClose={() => setIsFormModalOpen(false)}>
         {getModalContent()}
       </Modal>
-    </div>
-  );
+    </>
+      );
 };
 
 export default PipelinePage;

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { getClients, createClient, updateClient, deleteClient } from '../services/clientsService';
 import type { Client } from '../core/models/Client';
 import ClientForm from '../components/Client/ClientForm';
-import Sidebar from '../components/Sidebar/Sidebar';
 import Modal from '../components/Modal/Modal';
 import ConfirmModal from '../components/Modal/ConfirmModal';
 import Loader from '../components/Loader/Loader';
@@ -139,9 +138,7 @@ const ClientsPage: React.FC = () => {
     }, [filterNombre, filterEmpresa, filterCorreo]);
 
     return (
-        <div className="flex">
-            <Sidebar />
-            <div className="p-8 flex-1">
+            <>
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Clientes</h1>
                     <button
@@ -251,8 +248,7 @@ const ClientsPage: React.FC = () => {
                     onConfirm={confirmDelete}
                     message={`¿Seguro que deseas eliminar a ${clientToDelete?.nombre} ${clientToDelete?.apellido}?`}
                 />
-            </div>
-        </div>
+            </>
     );
 };
 

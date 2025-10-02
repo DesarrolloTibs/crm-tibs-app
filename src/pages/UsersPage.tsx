@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { getUsers, createUser, updateUser, deleteUser } from '../services/usersService';
 import type { User } from '../core/models/User';
 import UserForm from '../components/User/UserForm';
-import Sidebar from '../components/Sidebar/Sidebar';
 import Modal from '../components/Modal/Modal';
 import ConfirmModal from '../components/Modal/ConfirmModal';
 import Loader from '../components/Loader/Loader';
@@ -104,9 +103,7 @@ const UsersPage: React.FC = () => {
     };
 
     return (
-        <div className="flex">
-            <Sidebar />
-            <div className="p-8 flex-1">
+        <>
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Usuarios</h1>
                     {isAdmin && (
@@ -188,8 +185,7 @@ const UsersPage: React.FC = () => {
                     onConfirm={confirmDelete}
                     message={`¿Seguro que deseas eliminar a ${userToDelete?.username}?`}
                 />
-            </div>
-        </div>
+        </>
     );
 };
 
