@@ -20,8 +20,8 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
 
   const columnStyles = `
     flex flex-col
-    w-80 max-w-sm
     min-h-[850px]
+    w-[300px] flex-shrink-0
     rounded-xl
     bg-gray-100
     transition-colors duration-200 ease-in-out
@@ -39,7 +39,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
         </div>
       </div>
       <SortableContext items={opportunities.map(o => o.id)} >
-        <div className="flex-grow p-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+        <div className="flex-grow p-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
           {opportunities.map(opportunity => (
             <OpportunityCard 
               key={opportunity.id} 

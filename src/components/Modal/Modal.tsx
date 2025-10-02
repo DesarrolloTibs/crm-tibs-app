@@ -6,7 +6,7 @@ export interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   maxWidth?: string; // Prop opcional para definir el ancho máximo
-  maxHeight?: string; // Prop opcional para definir la altura máxima
+  height?: string; // Prop opcional para definir la altura fija
 }
 
 const Modal: React.FC<ModalProps> = ({ 
@@ -14,7 +14,7 @@ const Modal: React.FC<ModalProps> = ({
   onClose, 
   children, 
   maxWidth = 'max-w-6xl', 
-  maxHeight = 'max-h-[95vh]' // Altura máxima por defecto (90% de la altura de la ventana)
+  height = 'h-[95vh]' // Altura fija por defecto (90% de la altura de la ventana)
 }) => {
   if (!open) return null;
 
@@ -24,7 +24,7 @@ const Modal: React.FC<ModalProps> = ({
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-lg shadow-xl w-full ${maxWidth} ${maxHeight} relative flex flex-col`}
+        className={`bg-white rounded-lg shadow-xl w-full ${maxWidth} ${height} relative flex flex-col`}
         onClick={e => e.stopPropagation()}
       >
         <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 z-10">

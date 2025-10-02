@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import type { Opportunity, OpportunityStageType } from '../../core/models/Opportunity';
@@ -11,7 +11,7 @@ import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
 import OpportunityCard from './OpportunityCard';
-import { Plus } from 'lucide-react';
+import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square } from 'lucide-react';
 import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';
 import RemindersTab from '../Reminder/RemindersTab';
@@ -40,6 +40,12 @@ const PipelinePage: React.FC = () => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [activeOpportunity, setActiveOpportunity] = useState<Opportunity | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [executiveFilter, setExecutiveFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showStageSelector, setShowStageSelector] = useState(false);
+  const [visibleStages, setVisibleStages] = useState<OpportunityStageType[]>(STAGES);
 
   const fetchOpportunities = async () => {
     setLoading(true);
@@ -175,11 +181,53 @@ const PipelinePage: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-        <Loader />
-    );
-  }
+  const executives = useMemo(() => {
+    const execs = new Map<string, { id: string; username: string }>();
+    opportunities.forEach(opp => {
+      if (opp.ejecutivo && opp.ejecutivo.id && !execs.has(opp.ejecutivo.id)) {
+        execs.set(opp.ejecutivo.id, { id: opp.ejecutivo.id, username: opp.ejecutivo.username });
+      }
+    });
+    return Array.from(execs.values());
+  }, [opportunities]);
+
+  const filteredOpportunities = opportunities.filter(opp => {
+    const matchesSearch = opp.nombre_proyecto.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
+    const matchesStatus = statusFilter ? opp.etapa === statusFilter : true;
+    return matchesSearch && matchesExecutive && matchesStatus;
+  });
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setExecutiveFilter('');
+    setStatusFilter('');
+  };
+
+  const handleStageVisibilityChange = (stage: OpportunityStageType) => {
+    setVisibleStages(prev => {
+      const isCurrentlyVisible = prev.includes(stage);
+      // Prevenir que se desactive una etapa si solo quedan 3 visibles
+      if (isCurrentlyVisible && prev.length <= 3) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Acción no permitida',
+          text: 'Debes mantener al menos 3 etapas visibles.',
+          timer: 2500,
+          showConfirmButton: false,
+        });
+        return prev; // No se aplica el cambio
+      }
+
+      return isCurrentlyVisible
+        ? prev.filter(s => s !== stage) // Ocultar etapa
+        : [...prev, stage]; // Mostrar etapa
+    });
+  };
+
+  useEffect(() => {
+    // Reset filters if needed, or handle side effects
+  }, [searchTerm, executiveFilter, statusFilter]);
 
   const getModalContent = () => {
     // Si estamos creando, solo mostramos el formulario
@@ -202,23 +250,126 @@ const PipelinePage: React.FC = () => {
     return <Tabs tabs={tabs} />;
   };
 
+  if (loading) {
+    return (
+        <Loader />
+    );
+  }
+
   return (
     <>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Pipeline de Oportunidades</h1>
-          <button
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
-            onClick={openCreateModal}
-          >
-            <Plus size={18} /> Nueva Oportunidad
-          </button>
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <button
+                className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                onClick={() => setShowStageSelector(!showStageSelector)}
+              >
+                <Columns size={16} />
+                <span>Etapas</span>
+              </button>
+              {showStageSelector && (
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-4">
+                  <h4 className="font-semibold text-sm mb-2">Mostrar/Ocultar Etapas</h4>
+                  <div className="space-y-2">
+                    {STAGES.map(stage => {
+                      const isChecked = visibleStages.includes(stage);
+                      const isDisabled = isChecked && visibleStages.length <= 3;
+                      return (
+                        <label key={stage} className={`flex items-center space-x-2 text-sm ${isDisabled ? 'cursor-not-allowed text-gray-500' : 'cursor-pointer'}`}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            disabled={isDisabled}
+                            onChange={() => handleStageVisibilityChange(stage)}
+                            className="hidden"
+                          />
+                          {isChecked ? <CheckSquare size={16} className={isDisabled ? 'text-gray-400' : 'text-blue-600'} /> : <Square size={16} className="text-gray-400" />}
+                          <span>{stage}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+            <button
+                className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter size={16} />
+                <span>Filtros</span>
+              </button>
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+              onClick={openCreateModal}
+            >
+              <Plus size={18} /> Nueva Oportunidad
+            </button>
+          </div>
         </div>
+        {showFilters && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 animate-fade-in-down">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">Filtros</h3>
+              <button onClick={handleClearFilters} className="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                <XCircle size={16} className="mr-1" />
+                Limpiar filtros
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
+                  <Search size={20} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar por proyecto..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
+                  <User size={20} />
+                </span>
+                <select
+                  value={executiveFilter}
+                  onChange={e => setExecutiveFilter(e.target.value)}
+                  className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+                >
+                  <option value="">Todos los Ejecutivos</option>
+                  {executives.map(exec => (
+                    <option key={exec.id} value={exec.id}>{exec.username}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
+                  <Tag size={20} />
+                </span>
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+                >
+                  <option value="">Todos los Estatus</option>
+                  {STAGES.map(stage => (
+                    <option key={stage} value={stage}>{stage}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="flex space-x-4 overflow-x-auto pb-4">
-            {STAGES.map(stage => (
+            {STAGES.filter(stage => visibleStages.includes(stage)).map(stage => (
               <PipelineColumn key={stage}
                 stage={stage}
-                opportunities={opportunities.filter(opp => opp.etapa === stage)}
+                opportunities={filteredOpportunities.filter(opp => opp.etapa === stage)}
                 onEdit={openEditModal}
                 onDelete={openDeleteConfirm}
                 isAdmin={isAdmin}
