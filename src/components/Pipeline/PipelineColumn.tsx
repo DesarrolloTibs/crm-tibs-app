@@ -12,27 +12,41 @@ interface Props {
   isAdmin: boolean;
 }
 
+const stageColors: Record<OpportunityStageType, string> = {
+  'Nuevo': 'border-gray-400',
+  'Descubrimiento': 'border-blue-400',
+  'Estimación': 'border-blue-500',
+  'Propuesta': 'border-indigo-500',
+  'Negociación': 'border-purple-500',
+  'Ganada': 'border-green-500',
+  'Perdida': 'border-red-500',
+  'Cancelada': 'border-red-500',
+};
+
 const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelete, isAdmin }) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
 
   const count = opportunities.length;
   const total = opportunities.reduce((acc, opp) => acc + Number(opp.monto_total), 0);
+  const borderColor = stageColors[stage] || 'border-gray-400';
 
   const columnStyles = `
     flex flex-col
     min-h-[850px]
     w-[300px] flex-shrink-0
     rounded-xl
-    bg-gray-100
+    bg-slate-50/80 backdrop-blur-sm
     transition-colors duration-200 ease-in-out
-    border-2 
-    ${isOver ? 'bg-blue-50 border-blue-400 shadow-lg' : 'shadow-md'}
+    shadow-lg
+    border border-gray-200/80
+    ${isOver ? 'ring-2 ring-blue-500' : ''}
   `;
 
   return (
     <div ref={setNodeRef} className={columnStyles}>
+      {/* Header with color bar */}
       <div className="p-4 border-b border-gray-200">
-        <h3 className="font-bold text-lg text-gray-800 mb-2">{stage}</h3>
+        <h3 className={`font-bold text-lg text-gray-800 border-l-4 pl-3 mb-3 ${borderColor}`}>{stage}</h3>
         <div className="flex justify-between text-sm text-gray-600">
           <span>{count} {count === 1 ? 'Oportunidad' : 'Oportunidades'}</span>
           <span className="font-semibold">${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>

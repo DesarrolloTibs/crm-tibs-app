@@ -101,7 +101,8 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, isAdm
         {/* Amount */}
         <div className="my-3">
           <span className="text-xl font-bold text-blue-700">${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          <span className="ml-2 text-xs text-gray-500">{opportunity.moneda}</span>
+          <span className="ml-2 text-xs text-blue-700 font-bold">{opportunity.moneda}</span>
+         <p className="flex items-center gap-2 text-gray-500"><Building2 size={14} /> {opportunity.empresa}</p>
         </div>
 
         {/* Details and Tags */}
@@ -112,7 +113,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, isAdm
               <Avatar username={opportunity.ejecutivo?.username} />
             </div>
           </div>
-          <p className="flex items-center gap-2 text-gray-500"><Building2 size={14} /> {opportunity.empresa}</p>
+         
         </div>
       </div>
 
