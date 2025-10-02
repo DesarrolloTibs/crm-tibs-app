@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import type { DragEndEvent } from '@dnd-kit/core';
-import { DndContext } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 import type { Opportunity, OpportunityStageType } from '../../core/models/Opportunity';
 import { OpportunityStage } from '../../core/models/Opportunity';
 import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity } from '../../services/opportunitiesService';
@@ -10,6 +10,7 @@ import PipelineColumn from './PipelineColumn';
 import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
+import OpportunityCard from './OpportunityCard';
 import { Plus } from 'lucide-react';
 import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';
@@ -37,6 +38,7 @@ const PipelinePage: React.FC = () => {
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [opportunityToDelete, setOpportunityToDelete] = useState<Opportunity | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [activeOpportunity, setActiveOpportunity] = useState<Opportunity | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const fetchOpportunities = async () => {
@@ -121,8 +123,17 @@ const PipelinePage: React.FC = () => {
     return opportunities.find(o => o.id === id)?.etapa;
   }
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const opportunity = opportunities.find(o => o.id === active.id);
+    if (opportunity) {
+      setActiveOpportunity(opportunity);
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveOpportunity(null); // Limpiamos la tarjeta activa al soltar
 
     if (!over) return;
 
@@ -202,8 +213,8 @@ const PipelinePage: React.FC = () => {
             <Plus size={18} /> Nueva Oportunidad
           </button>
         </div>
-        <DndContext onDragEnd={handleDragEnd}>
-          <div className="flex space-x-4 p-4 ">
+        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className="flex space-x-4 overflow-x-auto pb-4">
             {STAGES.map(stage => (
               <PipelineColumn key={stage}
                 stage={stage}
@@ -214,6 +225,16 @@ const PipelinePage: React.FC = () => {
               />
             ))}
           </div>
+          <DragOverlay>
+            {activeOpportunity ? (
+              <OpportunityCard
+                opportunity={activeOpportunity}
+                onEdit={() => {}} // No-op durante el drag
+                onDelete={() => {}} // No-op durante el drag
+                isAdmin={isAdmin}
+              />
+            ) : null}
+          </DragOverlay>
       </DndContext>
       <ConfirmModal
         open={isConfirmModalOpen}
