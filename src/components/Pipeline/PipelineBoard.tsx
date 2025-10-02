@@ -138,9 +138,21 @@ const PipelinePage: React.FC = () => {
     });
 
     if (result.isConfirmed) {
-      await archiveOpportunity(opportunity.id, isArchiving);
-      Swal.fire('¡Éxito!', `Oportunidad ${isArchiving ? 'archivada' : 'desarchivada'} correctamente.`, 'success');
-      fetchOpportunities();
+      // Actualización optimista del estado
+      const originalOpportunities = [...opportunities];
+      const updatedOpportunities = opportunities.map(opp =>
+        opp.id === opportunity.id ? { ...opp, archived: isArchiving } : opp
+      );
+      setOpportunities(updatedOpportunities);
+
+      try {
+        await archiveOpportunity(opportunity.id, isArchiving);
+        Swal.fire('¡Éxito!', `Oportunidad ${isArchiving ? 'archivada' : 'desarchivada'} correctamente.`, 'success');
+      } catch (error) {
+        Swal.fire('Error', `No se pudo ${isArchiving ? 'archivar' : 'desarchivar'} la oportunidad.`, 'error');
+        // Revertir en caso de error
+        setOpportunities(originalOpportunities);
+      }
     }
   };
 
@@ -182,7 +194,7 @@ const PipelinePage: React.FC = () => {
 
       if (opportunityToUpdate) {
         // Desestructuramos para quitar los campos que no se deben enviar en el update.
-        const { id, cliente, proposalDocumentPath,ejecutivo, ...rest } = opportunityToUpdate as any;
+        const { id, cliente, proposalDocumentPath,ejecutivo,archived, ...rest } = opportunityToUpdate as any;
         const updateData = {
           ...rest,
           monto_licenciamiento: Number(rest.monto_licenciamiento) || 0,
