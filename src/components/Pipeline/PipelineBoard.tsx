@@ -46,7 +46,6 @@ const PipelinePage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showStageSelector, setShowStageSelector] = useState(false);
   const [visibleStages, setVisibleStages] = useState<OpportunityStageType[]>(STAGES);
-  const [showArchived, setShowArchived] = useState(false);
 
   const fetchOpportunities = async () => {
     setLoading(true);
@@ -226,7 +225,7 @@ const PipelinePage: React.FC = () => {
     const matchesSearch = opp.nombre_proyecto.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
     const matchesStatus = statusFilter ? opp.etapa === statusFilter : true;
-    const matchesArchived = showArchived ? opp.archived === true : opp.archived === false || opp.archived === undefined;
+    const matchesArchived = opp.archived === false || opp.archived === undefined;
     return matchesSearch && matchesExecutive && matchesStatus && matchesArchived;
   });
 
@@ -352,19 +351,7 @@ const PipelinePage: React.FC = () => {
                 Limpiar filtros
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-4 flex items-center justify-end">
-                <label htmlFor="showArchived" className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    id="showArchived"
-                    checked={showArchived}
-                    onChange={() => setShowArchived(!showArchived)}
-                    className="mr-2"
-                  />
-                  <Archive size={16} className="mr-1" /> Mostrar archivados
-                </label>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
                   <Search size={20} />
