@@ -57,3 +57,36 @@ export const getAllOpportunities = async (): Promise<Opportunity[]> => {
   const response = await axiosInstance.get<Opportunity[]>(`${OPPORTUNITIES.OPPORTUNITIES}/all`);
   return response.data;
 };
+
+/**
+ * Sube un documento de propuesta para una oportunidad.
+ * @param id - El ID de la oportunidad.
+ * @param file - El archivo a subir.
+ * @returns Una promesa que se resuelve en la oportunidad actualizada.
+ */
+export const uploadProposalDocument = async (id: string, file: File): Promise<Opportunity> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axiosInstance.post<Opportunity>(
+    `${OPPORTUNITIES.OPPORTUNITIES}/${id}/proposal`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  );
+  return response.data;
+};
+
+/**
+ * Descarga el documento de propuesta de una oportunidad.
+ * @param id - El ID de la oportunidad.
+ * @returns Una promesa que se resuelve en un objeto Blob con los datos del archivo.
+ */
+export const downloadProposalDocument = async (id: string): Promise<Blob> => {
+  const response = await axiosInstance.get(
+    `${OPPORTUNITIES.OPPORTUNITIES}/${id}/proposal/download`,
+    {
+      responseType: 'blob', // Esencial para manejar la respuesta como un archivo
+    }
+  );
+  return response.data;
+};

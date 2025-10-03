@@ -19,6 +19,7 @@ import InteractionsTab from '../components/Interaction/InteractionsTab';
 import { Plus, Search, Filter, XCircle, User, Tag, Archive } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import OpportunityHistoryTable from '../components/Pipeline/OpportunityHistoryTable';
+import ProposalTab from '../components/Proposal/ProposalTab';
 
 const PAGE_SIZE = 10;
 
@@ -194,7 +195,13 @@ const OpportunitiesHistoryPage: React.FC = () => {
       { label: 'Datos de Oportunidad', content: <OpportunityForm initialData={editingOpportunity} onSubmit={handleUpdate} onCancel={() => setIsFormModalOpen(false)} /> },
       
       { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
-      { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> }
+      { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> },
+        { label: 'Propuesta', content: <ProposalTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
+          // Actualizamos el estado local para reflejar el cambio en la UI sin recargar todo
+          setEditingOpportunity(updatedOpp);
+          setOpportunities(prev => prev.map(o => o.id === updatedOpp.id ? updatedOpp : o));
+        }} /> 
+      },
     ];
     return <Tabs tabs={tabs} />;
   };
