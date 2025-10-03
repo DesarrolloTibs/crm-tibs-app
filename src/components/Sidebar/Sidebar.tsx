@@ -8,7 +8,7 @@ interface Props {
     toggleSidebar: () => void;
 }
 
-const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
+const Sidebar: React.FC<Props> = ({ isSidebarOpen }) => {
     const { logout, isAdmin } = useAuth();
 
     const sidebarClasses = `

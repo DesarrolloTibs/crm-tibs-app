@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import {  CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 interface NotificationProps {
   type: 'success' | 'error' | 'warning' | 'confirmation';

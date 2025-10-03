@@ -3,7 +3,7 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import Confetti from 'react-confetti-boom';
 import type { Opportunity, OpportunityStageType } from '../../core/models/Opportunity';
-import { OpportunityStage, BusinessLine } from '../../core/models/Opportunity';
+import { OpportunityStage } from '../../core/models/Opportunity';
 import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity, archiveOpportunity } from '../../services/opportunitiesService';
 import Loader from '../Loader/Loader';
 import PipelineColumn from './PipelineColumn';
@@ -92,7 +92,7 @@ const PipelinePage: React.FC = () => {
   const handleCreate = async (opportunity: Partial<Opportunity>) => {
     try {
 
-      console.log("Creating opportunity:", opportunity);
+   
       await createOpportunity(opportunity);
       setIsFormModalOpen(false);
       setNotification({
@@ -119,7 +119,7 @@ const PipelinePage: React.FC = () => {
     try {
       // Desestructuramos para quitar los campos que no se deben enviar en el update.
       const { id, cliente, proposalDocumentPath,ejecutivo,archived, ...updateData } = opportunity as any;
-      console.log("Updating opportunity:", id, updateData);
+
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
       setIsFormModalOpen(false);
@@ -267,7 +267,7 @@ const PipelinePage: React.FC = () => {
              monto_total: Number(rest.monto_total) || 0,
         };
 
-        console.log("Updating opportunity:", id, updateData);
+    
         updateOpportunity(id, updateData).catch(() => {
           setNotification({
             show: true,

@@ -6,7 +6,7 @@ import {
   deleteOpportunity,
   archiveOpportunity
 } from '../services/opportunitiesService';
-import type { Opportunity, OpportunityStageType } from '../core/models/Opportunity';
+import type { Opportunity } from '../core/models/Opportunity';
 import { OpportunityStage } from '../core/models/Opportunity';
 import Modal from '../components/Modal/Modal';
 import ConfirmModal from '../components/Modal/ConfirmModal';
