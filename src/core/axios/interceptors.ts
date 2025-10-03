@@ -18,7 +18,12 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
         error => {
             // Manejo global de errores
             if (error.response?.status === 401) {
-                // Redirigir o limpiar sesión
+                // Limpiar el token para invalidar la sesión
+                localStorage.removeItem('token');
+                // Redirigir a la página de login, evitando bucles si ya estamos ahí
+                if (window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                }
             }
             return Promise.reject(error);
         }

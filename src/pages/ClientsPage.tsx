@@ -5,9 +5,9 @@ import ClientForm from '../components/Client/ClientForm';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import ClientsTable from '../components/Client/ClientsTable';
-import Swal from 'sweetalert2';
 import { User, Filter, XCircle, Search, Building, Mail } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import Notification from '../components/Modal/Notification';
 
 const PAGE_SIZE = 10;
 
@@ -29,13 +29,26 @@ const ClientsPage: React.FC = () => {
     // Loader
     const [loading, setLoading] = useState(false);
 
+    const [notification, setNotification] = useState({
+        show: false,
+        type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+        title: '',
+        message: '',
+        onConfirm: () => {},
+        onCancel: () => {},
+    });
+
+    const hideNotification = () => setNotification({ ...notification, show: false });
+
     const fetchClients = async () => {
         setLoading(true);
         try {
             const data = await getClients();
             setClients(data);
         } catch (error) {
-            Swal.fire('Error', 'No se pudieron cargar los clientes', 'error');
+            setNotification({
+                show: true, type: 'error', title: 'Error', message: 'No se pudieron cargar los clientes', onConfirm: hideNotification, onCancel: hideNotification
+            });
         } finally {
             setLoading(false);
         }
@@ -50,10 +63,14 @@ const ClientsPage: React.FC = () => {
         try {
             await createClient(client);
             setModalOpen(false);
-            Swal.fire('¡Éxito!', 'Cliente creado correctamente', 'success');
+            setNotification({
+                show: true, type: 'success', title: '¡Éxito!', message: 'Cliente creado correctamente', onConfirm: hideNotification, onCancel: hideNotification
+            });
             fetchClients();
         } catch (error) {
-            Swal.fire('Error', 'No se pudo crear el cliente', 'error');
+            setNotification({
+                show: true, type: 'error', title: 'Error', message: 'No se pudo crear el cliente', onConfirm: hideNotification, onCancel: hideNotification
+            });
         } finally {
             setLoading(false);
         }
@@ -64,13 +81,17 @@ const ClientsPage: React.FC = () => {
             setLoading(true);
             try {
                 const { id, ...updateData } = client;
-                await updateClient(client.id, updateData);
+                await updateClient(id, updateData);
                 setEditing(null);
                 setModalOpen(false);
-                Swal.fire('¡Éxito!', 'Cliente actualizado correctamente', 'success');
+                setNotification({
+                    show: true, type: 'success', title: '¡Éxito!', message: 'Cliente actualizado correctamente', onConfirm: hideNotification, onCancel: hideNotification
+                });
                 fetchClients();
             } catch (error) {
-                Swal.fire('Error', 'No se pudo actualizar el cliente', 'error');
+                setNotification({
+                    show: true, type: 'error', title: 'Error', message: 'No se pudo actualizar el cliente', onConfirm: hideNotification, onCancel: hideNotification
+                });
             } finally {
                 setLoading(false);
             }
@@ -79,26 +100,30 @@ const ClientsPage: React.FC = () => {
 
     const handleUpdateStatus = async (client: Client) => {
         if (!client.id) return; // Asegurarse de que el ID existe
+        const clientId = client.id;
         const isActivating = !client.estatus;
-        const result = await Swal.fire({
-          title: `¿Seguro que deseas ${isActivating ? 'reactivar' : 'desactivar'} este cliente?`,
-          text: isActivating ? 'El cliente volverá a estar activo.' : 'El cliente se marcará como inactivo.',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: `Sí, ${isActivating ? 'reactivar' : 'desactivar'}`,
-          cancelButtonText: 'Cancelar',
+        setNotification({
+            show: true,
+            type: 'confirmation',
+            title: `¿Seguro que deseas ${isActivating ? 'reactivar' : 'desactivar'} este cliente?`,
+            message: isActivating ? 'El cliente volverá a estar activo.' : 'El cliente se marcará como inactivo.',
+            onConfirm: async () => {
+                hideNotification();
+                try {
+                    await updateClientStatus(clientId, isActivating);
+                    setNotification({
+                        show: true, type: 'success', title: '¡Éxito!', message: `Cliente ${isActivating ? 'reactivado' : 'desactivado'} correctamente.`, onConfirm: hideNotification, onCancel: hideNotification
+                    });
+                    fetchClients(); // Vuelve a cargar los clientes para reflejar el cambio
+                } catch (error) {
+                    setNotification({
+                        show: true, type: 'error', title: 'Error', message: `No se pudo ${isActivating ? 'reactivar' : 'desactivar'} el cliente.`, onConfirm: hideNotification, onCancel: hideNotification
+                    });
+                }
+            },
+            onCancel: hideNotification,
         });
-    
-        if (result.isConfirmed) {
-          try {
-            await updateClientStatus(client.id, isActivating);
-            Swal.fire('¡Éxito!', `Cliente ${isActivating ? 'reactivado' : 'desactivado'} correctamente.`, 'success');
-            fetchClients(); // Vuelve a cargar los clientes para reflejar el cambio
-          } catch (error) {
-            Swal.fire('Error', `No se pudo ${isActivating ? 'reactivar' : 'desactivar'} el cliente.`, 'error');
-          }
-        }
-      };
+    };
     
 
     const openCreateModal = () => {
@@ -142,6 +167,7 @@ const ClientsPage: React.FC = () => {
 
     return (
             <>
+                <Notification {...notification} />
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Clientes</h1>
                     <div className="flex items-center space-x-4">

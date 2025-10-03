@@ -5,9 +5,9 @@ import UserForm from '../components/User/UserForm';
 import UsersTable from '../components/User/UsersTable';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
-import Swal from 'sweetalert2';
 import { UserPlus, Filter, XCircle, Search, Mail, Shield } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import Notification from '../components/Modal/Notification';
 
 const PAGE_SIZE = 10;
 
@@ -23,13 +23,30 @@ const UsersPage: React.FC = () => {
     const [filterRole, setFilterRole] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
 
+    const [notification, setNotification] = useState({
+        show: false,
+        type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+        title: '',
+        message: '',
+        onConfirm: () => {},
+        onCancel: () => {},
+    });
+
+    const hideNotification = () => setNotification({ ...notification, show: false });
+
     const fetchUsers = async () => {
         setLoading(true);
         try {
             const data = await getUsers();
             setUsers(data);
         } catch (error) {
-            Swal.fire('Error', 'No se pudieron cargar los usuarios', 'error');
+            setNotification({
+                show: true,
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudieron cargar los usuarios',
+                onConfirm: hideNotification,
+                onCancel: hideNotification,            });
         } finally {
             setLoading(false);
         }
@@ -44,10 +61,22 @@ const UsersPage: React.FC = () => {
         try {
             await createUser(user);
             setModalOpen(false);
-            Swal.fire('¡Éxito!', 'Usuario creado correctamente', 'success');
+            setNotification({
+                show: true,
+                type: 'success',
+                title: '¡Éxito!',
+                message: 'Usuario creado correctamente',
+                onConfirm: hideNotification,
+                onCancel: hideNotification,            });
             fetchUsers();
         } catch (error) {
-            Swal.fire('Error', 'No se pudo crear el usuario', 'error');
+            setNotification({
+                show: true,
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo crear el usuario',
+                onConfirm: hideNotification,
+                onCancel: hideNotification,            });
         } finally {
             setLoading(false);
         }
@@ -58,13 +87,25 @@ const UsersPage: React.FC = () => {
             setLoading(true);
             try {
                 const { id, ...updateData } = user;
-                await updateUser(user.id, updateData);
+                await updateUser(id, updateData);
                 setEditing(null);
                 setModalOpen(false);
-                Swal.fire('¡Éxito!', 'Usuario actualizado correctamente', 'success');
+                setNotification({
+                    show: true,
+                    type: 'success',
+                    title: '¡Éxito!',
+                    message: 'Usuario actualizado correctamente',
+                    onConfirm: hideNotification,
+                    onCancel: hideNotification,                });
                 fetchUsers();
             } catch (error) {
-                Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
+                setNotification({
+                    show: true,
+                    type: 'error',
+                    title: 'Error',
+                    message: 'No se pudo actualizar el usuario',
+                    onConfirm: hideNotification,
+                    onCancel: hideNotification,                });
             } finally {
                 setLoading(false);
             }
@@ -73,25 +114,29 @@ const UsersPage: React.FC = () => {
 
     const handleUpdateStatus = async (user: User) => {
         if (!user.id) return;
+        const userId = user.id; // Guardamos el id en una constante segura
         const isActivating = !user.isActive;
-        const result = await Swal.fire({
+        setNotification({
+            show: true,
+            type: 'confirmation',
             title: `¿Seguro que deseas ${isActivating ? 'reactivar' : 'desactivar'} este usuario?`,
-            text: isActivating ? 'El usuario podrá iniciar sesión.' : 'El usuario no podrá iniciar sesión.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: `Sí, ${isActivating ? 'reactivar' : 'desactivar'}`,
-            cancelButtonText: 'Cancelar',
+            message: isActivating ? 'El usuario podrá iniciar sesión.' : 'El usuario no podrá iniciar sesión.',
+            onConfirm: async () => {
+                hideNotification();
+                try {
+                    await updateUserStatus(userId, isActivating);
+                    setNotification({
+                        show: true, type: 'success', title: '¡Éxito!', message: `Usuario ${isActivating ? 'reactivado' : 'desactivado'} correctamente.`, onConfirm: hideNotification, onCancel: hideNotification
+                    });
+                    fetchUsers();
+                } catch (error) {
+                    setNotification({
+                        show: true, type: 'error', title: 'Error', message: `No se pudo ${isActivating ? 'reactivar' : 'desactivar'} el usuario.`, onConfirm: hideNotification, onCancel: hideNotification
+                    });
+                }
+            },
+            onCancel: hideNotification,
         });
-
-        if (result.isConfirmed) {
-            try {
-                await updateUserStatus(user.id, isActivating);
-                Swal.fire('¡Éxito!', `Usuario ${isActivating ? 'reactivado' : 'desactivado'} correctamente.`, 'success');
-                fetchUsers();
-            } catch (error) {
-                Swal.fire('Error', `No se pudo ${isActivating ? 'reactivar' : 'desactivar'} el usuario.`, 'error');
-            }
-        }
     };
 
     const openCreateModal = () => {
@@ -132,6 +177,7 @@ const UsersPage: React.FC = () => {
 
     return (
         <>
+                <Notification {...notification} />
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Usuarios</h1>
                     <div className="flex items-center space-x-4">

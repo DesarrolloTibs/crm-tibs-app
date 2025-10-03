@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import Swal from 'sweetalert2';
 import { uploadProposalDocument, downloadProposalDocument } from '../../services/opportunitiesService';
 import { Paperclip, UploadCloud, X, FileText } from 'lucide-react';
 import type { Opportunity } from '../../core/models/Opportunity';
+import Notification from '../Modal/Notification';
 
 interface ProposalTabProps {
   opportunity: Opportunity;
@@ -14,6 +14,18 @@ const ProposalTab: React.FC<ProposalTabProps> = ({ opportunity, onUploadSuccess 
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+
+  const [notification, setNotification] = useState({
+    show: false,
+    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    onCancel: () => {},
+  });
+
+  const hideNotification = () => setNotification({ ...notification, show: false });
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -44,7 +56,13 @@ const ProposalTab: React.FC<ProposalTabProps> = ({ opportunity, onUploadSuccess 
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      Swal.fire('Atención', 'Por favor, selecciona un archivo para subir.', 'warning');
+      setNotification({
+        show: true,
+        type: 'warning',
+        title: 'Atención',
+        message: 'Por favor, selecciona un archivo para subir.',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
       return;
     }
 
@@ -52,10 +70,22 @@ const ProposalTab: React.FC<ProposalTabProps> = ({ opportunity, onUploadSuccess 
     try {
       const updatedOpportunity = await uploadProposalDocument(opportunity.id, selectedFile);
       onUploadSuccess(updatedOpportunity);
-      Swal.fire('¡Éxito!', 'Propuesta subida correctamente.', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: '¡Éxito!',
+        message: 'Propuesta subida correctamente.',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
       setSelectedFile(null);
     } catch (error) {
-      Swal.fire('Error', 'No se pudo subir la propuesta.', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo subir la propuesta.',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     } finally {
       setUploading(false);
     }
@@ -79,7 +109,13 @@ const ProposalTab: React.FC<ProposalTabProps> = ({ opportunity, onUploadSuccess 
       window.URL.revokeObjectURL(url); // Limpiar la URL del objeto
     } catch (error) {
       console.error("Download error:", error);
-      Swal.fire('Error', 'No se pudo descargar la propuesta. Es posible que no exista o haya un problema con el servidor.', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo descargar la propuesta. Es posible que no exista o haya un problema con el servidor.',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     } finally {
       setDownloading(false);
     }
@@ -87,6 +123,7 @@ const ProposalTab: React.FC<ProposalTabProps> = ({ opportunity, onUploadSuccess 
 
   return (
     <div className="p-4 flex flex-col h-full max-h-[70vh]">
+      <Notification {...notification} />
       {/* <h3 className="text-xl font-semibold text-gray-800 mb-4">Documento de Propuesta</h3> */}
 
       {opportunity.proposalDocumentPath && (

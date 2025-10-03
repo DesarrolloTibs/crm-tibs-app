@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import Swal from 'sweetalert2';
 import {
   getAllOpportunities,
   createOpportunity,
@@ -19,6 +18,7 @@ import InteractionsTab from '../components/Interaction/InteractionsTab';
 import { Plus, Search, Filter, XCircle, User, Tag, Archive } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import OpportunityHistoryTable from '../components/Pipeline/OpportunityHistoryTable';
+import Notification from '../components/Modal/Notification';
 import ProposalTab from '../components/Proposal/ProposalTab';
 
 const PAGE_SIZE = 10;
@@ -39,13 +39,31 @@ const OpportunitiesHistoryPage: React.FC = () => {
   const [archivedFilter, setArchivedFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [notification, setNotification] = useState({
+    show: false,
+    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    onCancel: () => {},
+  });
+
+  const hideNotification = () => setNotification({ ...notification, show: false });
+
+
   const fetchOpportunities = async () => {
     setLoading(true);
     try {
       const data = await getAllOpportunities();
       setOpportunities(data);
     } catch (error) {
-      Swal.fire('Error', 'No se pudo cargar el historial de oportunidades', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo cargar el historial de oportunidades',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     } finally {
       setLoading(false);
     }
@@ -59,10 +77,22 @@ const OpportunitiesHistoryPage: React.FC = () => {
     try {
       await createOpportunity(opportunity);
       setIsFormModalOpen(false);
-      Swal.fire('¡Éxito!', 'Oportunidad creada correctamente', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: '¡Éxito!',
+        message: 'Oportunidad creada correctamente',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
       fetchOpportunities();
     } catch (error) {
-      Swal.fire('Error', 'No se pudo crear la oportunidad', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo crear la oportunidad',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     }
   };
 
@@ -74,10 +104,22 @@ const OpportunitiesHistoryPage: React.FC = () => {
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
       setIsFormModalOpen(false);
-      Swal.fire('¡Éxito!', 'Oportunidad actualizada correctamente', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: '¡Éxito!',
+        message: 'Oportunidad actualizada correctamente',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
       fetchOpportunities();
     } catch (error) {
-      Swal.fire('Error', 'No se pudo actualizar la oportunidad', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo actualizar la oportunidad',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     }
   };
 
@@ -85,10 +127,22 @@ const OpportunitiesHistoryPage: React.FC = () => {
     if (!opportunityToDelete) return;
     try {
       await deleteOpportunity(opportunityToDelete.id);
-      Swal.fire('¡Eliminada!', 'Oportunidad eliminada correctamente', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: '¡Eliminada!',
+        message: 'Oportunidad eliminada correctamente',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
       fetchOpportunities();
     } catch (error) {
-      Swal.fire('Error', 'No se pudo eliminar la oportunidad', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo eliminar la oportunidad',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     } finally {
       setIsConfirmModalOpen(false);
       setOpportunityToDelete(null);
@@ -97,23 +151,27 @@ const OpportunitiesHistoryPage: React.FC = () => {
 
   const handleArchive = async (opportunity: Opportunity) => {
     const isArchiving = !opportunity.archived;
-    const result = await Swal.fire({
+    setNotification({
+      show: true,
+      type: 'confirmation',
       title: `¿Seguro que deseas ${isArchiving ? 'archivar' : 'desarchivar'} la oportunidad?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: `Sí, ${isArchiving ? 'archivar' : 'desarchivar'}`,
-      cancelButtonText: 'Cancelar',
+      message: isArchiving ? 'La oportunidad se ocultará de la vista principal.' : 'La oportunidad volverá a estar visible.',
+      onConfirm: async () => {
+        hideNotification();
+        try {
+          await archiveOpportunity(opportunity.id, isArchiving);
+          setNotification({
+            show: true, type: 'success', title: '¡Éxito!', message: `Oportunidad ${isArchiving ? 'archivada' : 'desarchivada'} correctamente.`, onConfirm: hideNotification, onCancel: hideNotification
+          });
+          fetchOpportunities();
+        } catch (error) {
+          setNotification({
+            show: true, type: 'error', title: 'Error', message: `No se pudo ${isArchiving ? 'archivar' : 'desarchivar'} la oportunidad.`, onConfirm: hideNotification, onCancel: hideNotification
+          });
+        }
+      },
+      onCancel: hideNotification,
     });
-
-    if (result.isConfirmed) {
-      try {
-        await archiveOpportunity(opportunity.id, isArchiving);
-        Swal.fire('¡Éxito!', `Oportunidad ${isArchiving ? 'archivada' : 'desarchivada'} correctamente.`, 'success');
-        fetchOpportunities();
-      } catch (error) {
-        Swal.fire('Error', `No se pudo ${isArchiving ? 'archivar' : 'desarchivar'} la oportunidad.`, 'error');
-      }
-    }
   };
 
   const openCreateModal = () => {
@@ -215,6 +273,7 @@ const OpportunitiesHistoryPage: React.FC = () => {
 
   return (
     <>
+      <Notification {...notification} />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Historial de Oportunidades</h1>
         <div className="flex items-center space-x-4">

@@ -4,14 +4,13 @@ import { DndContext, DragOverlay } from '@dnd-kit/core';
 import type { Opportunity, OpportunityStageType } from '../../core/models/Opportunity';
 import { OpportunityStage, BusinessLine } from '../../core/models/Opportunity';
 import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity, archiveOpportunity } from '../../services/opportunitiesService';
-import Swal from 'sweetalert2';
 import Loader from '../Loader/Loader';
 import PipelineColumn from './PipelineColumn';
 import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
 import OpportunityCard from './OpportunityCard';
-import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square, Archive } from 'lucide-react';
+import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square } from 'lucide-react';
 import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';
 import RemindersTab from '../Reminder/RemindersTab';
@@ -19,6 +18,7 @@ import InteractionsTab from '../Interaction/InteractionsTab';
 
 import { useAuth } from '../../hooks/useAuth';
 import ProposalTab from '../Proposal/ProposalTab';
+import Notification from '../Modal/Notification';
 
 
 
@@ -49,6 +49,18 @@ const PipelinePage: React.FC = () => {
   const [showStageSelector, setShowStageSelector] = useState(false);
   const [visibleStages, setVisibleStages] = useState<OpportunityStageType[]>(STAGES);
 
+  const [notification, setNotification] = useState({
+    show: false,
+    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    onCancel: () => {},
+  });
+
+  const hideNotification = () => setNotification({ ...notification, show: false });
+
+
   const fetchOpportunities = async () => {
     setLoading(true);
       try {
@@ -59,7 +71,13 @@ const PipelinePage: React.FC = () => {
           throw new Error('Data format is incorrect');
         }
       } catch (error) {
-        Swal.fire('Error', 'No se pudieron cargar las oportunidades', 'error');
+        setNotification({
+          show: true,
+          type: 'error',
+          title: 'Error',
+          message: 'No se pudieron cargar las oportunidades',
+          onConfirm: hideNotification,
+          onCancel: hideNotification,      });
       } finally {
         setLoading(false);
       }
@@ -75,10 +93,22 @@ const PipelinePage: React.FC = () => {
       console.log("Creating opportunity:", opportunity);
       await createOpportunity(opportunity);
       setIsFormModalOpen(false);
-      Swal.fire('¡Éxito!', 'Oportunidad creada correctamente', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: '¡Éxito!',
+        message: 'Oportunidad creada correctamente',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
       fetchOpportunities();
     } catch (error) {
-      Swal.fire('Error', 'No se pudo crear la oportunidad', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo crear la oportunidad',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     }
   };
 
@@ -91,10 +121,22 @@ const PipelinePage: React.FC = () => {
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
       setIsFormModalOpen(false);
-      Swal.fire('¡Éxito!', 'Oportunidad actualizada correctamente', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: '¡Éxito!',
+        message: 'Oportunidad actualizada correctamente',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
       fetchOpportunities();
     } catch (error) {
-      Swal.fire('Error', 'No se pudo actualizar la oportunidad', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo actualizar la oportunidad',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     }
   };
 
@@ -102,10 +144,22 @@ const PipelinePage: React.FC = () => {
     if (!opportunityToDelete) return;
     try {
       await deleteOpportunity(opportunityToDelete.id);
-      Swal.fire('¡Eliminada!', 'Oportunidad eliminada correctamente', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: '¡Eliminada!',
+        message: 'Oportunidad eliminada correctamente',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
       fetchOpportunities();
     } catch (error) {
-      Swal.fire('Error', 'No se pudo eliminar la oportunidad', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo eliminar la oportunidad',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     } finally {
       setIsConfirmModalOpen(false);
       setOpportunityToDelete(null);
@@ -129,32 +183,35 @@ const PipelinePage: React.FC = () => {
 
   const handleArchive = async (opportunity: Opportunity) => {
     const isArchiving = !opportunity.archived;
-    const result = await Swal.fire({
+    setNotification({
+      show: true,
+      type: 'confirmation',
       title: `¿Seguro que deseas ${isArchiving ? 'archivar' : 'desarchivar'} la oportunidad?`,
-      text: isArchiving ? 'La oportunidad se ocultará de la vista principal.' : 'La oportunidad volverá a estar visible.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: `Sí, ${isArchiving ? 'archivar' : 'desarchivar'}`,
-      cancelButtonText: 'Cancelar',
+      message: isArchiving ? 'La oportunidad se ocultará de la vista principal.' : 'La oportunidad volverá a estar visible.',
+      onConfirm: async () => {
+        hideNotification();
+        // Actualización optimista del estado
+        const originalOpportunities = [...opportunities];
+        const updatedOpportunities = opportunities.map(opp =>
+          opp.id === opportunity.id ? { ...opp, archived: isArchiving } : opp
+        );
+        setOpportunities(updatedOpportunities);
+
+        try {
+          await archiveOpportunity(opportunity.id, isArchiving);
+          setNotification({
+            show: true, type: 'success', title: '¡Éxito!', message: `Oportunidad ${isArchiving ? 'archivada' : 'desarchivada'} correctamente.`, onConfirm: hideNotification, onCancel: hideNotification
+          });
+        } catch (error) {
+          setNotification({
+            show: true, type: 'error', title: 'Error', message: `No se pudo ${isArchiving ? 'archivar' : 'desarchivar'} la oportunidad.`, onConfirm: hideNotification, onCancel: hideNotification
+          });
+          // Revertir en caso de error
+          setOpportunities(originalOpportunities);
+        }
+      },
+      onCancel: hideNotification,
     });
-
-    if (result.isConfirmed) {
-      // Actualización optimista del estado
-      const originalOpportunities = [...opportunities];
-      const updatedOpportunities = opportunities.map(opp =>
-        opp.id === opportunity.id ? { ...opp, archived: isArchiving } : opp
-      );
-      setOpportunities(updatedOpportunities);
-
-      try {
-        await archiveOpportunity(opportunity.id, isArchiving);
-        Swal.fire('¡Éxito!', `Oportunidad ${isArchiving ? 'archivada' : 'desarchivada'} correctamente.`, 'success');
-      } catch (error) {
-        Swal.fire('Error', `No se pudo ${isArchiving ? 'archivar' : 'desarchivar'} la oportunidad.`, 'error');
-        // Revertir en caso de error
-        setOpportunities(originalOpportunities);
-      }
-    }
   };
 
   const findStageForOpportunity = (id: string) => {
@@ -205,7 +262,13 @@ const PipelinePage: React.FC = () => {
 
         console.log("Updating opportunity:", id, updateData);
         updateOpportunity(id, updateData).catch(() => {
-          Swal.fire('Error', 'No se pudo mover la oportunidad', 'error');
+          setNotification({
+            show: true,
+            type: 'error',
+            title: 'Error',
+            message: 'No se pudo mover la oportunidad',
+            onConfirm: hideNotification,
+            onCancel: hideNotification,          });
           // Revertimos al estado original si falla la actualización
           setOpportunities(originalOpportunities);
         });
@@ -242,13 +305,13 @@ const PipelinePage: React.FC = () => {
       const isCurrentlyVisible = prev.includes(stage);
       // Prevenir que se desactive una etapa si solo quedan 3 visibles
       if (isCurrentlyVisible && prev.length <= 3) {
-        Swal.fire({
-          icon: 'warning',
+        setNotification({
+          show: true,
+          type: 'warning',
           title: 'Acción no permitida',
-          text: 'Debes mantener al menos 3 etapas visibles.',
-          timer: 2500,
-          showConfirmButton: false,
-        });
+          message: 'Debes mantener al menos 3 etapas visibles.',
+          onConfirm: hideNotification,
+          onCancel: hideNotification,        });
         return prev; // No se aplica el cambio
       }
 
@@ -299,6 +362,7 @@ const PipelinePage: React.FC = () => {
 
   return (
     <>
+        <Notification {...notification} />
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Pipeline de Oportunidades</h1>
           <div className="flex items-center space-x-2">

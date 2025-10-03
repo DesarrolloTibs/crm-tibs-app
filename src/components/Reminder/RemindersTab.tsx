@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2';
 import { getRemindersByOpportunity, createReminder, deleteReminder } from '../../services/remindersService';
 import { Plus, Search, Trash2 } from 'lucide-react';
 import type { Reminder } from '../../core/models/Reminder';
 import { useAuth } from '../../hooks/useAuth';
+import Notification from '../Modal/Notification';
 
 interface RemindersTabProps {
   opportunityId: string;
@@ -17,14 +17,27 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
   const [newReminderDate, setNewReminderDate] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [notification, setNotification] = useState({
+    show: false,
+    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    onCancel: () => {},
+  });
+
+  const hideNotification = () => setNotification({ ...notification, show: false });
+
   const fetchReminders = async () => {
     setLoading(true);
     try {
       const data = await getRemindersByOpportunity(opportunityId);
       setReminders(data);
     } catch (error) {
+      setNotification({
+        show: true, type: 'error', title: 'Error', message: 'No se pudieron cargar los recordatorios.', onConfirm: hideNotification, onCancel: hideNotification
+      });
       console.error("Error fetching reminders:", error);
-      Swal.fire('Error', 'No se pudieron cargar los recordatorios.', 'error');
     } finally {
       setLoading(false);
     }
@@ -37,7 +50,9 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
   const handleAddReminder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReminderTitle || !newReminderDate) {
-      Swal.fire('Atención', 'El título y la fecha son obligatorios.', 'warning');
+      setNotification({
+        show: true, type: 'warning', title: 'Atención', message: 'El título y la fecha son obligatorios.', onConfirm: hideNotification, onCancel: hideNotification
+      });
       return;
     }
 
@@ -49,34 +64,35 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
       });
       setNewReminderTitle('');
       setNewReminderDate('');
-      Swal.fire('¡Éxito!', 'Recordatorio creado.', 'success');
+      setNotification({
+        show: true, type: 'success', title: '¡Éxito!', message: 'Recordatorio creado.', onConfirm: hideNotification, onCancel: hideNotification
+      });
       fetchReminders(); // Recargar la lista
     } catch (error) {
-      Swal.fire('Error', 'No se pudo crear el recordatorio.', 'error');
+      setNotification({
+        show: true, type: 'error', title: 'Error', message: 'No se pudo crear el recordatorio.', onConfirm: hideNotification, onCancel: hideNotification
+      });
     }
   };
 
   const handleDeleteReminder = async (reminderId: string) => {
-    const result = await Swal.fire({
+    setNotification({
+      show: true,
+      type: 'confirmation',
       title: '¿Estás seguro?',
-      text: "No podrás revertir esta acción.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, ¡eliminar!',
-      cancelButtonText: 'Cancelar'
+      message: 'No podrás revertir esta acción.',
+      onConfirm: async () => {
+        hideNotification();
+        try {
+          await deleteReminder(reminderId);
+          setNotification({ show: true, type: 'success', title: 'Eliminado', message: 'El recordatorio ha sido eliminado.', onConfirm: hideNotification, onCancel: hideNotification });
+          fetchReminders(); // Recargar la lista
+        } catch (error) {
+          setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo eliminar el recordatorio.', onConfirm: hideNotification, onCancel: hideNotification });
+        }
+      },
+      onCancel: hideNotification,
     });
-
-    if (result.isConfirmed) {
-      try {
-        await deleteReminder(reminderId);
-        Swal.fire('Eliminado', 'El recordatorio ha sido eliminado.', 'success');
-        fetchReminders(); // Recargar la lista
-      } catch (error) {
-        Swal.fire('Error', 'No se pudo eliminar el recordatorio.', 'error');
-      }
-    }
   };
 
   const filteredReminders = reminders.filter(reminder =>
@@ -86,7 +102,7 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
   if (loading) return <p>Cargando recordatorios...</p>;
 
   return (
-    <div className="p-4 flex flex-col h-full max-h-[80vh]">
+    <div className="p-4 flex flex-col h-full max-h-[80vh]">      <Notification {...notification} />
       {/* <h3 className="text-xl font-semibold text-gray-800 mb-4">Gestionar Recordatorios</h3> */}
       
       <form onSubmit={handleAddReminder} className="space-y-4 mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">

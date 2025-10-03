@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2';
 import { getInteractionsByOpportunity, createInteraction, deleteInteraction } from '../../services/interactionsService'; // Asumiendo que se movió a src/services
 import { Plus, Search, Trash2 } from 'lucide-react';
 import type { Interaction } from '../../core/models/Interaction';
 import { useAuth } from '../../hooks/useAuth';
+import Notification from '../Modal/Notification';
+
 interface InteractionsTabProps {
   opportunityId: string;
 }
@@ -15,6 +16,18 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   const [newInteractionComment, setNewInteractionComment] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [notification, setNotification] = useState({
+    show: false,
+    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    onCancel: () => {},
+  });
+
+  const hideNotification = () => setNotification({ ...notification, show: false });
+
+
   const fetchInteractions = async () => {
     setLoading(true);
     try {
@@ -22,7 +35,13 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
       setInteractions(data);
     } catch (error) {
       console.error("Error fetching interactions:", error);
-      Swal.fire('Error', 'No se pudo cargar el historial.', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo cargar el historial.',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
     } finally {
       setLoading(false);
     }
@@ -35,7 +54,13 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   const handleAddInteraction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newInteractionComment) {
-      Swal.fire('Atención', 'El comentario es obligatorio.', 'warning');
+      setNotification({
+        show: true,
+        type: 'warning',
+        title: 'Atención',
+        message: 'El comentario es obligatorio.',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,      });
       return;
     }
 
@@ -45,34 +70,44 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
         opportunity_id: opportunityId,
       });
       setNewInteractionComment('');
-      Swal.fire('¡Éxito!', 'Registro añadido al historial.', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: '¡Éxito!',
+        message: 'Registro añadido al historial.',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,
+      });
       fetchInteractions(); // Recargar la lista
     } catch (error) {
-      Swal.fire('Error', 'No se pudo añadir el registro.', 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo añadir el registro.',
+        onConfirm: hideNotification,
+        onCancel: hideNotification,
+      });
     }
   };
 
   const handleDeleteInteraction = async (interactionId: string) => {
-    const result = await Swal.fire({
+    setNotification({
+      show: true,
+      type: 'confirmation',
       title: '¿Estás seguro?',
-      text: "No podrás revertir esta acción.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, ¡elimínala!',
-      cancelButtonText: 'Cancelar'
+      message: 'No podrás revertir esta acción.',
+      onConfirm: async () => {
+        try {
+          await deleteInteraction(interactionId);
+          setNotification({ show: true, type: 'success', title: 'Eliminado', message: 'El registro ha sido eliminado.', onConfirm: hideNotification, onCancel: hideNotification });
+          fetchInteractions();
+        } catch (error) {
+          setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo eliminar el registro.', onConfirm: hideNotification, onCancel: hideNotification });
+        }
+      },
+      onCancel: hideNotification,
     });
-
-    if (result.isConfirmed) {
-      try {
-        await deleteInteraction(interactionId);
-        Swal.fire('Eliminado', 'El registro ha sido eliminado.', 'success');
-        fetchInteractions(); // Recargar la lista
-      } catch (error) {
-        Swal.fire('Error', 'No se pudo eliminar el registro.', 'error');
-      }
-    }
   };
 
   const filteredInteractions = interactions.filter(interaction =>
@@ -82,7 +117,8 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   if (loading) return <p>Cargando historial...</p>;
 
   return (
-    <div className="p-4 flex flex-col h-full max-h-[80vh]">
+    <div className="p-4 flex flex-col h-full max-h-[80vh]">      <Notification {...notification} />
+
       {/* <h3 className="text-xl font-semibold text-gray-800 mb-4">Historial</h3> */}
 
       <form onSubmit={handleAddInteraction} className="space-y-4 mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
