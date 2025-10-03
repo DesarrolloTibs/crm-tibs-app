@@ -25,3 +25,12 @@ export const getActiveClients = async (): Promise<Client[]> => {
   const response = await axiosInstance.get(`${CLIENTS.CLIENTS}/active`);
   return response.data;
 };
+
+/**
+ * Actualiza el estado de un cliente (activo/inactivo).
+ * @param id - El ID del cliente a actualizar.
+ * @param estatus - `true` para activar, `false` para desactivar.
+ */
+export const updateClientStatus = async (id: string, estatus: boolean): Promise<void> => {
+  await axiosInstance.patch(`${CLIENTS.CLIENTS}/${id}/status`, { estatus });
+};

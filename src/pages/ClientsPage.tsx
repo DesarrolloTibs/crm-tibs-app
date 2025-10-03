@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { getClients, createClient, updateClient, deleteClient } from '../services/clientsService';
+import { getClients, createClient, updateClient, updateClientStatus } from '../services/clientsService';
 import type { Client } from '../core/models/Client';
 import ClientForm from '../components/Client/ClientForm';
 import Modal from '../components/Modal/Modal';
-import ConfirmModal from '../components/Modal/ConfirmModal';
 import Loader from '../components/Loader/Loader';
 import ClientsTable from '../components/Client/ClientsTable';
 import Swal from 'sweetalert2';
@@ -17,8 +16,6 @@ const ClientsPage: React.FC = () => {
     const [clients, setClients] = useState<Client[]>([]);
     const [editing, setEditing] = useState<Client | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const [confirmOpen, setConfirmOpen] = useState(false);
-    const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 
     const [showFilters, setShowFilters] = useState(false);
     // Filtros
@@ -80,18 +77,29 @@ const ClientsPage: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        setLoading(true);
-        try {
-            await deleteClient(id);
-            Swal.fire('¡Eliminado!', 'Cliente eliminado correctamente', 'success');
-            fetchClients();
-        } catch (error) {
-            Swal.fire('Error', 'No se pudo eliminar el cliente', 'error');
-        } finally {
-            setLoading(false);
+    const handleUpdateStatus = async (client: Client) => {
+        if (!client.id) return; // Asegurarse de que el ID existe
+        const isActivating = !client.estatus;
+        const result = await Swal.fire({
+          title: `¿Seguro que deseas ${isActivating ? 'reactivar' : 'desactivar'} este cliente?`,
+          text: isActivating ? 'El cliente volverá a estar activo.' : 'El cliente se marcará como inactivo.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: `Sí, ${isActivating ? 'reactivar' : 'desactivar'}`,
+          cancelButtonText: 'Cancelar',
+        });
+    
+        if (result.isConfirmed) {
+          try {
+            await updateClientStatus(client.id, isActivating);
+            Swal.fire('¡Éxito!', `Cliente ${isActivating ? 'reactivado' : 'desactivado'} correctamente.`, 'success');
+            fetchClients(); // Vuelve a cargar los clientes para reflejar el cambio
+          } catch (error) {
+            Swal.fire('Error', `No se pudo ${isActivating ? 'reactivar' : 'desactivar'} el cliente.`, 'error');
+          }
         }
-    };
+      };
+    
 
     const openCreateModal = () => {
         setEditing(null);
@@ -101,19 +109,6 @@ const ClientsPage: React.FC = () => {
     const openEditModal = (client: Client) => {
         setEditing(client);
         setModalOpen(true);
-    };
-
-    const openDeleteConfirm = (client: Client) => {
-        setClientToDelete(client);
-        setConfirmOpen(true);
-    };
-
-    const confirmDelete = async () => {
-        if (clientToDelete) {
-            await handleDelete(clientToDelete.id!);
-            setConfirmOpen(false);
-            setClientToDelete(null);
-        }
     };
 
     // Filtrado
@@ -222,7 +217,7 @@ const ClientsPage: React.FC = () => {
                         <ClientsTable
                             clients={paginatedClients}
                             onEdit={openEditModal}
-                            onDelete={openDeleteConfirm}
+                            onUpdateStatus={handleUpdateStatus}
                             isAdmin={isAdmin}
                             currentPage={currentPage}
                             totalPages={totalPages}
@@ -237,12 +232,6 @@ const ClientsPage: React.FC = () => {
                         onCancel={() => setModalOpen(false)}
                     />
                 </Modal>
-                <ConfirmModal
-                    open={confirmOpen}
-                    onClose={() => setConfirmOpen(false)}
-                    onConfirm={confirmDelete}
-                    message={`¿Seguro que deseas eliminar a ${clientToDelete?.nombre} ${clientToDelete?.apellido}?`}
-                />
             </>
     );
 };

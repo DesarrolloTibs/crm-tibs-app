@@ -1,18 +1,18 @@
 import React from 'react';
 import type { Client } from '../../core/models/Client';
-import { Edit, Trash2, Inbox } from 'lucide-react';
+import { Edit, Inbox, UserCheck, UserX } from 'lucide-react';
 
 interface Props {
   clients: Client[];
   onEdit: (client: Client) => void;
-  onDelete: (client: Client) => void;
+  onUpdateStatus: (client: Client) => void;
   isAdmin: boolean;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
 }
 
-const ClientsTable: React.FC<Props> = ({ clients, onEdit, onDelete, isAdmin, currentPage, totalPages, onPageChange }) => {
+const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmin, currentPage, totalPages, onPageChange }) => {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border-separate" style={{ borderSpacing: '0 0.75rem' }}>
@@ -22,6 +22,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onDelete, isAdmin, cur
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Empresa</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Correo</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Teléfono</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Puesto</th>
             <th className="p-4"></th>
           </tr>
@@ -41,6 +42,12 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onDelete, isAdmin, cur
                 <td className="p-4"><p className="text-gray-700">{client.empresa}</p></td>
                 <td className="p-4"><p className="text-gray-700">{client.correo}</p></td>
                 <td className="p-4"><p className="text-gray-700">{client.telefono}</p></td>
+                <td className="p-4">
+                  <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${client.estatus ? 'text-green-900' : 'text-red-900'}`}>
+                    <span aria-hidden className={`absolute inset-0 ${client.estatus ? 'bg-green-200' : 'bg-red-200'} opacity-50 rounded-full`}></span>
+                    <span className="relative">{client.estatus ? 'Activo' : 'Inactivo'}</span>
+                  </span>
+                </td>
                 <td className="p-4"><p className="text-gray-700">{client.puesto}</p></td>
                 <td className="p-4 rounded-r-lg">
                   <div className="flex space-x-1 justify-end">
@@ -53,11 +60,11 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onDelete, isAdmin, cur
                     </button>
                     {isAdmin && (
                       <button
-                        onClick={() => onDelete(client)}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full"
-                        title="Eliminar"
+                        onClick={() => onUpdateStatus(client)}
+                        className={`p-2 text-gray-500 rounded-full ${client.estatus ? 'hover:text-yellow-600 hover:bg-yellow-100' : 'hover:text-green-600 hover:bg-green-100'}`}
+                        title={client.estatus ? 'Desactivar' : 'Reactivar'}
                       >
-                        <Trash2 size={18} />
+                        {client.estatus ? <UserX size={18} /> : <UserCheck size={18} />}
                       </button>
                     )}
                   </div>
@@ -66,7 +73,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onDelete, isAdmin, cur
             ))
           ) : (
             <tr>
-              <td colSpan={6} className="text-center py-16">
+              <td colSpan={7} className="text-center py-16">
                 <div className="flex flex-col items-center text-gray-500">
                   <Inbox size={48} className="mb-4" />
                   <h3 className="text-xl font-semibold">No se encontraron clientes</h3>
