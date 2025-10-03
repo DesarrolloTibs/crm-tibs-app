@@ -21,16 +21,15 @@ const Modal: React.FC<ModalProps> = ({
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 transition-opacity"
-      onClick={onClose}
     >
       <div
         className={`bg-white rounded-lg shadow-xl w-full ${maxWidth} ${height} relative flex flex-col`}
         onClick={e => e.stopPropagation()}
       >
-        <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 z-10">
+        <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full p-1.5 transition-colors z-10">
           <X size={24} />
         </button>
-        <div className="p-6 flex-grow h-full">
+        <div className="p-6 flex-grow h-full overflow-y-auto">
           {children}
         </div>
       </div>

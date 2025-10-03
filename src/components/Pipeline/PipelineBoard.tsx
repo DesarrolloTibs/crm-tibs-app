@@ -193,7 +193,7 @@ const PipelinePage: React.FC = () => {
 
       if (opportunityToUpdate) {
         // Desestructuramos para quitar los campos que no se deben enviar en el update.
-        const { id, cliente, proposalDocumentPath,ejecutivo,archived, ...rest } = opportunityToUpdate as any;
+        const { id, cliente, proposalDocumentPath,ejecutivo,archived,tipoCambio, ...rest } = opportunityToUpdate as any;
         const updateData = {
           ...rest,
           monto_licenciamiento: Number(rest.monto_licenciamiento) || 0,

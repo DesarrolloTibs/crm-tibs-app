@@ -16,9 +16,14 @@ const Login: React.FC = () => {
         setError('');
         try {
             await login(email, password);
-            navigate('/clients');
+            navigate('/pipeline');
         } catch (err: any) {
-            setError(err.message || 'Error al iniciar sesión');
+            // Revisa si el error viene con una respuesta del backend y un mensaje específico
+            if (err.response && err.response.data && err.response.data.message) {
+                setError(err.response.data.message);
+            } else {
+                setError(err.message || 'Error al iniciar sesión');
+            }
         } finally {
             setLoading(false);
         }

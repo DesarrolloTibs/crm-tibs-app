@@ -28,7 +28,16 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
   const { setNodeRef, isOver } = useDroppable({ id: stage });
 
   const count = opportunities.length;
-  const total = opportunities.reduce((acc, opp) => acc + Number(opp.monto_total), 0);
+  const total = opportunities.reduce((acc, opp) => {
+    const amount = Number(opp.monto_total) || 0;
+    if (opp.moneda === 'USD') {
+      // Si la moneda es USD, convierte a MXN usando el tipo de cambio.
+      // Si tipoCambio no está definido o es 0, se usa 1 para no afectar el monto.
+      const exchangeRate = opp.tipoCambio && opp.tipoCambio > 0 ? opp.tipoCambio : 1;
+      return acc + (amount * exchangeRate);
+    }
+    return acc + amount; // Si es MXN, se suma directamente.
+  }, 0);
   const borderColor = stageColors[stage] || 'border-gray-400';
 
   const columnStyles = `
@@ -50,7 +59,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
         <h3 className={`font-bold text-lg text-gray-800 border-l-4 pl-3 mb-3 ${borderColor}`}>{stage}</h3>
         <div className="flex justify-between text-sm text-gray-600">
           <span>{count} {count === 1 ? 'Oportunidad' : 'Oportunidades'}</span>
-          <span className="font-semibold">${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span className="font-semibold">${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN</span>
         </div>
       </div>
       <SortableContext items={opportunities.map(o => o.id)} >

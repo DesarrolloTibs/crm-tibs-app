@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Opportunity} from '../../core/models/Opportunity';
+import type { Opportunity, CurrencyType } from '../../core/models/Opportunity';
 import { OpportunityStage, Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
 import Select, { type SingleValue } from 'react-select';
 import type { Client } from '../../core/models/Client';
@@ -26,6 +26,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const { user, isAdmin, isEjecutivo } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [executives, setExecutives] = useState<User[]>([]);
+  const [editingField, setEditingField] = useState<string | null>(null);
   const [opportunity, setOpportunity] = useState<Partial<Opportunity>>(
     initialData || {
       nombre_proyecto: '',
@@ -37,6 +38,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       monto_servicios: 0,
       moneda: 'USD',
       linea_negocio: 'Datos',
+      tipoCambio: 0,
       tipo_entrega: 'Proyecto',
     }
   );
@@ -85,11 +87,59 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     setOpportunity(o => ({ ...o, monto_total: total }));
   }, [opportunity.monto_licenciamiento, opportunity.monto_servicios]);
 
+  const formatCurrency = (value: number | undefined | string) => {
+    if (value === undefined || value === null || value === '') return '';
+    const numberValue = Number(value);
+    if (isNaN(numberValue)) return '';
+    return new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numberValue);
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setEditingField(e.target.name);
+  };
+
+  const handleBlur = () => {
+    // Al salir del campo, parseamos el valor a un número con 2 decimales para evitar problemas de formato.
+    if (editingField) {
+      const currentValue = opportunity[editingField as keyof Opportunity] as string;
+      const numericValue = parseFloat(currentValue);
+      // Redondea a 2 decimales y lo guarda como número
+      const roundedValue = isNaN(numericValue) ? 0 : Number(numericValue.toFixed(2));
+      setOpportunity(prev => ({ ...prev, [editingField]: roundedValue }));
+    }
+    setEditingField(null);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    const isNumberInput = ['monto_licenciamiento', 'monto_servicios'].includes(name);
-    const parsedValue = isNumberInput ? (value === '' ? '' : parseFloat(value)) : value;
-    setOpportunity({ ...opportunity, [name]: parsedValue });
+
+    // Lógica especial para el cambio de moneda
+    if (name === 'moneda') {
+      setOpportunity(prev => {
+        // Si la moneda es MXN, el tipo de cambio es 0.
+        // Si es USD, se mantiene o se resetea a 1, asegurando que tenga 2 decimales.
+        const newTipoCambio = value === 'MXN' ? 0 : (prev.tipoCambio || 1);
+        return {
+          ...prev,
+          moneda: value as CurrencyType,
+          tipoCambio: Number(newTipoCambio.toFixed(2)),
+        };
+      });
+    } else {
+      setOpportunity({ ...opportunity, [name]: value });
+    }
+  };
+
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    // Limpiamos el valor para permitir solo números y un punto decimal.
+    const sanitizedValue = value.replace(/[^0-9.]/g, '');
+
+    // Para evitar que se guarden valores no numéricos, parseamos inmediatamente.
+    const numericValue = parseFloat(sanitizedValue);
+
+    // Guardamos el valor numérico o un string vacío si la entrada no es válida.
+    setOpportunity({ ...opportunity, [name]: isNaN(numericValue) ? '' : sanitizedValue });
   };
 
   const clientOptions = useMemo(() => clients.map(client => ({
@@ -135,19 +185,21 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         alert('Por favor, completa los campos requeridos.');
         return;
     }
+    // Aseguramos que los valores monetarios se envíen como números
     const finalOpportunity = {
       ...opportunity,
       monto_licenciamiento: Number(opportunity.monto_licenciamiento) || 0,
       monto_servicios: Number(opportunity.monto_servicios) || 0,
+      tipoCambio: Number(opportunity.tipoCambio) || 0,
     };
     onSubmit(finalOpportunity);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 p-2">
-      <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Nueva'} Oportunidad</h2>
+      {/* <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Nueva'} Oportunidad</h2> */}
 
-      <fieldset className="space-y-4">
+      <fieldset className="space-y-6">
         <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Datos del Proyecto</legend>
         
         <div>
@@ -155,7 +207,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           <input id="nombre_proyecto" name="nombre_proyecto" value={opportunity.nombre_proyecto} onChange={handleChange} placeholder="Ej: Implementación de CRM para Acme Corp" required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
             <Select inputId="cliente_id" name="cliente_id" options={clientOptions} value={selectedClientValue} onChange={handleClientChange} placeholder="-- Seleccione un Cliente --" isClearable isSearchable required />
@@ -169,21 +221,21 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         </div>
       </fieldset>
 
-      <fieldset className="space-y-4">
+      <fieldset className="space-y-6">
         <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Detalles Financieros</legend>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="monto_licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Monto Licenciamiento</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-              <input id="monto_licenciamiento" type="number" name="monto_licenciamiento" value={opportunity.monto_licenciamiento} onChange={handleChange} placeholder="0.00" step="0.01" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+              <input id="monto_licenciamiento" type="text" name="monto_licenciamiento" value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrency(opportunity.monto_licenciamiento)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
             </div>
           </div>
           <div>
             <label htmlFor="monto_servicios" className="block text-sm font-medium text-gray-700 mb-1">Monto Servicios</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-              <input id="monto_servicios" type="number" name="monto_servicios" value={opportunity.monto_servicios} onChange={handleChange} placeholder="0.00" step="0.01" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+              <input id="monto_servicios" type="text" name="monto_servicios" value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrency(opportunity.monto_servicios)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
             </div>
           </div>
           <div>
@@ -192,12 +244,21 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               {Object.values(Currency).map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
+          {opportunity.moneda === 'USD' && (
+            <div className="animate-fade-in">
+              <label htmlFor="tipoCambio" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Cambio (USD a MXN)</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+                <input id="tipoCambio" type="text" name="tipoCambio" value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="17.50" required={opportunity.moneda === 'USD'} className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
+              </div>
+            </div>
+          )}
         </div>
       </fieldset>
 
-      <fieldset className="space-y-4">
+      <fieldset className="space-y-6">
         <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Clasificación</legend>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="etapa" className="block text-sm font-medium text-gray-700 mb-1">Etapa</label>
             <select id="etapa" name="etapa" value={opportunity.etapa} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
