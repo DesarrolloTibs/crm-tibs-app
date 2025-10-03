@@ -87,7 +87,7 @@ const ProposalTab: React.FC<ProposalTabProps> = ({ opportunity, onUploadSuccess 
 
   return (
     <div className="p-4 flex flex-col h-full max-h-[70vh]">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">Documento de Propuesta</h3>
+      {/* <h3 className="text-xl font-semibold text-gray-800 mb-4">Documento de Propuesta</h3> */}
 
       {opportunity.proposalDocumentPath && (
         <div className="mb-6 p-4 border border-green-200 bg-green-50 rounded-lg">

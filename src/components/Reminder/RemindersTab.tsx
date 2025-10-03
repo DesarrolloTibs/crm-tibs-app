@@ -86,8 +86,8 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
   if (loading) return <p>Cargando recordatorios...</p>;
 
   return (
-    <div className="p-4 flex flex-col h-full max-h-[70vh]">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">Gestionar Recordatorios</h3>
+    <div className="p-4 flex flex-col h-full max-h-[80vh]">
+      {/* <h3 className="text-xl font-semibold text-gray-800 mb-4">Gestionar Recordatorios</h3> */}
       
       <form onSubmit={handleAddReminder} className="space-y-4 mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">

@@ -82,8 +82,8 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   if (loading) return <p>Cargando historial...</p>;
 
   return (
-    <div className="p-4 flex flex-col h-full max-h-[70vh]">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">Historial</h3>
+    <div className="p-4 flex flex-col h-full max-h-[80vh]">
+      {/* <h3 className="text-xl font-semibold text-gray-800 mb-4">Historial</h3> */}
 
       <form onSubmit={handleAddInteraction} className="space-y-4 mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
         <div>
