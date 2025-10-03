@@ -234,6 +234,7 @@ const ClientsPage: React.FC = () => {
                     <ClientForm
                         initialData={editing || undefined}
                         onSubmit={editing ? handleUpdate : handleCreate}
+                        onCancel={() => setModalOpen(false)}
                     />
                 </Modal>
                 <ConfirmModal

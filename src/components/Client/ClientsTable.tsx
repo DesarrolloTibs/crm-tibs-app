@@ -32,9 +32,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onDelete, isAdmin, cur
               <tr key={client.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px">
                 <td className="p-4 rounded-l-lg">
                   <div className="flex items-center">
-                    <div className="bg-blue-100 text-blue-700 rounded-full w-10 h-10 flex items-center justify-center font-bold mr-4 flex-shrink-0">
-                      {client.nombre.charAt(0)}{client.apellido.charAt(0)}
-                    </div>
+                  
                     <div>
                       <p className="font-semibold text-gray-900">{client.nombre} {client.apellido}</p>
                     </div>

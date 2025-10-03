@@ -25,8 +25,8 @@ const stageColors: Record<OpportunityStageType, { bg: string; text: string }> = 
 };
 
 const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDelete, onArchive, isAdmin, currentPage, totalPages, onPageChange }) => {
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('es-MX', { style: 'currency', currency }).format(amount);
+  const formatNumber = (amount: number) => {
+    return new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
   };
 
   return (
@@ -38,7 +38,8 @@ const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDel
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Cliente / Empresa</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Ejecutivo</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Etapa</th>
-            <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider">Monto Total</th>
+            <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider">Monto</th>
+            <th className="p-4 text-center text-sm font-semibold text-gray-500 uppercase tracking-wider">Moneda</th>
             <th className="p-4 text-center text-sm font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
             <th className="p-4"></th>
           </tr>
@@ -65,7 +66,10 @@ const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDel
                     </span>
                   </td>
                   <td className="p-4 text-right">
-                    <p className="text-gray-900 font-semibold">{formatCurrency(opp.monto_total, opp.moneda)}</p>
+                    <p className="text-gray-900 font-semibold">${formatNumber(opp.monto_total)}</p>
+                  </td>
+                  <td className="p-4 text-center">
+                    <p className="text-gray-700">{opp.moneda}</p>
                   </td>
                   <td className="p-4 text-center">
                     <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${opp.archived ? 'text-yellow-900' : 'text-green-900'}`}>
@@ -107,7 +111,7 @@ const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDel
             })
           ) : (
             <tr>
-              <td colSpan={7} className="text-center py-16">
+              <td colSpan={8} className="text-center py-16">
                 <div className="flex flex-col items-center text-gray-500">
                   <Inbox size={48} className="mb-4" />
                   <h3 className="text-xl font-semibold">No se encontraron oportunidades</h3>
