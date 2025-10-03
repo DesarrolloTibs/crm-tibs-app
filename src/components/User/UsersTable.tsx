@@ -1,18 +1,18 @@
 import React from 'react';
 import type { User } from '../../core/models/User';
-import { Edit, Trash2, Inbox } from 'lucide-react';
+import { Edit, Inbox, UserCheck, UserX } from 'lucide-react';
 
 interface Props {
   users: User[];
   onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
+  onUpdateStatus: (user: User) => void;
   isAdmin: boolean;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
 }
 
-const UsersTable: React.FC<Props> = ({ users, onEdit, onDelete, isAdmin, currentPage, totalPages, onPageChange }) => {
+const UsersTable: React.FC<Props> = ({ users, onEdit, onUpdateStatus, isAdmin, currentPage, totalPages, onPageChange }) => {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border-separate" style={{ borderSpacing: '0 0.75rem' }}>
@@ -51,11 +51,11 @@ const UsersTable: React.FC<Props> = ({ users, onEdit, onDelete, isAdmin, current
                         <Edit size={18} />
                       </button>
                       <button
-                        onClick={() => onDelete(user)}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full"
-                        title="Eliminar"
+                        onClick={() => onUpdateStatus(user)}
+                        className={`p-2 text-gray-500 rounded-full ${user.isActive ? 'hover:text-yellow-600 hover:bg-yellow-100' : 'hover:text-green-600 hover:bg-green-100'}`}
+                        title={user.isActive ? 'Desactivar' : 'Reactivar'}
                       >
-                        <Trash2 size={18} />
+                        {user.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
                       </button>
                     </div>
                   )}

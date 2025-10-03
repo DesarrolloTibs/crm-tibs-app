@@ -25,3 +25,7 @@ export const getActiveUsers = async (): Promise<User[]> => {
   const response = await axiosInstance.get(`${USERS.USERS}/active`);
   return response.data;
 };
+
+export const updateUserStatus = async (id: string, isActive: boolean): Promise<void> => {
+  await axiosInstance.patch(`${USERS.USERS}/${id}/status`, { isActive });
+};

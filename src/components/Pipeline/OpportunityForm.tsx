@@ -3,12 +3,10 @@ import type { Opportunity} from '../../core/models/Opportunity';
 import { OpportunityStage, Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
 import Select, { type SingleValue } from 'react-select';
 import type { Client } from '../../core/models/Client';
-import { getActiveClients } from '../../services/clientsService';
-
-
+import { getClients } from '../../services/clientsService';
+import { getUsers } from '../../services/usersService'; // Importar getUsers
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../core/models/User';
-import { getActiveUsers } from '../../services/usersService';
 
 
 interface Props {
@@ -19,8 +17,9 @@ interface Props {
 
 // Definir el tipo para las opciones del selector
 interface SelectOption {
-  value: string | undefined;
+  value: string;
   label: string;
+  isDisabled?: boolean;
 }
 
 const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
@@ -45,22 +44,24 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const activeClients = await getActiveClients();
-        setClients(activeClients);
+        // getClients ahora devuelve todos los clientes (activos e inactivos)
+        const allClients = await getClients();
+        setClients(allClients);
       } catch (error) {
         console.error("Error fetching clients:", error);
         // Opcional: Mostrar una alerta al usuario
       }
     };
     fetchClients();
-  }, []);
+  }, []); // No necesita dependencias, se carga una vez.
   
   useEffect(() => {
     const fetchExecutives = async () => {
       if (isAdmin) {
         try {
-          const activeUsers = await getActiveUsers();
-          setExecutives(activeUsers.filter(u => u.role === 'executive'));
+          // getUsers ahora devuelve todos los usuarios (activos e inactivos)
+          const allUsers = await getUsers();
+          setExecutives(allUsers.filter(u => u.role === 'executive')); // Filtrar solo ejecutivos
         } catch (error) {
           console.error("Error fetching executives:", error);
         }
@@ -93,11 +94,13 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const clientOptions = useMemo(() => clients.map(client => ({
     value: client.id!,
-    label: `${client.nombre} ${client.apellido} (${client.empresa})`
-  })), [clients]);
+    label: `${client.nombre} ${client.apellido} (${client.empresa}) ${!client.estatus ? '(Inactivo)' : ''}`,
+    // Deshabilita la opción si el cliente está inactivo, a menos que ya esté seleccionado en la oportunidad que se edita.
+    isDisabled: !client.estatus && client.id !== initialData?.cliente_id,
+  })), [clients, initialData?.cliente_id]);
 
-  const handleClientChange = (selectedOption: SingleValue<{ value: string; label: string }>) => {
-    const clientId = selectedOption ? selectedOption.value : '';
+  const handleClientChange = (selectedOption: SingleValue<SelectOption>) => {
+    const clientId = selectedOption ? selectedOption.value : ''; // Asegurarse de que el valor no sea undefined
     const selectedClient = clients.find(c => c.id === clientId);
     setOpportunity({
       ...opportunity,
@@ -107,19 +110,23 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   };
 
   const executiveOptions: SelectOption[] = useMemo(() => executives.map(exec => ({
-    value: exec.id,
-    label: exec.email
-  })), [executives]);
+    value: exec.id!,
+    label: `${exec.email} ${!exec.isActive ? '(Inactivo)' : ''}`, // Añadir (Inactivo) si el ejecutivo no está activo
+    // Deshabilita la opción si el ejecutivo está inactivo, a menos que ya esté seleccionado en la oportunidad que se edita.
+    isDisabled: !exec.isActive && exec.id !== initialData?.ejecutivo_id,
+  })), [executives, initialData?.ejecutivo_id]); // Añadir initialData?.ejecutivo_id a las dependencias
 
   const handleExecutiveChange = (selectedOption: SingleValue<SelectOption>) => {
     setOpportunity({
       ...opportunity,
-      ejecutivo_id: selectedOption ? selectedOption.value || '' : '',
+      ejecutivo_id: selectedOption ? selectedOption.value : '',
     });
   };
 
   // Encuentra el objeto de opción completo para el valor actual
   const selectedClientValue = clientOptions.find(option => option.value === opportunity.cliente_id);
+  // Encuentra el objeto de opción completo para el valor actual del ejecutivo
+  const selectedExecutiveValue = executiveOptions.find(option => option.value === opportunity.ejecutivo_id);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,7 +163,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           {isAdmin && (
             <div>
               <label htmlFor="ejecutivo_id" className="block text-sm font-medium text-gray-700 mb-1">Ejecutivo Asignado</label>
-              <Select inputId="ejecutivo_id" name="ejecutivo_id" options={executiveOptions} value={executiveOptions.find(option => option.value === opportunity.ejecutivo_id)} onChange={handleExecutiveChange} placeholder="-- Asignar a un Ejecutivo --" isClearable isSearchable required />
+              <Select inputId="ejecutivo_id" name="ejecutivo_id" options={executiveOptions} value={selectedExecutiveValue} onChange={handleExecutiveChange} placeholder="-- Asignar a un Ejecutivo --" isClearable isSearchable required />
             </div>
           )}
         </div>

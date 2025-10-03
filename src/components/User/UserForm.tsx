@@ -12,7 +12,7 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         username: '',
         email: '',
         password: '',
-        role: 'executive',
+        role: 'executive', // Por defecto, el rol es ejecutivo
         isActive: true,
         ...initialData,
     });
@@ -27,11 +27,7 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     }, [initialData]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        const isCheckbox = type === 'checkbox';
-        const inputValue = isCheckbox ? (e.target as HTMLInputElement).checked : value;
-
-        setForm({ ...form, [name]: inputValue });
+        setForm({ ...form, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -75,16 +71,6 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                             <option value='admin'>Administrador</option>
                             <option value='executive'>Ejecutivo</option>
                         </select>
-                    </div>
-                    <div className="flex items-center pt-6">
-                        <input
-                            id="isActive"
-                            name="isActive"
-                            type="checkbox"
-                            checked={form.isActive}
-                            onChange={handleChange}
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-                        <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">Usuario Activo</label>
                     </div>
                 </div>
             </fieldset>

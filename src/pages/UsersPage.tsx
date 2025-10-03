@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { getUsers, createUser, updateUser, deleteUser } from '../services/usersService';
+import { getUsers, createUser, updateUser, updateUserStatus } from '../services/usersService'; // Asumiendo que updateUserStatus existe
 import type { User } from '../core/models/User';
 import UserForm from '../components/User/UserForm';
 import UsersTable from '../components/User/UsersTable';
 import Modal from '../components/Modal/Modal';
-import ConfirmModal from '../components/Modal/ConfirmModal';
 import Loader from '../components/Loader/Loader';
 import Swal from 'sweetalert2';
 import { UserPlus, Filter, XCircle, Search, Mail, Shield } from 'lucide-react';
@@ -17,8 +16,6 @@ const UsersPage: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [editing, setEditing] = useState<User | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const [confirmOpen, setConfirmOpen] = useState(false);
-    const [userToDelete, setUserToDelete] = useState<User | null>(null);
     const [loading, setLoading] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [filterUsername, setFilterUsername] = useState('');
@@ -74,16 +71,26 @@ const UsersPage: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        setLoading(true);
-        try {
-            await deleteUser(id);
-            Swal.fire('¡Eliminado!', 'Usuario eliminado correctamente', 'success');
-            fetchUsers();
-        } catch (error) {
-            Swal.fire('Error', 'No se pudo eliminar el usuario', 'error');
-        } finally {
-            setLoading(false);
+    const handleUpdateStatus = async (user: User) => {
+        if (!user.id) return;
+        const isActivating = !user.isActive;
+        const result = await Swal.fire({
+            title: `¿Seguro que deseas ${isActivating ? 'reactivar' : 'desactivar'} este usuario?`,
+            text: isActivating ? 'El usuario podrá iniciar sesión.' : 'El usuario no podrá iniciar sesión.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: `Sí, ${isActivating ? 'reactivar' : 'desactivar'}`,
+            cancelButtonText: 'Cancelar',
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await updateUserStatus(user.id, isActivating);
+                Swal.fire('¡Éxito!', `Usuario ${isActivating ? 'reactivado' : 'desactivado'} correctamente.`, 'success');
+                fetchUsers();
+            } catch (error) {
+                Swal.fire('Error', `No se pudo ${isActivating ? 'reactivar' : 'desactivar'} el usuario.`, 'error');
+            }
         }
     };
 
@@ -95,19 +102,6 @@ const UsersPage: React.FC = () => {
     const openEditModal = (user: User) => {
         setEditing(user);
         setModalOpen(true);
-    };
-
-    const openDeleteConfirm = (user: User) => {
-        setUserToDelete(user);
-        setConfirmOpen(true);
-    };
-
-    const confirmDelete = async () => {
-        if (userToDelete && userToDelete.id) {
-            await handleDelete(userToDelete.id);
-            setConfirmOpen(false);
-            setUserToDelete(null);
-        }
     };
 
     const filteredUsers = users.filter(user =>
@@ -213,7 +207,7 @@ const UsersPage: React.FC = () => {
                     <UsersTable
                         users={paginatedUsers}
                         onEdit={openEditModal}
-                        onDelete={openDeleteConfirm}
+                        onUpdateStatus={handleUpdateStatus}
                         isAdmin={isAdmin}
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -227,12 +221,6 @@ const UsersPage: React.FC = () => {
                         onCancel={() => setModalOpen(false)}
                     />
                 </Modal>
-                <ConfirmModal
-                    open={confirmOpen}
-                    onClose={() => setConfirmOpen(false)}
-                    onConfirm={confirmDelete}
-                    message={`¿Seguro que deseas eliminar a ${userToDelete?.username}?`}
-                />
         </>
     );
 };
