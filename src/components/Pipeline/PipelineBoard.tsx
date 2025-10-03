@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
+import Confetti from 'react-confetti-boom';
 import type { Opportunity, OpportunityStageType } from '../../core/models/Opportunity';
 import { OpportunityStage, BusinessLine } from '../../core/models/Opportunity';
 import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity, archiveOpportunity } from '../../services/opportunitiesService';
@@ -48,6 +49,7 @@ const PipelinePage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showStageSelector, setShowStageSelector] = useState(false);
   const [visibleStages, setVisibleStages] = useState<OpportunityStageType[]>(STAGES);
+  const [isExploding, setIsExploding] = useState(false);
 
   const [notification, setNotification] = useState({
     show: false,
@@ -248,6 +250,11 @@ const PipelinePage: React.FC = () => {
       );
       setOpportunities(updatedOpportunities);
 
+      if (overStage === OpportunityStage.GANADA) {
+        setIsExploding(true);
+        setTimeout(() => setIsExploding(false), 4000); // El confeti se detiene después de 4 segundos
+      }
+
       const opportunityToUpdate = updatedOpportunities.find(o => o.id === activeId);
 
       if (opportunityToUpdate) {
@@ -362,6 +369,22 @@ const PipelinePage: React.FC = () => {
 
   return (
     <>
+        {isExploding && (          
+          <div className="fixed top-0 left-0 w-full h-full z-[100] pointer-events-none">
+            <Confetti
+           
+              deg={270} // Dirección hacia arriba
+              mode="boom"
+              particleCount={150} // Más partículas para una celebración mayor
+              spreadDeg={45} // Un cono de explosión más cerrado
+              launchSpeed={3} // Partículas viajan un poco más lejos y rápido
+              effectCount={1} // Una sola gran explosión
+              shapeSize={10} // Tamaño de las partículas
+              // Colores alineados con la paleta de la aplicación
+              colors={['#22c55e', '#3b82f6', '#8b5cf6', '#a855f7', '#ffffff']}
+            />
+          </div>
+        )}
         <Notification {...notification} />
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Pipeline de Oportunidades</h1>
