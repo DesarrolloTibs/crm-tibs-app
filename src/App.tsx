@@ -7,7 +7,7 @@ import OpportunitiesHistoryPage from './pages/OpportunitiesHistoryPage';
 import UsersPage from './pages/UsersPage';
 import ProtectedRoute from './core/guards/ProtectedRoute';
 import Layout from './components/Layout/Layout'; // Importar el Layout
-
+import '../src/components/Sidebar/animations.css' // Importar los estilos globales
 const App: React.FC = () => (
     <BrowserRouter>
         <Routes>

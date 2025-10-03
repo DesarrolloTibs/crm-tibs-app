@@ -18,7 +18,7 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
                     {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
                 {/* Título o breadcrumbs */}
-                <h1 className="text-xl font-semibold text-gray-800 hidden sm:block">Dashboard</h1>
+                <h1 className="text-xl font-semibold text-gray-800 hidden sm:block"></h1>
             </div>
 
             {/* Información del usuario */}
