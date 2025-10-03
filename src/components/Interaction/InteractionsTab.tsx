@@ -22,7 +22,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
       setInteractions(data);
     } catch (error) {
       console.error("Error fetching interactions:", error);
-      Swal.fire('Error', 'No se pudieron cargar las interacciones.', 'error');
+      Swal.fire('Error', 'No se pudo cargar el historial.', 'error');
     } finally {
       setLoading(false);
     }
@@ -45,10 +45,10 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
         opportunity_id: opportunityId,
       });
       setNewInteractionComment('');
-      Swal.fire('¡Éxito!', 'Interacción creada.', 'success');
+      Swal.fire('¡Éxito!', 'Registro añadido al historial.', 'success');
       fetchInteractions(); // Recargar la lista
     } catch (error) {
-      Swal.fire('Error', 'No se pudo crear la interacción.', 'error');
+      Swal.fire('Error', 'No se pudo añadir el registro.', 'error');
     }
   };
 
@@ -67,10 +67,10 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
     if (result.isConfirmed) {
       try {
         await deleteInteraction(interactionId);
-        Swal.fire('Eliminada', 'La interacción ha sido eliminada.', 'success');
+        Swal.fire('Eliminado', 'El registro ha sido eliminado.', 'success');
         fetchInteractions(); // Recargar la lista
       } catch (error) {
-        Swal.fire('Error', 'No se pudo eliminar la interacción.', 'error');
+        Swal.fire('Error', 'No se pudo eliminar el registro.', 'error');
       }
     }
   };
@@ -79,11 +79,11 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
     interaction.comment.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <p>Cargando interacciones...</p>;
+  if (loading) return <p>Cargando historial...</p>;
 
   return (
     <div className="p-4 flex flex-col h-full max-h-[70vh]">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">Historial de Interacciones</h3>
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">Historial</h3>
 
       <form onSubmit={handleAddInteraction} className="space-y-4 mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
         <div>
@@ -92,13 +92,13 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
             id="newInteractionComment"
             value={newInteractionComment} 
             onChange={e => setNewInteractionComment(e.target.value)} 
-            placeholder="Añadir un comentario o registrar una interacción..." 
+            placeholder="Añadir un comentario o registrar un evento..." 
             className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
             rows={3}
           ></textarea>
         </div>
         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2 mt-2">
-          <Plus size={18} /> Añadir Interacción
+          <Plus size={18} /> Añadir al Historial
         </button>
       </form>
 
@@ -108,7 +108,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
         </span>
         <input
           type="text"
-          placeholder="Buscar en interacciones..."
+          placeholder="Buscar en el historial..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           className="w-full border rounded pl-10 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
@@ -126,8 +126,8 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
               <button
                 onClick={() => handleDeleteInteraction(interaction.id)}
                 className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full transition-colors ml-4"
-                aria-label="Eliminar interacción"
-                title="Eliminar interacción"
+                aria-label="Eliminar registro del historial"
+                title="Eliminar registro del historial"
               >
                 <Trash2 size={20} />
               </button>
@@ -137,12 +137,12 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
         {filteredInteractions.length === 0 && (
           interactions.length > 0 ? (
             <div className="p-4 text-center text-gray-500">
-              <p>No se encontraron interacciones que coincidan con la búsqueda.</p>
+              <p>No se encontraron registros que coincidan con la búsqueda.</p>
             </div>
           ) : (
             <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
-              <p>No hay interacciones registradas para esta oportunidad.</p>
-              <p className="text-sm mt-1">¡Añade una para mantener el historial!</p>
+              <p>No hay registros en el historial para esta oportunidad.</p>
+              <p className="text-sm mt-1">¡Añade uno para no perder detalle!</p>
             </div>
           )
         )}

@@ -276,8 +276,10 @@ const PipelinePage: React.FC = () => {
     // Si estamos editando, mostramos las pestañas
     const tabs = [
       { label: 'Datos de Oportunidad', content: <OpportunityForm initialData={editingOpportunity} onSubmit={handleUpdate} onCancel={() => setIsFormModalOpen(false)} /> },
-      { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> },
-      { label: 'Interacciones', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
+     
+      { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
+       { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> }
+      
     ];
     return <Tabs tabs={tabs} />;
   };
