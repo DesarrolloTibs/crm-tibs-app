@@ -48,3 +48,12 @@ export const deleteOpportunity = async (id: string): Promise<void> => {
 export const archiveOpportunity = async (id: string, archived: boolean): Promise<void> => {
   await axiosInstance.patch(`${OPPORTUNITIES.OPPORTUNITIES}/${id}/archive`, { archived });
 };
+
+/**
+ * Obtiene el historial completo de oportunidades.
+ * @returns Una promesa que se resuelve en un array de todas las oportunidades.
+ */
+export const getAllOpportunities = async (): Promise<Opportunity[]> => {
+  const response = await axiosInstance.get<Opportunity[]>(`${OPPORTUNITIES.OPPORTUNITIES}/all`);
+  return response.data;
+};

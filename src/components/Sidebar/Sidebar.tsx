@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Users, Briefcase, BarChart3, LogOut } from 'lucide-react';
+import { Users, Briefcase, BarChart3, LogOut, History } from 'lucide-react';
 
 interface Props {
     isSidebarOpen: boolean;
@@ -24,6 +24,7 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
                 <ul className="space-y-2">
                     <li><NavLink to="/clients" className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}><Briefcase size={20} /> Clientes</NavLink></li>
                     <li><NavLink to="/pipeline" className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}><BarChart3 size={20} /> Pipeline</NavLink></li>
+                    <li><NavLink to="/history" className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}><History size={20} /> Historial</NavLink></li>
                     {isAdmin && <li><NavLink to="/users" className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}><Users size={20} /> Usuarios</NavLink></li>}
                 </ul>
             </nav>
