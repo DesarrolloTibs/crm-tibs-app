@@ -38,14 +38,27 @@ const getInitials = (name = 'N A') => {
   return name.substring(0, 2).toUpperCase();
 };
 
-const Avatar: React.FC<{ username?: string }> = ({ username }) => (
-  <div
-    className="w-7 h-7 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold"
-    title={username || 'No asignado'}
-  >
-    {getInitials(username)}
-  </div>
-);
+const Avatar: React.FC<{ username?: string; profileImageUrl?: string }> = ({ username, profileImageUrl }) => {
+  const baseUrl = import.meta.env.VITE_BASE_URL;
+  const imageUrl = profileImageUrl ? `${baseUrl}${profileImageUrl}` : null;
+
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={username || 'Avatar'}
+        className="w-7 h-7 rounded-full object-cover"
+        title={username || 'No asignado'}
+      />
+    );
+  }
+
+  return (
+    <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold" title={username || 'No asignado'}>
+      {getInitials(username)}
+    </div>
+  );
+};
 
 const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArchive, isAdmin }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -134,7 +147,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
         <div className="flex items-center justify-between mt-1">
           <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${tagColor}`}>{opportunity.linea_negocio}</span>
           <div className="flex items-center gap-2 text-gray-600">
-            <Avatar username={opportunity.ejecutivo?.username} />
+            <Avatar username={opportunity.ejecutivo?.username} profileImageUrl={opportunity.ejecutivo?.profileImageUrl} />
           </div>
         </div>
       </div>

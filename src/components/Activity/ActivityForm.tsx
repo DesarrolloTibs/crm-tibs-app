@@ -43,7 +43,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         activityType: 'Correo',
         opportunityId: initialData?.opportunityId || '',
         ...initialData, // Sobrescribimos 'date' después de esparcir initialData
-        date: formatDateTimeForInput(initialData?.date),
+        date: formatDateTimeForInput(initialData?.date || new Date().toISOString()),
     });
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
 

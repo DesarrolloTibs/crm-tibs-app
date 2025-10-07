@@ -6,6 +6,7 @@ import UsersTable from '../components/User/UsersTable';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import { UserPlus, Filter, XCircle, Search, Mail, Shield } from 'lucide-react';
+import ProfileImageUploadModal from '../components/User/ProfileImageUploadModal';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
 
@@ -15,6 +16,7 @@ const UsersPage: React.FC = () => {
     const { isAdmin } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [editing, setEditing] = useState<User | null>(null);
+    const [uploadingUser, setUploadingUser] = useState<User | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
@@ -149,6 +151,19 @@ const UsersPage: React.FC = () => {
         setModalOpen(true);
     };
 
+    const openUploadModal = (user: User) => {
+        setUploadingUser(user);
+    };
+
+    const closeUploadModal = () => {
+        setUploadingUser(null);
+    };
+
+    const handleUploadSuccess = () => {
+        closeUploadModal();
+        fetchUsers(); // Recargar usuarios para mostrar la nueva imagen
+    };
+
     const filteredUsers = users.filter(user =>
         user.username.toLowerCase().includes(filterUsername.toLowerCase()) &&
         user.email.toLowerCase().includes(filterEmail.toLowerCase()) &&
@@ -254,6 +269,7 @@ const UsersPage: React.FC = () => {
                         users={paginatedUsers}
                         onEdit={openEditModal}
                         onUpdateStatus={handleUpdateStatus}
+                        onUploadImage={openUploadModal}
                         isAdmin={isAdmin}
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -266,6 +282,16 @@ const UsersPage: React.FC = () => {
                         onSubmit={editing ? handleUpdate : handleCreate}
                         onCancel={() => setModalOpen(false)}
                     />
+                </Modal>
+                {/* Nuevo Modal para subir imagen */}
+                <Modal open={!!uploadingUser} onClose={closeUploadModal}>
+                    {uploadingUser && (
+                        <ProfileImageUploadModal
+                            user={uploadingUser}
+                            onClose={closeUploadModal}
+                            onUploadSuccess={handleUploadSuccess}
+                        />
+                    )}
                 </Modal>
         </>
     );

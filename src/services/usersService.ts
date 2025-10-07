@@ -29,3 +29,14 @@ export const getActiveUsers = async (): Promise<User[]> => {
 export const updateUserStatus = async (id: string, isActive: boolean): Promise<void> => {
   await axiosInstance.patch(`${USERS.USERS}/${id}/status`, { isActive });
 };
+export const uploadProfileImage = async (id: string, file: File): Promise<User> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axiosInstance.post<User>(
+    `${USERS.USERS}/${id}/profile-image`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  );
+  return response.data;
+};

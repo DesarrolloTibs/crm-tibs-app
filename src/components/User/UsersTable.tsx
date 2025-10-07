@@ -1,18 +1,19 @@
 import React from 'react';
 import type { User } from '../../core/models/User';
-import { Edit, Inbox, UserCheck, UserX } from 'lucide-react';
+import { Edit, Inbox, UserCheck, UserX, Camera } from 'lucide-react';
 
 interface Props {
   users: User[];
   onEdit: (user: User) => void;
   onUpdateStatus: (user: User) => void;
+  onUploadImage: (user: User) => void;
   isAdmin: boolean;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
 }
 
-const UsersTable: React.FC<Props> = ({ users, onEdit, onUpdateStatus, isAdmin, currentPage, totalPages, onPageChange }) => {
+const UsersTable: React.FC<Props> = ({ users, onEdit, onUpdateStatus, onUploadImage, isAdmin, currentPage, totalPages, onPageChange }) => {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border-separate" style={{ borderSpacing: '0 0.75rem' }}>
@@ -29,7 +30,19 @@ const UsersTable: React.FC<Props> = ({ users, onEdit, onUpdateStatus, isAdmin, c
           {users.length > 0 ? (
             users.map(user => (
               <tr key={user.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px">
-                <td className="p-4 rounded-l-lg">
+                <td className="p-4 rounded-l-lg flex items-center space-x-3">
+                  {user.profileImageUrl ? (
+                    <img
+                      src={`${import.meta.env.VITE_BASE_URL}${user.profileImageUrl}`}
+                      alt={user.username}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-sm font-bold">
+                      {user.username.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  
                   <p className="font-semibold text-gray-900">{user.username}</p>
                 </td>
                 <td className="p-4"><p className="text-gray-700">{user.email}</p></td>
@@ -49,6 +62,13 @@ const UsersTable: React.FC<Props> = ({ users, onEdit, onUpdateStatus, isAdmin, c
                         title="Editar"
                       >
                         <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => onUploadImage(user)}
+                        className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-100 rounded-full"
+                        title="Subir imagen de perfil"
+                      >
+                        <Camera size={18} />
                       </button>
                       <button
                         onClick={() => onUpdateStatus(user)}

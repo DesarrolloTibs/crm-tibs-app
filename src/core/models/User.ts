@@ -25,4 +25,5 @@ export interface User {
     password?: string;
     role: 'admin' | 'executive';
     isActive?: boolean;
+    profileImageUrl?: string;
 }

@@ -1,4 +1,4 @@
-const urlBase = import.meta.env.VITE_BASE_URL;
+const urlBase = import.meta.env.VITE_BASE_URL+'/api/';
 
 export const auth = {
     LOGIN: urlBase + 'auth/login'

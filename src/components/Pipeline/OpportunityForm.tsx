@@ -63,7 +63,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         try {
           // getUsers ahora devuelve todos los usuarios (activos e inactivos)
           const allUsers = await getUsers();
-          setExecutives(allUsers.filter(u => u.role === 'executive')); // Filtrar solo ejecutivos
+          setExecutives(allUsers); // Filtrar solo ejecutivos
         } catch (error) {
           console.error("Error fetching executives:", error);
         }
