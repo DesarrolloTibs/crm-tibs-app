@@ -16,10 +16,12 @@ import Tabs from '../components/Tabs/Tabs';
 import RemindersTab from '../components/Reminder/RemindersTab';
 import InteractionsTab from '../components/Interaction/InteractionsTab';
 import { Plus, Search, Filter, XCircle, User, Tag, Archive } from 'lucide-react';
+
 import { useAuth } from '../hooks/useAuth';
 import OpportunityHistoryTable from '../components/Pipeline/OpportunityHistoryTable';
 import Notification from '../components/Modal/Notification';
 import ProposalTab from '../components/Proposal/ProposalTab';
+import ActivitiesTab from '../components/Activity/ActivitiesTab';
 
 const PAGE_SIZE = 10;
 
@@ -250,7 +252,8 @@ const OpportunitiesHistoryPage: React.FC = () => {
     }
 
     const tabs = [
-      { label: 'Datos de Oportunidad', content: <OpportunityForm initialData={editingOpportunity} onSubmit={handleUpdate} onCancel={() => setIsFormModalOpen(false)} /> },
+      { label: 'Datos', content: <OpportunityForm initialData={editingOpportunity} onSubmit={handleUpdate} onCancel={() => setIsFormModalOpen(false)} /> },
+      { label: 'Actividades', content: <ActivitiesTab opportunityId={editingOpportunity.id} /> },
       
       { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
       { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> },

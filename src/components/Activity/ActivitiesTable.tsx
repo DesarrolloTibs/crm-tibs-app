@@ -25,7 +25,7 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, isAdmi
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Oportunidad</th>
-                        {isAdmin && <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>}
+                        <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,23 +37,21 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, isAdmi
                                 <td className="p-4 text-gray-600">{new Date(activity.date).toLocaleString()}</td>
                                 <td className="p-4 text-gray-600">{activity.user?.username}</td>
                                 <td className="p-4 text-gray-600">{activity.opportunity?.nombre_proyecto || 'N/A'}</td>
-                                {isAdmin && (
-                                    <td className="p-4 rounded-r-lg text-right">
-                                        <div className="flex space-x-1 justify-end">
-                                            <button onClick={() => onEdit(activity)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full" title="Editar">
-                                                <Edit size={18} />
-                                            </button>
-                                            <button onClick={() => onDelete(activity)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full" title="Eliminar">
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                )}
+                                <td className="p-4 rounded-r-lg text-right">
+                                    <div className="flex space-x-1 justify-end">
+                                        <button onClick={() => onEdit(activity)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full" title="Editar">
+                                            <Edit size={18} />
+                                        </button>
+                                        <button onClick={() => onDelete(activity)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full" title="Eliminar">
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={isAdmin ? 6 : 5} className="text-center py-16">
+                            <td colSpan={6} className="text-center py-16">
                                 <div className="flex flex-col items-center text-gray-500">
                                     <Inbox size={48} className="mb-4" />
                                     <h3 className="text-xl font-semibold">No se encontraron actividades</h3>

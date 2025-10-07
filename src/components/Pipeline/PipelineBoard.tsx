@@ -17,9 +17,11 @@ import Tabs from '../Tabs/Tabs';
 import RemindersTab from '../Reminder/RemindersTab';
 import InteractionsTab from '../Interaction/InteractionsTab';
 
+
 import { useAuth } from '../../hooks/useAuth';
 import ProposalTab from '../Proposal/ProposalTab';
 import Notification from '../Modal/Notification';
+import ActivitiesTab from '../Activity/ActivitiesTab';
 
 
 
@@ -347,6 +349,7 @@ const PipelinePage: React.FC = () => {
     // Si estamos editando, mostramos las pestañas
     const tabs = [
       { label: 'Datos', content: <OpportunityForm initialData={editingOpportunity} onSubmit={handleUpdate} onCancel={() => setIsFormModalOpen(false)} /> },
+      { label: 'Actividades', content: <ActivitiesTab opportunityId={editingOpportunity.id} /> },
     
       { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
       { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> },

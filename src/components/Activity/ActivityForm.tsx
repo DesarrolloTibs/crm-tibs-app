@@ -121,6 +121,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                             onChange={handleOpportunityChange}
                             placeholder="-- Seleccione una oportunidad --"
                             isClearable
+                            isDisabled={!!initialData?.opportunityId && !initialData?.id} // Deshabilita si es nueva actividad con ID de oportunidad
                             isSearchable
                             noOptionsMessage={() => 'No se encontraron oportunidades'}
                         />

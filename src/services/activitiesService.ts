@@ -22,3 +22,7 @@ export async function updateActivity(id: string, activity: Partial<Activity>): P
 export async function deleteActivity(id: string): Promise<void> {
     await axiosInstance.delete(`${ACTIVITIES.ACTIVITIES}/${id}`);
 }
+export async function getActivitiesByOpportunity(params?: { opportunityId?: string }): Promise<Activity[]> {
+    const response = await axiosInstance.get(ACTIVITIES.ACTIVITIES, { params });
+    return response.data;
+}
