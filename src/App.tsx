@@ -8,6 +8,7 @@ import UsersPage from './pages/UsersPage';
 import ProtectedRoute from './core/guards/ProtectedRoute';
 import Layout from './components/Layout/Layout'; // Importar el Layout
 import '../src/components/Sidebar/animations.css' // Importar los estilos globales
+import ActivitiesPage from './pages/ActivitiesPage';
 const App: React.FC = () => (
     <BrowserRouter>
         <Routes>
@@ -38,6 +39,16 @@ const App: React.FC = () => (
                     <ProtectedRoute>
                         <Layout>
                             <OpportunitiesHistoryPage />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/activities"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <ActivitiesPage />
                         </Layout>
                     </ProtectedRoute>
                 }

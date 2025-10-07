@@ -22,6 +22,10 @@ export const INTERACTIONS = {
 export const USERS = {
     USERS: urlBase + 'users',
 };
+
+export const ACTIVITIES = {
+    ACTIVITIES: urlBase + 'activities',
+};
 /*export const ENDPOINTS = {
     LOGIN: '/auth/login',
     CLIENTS: 'http://localhost:3090/clients',
