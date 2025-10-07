@@ -37,7 +37,7 @@ const Notification: React.FC<NotificationProps> = ({ type, title, message, onCon
   const { icon, bg } = iconMap[type];
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 transition-opacity flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 transition-opacity flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-2xl shadow-2xl transform transition-all max-w-sm w-full animate-fade-in-down">
         <div className="p-6 text-center">
           <div className={`mx-auto flex items-center justify-center h-20 w-20 rounded-full ${bg}`}>
