@@ -60,5 +60,6 @@ export const Licensing = {
   QLIK: 'Qlik',
   ALTERYX: 'Alteryx',
   KNIME: 'KNIME',
+  NO_APLICA: 'No Aplica',
 } as const;
 export type LicensingType = (typeof Licensing)[keyof typeof Licensing];

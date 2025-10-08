@@ -40,6 +40,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       linea_negocio: 'Datos',
       tipoCambio: 0,
       tipo_entrega: 'Proyecto',
+      licenciamiento: Licensing.NO_APLICA,
     }
   );
 
@@ -280,7 +281,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           <div>
             <label htmlFor="licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Licenciamiento</label>
             <select id="licenciamiento" name="licenciamiento" value={opportunity.licenciamiento} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-              <option value="">N/A</option>
               {Object.values(Licensing).map(l => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
