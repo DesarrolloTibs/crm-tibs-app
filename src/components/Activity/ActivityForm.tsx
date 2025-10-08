@@ -5,6 +5,7 @@ import Select, { type SingleValue } from 'react-select';
 import { getOpportunities } from '../../services/opportunitiesService';
 import type { Activity } from '../../core/models/Activity';
 import type { Opportunity } from '../../core/models/Opportunity';
+import { useAuth } from '../../hooks/useAuth';
 
 interface Props {
     initialData?: Partial<Activity>;
@@ -38,6 +39,7 @@ const formatDateTimeForInput = (isoString?: string) => {
 };
 
 const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
+    const { user, isAdmin } = useAuth();
     const [form, setForm] = useState<Partial<Activity>>({
         activity: '',
         activityType: 'Correo',
@@ -50,18 +52,21 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     useEffect(() => {
         const fetchOpportunities = async () => {
             try {
-                const data = await getOpportunities();
-                // Filtramos para mostrar solo oportunidades activas
-               /* const activeOpportunities = data.filter(op =>
-                    op.etapa !== 'Ganada' && op.etapa !== 'Perdida' && op.etapa !== 'Cancelada'
-                );*/
-                setOpportunities(data);
+                const allOpportunities = await getOpportunities();
+                let userOpportunities = allOpportunities;
+
+                // Si el usuario no es admin, filtramos por su ID
+                if (!isAdmin && user?.sub) {
+                    userOpportunities = allOpportunities.filter(op => op.ejecutivo_id === user.sub);
+                }
+
+                setOpportunities(userOpportunities);
             } catch (error) {
                 console.error('Failed to fetch opportunities', error);
             }
         };
         fetchOpportunities();
-    }, []);
+    }, [isAdmin, user]);
 
     const opportunityOptions: SelectOption[] = useMemo(() =>
         opportunities.map(op => ({

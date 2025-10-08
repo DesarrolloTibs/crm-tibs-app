@@ -249,7 +249,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               <label htmlFor="tipoCambio" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Cambio (USD a MXN)</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                <input id="tipoCambio" type="text" name="tipoCambio" value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="17.50" required={opportunity.moneda === 'USD'} className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
+                <input id="tipoCambio" type="text" name="tipoCambio" value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" required={opportunity.moneda === 'USD'} className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
               </div>
             </div>
           )}

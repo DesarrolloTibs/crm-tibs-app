@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Opportunity, OpportunityStageType} from '../../core/models/Opportunity';
+import { useAuth } from '../../hooks/useAuth';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Edit, Trash2, Building2, Archive, ArchiveRestore, MoreVertical } from 'lucide-react';
@@ -9,7 +10,6 @@ interface Props {
   onEdit: (opportunity: Opportunity) => void;
   onDelete: (opportunity: Opportunity) => void;
   onArchive: (opportunity: Opportunity) => void;
-  isAdmin: boolean;
 }
 
 const stageProgress: Record<OpportunityStageType, { percent: number; color: string }> = {
@@ -60,9 +60,12 @@ const Avatar: React.FC<{ username?: string; profileImageUrl?: string }> = ({ use
   );
 };
 
-const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArchive, isAdmin }) => {
+const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArchive }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { isAdmin, user: currentUser } = useAuth();
+
+  const isOwner = currentUser?.sub === opportunity.ejecutivo_id;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -75,13 +78,17 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: opportunity.id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: opportunity.id,
+    disabled: !(isAdmin || isOwner), // Deshabilita el drag si no es admin o dueño
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
+  const canDrag = isAdmin || isOwner;
   const progress = stageProgress[opportunity.etapa] || { percent: 0, color: 'bg-gray-400' };
   const tagColor = businessLineColors[opportunity.linea_negocio] || 'bg-gray-100 text-gray-800';
 
@@ -89,29 +96,33 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white m-2 p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative group w-[250px] h-[120px] touch-none"
+      className={`bg-white m-2 p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative group w-[250px] h-[120px] touch-none ${!canDrag ? 'cursor-not-allowed' : ''}`}
       {...attributes} // Apply accessibility attributes to the main container
     >
       {/* Action buttons are outside the draggable area */}
       <div className="absolute top-2 right-2 z-10" ref={menuRef}>
-        <button
-          className="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-haspopup="true"
-          aria-expanded={isMenuOpen}
-        >
-          <MoreVertical size={16} />
-        </button>
+        {(isAdmin || isOwner) && (
+          <button
+            className="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-haspopup="true"
+            aria-expanded={isMenuOpen}
+          >
+            <MoreVertical size={16} />
+          </button>
+        )}
         {isMenuOpen && (
           <div className="absolute top-0 right-full mr-2 flex items-center space-x-1 bg-white p-1 rounded-full shadow-lg border border-gray-100">
-            <button
-              className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full cursor-pointer"
-              onClick={() => { onEdit(opportunity); setIsMenuOpen(false); }}
-              title="Editar"
-            >
-              <Edit size={16} />
-            </button>
-            {isAdmin && (
+            {(isAdmin || isOwner) && (
+              <button
+                className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full cursor-pointer"
+                onClick={() => { onEdit(opportunity); setIsMenuOpen(false); }}
+                title="Editar"
+              >
+                <Edit size={16} />
+              </button>
+            )}
+            {(isAdmin || isOwner) && (
               <button
                 className="p-1.5 text-gray-500 hover:text-yellow-600 hover:bg-yellow-100 rounded-full cursor-pointer"
                 onClick={() => { onArchive(opportunity); setIsMenuOpen(false); }}
@@ -134,13 +145,13 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       </div>
       
       {/* This div is the draggable area */}
-      <div {...listeners} className="cursor-grab flex-grow flex flex-col justify-between">
+      <div {...listeners} className={`${canDrag ? 'cursor-grab' : 'cursor-default'} flex-grow flex flex-col justify-between`}>
         <div>
         <h4 className="font-bold text-gray-800 text-sm pr-4 leading-snug truncate" title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
         <div className="flex justify-between items-start mt-2">
           <p className="flex items-center gap-2 text-gray-500 text-xs truncate pt-1" title={opportunity.empresa}><Building2 size={14} /> {opportunity.empresa}</p>
           <div className="text-right flex-shrink-0">
-            <span className="text-lg font-bold text-blue-700">${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="text-lg font-bold text-blue-700">${Number(opportunity.monto_total).toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
             <span className="ml-1 text-xs text-blue-700 font-bold">{opportunity.moneda}</span>
           </div>
         </div>

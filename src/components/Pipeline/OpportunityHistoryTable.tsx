@@ -26,7 +26,7 @@ const stageColors: Record<OpportunityStageType, { bg: string; text: string }> = 
 
 const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDelete, onArchive, isAdmin, currentPage, totalPages, onPageChange }) => {
   const formatNumber = (amount: number) => {
-    return new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+    return new Intl.NumberFormat('es-MX', { minimumFractionDigits: 0}).format(amount);
   };
 
   return (
@@ -80,20 +80,20 @@ const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDel
                   <td className="p-4 rounded-r-lg">
                     <div className="flex space-x-1 justify-end">
                       <button
-                        onClick={() => onEdit(opp)}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full"
-                        title="Editar"
+                        onClick={() => onArchive(opp)}
+                        className="p-2 text-gray-500 hover:text-yellow-600 hover:bg-yellow-100 rounded-full"
+                        title={opp.archived ? 'Desarchivar' : 'Archivar'}
                       >
-                        <Edit size={18} />
+                        {opp.archived ? <ArchiveRestore size={18} /> : <Archive size={18} />}
                       </button>
                       {isAdmin && (
                         <>
                           <button
-                            onClick={() => onArchive(opp)}
-                            className="p-2 text-gray-500 hover:text-yellow-600 hover:bg-yellow-100 rounded-full"
-                            title={opp.archived ? 'Desarchivar' : 'Archivar'}
+                            onClick={() => onEdit(opp)}
+                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full"
+                            title="Editar"
                           >
-                            {opp.archived ? <ArchiveRestore size={18} /> : <Archive size={18} />}
+                            <Edit size={18} />
                           </button>
                           <button
                             onClick={() => onDelete(opp)}

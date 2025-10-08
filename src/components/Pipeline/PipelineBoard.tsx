@@ -18,7 +18,7 @@ import RemindersTab from '../Reminder/RemindersTab';
 import InteractionsTab from '../Interaction/InteractionsTab';
 
 
-import { useAuth } from '../../hooks/useAuth';
+
 import ProposalTab from '../Proposal/ProposalTab';
 import Notification from '../Modal/Notification';
 import ActivitiesTab from '../Activity/ActivitiesTab';
@@ -37,7 +37,7 @@ const STAGES: OpportunityStageType[] = [
 ];
 
 const PipelinePage: React.FC = () => {
-  const { isAdmin } = useAuth();
+
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
@@ -504,7 +504,6 @@ const PipelinePage: React.FC = () => {
                 onEdit={openEditModal}
                 onDelete={openDeleteConfirm}
                 onArchive={handleArchive}
-                isAdmin={isAdmin}
               />
             ))}
           </div>
@@ -515,7 +514,6 @@ const PipelinePage: React.FC = () => {
                 onEdit={() => {}} // No-op durante el drag
                 onDelete={() => {}} // No-op durante el drag
                 onArchive={() => {}} // No-op durante el drag
-                isAdmin={isAdmin}
               />
             ) : null}
           </DragOverlay>

@@ -14,7 +14,7 @@ interface Props {
     onPageChange: (page: number) => void;
 }
 
-const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, isAdmin, currentPage, totalPages, onPageChange }) => {
+const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, currentPage, totalPages, onPageChange }) => {
     return (
         <div className="overflow-x-auto">
             <table className="min-w-full border-separate" style={{ borderSpacing: '0 0.75rem' }}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import Navbar from '../Navbar/Navbar';
 
@@ -7,22 +7,8 @@ interface Props {
 }
 
 const Layout: React.FC<Props> = ({ children }) => {
-    // Hook para manejar el estado del sidebar y su comportamiento en diferentes tamaños de pantalla
-    const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
-
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth <= 1024) {
-                setSidebarOpen(false);
-            } else {
-                setSidebarOpen(true);
-            }
-        };
-
-        window.addEventListener('resize', handleResize);
-        // Limpieza del event listener al desmontar el componente
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    // El sidebar siempre inicia cerrado
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
 
     const toggleSidebar = () => {
         setSidebarOpen(!isSidebarOpen);

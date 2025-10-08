@@ -10,7 +10,6 @@ interface Props {
   onEdit: (opportunity: Opportunity) => void;
   onDelete: (opportunity: Opportunity) => void;
   onArchive: (opportunity: Opportunity) => void;
-  isAdmin: boolean;
 }
 
 const stageColors: Record<OpportunityStageType, string> = {
@@ -24,7 +23,7 @@ const stageColors: Record<OpportunityStageType, string> = {
   'Cancelada': 'border-red-500',
 };
 
-const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelete, onArchive, isAdmin }) => {
+const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelete, onArchive }) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
 
   const count = opportunities.length;
@@ -59,7 +58,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
         <h3 className={`font-bold text-lg text-gray-800 border-l-4 pl-3 mb-3 ${borderColor}`}>{stage}</h3>
         <div className="flex justify-between text-sm text-gray-600">
           <span>{count} {count === 1 ? 'Oportunidad' : 'Oportunidades'}</span>
-          <span className="font-semibold">${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN</span>
+          <span className="font-semibold">${total.toLocaleString('es-MX', { maximumFractionDigits: 0 })} MXN</span>
         </div>
       </div>
       <SortableContext items={opportunities.map(o => o.id)} >
@@ -71,7 +70,6 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
               onEdit={onEdit}
               onDelete={onDelete}
               onArchive={onArchive}
-              isAdmin={isAdmin}
             />
           ))}
         </div>
