@@ -55,7 +55,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
   return (
     <div ref={setNodeRef} className={columnStyles}>
       {/* Header with color bar */}
-      <div className="p-4 border-b border-[#6f757d] bg-[#f9f9f9]">
+      <div className="p-4 border-b-[1px] border-[#d6d6d6]  bg-[#f9f9f9]">
         <h3 className="font-bold text-lg text-gray-800 border-l-4 pl-3 mb-3" style={{ borderColor }}>{stage}</h3>
         <div className="flex justify-between text-sm text-[#6f757d]">
           <span>{count} {count === 1 ? 'Oportunidad' : 'Oportunidades'}</span>
