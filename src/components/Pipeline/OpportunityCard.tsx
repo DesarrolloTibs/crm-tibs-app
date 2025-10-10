@@ -26,7 +26,7 @@ const stageProgress: Record<OpportunityStageType, { percent: number; color: stri
 const businessLineColors: Record<string, string> = {
   'Datos': '#dbed74 #707a10',
   'Desarrollo': '#dcaeed #371450',
-  'Cloud': '#80d3f4 #2f5367',
+  'RH': '#80d3f4 #2f5367',
   'IA': '#c8e7df #1b6b65',
 };
 
