@@ -13,21 +13,21 @@ interface Props {
 }
 
 const stageProgress: Record<OpportunityStageType, { percent: number; color: string }> = {
-  'Nuevo': { percent: 0, color: 'bg-gray-400' },
-  'Descubrimiento': { percent: 20, color: 'bg-blue-400' },
-  'Estimación': { percent: 40, color: 'bg-blue-500' },
-  'Propuesta': { percent: 60, color: 'bg-indigo-500' },
-  'Negociación': { percent: 80, color: 'bg-purple-500' },
-  'Ganada': { percent: 100, color: 'bg-green-500' },
-  'Perdida': { percent: 100, color: 'bg-red-500' },
-  'Cancelada': { percent: 100, color: 'bg-red-500' },
+  'Nuevo': { percent: 0, color: '#c0c9d8' },
+  'Descubrimiento': { percent: 20, color: '#80d3f4' },
+  'Estimación': { percent: 40, color: '#25b4ad' },
+  'Propuesta': { percent: 60, color: '#3174b8' },
+  'Negociación': { percent: 80, color: '#a7d05e' },
+  'Ganada': { percent: 100, color: '#309b47' },
+  'Perdida': { percent: 100, color: '#a92c56' },
+  'Cancelada': { percent: 100, color: '#f68547' },
 };
 
 const businessLineColors: Record<string, string> = {
-  'Datos': 'bg-cyan-100 text-cyan-800',
-  'Desarrollo': 'bg-amber-100 text-amber-800',
-  'Cloud': 'bg-sky-100 text-sky-800',
-  'IA': 'bg-violet-100 text-violet-800',
+  'Datos': '#dbed74 #707a10',
+  'Desarrollo': '#dcaeed #371450',
+  'Cloud': '#80d3f4 #2f5367',
+  'IA': '#c8e7df #1b6b65',
 };
 
 const getInitials = (name = 'N A') => {
@@ -90,13 +90,18 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
 
   const canDrag = isAdmin || isOwner;
   const progress = stageProgress[opportunity.etapa] || { percent: 0, color: 'bg-gray-400' };
-  const tagColor = businessLineColors[opportunity.linea_negocio] || 'bg-gray-100 text-gray-800';
+  const tagColorString = businessLineColors[opportunity.linea_negocio] || '#f3f4f6 #1f2937'; // Default to gray-100 and gray-800
+  const [tagBgColor, tagTextColor] = tagColorString.split(' ');
+  const tagStyle = {
+    backgroundColor: tagBgColor,
+    color: tagTextColor,
+  };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white m-2 p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative group w-[250px] h-[120px] touch-none ${!canDrag ? 'cursor-not-allowed' : ''}`}
+      className={`bg-white m-2 p-2 pt-2 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative group w-[250px] h-[135px] touch-none ${!canDrag ? 'cursor-not-allowed' : ''}`}
       {...attributes} // Apply accessibility attributes to the main container
     >
       {/* Action buttons are outside the draggable area */}
@@ -147,26 +152,26 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       {/* This div is the draggable area */}
       <div {...listeners} className={`${canDrag ? 'cursor-grab' : 'cursor-default'} flex-grow flex flex-col justify-between`}>
         <div>
-        <h4 className="font-bold text-gray-800 text-sm pr-4 leading-snug truncate" title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
-        <div className="flex justify-between items-start mt-2">
-          <p className="flex items-center gap-2 text-gray-500 text-xs truncate pt-1" title={opportunity.empresa}><Building2 size={14} /> {opportunity.empresa}</p>
-          <div className="text-right flex-shrink-0">
-            <span className="text-lg font-bold text-blue-700">${Number(opportunity.monto_total).toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
-            <span className="ml-1 text-xs text-blue-700 font-bold">{opportunity.moneda}</span>
-          </div>
+        <h4 className="font-bold text-[#000000] text-sm top-0 leading-snug truncate" title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
+        <p className="flex items-center gap-2 ext-[#000000] text-xs truncate pt-2" title={opportunity.empresa}><Building2 size={14} /> {opportunity.empresa}</p>
+        <div className="text-right flex-shrink-0 mt-0">
+          <span className="text-lg font-bold text-[#2f5367]">${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0})}</span>
+          <span className="ml-1 text-xs text-[#2f5367] font-bold">{opportunity.moneda}</span>
         </div>
-        <div className="flex items-center justify-between mt-1">
-          <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${tagColor}`}>{opportunity.linea_negocio}</span>
+        {/* Progress Bar */}
+        <div className="bg-gray-200 rounded-full h-1 w-full mt-1 relative">
+          <div className="h-1 rounded-full transition-all duration-300" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div>
+          <div className="h-1 rounded-full transition-all duration-300 blur opacity-60 absolute top-0" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div>
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <span className="px-2 py-0.5 text-xs font-semibold rounded-full" style={tagStyle}>{opportunity.linea_negocio}</span>
           <div className="flex items-center gap-2 text-gray-600">
             <Avatar username={opportunity.ejecutivo?.username} profileImageUrl={opportunity.ejecutivo?.profileImageUrl} />
           </div>
         </div>
       </div>
       
-        {/* Progress Bar */}
-         <div className="bg-gray-200 rounded-full h-1 w-full">
-          <div className={`${progress.color} h-1 rounded-full transition-all duration-300`} style={{ width: `${progress.percent}%` }}></div>
-        </div> 
+     
         </div>
     </div>
   );

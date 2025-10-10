@@ -15,7 +15,7 @@ const Layout: React.FC<Props> = ({ children }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 font-sans">
+        <div className="min-h-screen font-sans">
             <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
             {/* Overlay para pantallas pequeñas */}

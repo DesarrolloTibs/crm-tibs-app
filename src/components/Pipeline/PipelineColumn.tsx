@@ -13,15 +13,16 @@ interface Props {
 }
 
 const stageColors: Record<OpportunityStageType, string> = {
-  'Nuevo': 'border-gray-400',
-  'Descubrimiento': 'border-blue-400',
-  'Estimación': 'border-blue-500',
-  'Propuesta': 'border-indigo-500',
-  'Negociación': 'border-purple-500',
-  'Ganada': 'border-green-500',
-  'Perdida': 'border-red-500',
-  'Cancelada': 'border-red-500',
+  'Nuevo': '#c0c9d8',
+  'Descubrimiento': '#80d3f4',
+  'Estimación': '#25b4ad',
+  'Propuesta': '#3174b8',
+  'Negociación': '#a7d05e',
+  'Ganada': '#309b47',
+  'Perdida': '#a92c56',
+  'Cancelada': '#f68547',
 };
+
 
 const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelete, onArchive }) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
@@ -37,7 +38,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
     }
     return acc + amount; // Si es MXN, se suma directamente.
   }, 0);
-  const borderColor = stageColors[stage] || 'border-gray-400';
+  const borderColor = stageColors[stage] || '#9ca3af'; // Fallback to gray-400
 
   const columnStyles = `
     flex flex-col
@@ -54,15 +55,15 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
   return (
     <div ref={setNodeRef} className={columnStyles}>
       {/* Header with color bar */}
-      <div className="p-4 border-b border-gray-200">
-        <h3 className={`font-bold text-lg text-gray-800 border-l-4 pl-3 mb-3 ${borderColor}`}>{stage}</h3>
-        <div className="flex justify-between text-sm text-gray-600">
+      <div className="p-4 border-b border-[#6f757d] bg-[#f9f9f9]">
+        <h3 className="font-bold text-lg text-gray-800 border-l-4 pl-3 mb-3" style={{ borderColor }}>{stage}</h3>
+        <div className="flex justify-between text-sm text-[#6f757d]">
           <span>{count} {count === 1 ? 'Oportunidad' : 'Oportunidades'}</span>
-          <span className="font-semibold">${total.toLocaleString('es-MX', { maximumFractionDigits: 0 })} MXN</span>
+          <span className="font-bold text-[#6f757d]">${total.toLocaleString('es-MX', { maximumFractionDigits: 0 })} MXN</span>
         </div>
       </div>
       <SortableContext items={opportunities.map(o => o.id)} >
-        <div className="flex-grow p-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+        <div className="flex-grow p-2 overflow-y-auto bg-[#fafafa]" style={{ maxHeight: 'calc(100vh - 120px)' }}>
           {opportunities.map(opportunity => (
             <OpportunityCard 
               key={opportunity.id} 
