@@ -55,13 +55,17 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
   return (
     <div ref={setNodeRef} className={columnStyles}>
       {/* Header with color bar */}
-      <div className="p-4 border-b-[1px] border-[#d6d6d6]  bg-[#f9f9f9]">
+      <div className="p-4 bg-[#f9f9f9]">
         <h3 className="font-bold text-lg text-gray-800 border-l-4 pl-3 mb-3" style={{ borderColor }}>{stage}</h3>
         <div className="flex justify-between text-sm text-[#6f757d]">
           <span>{count} {count === 1 ? 'Oportunidad' : 'Oportunidades'}</span>
           <span className="font-bold text-[#6f757d]">${total.toLocaleString('es-MX', { maximumFractionDigits: 0 })} MXN</span>
         </div>
       </div>
+
+      {/* Separator Line */}
+      <div className="h-[1px] bg-[#d6d6d6] w-[90%] mx-auto"></div>
+
       <SortableContext items={opportunities.map(o => o.id)} >
         <div className="flex-grow p-2 overflow-y-auto bg-[#fafafa]" style={{ maxHeight: 'calc(100vh - 120px)' }}>
           {opportunities.map(opportunity => (
