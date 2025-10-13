@@ -56,7 +56,8 @@ const Avatar: React.FC<{ opportunity: Opportunity }> = ({ opportunity }) => {
           alt={ejecutivo?.username || 'Avatar'}
           className="w-7 h-7 rounded-full object-cover cursor-pointer"
           title={ejecutivo?.username || 'No asignado'}
-          onClick={() => setShowPopover(!showPopover)}
+          onMouseEnter={() => setShowPopover(true)}
+          onMouseLeave={() => setShowPopover(false)}
         />
         <Popover targetRef={avatarRef} show={showPopover} onClose={() => setShowPopover(false)} className="w-max max-w-xs">
           {ejecutivo && (
@@ -72,7 +73,11 @@ const Avatar: React.FC<{ opportunity: Opportunity }> = ({ opportunity }) => {
 
   return (
     <>
-      <div ref={avatarRef as React.RefObject<HTMLDivElement>} className="w-7 h-7 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold cursor-pointer" title={ejecutivo?.username || 'No asignado'} onClick={() => setShowPopover(!showPopover)}>
+      <div 
+        ref={avatarRef as React.RefObject<HTMLDivElement>} 
+        className="w-7 h-7 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold cursor-pointer" 
+        title={ejecutivo?.username || 'No asignado'} 
+        onMouseEnter={() => setShowPopover(true)} onMouseLeave={() => setShowPopover(false)}>
         {getInitials(ejecutivo?.username)}
       </div>
       <Popover targetRef={avatarRef} show={showPopover} onClose={() => setShowPopover(false)} className="w-max max-w-xs">
