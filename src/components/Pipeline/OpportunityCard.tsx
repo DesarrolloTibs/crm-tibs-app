@@ -196,7 +196,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
         </div>
         <div className="mt-0">
           <div className="bg-gray-200 rounded-full h-1 w-full relative"><div className="h-1 rounded-full transition-all duration-300" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div><div className="h-1 rounded-full transition-all duration-300 blur opacity-60 absolute top-0" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div></div>
-          <span className="px-2 py-0.5 text-xs font-semibold rounded-full mt-1.5 inline-block" style={tagStyle}>{opportunity.linea_negocio}</span>
+          <span className="px-2 py-0.5 text-xs font-semibold rounded-full mt-2 inline-block" style={tagStyle}>{opportunity.linea_negocio}</span>
         </div>
       </div>
       
