@@ -3,7 +3,9 @@ import type { Opportunity, OpportunityStageType} from '../../core/models/Opportu
 import { useAuth } from '../../hooks/useAuth';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Edit, Trash2, Building2, Archive, ArchiveRestore, MoreVertical } from 'lucide-react';
+import { Edit, Trash2, Building2, Archive, ArchiveRestore, MoreVertical, Mail, User } from 'lucide-react';
+import Popover from './Popover';
+
 
 interface Props {
   opportunity: Opportunity;
@@ -38,25 +40,50 @@ const getInitials = (name = 'N A') => {
   return name.substring(0, 2).toUpperCase();
 };
 
-const Avatar: React.FC<{ username?: string; profileImageUrl?: string }> = ({ username, profileImageUrl }) => {
+const Avatar: React.FC<{ opportunity: Opportunity }> = ({ opportunity }) => {
+  const [showPopover, setShowPopover] = useState(false);
+  const avatarRef = useRef<HTMLDivElement | HTMLImageElement | null>(null);
   const baseUrl = import.meta.env.VITE_BASE_URL;
-  const imageUrl = profileImageUrl ? `${baseUrl}${profileImageUrl}` : null;
+  const { ejecutivo } = opportunity;
+  const imageUrl = ejecutivo?.profileImageUrl ? `${baseUrl}${ejecutivo.profileImageUrl}` : null;
 
   if (imageUrl) {
     return (
-      <img
-        src={imageUrl}
-        alt={username || 'Avatar'}
-        className="w-7 h-7 rounded-full object-cover"
-        title={username || 'No asignado'}
-      />
+      <>
+        <img
+          ref={avatarRef as React.RefObject<HTMLImageElement>}
+          src={imageUrl}
+          alt={ejecutivo?.username || 'Avatar'}
+          className="w-7 h-7 rounded-full object-cover cursor-pointer"
+          title={ejecutivo?.username || 'No asignado'}
+          onClick={() => setShowPopover(!showPopover)}
+        />
+        <Popover targetRef={avatarRef} show={showPopover} onClose={() => setShowPopover(false)} className="w-max max-w-xs">
+          {ejecutivo && (
+            <>
+              <p className="font-bold text-sm text-gray-800 flex items-center gap-2"><User size={14} /> {ejecutivo.username}</p>
+              <p className="text-xs text-gray-600 flex items-center gap-2 mt-1"><Mail size={14} /> {ejecutivo.email}</p>
+            </>
+          )}
+        </Popover>
+      </>
     );
   }
 
   return (
-    <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold" title={username || 'No asignado'}>
-      {getInitials(username)}
-    </div>
+    <>
+      <div ref={avatarRef as React.RefObject<HTMLDivElement>} className="w-7 h-7 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold cursor-pointer" title={ejecutivo?.username || 'No asignado'} onClick={() => setShowPopover(!showPopover)}>
+        {getInitials(ejecutivo?.username)}
+      </div>
+      <Popover targetRef={avatarRef} show={showPopover} onClose={() => setShowPopover(false)} className="w-max max-w-xs">
+        {ejecutivo && (
+          <>
+            <p className="font-bold text-sm text-gray-800 flex items-center gap-2"><User size={14} /> {ejecutivo.username}</p>
+            <p className="text-xs text-gray-600 flex items-center gap-2 mt-1"><Mail size={14} /> {ejecutivo.email}</p>
+          </>
+        )}
+      </Popover>
+    </>
   );
 };
 
@@ -102,7 +129,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       ref={setNodeRef}
       style={style}
       className={`bg-white m-2 p-2 pt-2 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative group w-[250px] h-[135px] touch-none ${!canDrag ? 'cursor-not-allowed' : ''}`}
-      {...attributes} // Apply accessibility attributes to the main container
+      {...attributes}
     >
       {/* Action buttons are outside the draggable area */}
       <div className="absolute top-2 right-2 z-10" ref={menuRef}>
@@ -149,30 +176,25 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
         )}
       </div>
       
-      {/* This div is the draggable area */}
-      <div {...listeners} className={`${canDrag ? 'cursor-grab' : 'cursor-default'} flex-grow flex flex-col justify-between`}>
-        <div>
-        <h4 className="font-bold text-[#000000] text-sm top-0 leading-snug truncate" title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
-        <p className="flex items-center gap-2 font-semibold italic text-[#579bd3] text-xs truncate pt-2" title={opportunity.empresa}><Building2 size={14} /> {opportunity.empresa}</p>
+      {/* Avatar is outside the draggable area */}
+      <div className="absolute bottom-1 right-2 z-10">
+        <Avatar opportunity={opportunity} />
+      </div>
+
+      {/* This div is the main content and the draggable handle */}
+      <div {...listeners} className={`${canDrag ? 'cursor-grab' : 'cursor-default'} flex-grow flex flex-col justify-between h-full`}>
+        <h4 className="font-bold text-[#000000] text-sm top-0 leading-snug truncate pr-8" title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
+        <p className="flex items-center gap-2 font-semibold italic text-[#579bd3] text-xs truncate " title={opportunity.empresa}><Building2 size={14} /> {opportunity.empresa}</p>
         <div className="text-right flex-shrink-0 mt-0">
-          <span className="text-lg font-bold text-[#2f5367]">${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0})}</span>
+          <span className="text-lg font-bold text-[#2f5367]">${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
           <span className="ml-1 text-xs text-[#2f5367] font-bold">{opportunity.moneda}</span>
         </div>
-        {/* Progress Bar */}
-        <div className="bg-gray-200 rounded-full h-1 w-full mt-1 relative">
-          <div className="h-1 rounded-full transition-all duration-300" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div>
-          <div className="h-1 rounded-full transition-all duration-300 blur opacity-60 absolute top-0" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div>
-        </div>
-        <div className="flex items-center justify-between mt-2">
-          <span className="px-2 py-0.5 text-xs font-semibold rounded-full" style={tagStyle}>{opportunity.linea_negocio}</span>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Avatar username={opportunity.ejecutivo?.username} profileImageUrl={opportunity.ejecutivo?.profileImageUrl} />
-          </div>
+        <div className="mt-2">
+          <div className="bg-gray-200 rounded-full h-1 w-full mt-1 relative"><div className="h-1 rounded-full transition-all duration-300" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div><div className="h-1 rounded-full transition-all duration-300 blur opacity-60 absolute top-0" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div></div>
+          <span className="px-2 py-0.5 text-xs font-semibold rounded-full mt-2 inline-block" style={tagStyle}>{opportunity.linea_negocio}</span>
         </div>
       </div>
       
-     
-        </div>
     </div>
   );
 };
