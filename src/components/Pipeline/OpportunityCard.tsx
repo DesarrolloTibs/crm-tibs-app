@@ -133,7 +133,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white m-2 p-2 pt-2 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative group w-[250px] h-[135px] touch-none ${!canDrag ? 'cursor-not-allowed' : ''}`}
+      className={`bg-white m-2 p-2 pt-2 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative group w-[250px] h-[120px] touch-none ${!canDrag ? 'cursor-not-allowed' : ''}`}
       {...attributes}
     >
       {/* Action buttons are outside the draggable area */}
@@ -182,21 +182,21 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       </div>
       
       {/* Avatar is outside the draggable area */}
-      <div className="absolute bottom-2 right-2 z-10">
+      <div className="absolute bottom-1.5 right-2 z-10">
         <Avatar opportunity={opportunity} />
       </div>
 
       {/* This div is the main content and the draggable handle */}
       <div {...listeners} className={`${canDrag ? 'cursor-grab' : 'cursor-default'} flex-grow flex flex-col h-full`}>
         <h4 className="font-bold text-[#000000] text-sm top-0 leading-snug truncate pr-8" title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
-        <p className="flex items-center gap-2 font-semibold italic text-[#579bd3] text-xs truncate " title={opportunity.empresa}><Building2 size={14} /> {opportunity.empresa}</p>
+        <p className="flex items-center gap-2 font-semibold italic text-[#579bd3] text-xs truncate pt-1" title={opportunity.empresa}><Building2 size={14} /> {opportunity.empresa}</p>
         <div className="text-right flex-shrink-0 mt-0">
           <span className="text-lg font-bold text-[#2f5367]">${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
           <span className="ml-1 text-xs text-[#2f5367] font-bold">{opportunity.moneda}</span>
         </div>
-        <div className="mt-3">
-          <div className="bg-gray-200 rounded-full h-1 w-full mt-1 relative"><div className="h-1 rounded-full transition-all duration-300" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div><div className="h-1 rounded-full transition-all duration-300 blur opacity-60 absolute top-0" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div></div>
-          <span className="px-2 py-0.5 text-xs font-semibold rounded-full mt-2 inline-block" style={tagStyle}>{opportunity.linea_negocio}</span>
+        <div className="mt-0">
+          <div className="bg-gray-200 rounded-full h-1 w-full relative"><div className="h-1 rounded-full transition-all duration-300" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div><div className="h-1 rounded-full transition-all duration-300 blur opacity-60 absolute top-0" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div></div>
+          <span className="px-2 py-0.5 text-xs font-semibold rounded-full mt-1.5 inline-block" style={tagStyle}>{opportunity.linea_negocio}</span>
         </div>
       </div>
       
