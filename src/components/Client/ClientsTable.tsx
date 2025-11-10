@@ -24,6 +24,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Teléfono</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Puesto</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Ejecutivo</th>
             <th className="p-4"></th>
           </tr>
         </thead>
@@ -49,6 +50,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
                   </span>
                 </td>
                 <td className="p-4"><p className="text-gray-700">{client.puesto}</p></td>
+                <td className="p-4"><p className="text-gray-700">{client.ejecutivo?.username ?? 'N/A'}</p></td>
                 <td className="p-4 rounded-r-lg">
                   <div className="flex space-x-1 justify-end">
                     <button
@@ -73,7 +75,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
             ))
           ) : (
             <tr>
-              <td colSpan={7} className="text-center py-16">
+              <td colSpan={8} className="text-center py-16">
                 <div className="flex flex-col items-center text-gray-500">
                   <Inbox size={48} className="mb-4" />
                   <h3 className="text-xl font-semibold">No se encontraron clientes</h3>

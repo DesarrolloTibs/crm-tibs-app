@@ -1,3 +1,6 @@
+import type { User } from "./User";
+
+
 export interface Client {
     id?: string;
     nombre: string;
@@ -7,4 +10,6 @@ export interface Client {
     puesto: string;
     telefono: string;
     estatus?: boolean;
+    ejecutivo_id?: string;
+    ejecutivo?: User;
 }

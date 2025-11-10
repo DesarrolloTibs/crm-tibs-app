@@ -1,4 +1,5 @@
-export interface Opportunity extends BaseEntity {
+export interface Opportunity  {
+    id: string;
   nombre_proyecto: string;
   description?: string;
   cliente_id: string;

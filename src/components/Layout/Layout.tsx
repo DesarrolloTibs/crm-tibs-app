@@ -27,7 +27,7 @@ const Layout: React.FC<Props> = ({ children }) => {
             )}
 
             {/* Contenedor del Contenido Principal */}
-            <div className="relative flex flex-col flex-1">
+            <div className="relative flex flex-col flex-1 min-h-screen ">
                 {/* Navbar */}
                 <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
 

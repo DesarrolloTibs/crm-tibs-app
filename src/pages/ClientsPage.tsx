@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { getClients, createClient, updateClient, updateClientStatus } from '../services/clientsService';
+import { getActiveUsers } from '../services/usersService';
 import type { Client } from '../core/models/Client';
 import ClientForm from '../components/Client/ClientForm';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import ClientsTable from '../components/Client/ClientsTable';
-import { User, Filter, XCircle, Search, Building, Mail } from 'lucide-react';
+import { User, Filter, XCircle, Search, Building, Mail, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
+import Select from 'react-select';
 
 const PAGE_SIZE = 10;
 
@@ -22,6 +24,8 @@ const ClientsPage: React.FC = () => {
     const [filterNombre, setFilterNombre] = useState('');
     const [filterEmpresa, setFilterEmpresa] = useState('');
     const [filterCorreo, setFilterCorreo] = useState('');
+    const [filterEjecutivoId, setFilterEjecutivoId] = useState<string | null>(null);
+    const [executives, setExecutives] = useState<{ value: string; label: string }[]>([]);
 
     // Paginación
     const [currentPage, setCurrentPage] = useState(1);
@@ -56,12 +60,25 @@ const ClientsPage: React.FC = () => {
 
     useEffect(() => {
         fetchClients();
+        const fetchExecutives = async () => {
+            try {
+                const users = await getActiveUsers();
+                const executiveOptions = users
+                    .filter(user => user.id)
+                    .map(user => ({ value: user.id!, label: user.username }));
+                setExecutives(executiveOptions);
+            } catch (error) {
+                console.error("Error fetching executives:", error);
+            }
+        };
+        fetchExecutives();
     }, []);
 
     const handleCreate = async (client: Client) => {
         setLoading(true);
         try {
-            await createClient(client);
+            const { ejecutivo, ...clientData } = client as any;
+            await createClient(clientData);
             setModalOpen(false);
             setNotification({
                 show: true, type: 'success', title: '¡Éxito!', message: 'Cliente creado correctamente', onConfirm: hideNotification, onCancel: hideNotification
@@ -80,7 +97,7 @@ const ClientsPage: React.FC = () => {
         if (client.id) {
             setLoading(true);
             try {
-                const { id, ...updateData } = client;
+                const { id, ejecutivo, ...updateData } = client as any;
                 await updateClient(id, updateData);
                 setEditing(null);
                 setModalOpen(false);
@@ -140,7 +157,8 @@ const ClientsPage: React.FC = () => {
     const filteredClients = clients.filter(client =>
         client.nombre.toLowerCase().includes(filterNombre.toLowerCase()) &&
         client.empresa.toLowerCase().includes(filterEmpresa.toLowerCase()) &&
-        client.correo.toLowerCase().includes(filterCorreo.toLowerCase())
+        client.correo.toLowerCase().includes(filterCorreo.toLowerCase()) &&
+        (!filterEjecutivoId || client.ejecutivo_id === filterEjecutivoId)
     );
 
     // Paginación
@@ -157,12 +175,13 @@ const ClientsPage: React.FC = () => {
     // Reset page when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterNombre, filterEmpresa, filterCorreo]);
+    }, [filterNombre, filterEmpresa, filterCorreo, filterEjecutivoId]);
 
     const handleClearFilters = () => {
         setFilterNombre('');
         setFilterEmpresa('');
         setFilterCorreo('');
+        setFilterEjecutivoId(null);
     };
 
     return (
@@ -195,7 +214,7 @@ const ClientsPage: React.FC = () => {
                                 Limpiar filtros
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="relative">
                                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
                                     <Search size={20} />
@@ -230,6 +249,26 @@ const ClientsPage: React.FC = () => {
                                     value={filterCorreo}
                                     onChange={e => setFilterCorreo(e.target.value)}
                                     className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
+                                    <UserIcon size={20} />
+                                </span>
+                                <Select
+                                    inputId="ejecutivo-filter"
+                                    options={executives}
+                                    value={executives.find(option => option.value === filterEjecutivoId)}
+                                    onChange={option => setFilterEjecutivoId(option ? option.value : null)}
+                                    placeholder="Filtrar por ejecutivo"
+                                    isClearable
+                                    isSearchable
+                                    className="w-full"
+                                    styles={{
+                                        input: (base) => ({ ...base, paddingLeft: '28px' }),
+                                        placeholder: (base) => ({ ...base, paddingLeft: '28px' }),
+                                        singleValue: (base) => ({...base, paddingLeft: '28px'})
+                                    }}
                                 />
                             </div>
                         </div>
