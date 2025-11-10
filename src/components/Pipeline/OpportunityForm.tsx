@@ -32,6 +32,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const [opportunity, setOpportunity] = useState<Partial<Opportunity>>(
     initialData || {
       nombre_proyecto: '',
+      description: '',
       cliente_id: '', // Este campo necesitará un selector de clientes
       empresa: '',
       ejecutivo_id: '', // Este campo necesitará un selector de ejecutivos
@@ -227,6 +228,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         <div>
           <label htmlFor="nombre_proyecto" className="block text-sm font-medium text-gray-700 mb-1">Nombre del Proyecto</label>
           <input id="nombre_proyecto" name="nombre_proyecto" value={opportunity.nombre_proyecto} onChange={handleChange} placeholder="Ej: Implementación de CRM para Acme Corp" required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+        </div>
+
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <textarea id="description" name="description" value={opportunity.description} onChange={handleChange} placeholder="Añade una descripción detallada de la oportunidad..." rows={3} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

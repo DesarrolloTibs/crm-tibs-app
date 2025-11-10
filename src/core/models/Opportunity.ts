@@ -1,6 +1,6 @@
-export interface Opportunity {
-  id: string;
+export interface Opportunity extends BaseEntity {
   nombre_proyecto: string;
+  description?: string;
   cliente_id: string;
   cliente: any; // You might want to create a Client model as well
   empresa: string;
