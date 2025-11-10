@@ -165,7 +165,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const executiveOptions: SelectOption[] = useMemo(() => executives.map(exec => ({
     value: exec.id!,
-    label: `${exec.email} ${!exec.isActive ? '(Inactivo)' : ''}`, // Añadir (Inactivo) si el ejecutivo no está activo
+    label: `${exec.username} ${!exec.isActive ? '(Inactivo)' : ''}`, // Añadir (Inactivo) si el ejecutivo no está activo
     // Deshabilita la opción si el ejecutivo está inactivo, a menos que ya esté seleccionado en la oportunidad que se edita.
     isDisabled: !exec.isActive && exec.id !== initialData?.ejecutivo_id,
   })), [executives, initialData?.ejecutivo_id]); // Añadir initialData?.ejecutivo_id a las dependencias
