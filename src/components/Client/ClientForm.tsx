@@ -30,6 +30,7 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         onSubmit(form as Client);
     };
 
@@ -77,7 +78,7 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                 <button type="button" onClick={onCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
                     Cancelar
                 </button>
-                <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                <button type="button" onClick={() => onSubmit(form as Client)} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
                     Guardar
                 </button>
             </div>

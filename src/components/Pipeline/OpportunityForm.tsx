@@ -3,10 +3,11 @@ import type { Opportunity, CurrencyType } from '../../core/models/Opportunity';
 import { OpportunityStage, Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
 import Select, { type SingleValue } from 'react-select';
 import type { Client } from '../../core/models/Client';
-import { getClients } from '../../services/clientsService';
+import { getClients, createClient } from '../../services/clientsService';
 import { getUsers } from '../../services/usersService'; // Importar getUsers
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../core/models/User';
+import ClientForm from '../Client/ClientForm';
 
 
 interface Props {
@@ -27,6 +28,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const [clients, setClients] = useState<Client[]>([]);
   const [executives, setExecutives] = useState<User[]>([]);
   const [editingField, setEditingField] = useState<string | null>(null);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [opportunity, setOpportunity] = useState<Partial<Opportunity>>(
     initialData || {
       nombre_proyecto: '',
@@ -196,6 +198,25 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     onSubmit(finalOpportunity);
   };
 
+  const handleCreateClient = async (newClient: Client) => {
+    try {
+      const createdClient = await createClient(newClient);
+      // Añadir el nuevo cliente a la lista y seleccionarlo
+      setClients(prevClients => [...prevClients, createdClient]);
+      setOpportunity(prevOpp => ({
+        ...prevOpp,
+        cliente_id: createdClient.id,
+        empresa: createdClient.empresa,
+      }));
+      setIsClientModalOpen(false); // Cerrar el modal
+    } catch (error) {
+      console.error("Error creating client:", error);
+      // Aquí podrías mostrar una notificación de error al usuario
+      alert('Hubo un error al crear el cliente.');
+    }
+  };
+
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8 p-2">
       {/* <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Nueva'} Oportunidad</h2> */}
@@ -210,7 +231,12 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-700">Cliente</label>
+              <button type="button" onClick={() => setIsClientModalOpen(true)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                + Nuevo Cliente
+              </button>
+            </div>
             <Select inputId="cliente_id" name="cliente_id" options={clientOptions} value={selectedClientValue} onChange={handleClientChange} placeholder="-- Seleccione un Cliente --" isClearable isSearchable required />
           </div>
           {isAdmin && (
@@ -295,6 +321,19 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           Guardar
         </button>
       </div>
+
+      {isClientModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-full overflow-y-auto">
+            <div className="p-6">
+              <ClientForm 
+                onSubmit={handleCreateClient}
+                onCancel={() => setIsClientModalOpen(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 };
