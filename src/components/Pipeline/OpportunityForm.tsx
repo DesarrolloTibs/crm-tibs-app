@@ -219,114 +219,116 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 p-2">
-      {/* <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Nueva'} Oportunidad</h2> */}
+    <>
+      <form onSubmit={handleSubmit} className="space-y-8 p-2">
+        {/* <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Nueva'} Oportunidad</h2> */}
 
-      <fieldset className="space-y-6">
-        <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Datos del Proyecto</legend>
-        
-        <div>
-          <label htmlFor="nombre_proyecto" className="block text-sm font-medium text-gray-700 mb-1">Nombre del Proyecto</label>
-          <input id="nombre_proyecto" name="nombre_proyecto" value={opportunity.nombre_proyecto} onChange={handleChange} placeholder="Ej: Implementación de CRM para Acme Corp" required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
-        </div>
-
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-          <textarea id="description" name="description" value={opportunity.description} onChange={handleChange} placeholder="Añade una descripción detallada de la oportunidad..." rows={3} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <fieldset className="space-y-6">
+          <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Datos del Proyecto</legend>
+          
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-700">Cliente</label>
-              <button type="button" onClick={() => setIsClientModalOpen(true)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-                + Nuevo Cliente
-              </button>
-            </div>
-            <Select inputId="cliente_id" name="cliente_id" options={clientOptions} value={selectedClientValue} onChange={handleClientChange} placeholder="-- Seleccione un Cliente --" isClearable isSearchable required />
+            <label htmlFor="nombre_proyecto" className="block text-sm font-medium text-gray-700 mb-1">Nombre del Proyecto</label>
+            <input id="nombre_proyecto" name="nombre_proyecto" value={opportunity.nombre_proyecto} onChange={handleChange} placeholder="Ej: Implementación de CRM para Acme Corp" required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
-          {isAdmin && (
+
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+            <textarea id="description" name="description" value={opportunity.description} onChange={handleChange} placeholder="Añade una descripción detallada de la oportunidad..." rows={3} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="ejecutivo_id" className="block text-sm font-medium text-gray-700 mb-1">Ejecutivo Asignado</label>
-              <Select inputId="ejecutivo_id" name="ejecutivo_id" options={executiveOptions} value={selectedExecutiveValue} onChange={handleExecutiveChange} placeholder="-- Asignar a un Ejecutivo --" isClearable isSearchable required />
+              <div className="flex justify-between items-center mb-1">
+                <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-700">Cliente</label>
+                <button type="button" onClick={() => setIsClientModalOpen(true)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                  + Nuevo Cliente
+                </button>
+              </div>
+              <Select inputId="cliente_id" name="cliente_id" options={clientOptions} value={selectedClientValue} onChange={handleClientChange} placeholder="-- Seleccione un Cliente --" isClearable isSearchable required />
             </div>
-          )}
-        </div>
-      </fieldset>
+            {isAdmin && (
+              <div>
+                <label htmlFor="ejecutivo_id" className="block text-sm font-medium text-gray-700 mb-1">Ejecutivo Asignado</label>
+                <Select inputId="ejecutivo_id" name="ejecutivo_id" options={executiveOptions} value={selectedExecutiveValue} onChange={handleExecutiveChange} placeholder="-- Asignar a un Ejecutivo --" isClearable isSearchable required />
+              </div>
+            )}
+          </div>
+        </fieldset>
 
-      <fieldset className="space-y-6">
-        <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Detalles Financieros</legend>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="monto_licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Monto Licenciamiento</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-              <input id="monto_licenciamiento" type="text" name="monto_licenciamiento" value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrency(opportunity.monto_licenciamiento)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="monto_servicios" className="block text-sm font-medium text-gray-700 mb-1">Monto Servicios</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-              <input id="monto_servicios" type="text" name="monto_servicios" value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrency(opportunity.monto_servicios)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="moneda" className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
-            <select id="moneda" name="moneda" value={opportunity.moneda} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-              {Object.values(Currency).map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          {opportunity.moneda === 'USD' && (
-            <div className="animate-fade-in">
-              <label htmlFor="tipoCambio" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Cambio (USD a MXN)</label>
+        <fieldset className="space-y-6">
+          <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Detalles Financieros</legend>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="monto_licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Monto Licenciamiento</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                <input id="tipoCambio" type="text" name="tipoCambio" value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" required={opportunity.moneda === 'USD'} className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
+                <input id="monto_licenciamiento" type="text" name="monto_licenciamiento" value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrency(opportunity.monto_licenciamiento)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
               </div>
             </div>
-          )}
-        </div>
-      </fieldset>
+            <div>
+              <label htmlFor="monto_servicios" className="block text-sm font-medium text-gray-700 mb-1">Monto Servicios</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+                <input id="monto_servicios" type="text" name="monto_servicios" value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrency(opportunity.monto_servicios)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="moneda" className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+              <select id="moneda" name="moneda" value={opportunity.moneda} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                {Object.values(Currency).map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            {opportunity.moneda === 'USD' && (
+              <div className="animate-fade-in">
+                <label htmlFor="tipoCambio" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Cambio (USD a MXN)</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+                  <input id="tipoCambio" type="text" name="tipoCambio" value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" required={opportunity.moneda === 'USD'} className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
+                </div>
+              </div>
+            )}
+          </div>
+        </fieldset>
 
-      <fieldset className="space-y-6">
-        <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Clasificación</legend>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="etapa" className="block text-sm font-medium text-gray-700 mb-1">Etapa</label>
-            <select id="etapa" name="etapa" value={opportunity.etapa} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-              {Object.values(OpportunityStage).map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+        <fieldset className="space-y-6">
+          <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Clasificación</legend>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="etapa" className="block text-sm font-medium text-gray-700 mb-1">Etapa</label>
+              <select id="etapa" name="etapa" value={opportunity.etapa} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                {Object.values(OpportunityStage).map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="linea_negocio" className="block text-sm font-medium text-gray-700 mb-1">Línea de Negocio</label>
+              <select id="linea_negocio" name="linea_negocio" value={opportunity.linea_negocio} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                {Object.values(BusinessLine).map(bl => <option key={bl} value={bl}>{bl}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="tipo_entrega" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Entrega</label>
+              <select id="tipo_entrega" name="tipo_entrega" value={opportunity.tipo_entrega} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                {Object.values(DeliveryType).map(dt => <option key={dt} value={dt}>{dt}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Licenciamiento</label>
+              <select id="licenciamiento" name="licenciamiento" value={opportunity.licenciamiento} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                {Object.values(Licensing).map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </div>
           </div>
-          <div>
-            <label htmlFor="linea_negocio" className="block text-sm font-medium text-gray-700 mb-1">Línea de Negocio</label>
-            <select id="linea_negocio" name="linea_negocio" value={opportunity.linea_negocio} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-              {Object.values(BusinessLine).map(bl => <option key={bl} value={bl}>{bl}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="tipo_entrega" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Entrega</label>
-            <select id="tipo_entrega" name="tipo_entrega" value={opportunity.tipo_entrega} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-              {Object.values(DeliveryType).map(dt => <option key={dt} value={dt}>{dt}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Licenciamiento</label>
-            <select id="licenciamiento" name="licenciamiento" value={opportunity.licenciamiento} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-              {Object.values(Licensing).map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </div>
-        </div>
-      </fieldset>
+        </fieldset>
 
-      <div className="flex justify-end space-x-2">
-        <button type="button" onClick={onCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
-          Cancelar
-        </button>
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-          Guardar
-        </button>
-      </div>
+        <div className="flex justify-end space-x-2">
+          <button type="button" onClick={onCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+            Cancelar
+          </button>
+          <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Guardar
+          </button>
+        </div>
+      </form>
 
       {isClientModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center p-4">
@@ -340,7 +342,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           </div>
         </div>
       )}
-    </form>
+    </>
   );
 };
 
