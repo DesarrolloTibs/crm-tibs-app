@@ -20,10 +20,14 @@ interface SelectOption {
 
 const activityTypes = [
     "Correo",
+    "Evento",
     "Presentación Servicios Presencial",
     "Presentación Servicios En Línea",
-    "Evento",
-    "Seguimiento Oportunidad",
+    "Seguimiento Oportunidad Línea",
+    "Seguimiento Oportunidad Presencial",
+    "Llamada",
+     "Otros"
+    
 ];
 
 const formatDateTimeForInput = (isoString?: string) => {
