@@ -22,6 +22,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Empresa</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Correo</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Teléfono</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Categoría</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Puesto</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Ejecutivo</th>
@@ -43,6 +44,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
                 <td className="p-4"><p className="text-gray-700">{client.empresa}</p></td>
                 <td className="p-4"><p className="text-gray-700">{client.correo}</p></td>
                 <td className="p-4"><p className="text-gray-700">{client.telefono}</p></td>
+                <td className="p-4"><p className="text-gray-700">{client.category ?? 'N/A'}</p></td>
                 <td className="p-4">
                   <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${client.estatus ? 'text-green-900' : 'text-red-900'}`}>
                     <span aria-hidden className={`absolute inset-0 ${client.estatus ? 'bg-green-200' : 'bg-red-200'} opacity-50 rounded-full`}></span>
@@ -75,7 +77,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
             ))
           ) : (
             <tr>
-              <td colSpan={8} className="text-center py-16">
+              <td colSpan={9} className="text-center py-16">
                 <div className="flex flex-col items-center text-gray-500">
                   <Inbox size={48} className="mb-4" />
                   <h3 className="text-xl font-semibold">No se encontraron clientes</h3>

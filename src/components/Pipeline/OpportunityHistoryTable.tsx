@@ -22,6 +22,7 @@ const stageColors: Record<OpportunityStageType, { bg: string; text: string }> = 
   'Ganada': { bg: 'bg-green-100', text: 'text-green-800' },
   'Perdida': { bg: 'bg-red-100', text: 'text-red-800' },
   'Cancelada': { bg: 'bg-orange-100', text: 'text-orange-800' },
+  'Standby': { bg: 'bg-pink-100', text: 'text-pink-800' },
 };
 
 const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDelete, onArchive, isAdmin, currentPage, totalPages, onPageChange }) => {

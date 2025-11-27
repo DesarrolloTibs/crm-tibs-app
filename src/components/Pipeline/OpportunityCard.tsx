@@ -23,6 +23,7 @@ const stageProgress: Record<OpportunityStageType, { percent: number; color: stri
   'Ganada': { percent: 100, color: '#309b47' },
   'Perdida': { percent: 100, color: '#a92c56' },
   'Cancelada': { percent: 100, color: '#f68547' },
+  'Standby': { percent: 100, color: '#921e82ff' },
 };
 
 const businessLineColors: Record<string, string> = {

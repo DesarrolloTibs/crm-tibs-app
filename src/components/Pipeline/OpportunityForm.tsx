@@ -23,13 +23,17 @@ interface SelectOption {
   isDisabled?: boolean;
 }
 
+type OpportunityFormData = Omit<Partial<Opportunity>, 'estimated_closure_date'> & {
+    estimated_closure_date?: string;
+};
+
 const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
   const { user, isAdmin, isEjecutivo } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [executives, setExecutives] = useState<User[]>([]);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [opportunity, setOpportunity] = useState<Partial<Opportunity>>(
+  const [opportunity, setOpportunity] = useState<OpportunityFormData>(
     initialData ? {
       ...initialData,
       estimated_closure_date: initialData.estimated_closure_date ? new Date(initialData.estimated_closure_date).toISOString().split('T')[0] : '',
@@ -195,7 +199,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     }
 
     const { estimated_closure_date, ...rest } = opportunity;
-    let closureDate: Date | null = null;
+    let closureDate: Date | undefined = undefined;
     if (estimated_closure_date) {
         const dateString = estimated_closure_date as unknown as string;
         const parts = dateString.split('-');
@@ -204,7 +208,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     }
 
     // Aseguramos que los valores monetarios se envíen como números
-    const finalOpportunity = {
+    const finalOpportunity: Partial<Opportunity> = {
       ...rest,
       monto_licenciamiento: Number(opportunity.monto_licenciamiento) || 0,
       monto_servicios: Number(opportunity.monto_servicios) || 0,
@@ -248,7 +252,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-            <textarea id="description" name="description" value={opportunity.description} onChange={handleChange} placeholder="Añade una descripción detallada de la oportunidad..." rows={3} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+            <textarea id=".description" name="description" value={opportunity.description} onChange={handleChange} placeholder="Añade una descripción detallada de la oportunidad..." rows={3} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
 
           <div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import type { Client } from '../../core/models/Client';
+import { ClientCategory, type Client } from '../../core/models/Client';
 import { getUsers } from '../../services/usersService';
 import type { User } from '../../core/models/User';
 
@@ -21,6 +21,7 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         telefono: '',
         estatus: true, // Default to active
         ejecutivo_id: '',
+        category: ClientCategory.CONTACTO,
         ...initialData,
     });
     const [executives, setExecutives] = useState<User[]>([]);
@@ -45,7 +46,7 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
 
     const selectedExecutiveValue = executiveOptions.find(option => option.value === form.ejecutivo_id);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const isCheckbox = type === 'checkbox';
         const inputValue = isCheckbox ? (e.target as HTMLInputElement).checked : value;
@@ -99,6 +100,12 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                     <div>
                         <label htmlFor="puesto" className="block text-sm font-medium text-gray-700 mb-1">Puesto</label>
                         <input id="puesto" name="puesto" value={form.puesto} onChange={handleChange} placeholder="Puesto del cliente" required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+                    </div>
+                    <div>
+                        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                        <select id="category" name="category" value={form.category} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                            {Object.values(ClientCategory).map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
                     </div>
                     <div className="md:col-span-2">
                         <label htmlFor="ejecutivo_id" className="block text-sm font-medium text-gray-700 mb-1">Ejecutivo Asignado</label>

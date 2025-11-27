@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getClients, createClient, updateClient, updateClientStatus } from '../services/clientsService';
 import { getActiveUsers } from '../services/usersService';
-import type { Client } from '../core/models/Client';
+import { ClientCategory, type Client } from '../core/models/Client';
 import ClientForm from '../components/Client/ClientForm';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
@@ -25,6 +25,7 @@ const ClientsPage: React.FC = () => {
     const [filterEmpresa, setFilterEmpresa] = useState('');
     const [filterCorreo, setFilterCorreo] = useState('');
     const [filterEjecutivoId, setFilterEjecutivoId] = useState<string | null>(null);
+    const [filterCategory, setFilterCategory] = useState<string | null>(null);
     const [executives, setExecutives] = useState<{ value: string; label: string }[]>([]);
 
     // Paginación
@@ -158,7 +159,8 @@ const ClientsPage: React.FC = () => {
         client.nombre.toLowerCase().includes(filterNombre.toLowerCase()) &&
         client.empresa.toLowerCase().includes(filterEmpresa.toLowerCase()) &&
         client.correo.toLowerCase().includes(filterCorreo.toLowerCase()) &&
-        (!filterEjecutivoId || client.ejecutivo_id === filterEjecutivoId)
+        (!filterEjecutivoId || client.ejecutivo_id === filterEjecutivoId) &&
+        (!filterCategory || client.category === filterCategory)
     );
 
     // Paginación
@@ -175,13 +177,14 @@ const ClientsPage: React.FC = () => {
     // Reset page when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterNombre, filterEmpresa, filterCorreo, filterEjecutivoId]);
+    }, [filterNombre, filterEmpresa, filterCorreo, filterEjecutivoId, filterCategory]);
 
     const handleClearFilters = () => {
         setFilterNombre('');
         setFilterEmpresa('');
         setFilterCorreo('');
         setFilterEjecutivoId(null);
+        setFilterCategory(null);
     };
 
     return (
@@ -270,6 +273,16 @@ const ClientsPage: React.FC = () => {
                                         singleValue: (base) => ({...base, paddingLeft: '28px'})
                                     }}
                                 />
+                            </div>
+                            <div>
+                                <select
+                                    value={filterCategory || ''}
+                                    onChange={e => setFilterCategory(e.target.value || null)}
+                                    className="w-full border rounded-lg px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                                >
+                                    <option value="">Todas las categorías</option>
+                                    {Object.values(ClientCategory).map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
                             </div>
                         </div>
                     </div>
