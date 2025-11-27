@@ -30,7 +30,10 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const [editingField, setEditingField] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [opportunity, setOpportunity] = useState<Partial<Opportunity>>(
-    initialData || {
+    initialData ? {
+      ...initialData,
+      estimated_closure_date: initialData.estimated_closure_date ? new Date(initialData.estimated_closure_date).toISOString().split('T')[0] : '',
+    } : {
       nombre_proyecto: '',
       description: '',
       cliente_id: '', // Este campo necesitará un selector de clientes
@@ -44,6 +47,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       tipoCambio: 0,
       tipo_entrega: 'Proyecto',
       licenciamiento: Licensing.NO_APLICA,
+      estimated_closure_date: new Date().toISOString().split('T')[0],
     }
   );
 
@@ -189,12 +193,23 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         alert('Por favor, completa los campos requeridos.');
         return;
     }
+
+    const { estimated_closure_date, ...rest } = opportunity;
+    let closureDate: Date | null = null;
+    if (estimated_closure_date) {
+        const dateString = estimated_closure_date as unknown as string;
+        const parts = dateString.split('-');
+        // Asegurarse de que la fecha se cree en la zona horaria local para evitar problemas de un día menos
+        closureDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12); // Usar mediodía para estar seguros
+    }
+
     // Aseguramos que los valores monetarios se envíen como números
     const finalOpportunity = {
-      ...opportunity,
+      ...rest,
       monto_licenciamiento: Number(opportunity.monto_licenciamiento) || 0,
       monto_servicios: Number(opportunity.monto_servicios) || 0,
       tipoCambio: Number(opportunity.tipoCambio) || 0,
+      estimated_closure_date: closureDate,
     };
     onSubmit(finalOpportunity);
   };
@@ -234,6 +249,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
             <textarea id="description" name="description" value={opportunity.description} onChange={handleChange} placeholder="Añade una descripción detallada de la oportunidad..." rows={3} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+          </div>
+
+          <div>
+            <label htmlFor="estimated_closure_date" className="block text-sm font-medium text-gray-700 mb-1">Fecha de Cierre Estimada</label>
+            <input type="date" id="estimated_closure_date" name="estimated_closure_date" value={opportunity.estimated_closure_date || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

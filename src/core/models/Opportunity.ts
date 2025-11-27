@@ -20,6 +20,7 @@ export interface Opportunity  {
   archived?: boolean;
   proposalDocumentPath?: string;
   tipoCambio?: number;
+  estimated_closure_date?: Date;
 }
 
 export const OpportunityStage = {
