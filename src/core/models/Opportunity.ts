@@ -31,6 +31,7 @@ export const OpportunityStage = {
   GANADA: 'Ganada',
   PERDIDA: 'Perdida',
   CANCELADA: 'Cancelada',
+  STANDBY: 'Standby',
 } as const;
 export type OpportunityStageType = (typeof OpportunityStage)[keyof typeof OpportunityStage];
 

@@ -21,6 +21,7 @@ const stageColors: Record<OpportunityStageType, string> = {
   'Ganada': '#309b47',
   'Perdida': '#a92c56',
   'Cancelada': '#f68547',
+  'Standby': '#921e82ff',
 };
 
 

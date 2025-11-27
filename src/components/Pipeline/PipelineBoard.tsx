@@ -34,6 +34,7 @@ const STAGES: OpportunityStageType[] = [
     OpportunityStage.GANADA,
      OpportunityStage.PERDIDA,
     OpportunityStage.CANCELADA,
+    OpportunityStage.STANDBY
 ];
 
 const PipelinePage: React.FC = () => {
