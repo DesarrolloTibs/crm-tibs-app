@@ -49,8 +49,8 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     const [form, setForm] = useState<Partial<Activity>>({
         activity: '',
         activityType: 'Correo',
-        opportunityId: initialData?.opportunityId || '',
-        clientId: initialData?.clientId || null,
+        opportunityId: initialData?.opportunityId ?? null,
+        clientId: initialData?.clientId ?? null,
         flaghistory: initialData?.flaghistory || false,
         ...initialData,
         date: formatDateTimeForInput(initialData?.date || new Date().toISOString()),
@@ -113,8 +113,8 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     const handleOpportunityChange = (selectedOption: SingleValue<SelectOption>) => {
         setForm({
             ...form,
-            opportunityId: selectedOption ? selectedOption.value : '',
-            flaghistory: selectedOption ? form.flaghistory : false, // Reset flaghistory if opportunity is unselected
+            opportunityId: selectedOption?.value ?? null,
+            flaghistory: !!selectedOption && form.flaghistory,
         });
     };
 
@@ -122,6 +122,8 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         setForm({
             ...form,
             clientId: selectedOption ? selectedOption.value : null,
+            opportunityId: null, // Resetear la oportunidad al cambiar el cliente
+            flaghistory: false, // Resetear el historial al cambiar el cliente
         });
     };
 
@@ -130,6 +132,11 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         onSubmit(form);
     };
 
+    // Determina el valor para el Select de Oportunidad.
+    // Si opportunityId es null, el valor del Select debe ser null para que se reinicie visualmente.
+    const selectedOpportunityValue = form.opportunityId
+        ? opportunityOptions.find(option => option.value === form.opportunityId) || null
+        : null;
     return (
         <form onSubmit={handleSubmit} className="space-y-8 p-2">
             <h2 className="text-2xl font-bold text-gray-800">{initialData?.id ? 'Editar' : 'Nueva'} Actividad</h2>
@@ -174,7 +181,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                             inputId="opportunityId"
                             name="opportunityId"
                             options={opportunityOptions}
-                            value={opportunityOptions.find(option => option.value === form.opportunityId)}
+                            value={selectedOpportunityValue}
                             onChange={handleOpportunityChange}
                             placeholder="-- Seleccione una oportunidad --"
                             isClearable
