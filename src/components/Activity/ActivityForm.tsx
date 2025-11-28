@@ -3,8 +3,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Select, { type SingleValue } from 'react-select';
 
 import { getOpportunities } from '../../services/opportunitiesService';
+import { getActiveClients } from '../../services/clientsService';
 import type { Activity } from '../../core/models/Activity';
 import type { Opportunity } from '../../core/models/Opportunity';
+import type { Client } from '../../core/models/Client';
 import { useAuth } from '../../hooks/useAuth';
 
 interface Props {
@@ -48,46 +50,78 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         activity: '',
         activityType: 'Correo',
         opportunityId: initialData?.opportunityId || '',
-        ...initialData, // Sobrescribimos 'date' después de esparcir initialData
+        clientId: initialData?.clientId || null,
+        flaghistory: initialData?.flaghistory || false,
+        ...initialData,
         date: formatDateTimeForInput(initialData?.date || new Date().toISOString()),
     });
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+    const [clients, setClients] = useState<Client[]>([]);
 
     useEffect(() => {
-        const fetchOpportunities = async () => {
+        const fetchData = async () => {
             try {
                 const allOpportunities = await getOpportunities();
                 let userOpportunities = allOpportunities;
 
-                // Si el usuario no es admin, filtramos por su ID
                 if (!isAdmin && user?.sub) {
                     userOpportunities = allOpportunities.filter(op => op.ejecutivo_id === user.sub);
                 }
 
                 setOpportunities(userOpportunities);
+
+                const activeClients = await getActiveClients();
+                setClients(activeClients);
+
             } catch (error) {
-                console.error('Failed to fetch opportunities', error);
+                console.error('Failed to fetch data', error);
             }
         };
-        fetchOpportunities();
+        fetchData();
     }, [isAdmin, user]);
 
-    const opportunityOptions: SelectOption[] = useMemo(() =>
-        opportunities.map(op => ({
+    const opportunityOptions: SelectOption[] = useMemo(() => {
+        let filteredOpportunities = opportunities;
+
+        if (form.clientId) {
+            filteredOpportunities = opportunities.filter(
+                op => op.cliente?.id === form.clientId
+            );
+        }
+
+        return filteredOpportunities.map(op => ({
             value: op.id,
             label: `${op.nombre_proyecto} (${op.cliente?.nombre} - ${op.empresa})`,
+        }));
+    }, [opportunities, form.clientId]);
+
+    const clientOptions: SelectOption[] = useMemo(() =>
+        clients.filter(client => client.id !== undefined).map(client => ({
+            value: client.id as string,
+            label: `${client.nombre} (${client.empresa})`,
         })),
-    [opportunities]);
+    [clients]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setForm({ ...form, [name]: value });
+        const { name, value, type, checked } = e.target as HTMLInputElement;
+        setForm({
+            ...form,
+            [name]: type === 'checkbox' ? checked : value,
+        });
     };
 
     const handleOpportunityChange = (selectedOption: SingleValue<SelectOption>) => {
         setForm({
             ...form,
             opportunityId: selectedOption ? selectedOption.value : '',
+            flaghistory: selectedOption ? form.flaghistory : false, // Reset flaghistory if opportunity is unselected
+        });
+    };
+
+    const handleClientChange = (selectedOption: SingleValue<SelectOption>) => {
+        setForm({
+            ...form,
+            clientId: selectedOption ? selectedOption.value : null,
         });
     };
 
@@ -121,6 +155,20 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                         <input id="activity" name="activity" value={form.activity} onChange={handleChange} placeholder="Descripción breve de la actividad" required maxLength={80} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
                     </div>
                     <div className="md:col-span-2">
+                        <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">Cliente (Opcional)</label>
+                        <Select
+                            inputId="clientId"
+                            name="clientId"
+                            options={clientOptions}
+                            value={clientOptions.find(option => option.value === form.clientId)}
+                            onChange={handleClientChange}
+                            placeholder="-- Seleccione un cliente --"
+                            isClearable
+                            isSearchable
+                            noOptionsMessage={() => 'No se encontraron clientes'}
+                        />
+                    </div>
+                    <div className="md:col-span-2">
                         <label htmlFor="opportunityId" className="block text-sm font-medium text-gray-700 mb-1">Oportunidad (Opcional)</label>
                         <Select
                             inputId="opportunityId"
@@ -130,11 +178,26 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                             onChange={handleOpportunityChange}
                             placeholder="-- Seleccione una oportunidad --"
                             isClearable
-                            isDisabled={!!initialData?.opportunityId && !initialData?.id} // Deshabilita si es nueva actividad con ID de oportunidad
+                            isDisabled={!!initialData?.opportunityId && !initialData?.id}
                             isSearchable
                             noOptionsMessage={() => 'No se encontraron oportunidades'}
                         />
                     </div>
+                    {form.opportunityId && (
+                        <div className="md:col-span-2 flex items-center">
+                            <input
+                                id="flaghistory"
+                                name="flaghistory"
+                                type="checkbox"
+                                checked={form.flaghistory || false}
+                                onChange={handleChange}
+                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            />
+                            <label htmlFor="flaghistory" className="ml-2 block text-sm font-medium text-gray-700">
+                                Agregar a Historial
+                            </label>
+                        </div>
+                    )}
                 </div>
             </fieldset>
 
