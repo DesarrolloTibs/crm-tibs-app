@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Menu, X } from 'lucide-react';
-import ChristmasLights from './ChristmasLights';
+import ChristmasLights from './Season/Christmas/ChristmasLights';
 
 interface Props {
     toggleSidebar: () => void;
