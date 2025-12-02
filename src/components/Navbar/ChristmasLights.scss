@@ -1,0 +1,122 @@
+@use "sass:math";
+@use "sass:list";
+
+$globe-width:   12px;
+$globe-height:  20px;
+$globe-spacing: 40px;
+$globe-spread: 3px;
+$light-off-opacity: 0.3;
+$base-animation-duration: 2.5s;
+
+$lights: (
+  1: #E74C3C, // Rojo
+  2: #2ECC71, // Verde
+  3: #3498DB, // Azul
+  4: #F1C40F, // Amarillo
+  5: #E67E22  // Naranja
+);
+
+
+.lightrope {
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  position: absolute;
+  z-index: 1;
+  margin: -15px 0 0 0;
+  padding: 0;
+  pointer-events: none;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  
+  li {
+    position: relative;
+    animation-fill-mode: both; 
+    animation-iteration-count:infinite;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: $globe-width;
+    height: $globe-height;
+    border-radius: 50%;
+    margin: math.div($globe-spacing, 2);
+    display: inline-block;
+
+    @each $index, $light-props in $lights {
+      $color: $light-props;
+      $delay: math.div($base-animation-duration, list.length($lights)) * ($index - 1) * -1;
+
+      &:nth-child(#{list.length($lights)}n+#{$index}) {
+        background: $color;
+        box-shadow: 0px math.div($globe-height, 6) $globe-width*2 $globe-spread $color;
+        animation-name: flash-#{$index};
+        animation-duration: $base-animation-duration;
+        animation-delay: $delay;
+      }
+    }
+
+    &:before {
+      content: "";
+      position: absolute;
+      background: #004d00;
+      width: ($globe-width - 2);
+      height: math.div($globe-height, 3);
+      border-radius: 3px;
+      top: (0 - (math.div($globe-height, 6)));
+      left: 1px;
+    }
+    &:after {
+      content: "";
+      top: (0 - math.div($globe-height, 2));
+      left: $globe-width - 3;
+      position: absolute;
+      width: $globe-spacing + 12;
+      height: (math.div($globe-height, 3) * 2);
+      border-bottom: solid #222 2px;
+      border-radius: 50%;
+    }
+    &:last-child:after {
+      content: none;
+    }
+    &:first-child {
+      margin-left: -$globe-spacing;
+    }
+  }
+}
+
+// Variables para la vista móvil
+$globe-width-sm: 8px;
+$globe-spacing-sm: 20px;
+
+@media (max-width: 768px) {
+  .lightrope {
+    li {
+      width: $globe-width-sm;
+      height: $globe-height; // La altura no cambia
+      margin: math.div($globe-spacing-sm, 2);
+      &:before {
+        width: $globe-width-sm - 2;
+      }
+      &:after {
+        width: $globe-spacing-sm + 10;
+        left: $globe-width-sm - 3;
+      }
+    }
+  }
+}
+
+@each $index, $light-props in $lights {
+  $color: $light-props;
+
+  @keyframes flash-#{$index} {
+    0%, 100% {
+      background: $color;
+      box-shadow: 0px math.div($globe-height, 6) $globe-width*2 $globe-spread $color;
+    }
+    50% {
+      background: rgba($color, $light-off-opacity);
+      box-shadow: 0px math.div($globe-height, 6) $globe-width*2 $globe-spread rgba($color, $light-off-opacity);
+    }
+  }
+}
