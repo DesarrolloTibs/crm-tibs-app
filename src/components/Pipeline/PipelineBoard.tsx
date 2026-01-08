@@ -63,42 +63,15 @@ const PipelinePage: React.FC = () => {
     onCancel: () => {},
   });
 
-  const [startDate, setStartDate] = useState<string>(`${new Date().getFullYear()}-01-01`);
-  const [dirtyStartDate, setDirtyStartDate] = useState(false);
-  const [endDate, setEndDate] = useState<string>(`${new Date().getFullYear()}-12-31`);
-  const [dirtyEndDate, setDirtyEndDate] = useState(false);
 
-  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartDate(e.target.value);
-    setDirtyStartDate(true);
-  };
-
-  const handleStartDateBlur = () => {
-    if (dirtyStartDate) {
-      fetchOpportunities(startDate, endDate);
-      setDirtyStartDate(false);
-    }
-  };
-
-  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEndDate(e.target.value);
-    setDirtyEndDate(true);
-  };
-
-  const handleEndDateBlur = () => {
-    if (dirtyEndDate) {
-      fetchOpportunities(startDate, endDate);
-      setDirtyEndDate(false);
-    }
-  };
 
   const hideNotification = () => setNotification({ ...notification, show: false });
 
 
-  const fetchOpportunities = async (start: string, end: string) => {
+  const fetchOpportunities = async () => {
     setLoading(true);
       try {
-        const data = await getOpportunities(start, end);
+        const data = await getOpportunities();
         if (Array.isArray(data)) {
           setOpportunities(data);
         } else {
@@ -132,8 +105,7 @@ const PipelinePage: React.FC = () => {
         message: 'Oportunidad creada correctamente',
         onConfirm: hideNotification,
         onCancel: hideNotification,      });
-      fetchOpportunities(startDate, endDate);
-    } catch (error) {
+            fetchOpportunities();    } catch (error) {
       setNotification({
         show: true,
         type: 'error',
@@ -159,8 +131,7 @@ const PipelinePage: React.FC = () => {
         message: 'Oportunidad actualizada correctamente',
         onConfirm: hideNotification,
         onCancel: hideNotification,      });
-      fetchOpportunities(startDate, endDate);
-    } catch (error) {
+            fetchOpportunities();    } catch (error) {
       setNotification({
         show: true,
         type: 'error',
@@ -181,8 +152,7 @@ const PipelinePage: React.FC = () => {
         message: 'Oportunidad eliminada correctamente',
         onConfirm: hideNotification,
         onCancel: hideNotification,      });
-      fetchOpportunities(startDate, endDate);
-    } catch (error) {
+            fetchOpportunities();    } catch (error) {
       setNotification({
         show: true,
         type: 'error',
@@ -332,8 +302,6 @@ const PipelinePage: React.FC = () => {
     setSearchTerm('');
     setExecutiveFilter('');
     setStatusFilter('');
-    setStartDate(`${new Date().getFullYear()}-01-01`);
-    setEndDate(`${new Date().getFullYear()}-12-31`);
   };
 
   const handleStageVisibilityChange = (stage: OpportunityStageType) => {
@@ -358,8 +326,7 @@ const PipelinePage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchOpportunities(startDate, endDate);
-  }, []);
+          fetchOpportunities();  }, []);
 
   useEffect(() => {
     // Reset filters if needed, or handle side effects
@@ -524,36 +491,7 @@ const PipelinePage: React.FC = () => {
                 </select>
               </div>
             </div>
-            <div className="flex flex-col md:flex-row gap-4 mt-4 items-end">
-              <div className="flex-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
-                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Desde</label>
-                <input
-                  type="date"
-                  id="startDate"
-                  value={startDate}
-                  onChange={handleStartDateChange}
-                  onBlur={handleStartDateBlur}
-                  className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div className="flex-1">
-              <div>
-                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">Hasta</label>
-                <input
-                  type="date"
-                  id="endDate"
-                  value={endDate}
-                  onChange={handleEndDateChange}
-                  onBlur={handleEndDateBlur}
-                  className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+
     </div>
         )}
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
