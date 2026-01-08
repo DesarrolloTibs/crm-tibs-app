@@ -46,7 +46,11 @@ const UsersTable: React.FC<Props> = ({ users, onEdit, onUpdateStatus, onUploadIm
                   <p className="font-semibold text-gray-900">{user.username}</p>
                 </td>
                 <td className="p-4"><p className="text-gray-700">{user.email}</p></td>
-                <td className="p-4"><p className="text-gray-700 capitalize">{user.role}</p></td>
+                <td className="p-4">
+                  <p className="text-gray-700 capitalize">
+                    {user.role === 'admin' ? 'Administrador' : user.role === 'executive' ? 'Ejecutivo' : user.role}
+                  </p>
+                </td>
                 <td className="p-4">
                   <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${user.isActive ? 'text-green-900' : 'text-red-900'}`}>
                     <span aria-hidden className={`absolute inset-0 ${user.isActive ? 'bg-green-200' : 'bg-red-200'} opacity-50 rounded-full`}></span>
