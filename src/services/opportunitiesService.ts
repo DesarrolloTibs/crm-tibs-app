@@ -2,12 +2,23 @@ import  axiosInstance from "../core/axios/axiosInstance";
 import type { Opportunity } from "../core/models/Opportunity";
 import { OPPORTUNITIES } from "../global/endpoints";
 
+const buildQueryString = (params: Record<string, string | undefined>): string => {
+  const query = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== '')
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value!)}`)
+    .join('&');
+  return query ? `?${query}` : '';
+};
+
 /**
  * Obtiene todas las oportunidades.
+ * @param startDate - Fecha de inicio para filtrar oportunidades (opcional).
+ * @param endDate - Fecha de fin para filtrar oportunidades (opcional).
  * @returns Una promesa que se resuelve en un array de oportunidades.
  */
-export const getOpportunities = async (): Promise<Opportunity[]> => {
-  const response = await axiosInstance.get<Opportunity[]>(OPPORTUNITIES.OPPORTUNITIES);
+export const getOpportunities = async (startDate?: string, endDate?: string): Promise<Opportunity[]> => {
+  const query = buildQueryString({ startDate, endDate });
+  const response = await axiosInstance.get<Opportunity[]>(`${OPPORTUNITIES.OPPORTUNITIES}${query}`);
   return response.data;
 };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Menu, X } from 'lucide-react';
-import ChristmasLights from './Season/Christmas/ChristmasLights';
+// import ChristmasLights from './Season/Christmas/ChristmasLights';
 
 interface Props {
     toggleSidebar: () => void;
@@ -24,7 +24,7 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
 
             {/* Sección central para decoraciones temáticas */}
             <div className="flex-grow flex justify-center items-center hidden sm:flex">
-                <ChristmasLights />
+                {/* <ChristmasLights /> */}
             </div>
 
             {/* Información del usuario */}

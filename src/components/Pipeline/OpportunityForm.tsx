@@ -23,8 +23,9 @@ interface SelectOption {
   isDisabled?: boolean;
 }
 
-type OpportunityFormData = Omit<Partial<Opportunity>, 'estimated_closure_date'> & {
+type OpportunityFormData = Omit<Partial<Opportunity>, 'estimated_closure_date' | 'createdAt'> & {
     estimated_closure_date?: string;
+    createdAt?: string;
 };
 
 const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
@@ -37,6 +38,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     initialData ? {
       ...initialData,
       estimated_closure_date: initialData.estimated_closure_date ? new Date(initialData.estimated_closure_date).toISOString().split('T')[0] : '',
+      createdAt: initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : '',
     } : {
       nombre_proyecto: '',
       description: '',
@@ -52,6 +54,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       tipo_entrega: 'Proyecto',
       licenciamiento: Licensing.NO_APLICA,
       estimated_closure_date: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString().split('T')[0], // Default to today's date
     }
   );
 
@@ -198,13 +201,20 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         return;
     }
 
-    const { estimated_closure_date, ...rest } = opportunity;
+    const { estimated_closure_date, createdAt, ...rest } = opportunity;
     let closureDate: Date | undefined = undefined;
     if (estimated_closure_date) {
         const dateString = estimated_closure_date as unknown as string;
         const parts = dateString.split('-');
         // Asegurarse de que la fecha se cree en la zona horaria local para evitar problemas de un día menos
         closureDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12); // Usar mediodía para estar seguros
+    }
+
+    let creationDate: Date | undefined = undefined;
+    if (createdAt) {
+      const dateString = createdAt as unknown as string;
+      const parts = dateString.split('-');
+      creationDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12);
     }
 
     // Aseguramos que los valores monetarios se envíen como números
@@ -214,6 +224,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       monto_servicios: Number(opportunity.monto_servicios) || 0,
       tipoCambio: Number(opportunity.tipoCambio) || 0,
       estimated_closure_date: closureDate,
+      createdAt: creationDate,
     };
     onSubmit(finalOpportunity);
   };
@@ -258,6 +269,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           <div>
             <label htmlFor="estimated_closure_date" className="block text-sm font-medium text-gray-700 mb-1">Fecha de Cierre Estimada</label>
             <input type="date" id="estimated_closure_date" name="estimated_closure_date" value={opportunity.estimated_closure_date || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+          </div>
+
+          <div>
+            <label htmlFor="createdAt" className="block text-sm font-medium text-gray-700 mb-1">Fecha de Creación</label>
+            <input type="date" id="createdAt" name="createdAt" value={opportunity.createdAt || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

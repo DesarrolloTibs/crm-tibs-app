@@ -21,6 +21,7 @@ export interface Opportunity  {
   proposalDocumentPath?: string;
   tipoCambio?: number;
   estimated_closure_date?: Date;
+  createdAt?: Date;
 }
 
 export const OpportunityStage = {
