@@ -9,6 +9,7 @@ import ProtectedRoute from './core/guards/ProtectedRoute';
 import Layout from './components/Layout/Layout'; // Importar el Layout
 import '../src/components/Sidebar/animations.css' // Importar los estilos globales
 import ActivitiesPage from './pages/ActivitiesPage';
+import ExpensesPage from './pages/ExpensesPage';
 const App: React.FC = () => (
     <BrowserRouter>
         <Routes>
@@ -49,6 +50,16 @@ const App: React.FC = () => (
                     <ProtectedRoute>
                         <Layout>
                             <ActivitiesPage />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/expenses"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <ExpensesPage />
                         </Layout>
                     </ProtectedRoute>
                 }

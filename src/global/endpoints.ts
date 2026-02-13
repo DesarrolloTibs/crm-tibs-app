@@ -1,4 +1,4 @@
-const urlBase = import.meta.env.VITE_BASE_URL+'/api/';
+const urlBase = import.meta.env.VITE_BASE_URL + '/api/';
 
 export const auth = {
     LOGIN: urlBase + 'auth/login'
@@ -25,6 +25,10 @@ export const USERS = {
 
 export const ACTIVITIES = {
     ACTIVITIES: urlBase + 'activities',
+};
+
+export const EXPENSES = {
+    EXPENSES: urlBase + 'expenses',
 };
 /*export const ENDPOINTS = {
     LOGIN: '/auth/login',
