@@ -1,3 +1,5 @@
+@use "sass:math";
+
 .spring-background {
   position: absolute;
   top: 0;
@@ -102,10 +104,10 @@
 
     @for $i from 1 through 100 {
       &:nth-child(#{$i}) {
-        height: #{3 + random(5)}px;
+        height: #{3 + math.random(5)}px;
         animation-delay: -#{$i * 0.15}s;
         margin-left: -1px;
-        opacity: #{0.7 + (random(3) / 10)};
+        opacity: #{0.7 + math.div(math.random(3), 10)};
       }
     }
   }
