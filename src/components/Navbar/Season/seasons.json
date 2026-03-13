@@ -1,0 +1,20 @@
+[
+  {
+    "id": "spring",
+    "name": "Spring",
+    "startMonth": 3,
+    "startDay": 1,
+    "endMonth": 5,
+    "endDay": 31,
+    "component": "Spring"
+  },
+  {
+    "id": "christmas",
+    "name": "Christmas",
+    "startMonth": 12,
+    "startDay": 1,
+    "endMonth": 1,
+    "endDay": 7,
+    "component": "Christmas"
+  }
+]

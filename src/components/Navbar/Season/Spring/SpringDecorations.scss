@@ -1,0 +1,178 @@
+.spring-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+
+.flowers-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  width: 60%;
+  height: 40px;
+  padding-bottom: 2px;
+  z-index: 2;
+}
+
+.flower {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: bottom center;
+  animation: sway 4s ease-in-out infinite alternate;
+
+  @for $i from 1 through 10 {
+    &:nth-child(#{$i}) {
+      animation-delay: -#{$i * 0.5}s;
+    }
+  }
+
+  .stem {
+    width: 1.5px;
+    height: 12px;
+    background: linear-gradient(to bottom, #4caf50, #2e7d32);
+    border-radius: 0 0 1.5px 1.5px;
+  }
+
+  .petals {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    margin-bottom: -1px;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+
+    .petal {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50% 50% 0 50%;
+      background: #ffb7ce;
+      top: 0;
+      left: 0;
+
+      &:nth-child(2) { transform: rotate(90deg); left: 8px; background: #f48fb1; }
+      &:nth-child(3) { transform: rotate(180deg); top: 8px; left: 8px; background: #f06292; }
+      &:nth-child(4) { transform: rotate(270deg); top: 8px; background: #ec407a; }
+    }
+
+    .center {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #ffeb3b;
+      border-radius: 50%;
+      top: 6px;
+      left: 6px;
+      z-index: 2;
+    }
+  }
+
+  &.f2 .petals .petal { background: #ce93d8; &:nth-child(2) { background: #ba68c8; } &:nth-child(3) { background: #ab47bc; } &:nth-child(4) { background: #9c27b0; } }
+  &.f3 .petals .petal { background: #fff59d; &:nth-child(2) { background: #fff176; } &:nth-child(3) { background: #ffee58; } &:nth-child(4) { background: #ffeb3b; } }
+}
+
+.grass-container {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 10px;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  z-index: 1;
+
+  .blade {
+    width: 3px;
+    height: 8px;
+    background: #4caf50;
+    border-radius: 50% 50% 0 0;
+    transform-origin: bottom bottom;
+    animation: sway 3s ease-in-out infinite alternate;
+
+    @for $i from 1 through 100 {
+      &:nth-child(#{$i}) {
+        height: #{3 + random(5)}px;
+        animation-delay: -#{$i * 0.15}s;
+        margin-left: -1px;
+        opacity: #{0.7 + (random(3) / 10)};
+      }
+    }
+  }
+}
+
+.butterfly-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.butterfly {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #2196f3;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: fly 25s linear infinite;
+
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: inherit;
+    border-radius: 50% 50% 0 50%;
+    top: -2px;
+    animation: flap 0.2s ease-in-out infinite alternate;
+  }
+
+  &::before { left: -4px; transform: rotate(-45deg); }
+  &::after { right: -4px; transform: rotate(45deg); animation-delay: 0.1s; }
+
+  &.b2 { background: #ff9800; animation-duration: 30s; animation-delay: -5s; top: 25%; }
+  &.b3 { background: #e91e63; animation-duration: 22s; animation-delay: -10s; top: 15%; }
+  &.b4 { background: #9c27b0; animation-duration: 35s; animation-delay: -15s; top: 40%; }
+  &.b5 { background: #4caf50; animation-duration: 28s; animation-delay: -7s; top: 35%; }
+  &.b6 { background: #ffeb3b; animation-duration: 32s; animation-delay: -12s; top: 20%; }
+}
+
+@keyframes sway {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(5deg); }
+}
+
+@keyframes fly {
+  0% { left: 20%; top: 60%; transform: scale(0.8) rotate(10deg); }
+  25% { top: 20%; transform: scale(1) rotate(-10deg); }
+  50% { left: 50%; top: 70%; transform: scale(0.9) rotate(20deg); }
+  75% { top: 30%; transform: scale(1.1) rotate(-20deg); }
+  100% { left: 80%; top: 60%; transform: scale(0.8) rotate(10deg); }
+}
+
+@keyframes flap {
+  from { transform: scaleY(1) rotate(-45deg); }
+  to { transform: scaleY(0.2) rotate(-45deg); }
+}
+
+// Mobile overrides
+@media (max-width: 640px) {
+  .flowers-container {
+    width: 100%;
+  }
+  .butterfly {
+    display: none;
+  }
+}
