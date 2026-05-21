@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback,useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { getActivities, createActivity, updateActivity, deleteActivity } from '../services/activitiesService';
 import Select, { type SingleValue } from 'react-select';
 import { getUsers } from '../services/usersService';
@@ -7,7 +7,7 @@ import ActivityForm from '../components/Activity/ActivityForm';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import ActivitiesTable from '../components/Activity/ActivitiesTable';
-import { Plus, Filter, XCircle, Search, User, Calendar } from 'lucide-react';
+import { Plus, Filter, XCircle, Search, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
 import type { Activity } from '../core/models/Activity';
@@ -40,8 +40,8 @@ const ActivitiesPage: React.FC = () => {
         type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
         title: '',
         message: '',
-        onConfirm: () => {},
-        onCancel: () => {},
+        onConfirm: () => { },
+        onCancel: () => { },
     });
 
     const hideNotification = () => setNotification({ ...notification, show: false });
@@ -158,7 +158,7 @@ const ActivitiesPage: React.FC = () => {
                 value: user.id,
                 label: user.username,
             })),
-    [users]);
+        [users]);
 
     const handleUserFilterChange = (selectedOption: SingleValue<SelectOption>) => {
         setFilterUser(selectedOption ? selectedOption.value : '');
@@ -194,24 +194,24 @@ const ActivitiesPage: React.FC = () => {
     return (
         <>
             <Notification {...notification} />
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <h1 className="text-2xl font-bold text-gray-800">Actividades</h1>
-                    <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
-                        <button
-                            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
-                            onClick={() => setShowFilters(!showFilters)}
-                        >
-                            <Filter size={16} />
-                            <span>Filtros</span>
-                        </button>
-                        <button
-                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
-                            onClick={openCreateModal}
-                        >
-                            <Plus size={18} /> Nueva Actividad
-                        </button>
-                    </div>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h1 className="text-2xl font-bold text-gray-800">Actividades</h1>
+                <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+                    <button
+                        className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
+                        onClick={() => setShowFilters(!showFilters)}
+                    >
+                        <Filter size={16} />
+                        <span>Filtros</span>
+                    </button>
+                    <button
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
+                        onClick={openCreateModal}
+                    >
+                        <Plus size={18} /> Nueva Actividad
+                    </button>
                 </div>
+            </div>
             {showFilters && (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 animate-fade-in-down">
                     <div className="flex justify-between items-center mb-4">
