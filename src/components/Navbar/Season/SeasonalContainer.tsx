@@ -2,6 +2,9 @@ import React, { useMemo } from 'react';
 import seasonsData from './seasons.json';
 import ChristmasLights from './Christmas/ChristmasLights';
 import SpringDecorations from './Spring/SpringDecorations';
+import IndependenceDay from './Independence/IndependenceDay';
+import HalloweenWeb from './Halloween/HalloweenWeb';
+import MuertosCandles from './DiaDeMuertos/MuertosCandles';
 
 interface SeasonConfig {
     id: string;
@@ -18,6 +21,11 @@ const SeasonalContainer: React.FC = () => {
         const month = now.getMonth() + 1; // getMonth() returns 0-11
         const day = now.getDate();
 
+        // For TESTING PURPOSES, if you want to test right now, uncomment one of these:
+        //const month = 9; const day = 15; // Pruebas Independencia
+        //const month = 10; const day = 30; // Pruebas Halloween
+        //const month = 11; const day = 2; // Pruebas Dia de Muertos
+
         const isBetween = (m: number, d: number, startM: number, startD: number, endM: number, endD: number) => {
             const current = m * 100 + d;
             const start = startM * 100 + startD;
@@ -31,7 +39,7 @@ const SeasonalContainer: React.FC = () => {
             }
         };
 
-        const activeSeason = (seasonsData as SeasonConfig[]).find(season => 
+        const activeSeason = (seasonsData as SeasonConfig[]).find(season =>
             isBetween(month, day, season.startMonth, season.startDay, season.endMonth, season.endDay)
         );
 
@@ -42,6 +50,12 @@ const SeasonalContainer: React.FC = () => {
                 return <ChristmasLights />;
             case 'Spring':
                 return <SpringDecorations />;
+            case 'Independence':
+                return <IndependenceDay />;
+            case 'Halloween':
+                return <HalloweenWeb />;
+            case 'Muertos':
+                return <MuertosCandles />;
             default:
                 return null;
         }

@@ -9,6 +9,33 @@
     "component": "Spring"
   },
   {
+    "id": "independence",
+    "name": "Independence Day",
+    "startMonth": 9,
+    "startDay": 1,
+    "endMonth": 9,
+    "endDay": 30,
+    "component": "Independence"
+  },
+  {
+    "id": "halloween",
+    "name": "Halloween",
+    "startMonth": 10,
+    "startDay": 15,
+    "endMonth": 10,
+    "endDay": 31,
+    "component": "Halloween"
+  },
+  {
+    "id": "muertos",
+    "name": "Dia de Muertos",
+    "startMonth": 11,
+    "startDay": 1,
+    "endMonth": 11,
+    "endDay": 4,
+    "component": "Muertos"
+  },
+  {
     "id": "christmas",
     "name": "Christmas",
     "startMonth": 12,
