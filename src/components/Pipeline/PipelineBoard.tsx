@@ -11,7 +11,7 @@ import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
 import OpportunityCard from './OpportunityCard';
-import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square } from 'lucide-react';
+import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square, ChevronUp, ChevronDown } from 'lucide-react';
 import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';
 import RemindersTab from '../Reminder/RemindersTab';
@@ -64,6 +64,7 @@ const PipelinePage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [showStageSelector, setShowStageSelector] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(true);
   const [visibleStages, setVisibleStages] = useState<OpportunityStageType[]>(STAGES);
   const [isExploding, setIsExploding] = useState(false);
 
@@ -400,12 +401,20 @@ const PipelinePage: React.FC = () => {
           </div>
         )}
         <Notification {...notification} />
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <h1 className="text-2xl font-bold text-gray-800">Pipeline de Oportunidades</h1>
-          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start w-full md:w-auto gap-2 sm:gap-4">
+        <div className="flex flex-col mb-4 md:mb-6 gap-4">
+          <div className="flex justify-between items-center w-full">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Pipeline de Oportunidades</h1>
+            <button 
+                className="md:hidden p-2 text-gray-500 hover:text-indigo-600 bg-gray-100 rounded-full transition-colors"
+                onClick={() => setShowToolbar(!showToolbar)}
+            >
+                {showToolbar ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </button>
+          </div>
+          <div className={`${showToolbar ? 'flex' : 'hidden'} md:flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start w-full md:w-auto gap-2 sm:gap-4`}>
             <div className="relative flex-1 sm:flex-none">
               <button
-                className="w-full bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+                className="w-full bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors whitespace-nowrap shadow-sm"
                 onClick={() => setShowStageSelector(!showStageSelector)}
               >
                 <Columns size={16} />
