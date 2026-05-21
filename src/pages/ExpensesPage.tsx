@@ -8,7 +8,7 @@ import ExpenseForm from '../components/Expense/ExpenseForm';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import Notification from '../components/Modal/Notification';
-import { PlusCircle, Search, Filter, XCircle, User, Calendar } from 'lucide-react';
+import { Plus, Search, Filter, XCircle, User, Calendar } from 'lucide-react';
 import Select, { type SingleValue } from 'react-select';
 
 import ReceiptUploadModal from '../components/Expense/ReceiptUploadModal';
@@ -209,21 +209,21 @@ const ExpensesPage: React.FC = () => {
     return (
         <>
             <Notification {...notification} />
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h1 className="text-2xl font-bold text-gray-800">Control de Gastos</h1>
-                <div className="flex items-center space-x-4 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h1 className="text-2xl font-bold text-gray-800">Gastos</h1>
+                <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
                     <button
-                        className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                        className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
                         onClick={() => setShowFilters(!showFilters)}
                     >
                         <Filter size={16} />
                         <span>Filtros</span>
                     </button>
                     <button
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
                         onClick={openCreateModal}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 whitespace-nowrap"
                     >
-                        <PlusCircle size={18} /> Nuevo Gasto
+                        <Plus size={18} /> Nuevo Gasto
                     </button>
                 </div>
             </div>

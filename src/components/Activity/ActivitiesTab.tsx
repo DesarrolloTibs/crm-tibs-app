@@ -4,7 +4,7 @@ import { getActivitiesByOpportunity, createActivity, updateActivity, deleteActiv
 import Modal from '../Modal/Modal';
 import Loader from '../Loader/Loader';
 
-import { PlusCircle,Search  } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import Notification from '../Modal/Notification';
 import type { Activity } from '../../core/models/Activity';
@@ -155,10 +155,10 @@ const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
     const paginatedActivities = filteredActivities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     return (
-        <div className="p-4">
+        <div className="p-4 flex flex-col h-full max-h-[80vh]">
             <Notification {...notification} />
-            <div className="flex justify-between items-center mb-4 gap-4">
-                <div className="relative flex-grow">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                <div className="relative flex-grow w-full sm:w-auto">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
                         <Search size={20} />
                     </span>
@@ -171,10 +171,10 @@ const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
                     />
                 </div>
                 <button
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm whitespace-nowrap"
                     onClick={openCreateModal}
                 >
-                    <PlusCircle size={18} /> Nueva Actividad
+                    <Plus size={18} /> Nueva Actividad
                 </button>
             </div>
             {loading ? (

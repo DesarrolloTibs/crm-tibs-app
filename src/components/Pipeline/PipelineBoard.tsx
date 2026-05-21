@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
 import Confetti from 'react-confetti-boom';
 import type { Opportunity, OpportunityStageType } from '../../core/models/Opportunity';
 import { OpportunityStage } from '../../core/models/Opportunity';
@@ -38,6 +38,19 @@ const STAGES: OpportunityStageType[] = [
 ];
 
 const PipelinePage: React.FC = () => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
 
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -387,12 +400,12 @@ const PipelinePage: React.FC = () => {
           </div>
         )}
         <Notification {...notification} />
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Pipeline de Oportunidades</h1>
-          <div className="flex items-center space-x-2">
-            <div className="relative">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <h1 className="text-2xl font-bold text-gray-800">Pipeline de Oportunidades</h1>
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start w-full md:w-auto gap-2 sm:gap-4">
+            <div className="relative flex-1 sm:flex-none">
               <button
-                className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                className="w-full bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
                 onClick={() => setShowStageSelector(!showStageSelector)}
               >
                 <Columns size={16} />
@@ -424,14 +437,14 @@ const PipelinePage: React.FC = () => {
               )}
             </div>
             <button
-                className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors flex-1 sm:flex-none whitespace-nowrap"
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Filter size={16} />
                 <span>Filtros</span>
               </button>
             <button
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 whitespace-nowrap"
               onClick={openCreateModal}
             >
               <Plus size={18} /> Nueva Oportunidad
@@ -494,8 +507,8 @@ const PipelinePage: React.FC = () => {
 
     </div>
         )}
-        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex space-x-4 overflow-x-auto pb-4">
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar ${!activeOpportunity ? 'snap-x snap-mandatory' : ''}`}>
             {STAGES.filter(stage => visibleStages.includes(stage)).map(stage => (
               <PipelineColumn key={stage}
                 stage={stage}

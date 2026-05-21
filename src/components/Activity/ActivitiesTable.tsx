@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 
-import { Edit, Inbox, Trash2 } from 'lucide-react';
+import { Edit, Inbox, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Activity } from '../../core/models/Activity';
 
 interface Props {
@@ -15,10 +15,15 @@ interface Props {
 }
 
 const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, currentPage, totalPages, onPageChange }) => {
+    const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+    const toggleRow = (id: string) => {
+        setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
+    };
     return (
         <div className="overflow-x-auto">
-            <table className="min-w-full border-separate" style={{ borderSpacing: '0 0.75rem' }}>
-                <thead>
+            <table className="min-w-full border-separate block md:table" style={{ borderSpacing: '0 0.75rem' }}>
+                <thead className="hidden md:table-header-group">
                     <tr>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Actividad</th>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
@@ -28,30 +33,67 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                         <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody className="block md:table-row-group">
                     {activities.length > 0 ? (
-                        activities.map(activity => (
-                            <tr key={activity.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px">
-                                <td className="p-4 rounded-l-lg font-medium text-gray-900">{activity.activity}</td>
-                                <td className="p-4 text-gray-600">{activity.activityType}</td>
-                                <td className="p-4 text-gray-600">{new Date(activity.date).toLocaleString()}</td>
-                                <td className="p-4 text-gray-600">{activity.user?.username}</td>
-                                <td className="p-4 text-gray-600">{activity.opportunity?.nombre_proyecto || 'N/A'}</td>
-                                <td className="p-4 rounded-r-lg text-right">
-                                    <div className="flex space-x-1 justify-end">
-                                        <button onClick={() => onEdit(activity)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full" title="Editar">
-                                            <Edit size={18} />
-                                        </button>
-                                        <button onClick={() => onDelete(activity)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full" title="Eliminar">
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))
+                        activities.map(activity => {
+                            const isExpanded = expandedRows[activity.id!];
+                            return (
+                                <tr key={activity.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px block md:table-row mb-4 md:mb-0">
+                                    <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none md:rounded-l-lg font-medium text-gray-900">
+                                        <div className="flex flex-col md:block">
+                                            <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Actividad</span>
+                                            <p>{activity.activity}</p>
+                                        </div>
+                                    </td>
+                                    <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none text-gray-600">
+                                        <div className="flex flex-col md:block">
+                                            <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Tipo</span>
+                                            <p>{activity.activityType}</p>
+                                        </div>
+                                    </td>
+                                    <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none text-gray-600">
+                                        <div className="flex flex-col md:block">
+                                            <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Fecha</span>
+                                            <p>{new Date(activity.date).toLocaleString()}</p>
+                                        </div>
+                                    </td>
+                                    <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
+                                        <div className="flex flex-col md:block">
+                                            <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Usuario</span>
+                                            <p>{activity.user?.username}</p>
+                                        </div>
+                                    </td>
+                                    <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
+                                        <div className="flex flex-col md:block">
+                                            <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Oportunidad</span>
+                                            <p>{activity.opportunity?.nombre_proyecto || 'N/A'}</p>
+                                        </div>
+                                    </td>
+                                    <td className="p-4 block md:table-cell md:rounded-r-lg text-right">
+                                        <div className="flex justify-between md:justify-end items-center mt-2 md:mt-0">
+                                            <button 
+                                                onClick={() => toggleRow(activity.id!)} 
+                                                className="md:hidden text-blue-600 font-medium text-sm flex items-center hover:bg-blue-50 px-2 py-1 rounded"
+                                            >
+                                                {isExpanded ? <ChevronUp size={16} className="mr-1"/> : <ChevronDown size={16} className="mr-1"/>}
+                                                {isExpanded ? 'Menos' : 'Más'} detalles
+                                            </button>
+                                            <div className="flex space-x-1">
+                                                <button onClick={() => onEdit(activity)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full" title="Editar">
+                                                    <Edit size={18} />
+                                                </button>
+                                                <button onClick={() => onDelete(activity)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full" title="Eliminar">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })
                     ) : (
                         <tr>
-                            <td colSpan={6} className="text-center py-16">
+                            <td colSpan={6} className="text-center py-16 block md:table-cell">
                                 <div className="flex flex-col items-center text-gray-500">
                                     <Inbox size={48} className="mb-4" />
                                     <h3 className="text-xl font-semibold">No se encontraron actividades</h3>

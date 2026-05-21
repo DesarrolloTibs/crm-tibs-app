@@ -44,7 +44,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
   const columnStyles = `
     flex flex-col
     min-h-[850px]
-    w-[300px] flex-shrink-0
+    w-[85vw] md:w-[300px] flex-shrink-0 snap-center
     rounded-xl
     bg-slate-50/80 backdrop-blur-sm
     transition-colors duration-200 ease-in-out

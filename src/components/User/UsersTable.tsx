@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { User } from '../../core/models/User';
-import { Edit, Inbox, UserCheck, UserX, Camera } from 'lucide-react';
+import { Edit, Inbox, UserCheck, UserX, Camera, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Props {
   users: User[];
@@ -14,10 +14,16 @@ interface Props {
 }
 
 const UsersTable: React.FC<Props> = ({ users, onEdit, onUpdateStatus, onUploadImage, isAdmin, currentPage, totalPages, onPageChange }) => {
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full border-separate" style={{ borderSpacing: '0 0.75rem' }}>
-        <thead>
+      <table className="min-w-full border-separate block md:table" style={{ borderSpacing: '0 0.75rem' }}>
+        <thead className="hidden md:table-header-group">
           <tr>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Email</th>
@@ -26,69 +32,96 @@ const UsersTable: React.FC<Props> = ({ users, onEdit, onUpdateStatus, onUploadIm
             <th className="p-4"></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="block md:table-row-group">
           {users.length > 0 ? (
-            users.map(user => (
-              <tr key={user.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px">
-                <td className="p-4 rounded-l-lg flex items-center space-x-3">
-                  {user.profileImageUrl ? (
-                    <img
-                      src={`${import.meta.env.VITE_BASE_URL}${user.profileImageUrl}`}
-                      alt={user.username}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-sm font-bold">
-                      {user.username.substring(0, 2).toUpperCase()}
+            users.map(user => {
+              const isExpanded = expandedRows[user.id!];
+              return (
+                <tr key={user.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px block md:table-row mb-4 md:mb-0">
+                  <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none md:rounded-l-lg">
+                    <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-3">
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Usuario</span>
+                      <div className="flex items-center space-x-3">
+                        {user.profileImageUrl ? (
+                          <img
+                            src={`${import.meta.env.VITE_BASE_URL}${user.profileImageUrl}`}
+                            alt={user.username}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-sm font-bold">
+                            {user.username.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <p className="font-semibold text-gray-900">{user.username}</p>
+                      </div>
                     </div>
-                  )}
-                  
-                  <p className="font-semibold text-gray-900">{user.username}</p>
-                </td>
-                <td className="p-4"><p className="text-gray-700">{user.email}</p></td>
-                <td className="p-4">
-                  <p className="text-gray-700 capitalize">
-                    {user.role === 'admin' ? 'Administrador' : user.role === 'executive' ? 'Ejecutivo' : user.role}
-                  </p>
-                </td>
-                <td className="p-4">
-                  <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${user.isActive ? 'text-green-900' : 'text-red-900'}`}>
-                    <span aria-hidden className={`absolute inset-0 ${user.isActive ? 'bg-green-200' : 'bg-red-200'} opacity-50 rounded-full`}></span>
-                    <span className="relative">{user.isActive ? 'Activo' : 'Inactivo'}</span>
-                  </span>
-                </td>
-                <td className="p-4 rounded-r-lg text-right">
-                  {isAdmin && (
-                    <div className="flex space-x-1 justify-end">
-                      <button
-                        onClick={() => onEdit(user)}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full"
-                        title="Editar"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => onUploadImage(user)}
-                        className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-100 rounded-full"
-                        title="Subir imagen de perfil"
-                      >
-                        <Camera size={18} />
-                      </button>
-                      <button
-                        onClick={() => onUpdateStatus(user)}
-                        className={`p-2 text-gray-500 rounded-full ${user.isActive ? 'hover:text-yellow-600 hover:bg-yellow-100' : 'hover:text-green-600 hover:bg-green-100'}`}
-                        title={user.isActive ? 'Desactivar' : 'Reactivar'}
-                      >
-                        {user.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
-                      </button>
+                  </td>
+                  <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
+                    <div className="flex flex-col md:block">
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Email</span>
+                      <p className="text-gray-700">{user.email}</p>
                     </div>
-                  )}
-                </td>
-              </tr>
-            ))
+                  </td>
+                  <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
+                    <div className="flex flex-col md:block">
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Rol</span>
+                      <p className="text-gray-700 capitalize">
+                        {user.role === 'admin' ? 'Administrador' : user.role === 'executive' ? 'Ejecutivo' : user.role}
+                      </p>
+                    </div>
+                  </td>
+                  <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
+                    <div className="flex flex-col md:block">
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Estado</span>
+                      <span className={`relative inline-block px-3 py-1 font-semibold leading-tight w-fit ${user.isActive ? 'text-green-900' : 'text-red-900'}`}>
+                        <span aria-hidden className={`absolute inset-0 ${user.isActive ? 'bg-green-200' : 'bg-red-200'} opacity-50 rounded-full`}></span>
+                        <span className="relative">{user.isActive ? 'Activo' : 'Inactivo'}</span>
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-4 block md:table-cell md:rounded-r-lg">
+                    <div className="flex justify-between md:justify-end items-center mt-2 md:mt-0">
+                      <button 
+                        onClick={() => toggleRow(user.id!)} 
+                        className="md:hidden text-blue-600 font-medium text-sm flex items-center hover:bg-blue-50 px-2 py-1 rounded"
+                      >
+                        {isExpanded ? <ChevronUp size={16} className="mr-1"/> : <ChevronDown size={16} className="mr-1"/>}
+                        {isExpanded ? 'Menos' : 'Más'} detalles
+                      </button>
+                      {isAdmin && (
+                        <div className="flex space-x-1 justify-end">
+                          <button
+                            onClick={() => onEdit(user)}
+                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full"
+                            title="Editar"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => onUploadImage(user)}
+                            className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-100 rounded-full"
+                            title="Subir imagen de perfil"
+                          >
+                            <Camera size={18} />
+                          </button>
+                          <button
+                            onClick={() => onUpdateStatus(user)}
+                            className={`p-2 text-gray-500 rounded-full ${user.isActive ? 'hover:text-yellow-600 hover:bg-yellow-100' : 'hover:text-green-600 hover:bg-green-100'}`}
+                            title={user.isActive ? 'Desactivar' : 'Reactivar'}
+                          >
+                            {user.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
           ) : (
             <tr>
-              <td colSpan={5} className="text-center py-16">
+              <td colSpan={5} className="text-center py-16 block md:table-cell">
                 <div className="flex flex-col items-center text-gray-500">
                   <Inbox size={48} className="mb-4" />
                   <h3 className="text-xl font-semibold">No se encontraron usuarios</h3>

@@ -277,18 +277,18 @@ const OpportunitiesHistoryPage: React.FC = () => {
   return (
     <>
       <Notification {...notification} />
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Historial de Oportunidades</h1>
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">Historial de Oportunidades</h1>
+        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
           <button
-            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-2 transition-colors"
+            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter size={16} />
             <span>Filtros</span>
           </button>
           <button
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap"
             onClick={openCreateModal}
           >
             <Plus size={18} /> Nueva Oportunidad

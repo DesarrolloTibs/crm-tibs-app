@@ -12,30 +12,41 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
     const { user } = useAuth();
 
     return (
-        <header className="bg-white shadow-md p-2 sm:p-4 flex justify-between items-center">
-            <div className="flex items-center gap-4">
+        <header className="bg-white shadow-sm p-3 sm:p-4 flex justify-between items-center sticky top-0 z-20 border-b border-gray-100">
+            <div className="flex items-center gap-4 w-1/4">
                 {/* Botón para el menú */}
-                <button onClick={toggleSidebar} className="text-gray-600 hover:text-gray-800">
+                <button 
+                    onClick={toggleSidebar} 
+                    className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="Toggle menu"
+                >
                     {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
-                {/* Título o breadcrumbs */}
-                <h1 className="text-xl font-semibold text-gray-800 hidden sm:block"></h1>
             </div>
 
-            {/* Sección central para decoraciones temáticas */}
-            <div className="flex-grow flex justify-center items-center hidden sm:flex h-16 relative overflow-visible mx-2">
+            {/* Logo para móvil (centrado) */}
+            <div className="sm:hidden flex-grow flex justify-center items-center">
+                <span className="font-bold text-xl text-blue-800 tracking-tight">Friday</span>
+            </div>
+
+            {/* Sección central para decoraciones temáticas (Desktop) */}
+            <div className="flex-grow justify-center items-center hidden sm:flex h-16 relative overflow-visible mx-2 w-1/2">
                 <div className="w-full h-full relative">
                     <SeasonalContainer />
                 </div>
             </div>
 
             {/* Información del usuario */}
-            <div className="flex items-center gap-2 sm:gap-4">
-                <span className="text-gray-600">
-                    <span className="hidden sm:inline">Hola, </span>
-                    <span className="font-semibold">{user?.username || 'Usuario'}</span>
-                </span>
-                {/* Aquí se podría añadir un menú desplegable para el perfil y logout */}
+            <div className="flex items-center justify-end gap-2 sm:gap-4 w-1/4">
+                <div className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 transition-colors py-1.5 px-3 rounded-full cursor-pointer border border-gray-200 shadow-sm">
+                    <span className="text-gray-600 flex items-center text-sm">
+                        <span className="hidden sm:inline mr-1">Hola,</span>
+                        <span className="font-semibold text-gray-800 truncate max-w-[80px] sm:max-w-[150px]">{user?.username || 'Usuario'}</span>
+                    </span>
+                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-inner">
+                        {(user?.username || 'U').substring(0, 1).toUpperCase()}
+                    </div>
+                </div>
             </div>
         </header>
     );

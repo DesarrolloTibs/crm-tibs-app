@@ -1,105 +1,83 @@
-/* src/components/Login/Login.css */
-
-/* Animación para el fondo de gradiente */
-@keyframes gradient-animation {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* Light Glassmorphism Login Card */
+.glass-login-card {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-radius: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 
+        0 20px 40px -15px rgba(0, 0, 0, 0.05),
+        0 0 0 1px rgba(255, 255, 255, 0.4);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.animated-gradient {
-  background-size: 200% 200%;
-  animation: gradient-animation 10s ease infinite;
+.glass-login-card:hover {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.8);
+    transform: translateY(-5px);
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.08);
 }
 
-/* Contenedor para las burbujas flotantes */
-.bubbles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: 0;
+/* Premium Inputs (Light Mode) */
+.login-input-premium {
+    @apply w-full py-4 rounded-2xl text-slate-900 text-sm font-medium transition-all duration-300 border;
+    outline: none;
 }
 
-/* Estilo de cada burbuja */
-.bubbles li {
-  position: absolute;
-  display: block;
-  list-style: none;
-  width: 20px;
-  height: 20px;
-  background: rgba(96, 165, 250, 0.2); /* Tono azul-400 con transparencia */
-  animation: float-up 40s linear infinite;
-  bottom: -150px; /* Inician fuera de la pantalla */
+.login-input-premium:focus {
+    @apply border-blue-600 shadow-xl shadow-blue-500/10;
+    background: #fff !important;
 }
 
-/* Variaciones de tamaño y posición para las burbujas */
-.bubbles li:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
-.bubbles li:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 25s; }
-.bubbles li:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
-.bubbles li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 30s; }
-.bubbles li:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
-.bubbles li:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
-.bubbles li:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
-.bubbles li:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
-.bubbles li:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
-.bubbles li:nth-child(10) { left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 22s; }
-.bubbles li:nth-child(11) { left: 5%; width: 40px; height: 40px; animation-delay: 5s; animation-duration: 30s; }
-.bubbles li:nth-child(12) { left: 90%; width: 30px; height: 30px; animation-delay: 8s; animation-duration: 20s; }
-.bubbles li:nth-child(13) { left: 15%; width: 70px; height: 70px; animation-delay: 12s; animation-duration: 38s; }
-.bubbles li:nth-child(14) { left: 80%; width: 50px; height: 50px; animation-delay: 1s; animation-duration: 28s; }
-.bubbles li:nth-child(15) { left: 60%; width: 90px; height: 90px; animation-delay: 6s; animation-duration: 32s; }
-.bubbles li:nth-child(16) { left: 30%; width: 22px; height: 22px; animation-delay: 10s; animation-duration: 45s; }
-.bubbles li:nth-child(17) { left: 55%; width: 120px; height: 120px; animation-delay: 4s; animation-duration: 25s; }
-.bubbles li:nth-child(18) { left: 2%; width: 18px; height: 18px; animation-delay: 14s; animation-duration: 50s; }
-.bubbles li:nth-child(19) { left: 95%; width: 75px; height: 75px; animation-delay: 9s; animation-duration: 29s; }
-.bubbles li:nth-child(20) { left: 45%; width: 35px; height: 35px; animation-delay: 1s; animation-duration: 39s; }
-
-/* Animación de flotación hacia arriba */
-@keyframes float-up {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
-    border-radius: 0;
-  }
-  100% {
-    transform: translateY(-1000px) rotate(720deg);
-    opacity: 0;
-    border-radius: 50%;
-  }
+.login-input-premium:hover {
+    @apply border-slate-300;
 }
 
-
-/* Animación de entrada para el formulario */
-.form-fade-in-up {
-  animation: fade-in-up 0.8s ease-out forwards;
+.login-input-premium::placeholder {
+    color: #94a3b8;
+    font-weight: 500;
 }
 
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Premium Button (Vibrant Blue) */
+.login-btn-premium {
+    @apply w-full bg-blue-600 text-white rounded-2xl font-black text-sm tracking-[0.2em] transition-all duration-500 flex items-center justify-center shadow-lg shadow-blue-500/30 border-none;
+    padding: 1.25rem;
 }
 
-/* Estilo para la tarjeta de login con efecto de cristal */
-.login-card {
-  background: #fff;
+.login-btn-premium:hover:not(:disabled) {
+    @apply bg-blue-700 -translate-y-1 shadow-xl shadow-blue-600/40 scale-[1.01];
 }
 
-/* Placeholder de color blanco para los inputs */
-.login-card input::placeholder {
-  color: #9ca3af; /* gray-400 */
+.login-btn-premium:active:not(:disabled) {
+    @apply scale-[0.98] -translate-y-0.5;
 }
 
-/* Estilo para los inputs en la tarjeta de login */
-.login-card input {
-  background-color: #f9fafb; /* gray-50 */
-  color: #111827; /* gray-900 */
+.login-btn-premium:disabled {
+    @apply opacity-70 cursor-not-allowed bg-slate-400 shadow-none -translate-y-0 scale-100;
 }
+
+/* Animations */
+@keyframes aura-pulse-light {
+    0%, 100% { opacity: 0.1; transform: scale(1); }
+    50% { opacity: 0.2; transform: scale(1.1); }
+}
+
+.animate-pulse {
+    animation: aura-pulse-light 8s infinite ease-in-out;
+}
+
+/* Base fade-in */
+.animate-in {
+    animation: login-fade-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes login-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
