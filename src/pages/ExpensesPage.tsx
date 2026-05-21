@@ -274,7 +274,7 @@ const ExpensesPage: React.FC = () => {
                                 type="date"
                                 value={filterDate}
                                 onChange={e => setFilterDate(e.target.value)}
-                                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0"
                             />
                         </div>
                     </div>

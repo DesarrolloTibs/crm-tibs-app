@@ -251,15 +251,15 @@ const ActivitiesPage: React.FC = () => {
                             />
                         </div>
                         <div className="relative">
-                             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                <Calendar size={20} />
-                            </span>
-                            <input
-                                type="date"
-                                value={filterDate}
-                                onChange={e => setFilterDate(e.target.value)}
-                                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                            />
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                                <input
+                                    type="date"
+                                    value={filterDate}
+                                    onChange={(e) => setFilterDate(e.target.value)}
+                                    className="w-full border rounded-lg px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

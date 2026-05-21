@@ -152,7 +152,7 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
                 type="datetime-local" 
                 value={newReminderDate} 
                 onChange={e => setNewReminderDate(e.target.value)} 
-                className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
+                className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0" 
               />
             </div>
           </div>

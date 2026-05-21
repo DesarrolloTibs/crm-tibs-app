@@ -268,12 +268,12 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
           <div>
             <label htmlFor="estimated_closure_date" className="block text-sm font-medium text-gray-700 mb-1">Fecha de Cierre Estimada</label>
-            <input type="date" id="estimated_closure_date" name="estimated_closure_date" value={opportunity.estimated_closure_date || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+            <input type="date" id="estimated_closure_date" name="estimated_closure_date" value={opportunity.estimated_closure_date || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0" />
           </div>
 
           <div>
             <label htmlFor="createdAt" className="block text-sm font-medium text-gray-700 mb-1">Fecha de Creación</label>
-            <input type="date" id="createdAt" name="createdAt" value={opportunity.createdAt || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+            <input type="date" id="createdAt" name="createdAt" value={opportunity.createdAt || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
