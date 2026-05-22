@@ -147,9 +147,9 @@ const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDel
               );
             })
           ) : (
-            <tr>
+            <tr className="block md:table-row w-full">
               <td colSpan={8} className="text-center py-16 block md:table-cell w-full">
-                <div className="flex flex-col items-center justify-center text-center text-gray-500 w-full">
+                <div className="flex flex-col items-center justify-center text-center text-gray-500 w-full mx-auto">
                   <Inbox size={48} className="mb-4 mx-auto" />
                   <h3 className="text-xl font-semibold text-center w-full">No se encontraron oportunidades</h3>
                   <p className="text-sm text-center w-full mt-1">Intenta ajustar los filtros o crear una nueva oportunidad.</p>
