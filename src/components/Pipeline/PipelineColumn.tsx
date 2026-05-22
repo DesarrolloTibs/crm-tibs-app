@@ -68,7 +68,7 @@ const PipelineColumn: React.FC<Props> = ({ stage, opportunities, onEdit, onDelet
       <div className="h-[1px] bg-[#d6d6d6] w-[90%] mx-auto"></div>
 
       <SortableContext items={opportunities.map(o => o.id)} >
-        <div className="flex-grow p-2 overflow-y-auto bg-[#fafafa]" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+        <div className="flex-grow p-2 overflow-y-auto bg-[#fafafa] flex flex-col items-center" style={{ maxHeight: 'calc(100vh - 120px)' }}>
           {opportunities.map(opportunity => (
             <OpportunityCard 
               key={opportunity.id} 
