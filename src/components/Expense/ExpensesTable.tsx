@@ -131,11 +131,11 @@ const ExpensesTable: React.FC<Props> = ({ expenses, onEdit, onDelete, currentPag
                         })
                     ) : (
                         <tr>
-                            <td colSpan={6} className="text-center py-16 block md:table-cell">
-                                <div className="flex flex-col items-center text-gray-500">
-                                    <Inbox size={48} className="mb-4" />
-                                    <h3 className="text-xl font-semibold">No se encontraron gastos</h3>
-                                    <p className="text-sm">Registra un nuevo gasto para comenzar.</p>
+                            <td colSpan={6} className="text-center py-16 block md:table-cell w-full">
+                                <div className="flex flex-col items-center justify-center text-center text-gray-500 w-full">
+                                    <Inbox size={48} className="mb-4 mx-auto" />
+                                    <h3 className="text-xl font-semibold text-center w-full">No se encontraron gastos</h3>
+                                    <p className="text-sm text-center w-full mt-1">Registra un nuevo gasto para comenzar.</p>
                                 </div>
                             </td>
                         </tr>
