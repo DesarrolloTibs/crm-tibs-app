@@ -10,10 +10,15 @@ import Layout from './components/Layout/Layout'; // Importar el Layout
 import '../src/components/Sidebar/animations.css' // Importar los estilos globales
 import ActivitiesPage from './pages/ActivitiesPage';
 import ExpensesPage from './pages/ExpensesPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+
 const App: React.FC = () => (
     <BrowserRouter>
         <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route
                 path="/clients"
                 element={

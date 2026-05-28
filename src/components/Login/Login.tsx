@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { login } from '../../services/authService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, LogIn, ShieldAlert, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import LoginBackground from './LoginBackground';
 import './Login.css';
@@ -147,6 +147,13 @@ const Login: React.FC = () => {
                                 </div>
                                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Recordarme</span>
                             </label>
+
+                            <Link
+                                to="/forgot-password"
+                                className="text-[10px] font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest transition-colors"
+                            >
+                                ¿Olvidaste tu contraseña?
+                            </Link>
                         </div>
 
                         {error && (

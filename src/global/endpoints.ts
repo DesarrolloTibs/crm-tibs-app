@@ -1,7 +1,9 @@
 const urlBase = import.meta.env.VITE_BASE_URL + '/api/';
 
 export const auth = {
-    LOGIN: urlBase + 'auth/login'
+    LOGIN: urlBase + 'auth/login',
+    FORGOT_PASSWORD: urlBase + 'auth/forgot-password',
+    RESET_PASSWORD: urlBase + 'auth/reset-password',
 };
 
 export const CLIENTS = {
