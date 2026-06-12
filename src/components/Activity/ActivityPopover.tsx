@@ -32,7 +32,8 @@ const DetailRow: React.FC<DetailRowProps> = ({ icon, children }) => (
  * Muestra los detalles de la actividad y botones de editar / eliminar.
  */
 const ActivityPopover: React.FC<Props> = ({ activity, position, onEdit, onDelete, onClose }) => {
-    const color = getActivityColor(activity.activityType);
+    const typeName = activity.typeActivity?.strname;
+    const color = getActivityColor(typeName);
 
     const popoverLeft = Math.min(position.x - 160, window.innerWidth - 340);
     const popoverTop  = Math.min(position.y + 8,   window.innerHeight - 300);
@@ -65,7 +66,7 @@ const ActivityPopover: React.FC<Props> = ({ activity, position, onEdit, onDelete
                     style={{ backgroundColor: color.bg }}
                 >
                     <span className="text-white text-xs font-bold uppercase tracking-wider">
-                        {activity.activityType}
+                        {typeName || 'Sin tipo'}
                     </span>
                     <button
                         onClick={onClose}

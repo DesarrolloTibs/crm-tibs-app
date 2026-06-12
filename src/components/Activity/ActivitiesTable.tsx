@@ -48,7 +48,7 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                                     <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none text-gray-600">
                                         <div className="flex flex-col md:block">
                                             <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Tipo</span>
-                                            <p>{activity.activityType}</p>
+                                            <p>{activity.typeActivity?.strname || 'N/A'}</p>
                                         </div>
                                     </td>
                                     <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none text-gray-600">

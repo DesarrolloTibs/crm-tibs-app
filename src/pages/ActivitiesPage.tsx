@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { getActivities, createActivity, updateActivity, deleteActivity } from '../services/activitiesService';
+import { getActivities, createActivity, updateActivity, deleteActivity, getActivityTypes } from '../services/activitiesService';
 import Select, { type SingleValue } from 'react-select';
 import { getUsers } from '../services/usersService';
 
@@ -11,7 +11,7 @@ import ActivitiesCalendar from '../components/Activity/ActivitiesCalendar';
 import { Plus, Filter, XCircle, Search, User, LayoutGrid, Table2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
-import type { Activity } from '../core/models/Activity';
+import type { Activity, TypeActivity } from '../core/models/Activity';
 import type { User as UserModel } from '../core/models/User';
 
 interface SelectOption {
@@ -26,6 +26,7 @@ type ViewMode = 'table' | 'calendar';
 const ActivitiesPage: React.FC = () => {
     const { isAdmin } = useAuth();
     const [activities, setActivities] = useState<Activity[]>([]);
+    const [activityTypes, setActivityTypes] = useState<TypeActivity[]>([]);
     const [users, setUsers] = useState<UserModel[]>([]);
     const [editing, setEditing] = useState<Activity | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -65,9 +66,20 @@ const ActivitiesPage: React.FC = () => {
         }
     }, []);
 
+    const fetchActivityTypes = useCallback(async () => {
+        try {
+            const types = await getActivityTypes();
+            // Filtrar solo los tipos activos (blnstatus === true)
+            setActivityTypes(types.filter(t => t.blnstatus));
+        } catch (error) {
+            console.error("Failed to fetch activity types", error);
+        }
+    }, []);
+
     useEffect(() => {
         fetchActivities();
-    }, [fetchActivities]);
+        fetchActivityTypes();
+    }, [fetchActivities, fetchActivityTypes]);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -103,7 +115,7 @@ const ActivitiesPage: React.FC = () => {
         if (activity.id) {
             setLoading(true);
             try {
-                const { id, user, opportunity, userId, ...updateData } = activity as Activity;
+                const { id, user, opportunity, userId, typeActivity, ...updateData } = activity as Activity;
                 await updateActivity(id, updateData);
                 setEditing(null);
                 setModalOpen(false);
@@ -309,6 +321,7 @@ const ActivitiesPage: React.FC = () => {
             ) : viewMode === 'calendar' ? (
                 <ActivitiesCalendar
                     activities={filteredActivities}
+                    activityTypes={activityTypes}
                     onEdit={openEditModal}
                     onDelete={handleDelete}
                     onCreateWithDate={openCreateModalWithDate}
@@ -329,6 +342,7 @@ const ActivitiesPage: React.FC = () => {
             <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
                 <ActivityForm
                     initialData={editing ? editing : (initialDate ? { date: initialDate } : undefined)}
+                    activityTypes={activityTypes}
                     onSubmit={editing ? handleUpdate : handleCreate}
                     onCancel={() => setModalOpen(false)}
                 />

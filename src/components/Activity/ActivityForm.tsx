@@ -1,17 +1,16 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import Select, { type SingleValue } from 'react-select';
 
 import { getOpportunities } from '../../services/opportunitiesService';
 import { getActiveClients } from '../../services/clientsService';
-import type { Activity } from '../../core/models/Activity';
+import type { Activity, TypeActivity } from '../../core/models/Activity';
 import type { Opportunity } from '../../core/models/Opportunity';
 import type { Client } from '../../core/models/Client';
 import { useAuth } from '../../hooks/useAuth';
-import { ACTIVITY_TYPES } from './activityColors';
 
 interface Props {
     initialData?: Partial<Activity>;
+    activityTypes: TypeActivity[];
     onSubmit: (activity: Partial<Activity>) => void;
     onCancel: () => void;
 }
@@ -34,11 +33,11 @@ const formatDateTimeForInput = (isoString?: string) => {
     }
 };
 
-const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
+const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, onCancel }) => {
     const { user, isAdmin } = useAuth();
     const [form, setForm] = useState<Partial<Activity>>({
         activity: '',
-        activityType: 'Correo',
+        typeActivityId: initialData?.typeActivityId ?? (activityTypes[0]?.id || null),
         opportunityId: initialData?.opportunityId ?? null,
         clientId: initialData?.clientId ?? null,
         flaghistory: initialData?.flaghistory || false,
@@ -94,9 +93,17 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type, checked } = e.target as HTMLInputElement;
+        
+        let parsedValue: any = value;
+        if (name === 'typeActivityId') {
+            parsedValue = value ? parseInt(value, 10) : null;
+        } else if (type === 'checkbox') {
+            parsedValue = checked;
+        }
+
         setForm({
             ...form,
-            [name]: type === 'checkbox' ? checked : value,
+            [name]: parsedValue,
         });
     };
 
@@ -135,11 +142,11 @@ const ActivityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                 <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Detalles de la Actividad</legend>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="activityType" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Actividad</label>
-                        <select id="activityType" name="activityType" value={form.activityType} onChange={handleChange} required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                        <label htmlFor="typeActivityId" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Actividad</label>
+                        <select id="typeActivityId" name="typeActivityId" value={form.typeActivityId || ''} onChange={handleChange} required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">Seleccione un tipo</option>
-                            {ACTIVITY_TYPES.map(type => (
-                                <option key={type} value={type}>{type}</option>
+                            {activityTypes.map(type => (
+                                <option key={type.id} value={type.id}>{type.strname}</option>
                             ))}
                         </select>
                     </div>

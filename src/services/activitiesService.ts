@@ -1,6 +1,6 @@
 
 import axiosInstance from '../core/axios/axiosInstance';
-import type { Activity } from '../core/models/Activity';
+import type { Activity, TypeActivity } from '../core/models/Activity';
 import { ACTIVITIES } from '../global/endpoints';
 
 
@@ -24,5 +24,10 @@ export async function deleteActivity(id: string): Promise<void> {
 }
 export async function getActivitiesByOpportunity(params?: { opportunityId?: string }): Promise<Activity[]> {
     const response = await axiosInstance.get(ACTIVITIES.ACTIVITIES, { params });
+    return response.data;
+}
+
+export async function getActivityTypes(): Promise<TypeActivity[]> {
+    const response = await axiosInstance.get(`${ACTIVITIES.ACTIVITIES}/types`);
     return response.data;
 }

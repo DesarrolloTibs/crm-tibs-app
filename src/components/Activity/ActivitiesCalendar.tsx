@@ -7,7 +7,7 @@ import listPlugin from '@fullcalendar/list';
 import type { EventClickArg, DateSelectArg, EventContentArg } from '@fullcalendar/core';
 import esLocale from '@fullcalendar/core/locales/es';
 
-import type { Activity } from '../../core/models/Activity';
+import type { Activity, TypeActivity } from '../../core/models/Activity';
 import { getActivityColor } from './activityColors';
 import ActivityTypeLegend from './ActivityTypeLegend';
 import ActivityEventCard from './ActivityEventCard';
@@ -18,6 +18,7 @@ import './calendar.css';
 
 interface Props {
     activities: Activity[];
+    activityTypes: TypeActivity[];
     onEdit: (activity: Activity) => void;
     onDelete: (activity: Activity) => void;
     onCreateWithDate: (date: string) => void;
@@ -49,6 +50,7 @@ const toLocalDateTimeString = (date: Date): string => {
  */
 const ActivitiesCalendar: React.FC<Props> = ({
     activities,
+    activityTypes,
     onEdit,
     onDelete,
     onCreateWithDate,
@@ -71,7 +73,7 @@ const ActivitiesCalendar: React.FC<Props> = ({
         borderColor: 'transparent',
         extendedProps: { activity },
         // Necesario para la vista de Lista, que usa el dot de color
-        color: getActivityColor(activity.activityType).bg,
+        color: getActivityColor(activity.typeActivity?.strname).bg,
     }));
 
     /* ── Handlers ───────────────────────────────────────────────────────── */
@@ -123,7 +125,7 @@ const ActivitiesCalendar: React.FC<Props> = ({
 
     return (
         <div className="relative">
-            <ActivityTypeLegend />
+            <ActivityTypeLegend activityTypes={activityTypes} />
 
             <div className="tibs-calendar bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <FullCalendar

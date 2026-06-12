@@ -14,7 +14,7 @@ interface Props {
  */
 const ActivityEventCard: React.FC<Props> = ({ eventInfo }) => {
     const activity = eventInfo.event.extendedProps.activity as Activity;
-    const color = getActivityColor(activity.activityType);
+    const color = getActivityColor(activity.typeActivity?.strname);
 
     return (
         <div
