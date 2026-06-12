@@ -7,7 +7,8 @@ import ActivityForm from '../components/Activity/ActivityForm';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import ActivitiesTable from '../components/Activity/ActivitiesTable';
-import { Plus, Filter, XCircle, Search, User } from 'lucide-react';
+import ActivitiesCalendar from '../components/Activity/ActivitiesCalendar';
+import { Plus, Filter, XCircle, Search, User, LayoutGrid, Table2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
 import type { Activity } from '../core/models/Activity';
@@ -20,12 +21,16 @@ interface SelectOption {
 
 const PAGE_SIZE = 10;
 
+type ViewMode = 'table' | 'calendar';
+
 const ActivitiesPage: React.FC = () => {
     const { isAdmin } = useAuth();
     const [activities, setActivities] = useState<Activity[]>([]);
     const [users, setUsers] = useState<UserModel[]>([]);
     const [editing, setEditing] = useState<Activity | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<ViewMode>('calendar');
+    const [initialDate, setInitialDate] = useState<string | undefined>(undefined);
 
     const [showFilters, setShowFilters] = useState(false);
     const [filterTitle, setFilterTitle] = useState('');
@@ -143,11 +148,19 @@ const ActivitiesPage: React.FC = () => {
 
     const openCreateModal = () => {
         setEditing(null);
+        setInitialDate(undefined);
+        setModalOpen(true);
+    };
+
+    const openCreateModalWithDate = (date: string) => {
+        setEditing(null);
+        setInitialDate(date);
         setModalOpen(true);
     };
 
     const openEditModal = (activity: Activity) => {
         setEditing(activity);
+        setInitialDate(undefined);
         setModalOpen(true);
     };
 
@@ -197,13 +210,40 @@ const ActivitiesPage: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold text-gray-800">Actividades</h1>
                 <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
-                    <button
-                        className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
-                        onClick={() => setShowFilters(!showFilters)}
-                    >
-                        <Filter size={16} />
-                        <span>Filtros</span>
-                    </button>
+                    {/* Toggle Tabla / Calendario */}
+                    <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+                        <button
+                            onClick={() => setViewMode('table')}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                                viewMode === 'table'
+                                    ? 'bg-white text-indigo-700 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            <Table2 size={15} />
+                            Tabla
+                        </button>
+                        <button
+                            onClick={() => setViewMode('calendar')}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                                viewMode === 'calendar'
+                                    ? 'bg-white text-indigo-700 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            <LayoutGrid size={15} />
+                            Calendario
+                        </button>
+                    </div>
+                    {viewMode === 'table' && (
+                        <button
+                            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
+                            <Filter size={16} />
+                            <span>Filtros</span>
+                        </button>
+                    )}
                     <button
                         className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
                         onClick={openCreateModal}
@@ -266,6 +306,13 @@ const ActivitiesPage: React.FC = () => {
             )}
             {loading ? (
                 <Loader />
+            ) : viewMode === 'calendar' ? (
+                <ActivitiesCalendar
+                    activities={filteredActivities}
+                    onEdit={openEditModal}
+                    onDelete={handleDelete}
+                    onCreateWithDate={openCreateModalWithDate}
+                />
             ) : (
                 <>
                     <ActivitiesTable
@@ -281,7 +328,7 @@ const ActivitiesPage: React.FC = () => {
             )}
             <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
                 <ActivityForm
-                    initialData={editing || undefined}
+                    initialData={editing ? editing : (initialDate ? { date: initialDate } : undefined)}
                     onSubmit={editing ? handleUpdate : handleCreate}
                     onCancel={() => setModalOpen(false)}
                 />

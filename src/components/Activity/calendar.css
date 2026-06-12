@@ -1,0 +1,175 @@
+/* FullCalendar theme overrides — estas clases las genera FullCalendar internamente
+   y no pueden controlarse con Tailwind, por eso viven en un archivo CSS dedicado. */
+
+.tibs-calendar .fc {
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.tibs-calendar .fc-toolbar {
+    padding: 1rem 1.25rem;
+}
+
+.tibs-calendar .fc-toolbar-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111827;
+    text-transform: capitalize;
+}
+
+/* ── Botones de navegación ───────────────────────────────────────────────── */
+.tibs-calendar .fc-button {
+    background-color: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    color: #374151 !important;
+    font-weight: 600 !important;
+    border-radius: 0.5rem !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.813rem !important;
+    transition: background-color 0.15s, border-color 0.15s !important;
+    box-shadow: none !important;
+    text-transform: capitalize !important;
+}
+
+.tibs-calendar .fc-button:hover:not(:disabled) {
+    background-color: #e5e7eb !important;
+    border-color: #9ca3af !important;
+}
+
+.tibs-calendar .fc-button-active,
+.tibs-calendar .fc-button:focus {
+    background-color: #4f46e5 !important;
+    border-color: #4f46e5 !important;
+    color: #ffffff !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
+}
+
+.tibs-calendar .fc-today-button {
+    background-color: #4f46e5 !important;
+    border-color: #4f46e5 !important;
+    color: #ffffff !important;
+}
+
+.tibs-calendar .fc-today-button:hover:not(:disabled) {
+    background-color: #4338ca !important;
+    border-color: #4338ca !important;
+}
+
+.tibs-calendar .fc-today-button:disabled {
+    background-color: #a5b4fc !important;
+    border-color: #a5b4fc !important;
+    opacity: 1 !important;
+}
+
+/* ── Cabeceras de día ────────────────────────────────────────────────────── */
+.tibs-calendar .fc-col-header-cell {
+    background-color: #f9fafb !important;
+    font-weight: 600 !important;
+    color: #6b7280 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 0.625rem 0 !important;
+    border-color: #f3f4f6 !important;
+}
+
+/* ── Números de día ──────────────────────────────────────────────────────── */
+.tibs-calendar .fc-daygrid-day-number {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+    padding: 0.375rem 0.5rem !important;
+}
+
+/* Día actual destacado */
+.tibs-calendar .fc-day-today {
+    background-color: #eef2ff !important;
+}
+
+.tibs-calendar .fc-day-today .fc-daygrid-day-number {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    border-radius: 9999px !important;
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 4px !important;
+}
+
+/* ── Eventos ─────────────────────────────────────────────────────────────── */
+/* El color de fondo lo controla el componente ActivityEventCard via inline style.
+   Aquí solo ajustamos forma y animaciones. */
+.tibs-calendar .fc-event {
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: opacity 0.15s, transform 0.15s !important;
+    padding: 1px 0 !important;
+    box-shadow: none !important;
+}
+
+.tibs-calendar .fc-event:hover {
+    opacity: 0.92 !important;
+    transform: scale(1.01) !important;
+}
+
+/* Ocultar el dot que viene por defecto en la lista */
+.tibs-calendar .fc-daygrid-event-dot {
+    display: none !important;
+}
+
+/* ── Vista Lista/Agenda ──────────────────────────────────────────────────── */
+.tibs-calendar .fc-list-event:hover td {
+    background-color: #eef2ff !important;
+}
+
+.tibs-calendar .fc-list-event-dot {
+    border-radius: 50% !important;
+}
+
+.tibs-calendar .fc-list-day-cushion {
+    background-color: #f9fafb !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    font-size: 0.875rem !important;
+    text-transform: capitalize !important;
+}
+
+/* ── Grillas y bordes ────────────────────────────────────────────────────── */
+.tibs-calendar .fc-scrollgrid {
+    border-color: #f3f4f6 !important;
+}
+
+.tibs-calendar .fc-scrollgrid-section-header th,
+.tibs-calendar .fc-scrollgrid td,
+.tibs-calendar .fc-scrollgrid th {
+    border-color: #f3f4f6 !important;
+}
+
+/* Selección de rango de fechas */
+.tibs-calendar .fc-highlight {
+    background-color: #e0e7ff !important;
+}
+
+/* ── Time grid ───────────────────────────────────────────────────────────── */
+.tibs-calendar .fc-timegrid-slot {
+    height: 2.5rem !important;
+}
+
+.tibs-calendar .fc-timegrid-slot-label {
+    font-size: 0.75rem !important;
+    color: #9ca3af !important;
+}
+
+/* Indicador de hora actual */
+.tibs-calendar .fc-timegrid-now-indicator-line {
+    border-color: #ef4444 !important;
+}
+
+.tibs-calendar .fc-timegrid-now-indicator-arrow {
+    border-top-color: #ef4444 !important;
+}
