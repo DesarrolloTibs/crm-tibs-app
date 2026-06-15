@@ -190,7 +190,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       {/* This div is the main content and the draggable handle */}
       <div {...listeners} className={`${canDrag ? 'cursor-grab' : 'cursor-default'} flex-grow flex flex-col h-full`}>
         <h4 className="font-bold text-[#000000] text-sm top-0 leading-snug truncate pr-8" title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
-        <p className="flex items-center gap-2 font-semibold italic text-[#579bd3] text-xs truncate pt-1" title={opportunity.empresa}><Building2 size={14} /> {opportunity.empresa}</p>
+        <p className="flex items-center gap-2 font-semibold italic text-[#579bd3] text-xs truncate pt-1" title={opportunity.company?.nombre || opportunity.empresa || ''}><Building2 size={14} /> {opportunity.company?.nombre || opportunity.empresa || 'Sin empresa'}</p>
         <div className="text-right flex-shrink-0 mt-0">
           <span className="text-lg font-bold text-[#2f5367]">${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
           <span className="ml-1 text-xs text-[#2f5367] font-bold">{opportunity.moneda}</span>

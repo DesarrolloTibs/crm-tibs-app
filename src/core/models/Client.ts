@@ -1,4 +1,5 @@
 import type { User } from "./User";
+import type { Company } from "./Company";
 
 export const ClientCategory = {
     CONTACTO: 'Contacto',
@@ -13,11 +14,13 @@ export interface Client {
     nombre: string;
     apellido: string;
     correo: string;
-    empresa: string;
+    empresa?: string | null;
     puesto: string;
     telefono: string;
     estatus?: boolean;
     ejecutivo_id?: string;
     ejecutivo?: User;
     category?: ClientCategoryType;
-}
+    companyId?: string | null;
+    company?: Company | null;
+}

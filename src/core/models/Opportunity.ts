@@ -1,10 +1,17 @@
+import type { Client } from "./Client";
+import type { Company } from "./Company";
+
 export interface Opportunity  {
-    id: string;
+  id: string;
   nombre_proyecto: string;
   description?: string;
-  cliente_id: string;
-  cliente: any; // You might want to create a Client model as well
-  empresa: string;
+  cliente_id?: string | null;
+  cliente?: Client | null;
+  empresa?: string | null;
+  companyId?: string | null;
+  company?: Company | null;
+  contacts?: Client[];
+  contactIds?: string[];
   ejecutivo_id: string;
   ejecutivo: any; 
   etapa: OpportunityStageType;
@@ -23,6 +30,7 @@ export interface Opportunity  {
   estimated_closure_date?: Date;
   createdAt?: Date;
 }
+
 
 export const OpportunityStage = {
   NUEVO: 'Nuevo',

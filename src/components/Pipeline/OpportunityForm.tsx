@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Opportunity, CurrencyType } from '../../core/models/Opportunity';
 import { OpportunityStage, Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
-import Select, { type SingleValue } from 'react-select';
+import Select, { type SingleValue, type MultiValue } from 'react-select';
 import type { Client } from '../../core/models/Client';
 import { getClients, createClient } from '../../services/clientsService';
 import { getUsers } from '../../services/usersService'; // Importar getUsers
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../core/models/User';
 import ClientForm from '../Client/ClientForm';
+import { getCompanies } from '../../services/companiesService';
+import type { Company } from '../../core/models/Company';
+
 
 
 interface Props {
@@ -26,25 +29,34 @@ interface SelectOption {
 type OpportunityFormData = Omit<Partial<Opportunity>, 'estimated_closure_date' | 'createdAt'> & {
     estimated_closure_date?: string;
     createdAt?: string;
+    contactIds?: string[];
 };
 
 const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
   const { user, isAdmin, isEjecutivo } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [executives, setExecutives] = useState<User[]>([]);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [linkType, setLinkType] = useState<'company' | 'contact'>(
+    initialData?.companyId ? 'company' : 'contact'
+  );
+
   const [opportunity, setOpportunity] = useState<OpportunityFormData>(
     initialData ? {
       ...initialData,
       estimated_closure_date: initialData.estimated_closure_date ? new Date(initialData.estimated_closure_date).toISOString().split('T')[0] : '',
       createdAt: initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : '',
+      contactIds: initialData.contacts?.map(c => c.id!) || [],
     } : {
       nombre_proyecto: '',
       description: '',
-      cliente_id: '', // Este campo necesitará un selector de clientes
+      cliente_id: '', 
+      companyId: '',
+      contactIds: [],
       empresa: '',
-      ejecutivo_id: '', // Este campo necesitará un selector de ejecutivos
+      ejecutivo_id: '', 
       etapa: 'Nuevo',
       monto_licenciamiento: 0,
       monto_servicios: 0,
@@ -54,23 +66,26 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       tipo_entrega: 'Proyecto',
       licenciamiento: Licensing.NO_APLICA,
       estimated_closure_date: new Date().toISOString().split('T')[0],
-      createdAt: new Date().toISOString().split('T')[0], // Default to today's date
+      createdAt: new Date().toISOString().split('T')[0], 
     }
   );
 
   useEffect(() => {
-    const fetchClients = async () => {
+    const loadData = async () => {
       try {
-        // getClients ahora devuelve todos los clientes (activos e inactivos)
-        const allClients = await getClients();
+        const [allClients, allCompanies] = await Promise.all([
+          getClients(),
+          getCompanies()
+        ]);
         setClients(allClients);
+        setCompanies(allCompanies.filter(c => c.estatus));
       } catch (error) {
-        console.error("Error fetching clients:", error);
-        // Opcional: Mostrar una alerta al usuario
+        console.error("Error loading clients and companies:", error);
       }
     };
-    fetchClients();
-  }, []); // No necesita dependencias, se carga una vez.
+    loadData();
+  }, []); 
+
   
   useEffect(() => {
     const fetchExecutives = async () => {
@@ -159,27 +174,82 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const clientOptions = useMemo(() => clients.map(client => ({
     value: client.id!,
-    label: `${client.nombre} ${client.apellido} (${client.empresa}) ${!client.estatus ? '(Inactivo)' : ''}`,
-    // Deshabilita la opción si el cliente está inactivo, a menos que ya esté seleccionado en la oportunidad que se edita.
+    label: `${client.nombre} ${client.apellido} (${client.company?.nombre || client.empresa || 'Sin empresa'}) ${!client.estatus ? '(Inactivo)' : ''}`,
     isDisabled: !client.estatus && client.id !== initialData?.cliente_id,
   })), [clients, initialData?.cliente_id]);
 
   const handleClientChange = (selectedOption: SingleValue<SelectOption>) => {
-    const clientId = selectedOption ? selectedOption.value : ''; // Asegurarse de que el valor no sea undefined
+    const clientId = selectedOption ? selectedOption.value : '';
     const selectedClient = clients.find(c => c.id === clientId);
     setOpportunity({
       ...opportunity,
       cliente_id: clientId,
-      empresa: selectedClient ? selectedClient.empresa : '',
+      empresa: selectedClient ? (selectedClient.company?.nombre || selectedClient.empresa || '') : '',
+      companyId: selectedClient ? (selectedClient.companyId || null) : null,
     });
+  };
+
+  const companyOptions = useMemo(() => companies.map(c => ({
+    value: c.id!,
+    label: c.nombre,
+  })), [companies]);
+
+  const selectedCompanyValue = companyOptions.find(option => option.value === opportunity.companyId);
+
+  const handleCompanyChange = (selectedOption: SingleValue<SelectOption>) => {
+    const companyId = selectedOption ? selectedOption.value : '';
+    const selectedComp = companies.find(c => c.id === companyId);
+    setOpportunity(prev => ({
+      ...prev,
+      companyId: companyId,
+      empresa: selectedComp ? selectedComp.nombre : '',
+      contactIds: [],
+    }));
+  };
+
+  const companyContactOptions = useMemo<SelectOption[]>(() => {
+    if (!opportunity.companyId) return [];
+    const list = clients
+      .filter(client => client.companyId === opportunity.companyId || !client.companyId)
+      .map(client => ({
+        value: client.id!,
+        label: `${client.nombre} ${client.apellido} (${client.company?.nombre || client.empresa || 'Sin empresa'}) ${!client.estatus ? '(Inactivo)' : ''}`,
+        isDisabled: !client.estatus && !opportunity.contactIds?.includes(client.id!),
+      }));
+    if (list.length > 0) {
+      return [{ value: 'all', label: 'Seleccionar todos' }, ...list];
+    }
+    return list;
+  }, [clients, opportunity.companyId, opportunity.contactIds]);
+
+  const selectedContactsValue = companyContactOptions.filter(option => 
+    option.value !== 'all' && opportunity.contactIds?.includes(option.value)
+  );
+
+  const handleContactsChange = (selectedOptions: MultiValue<SelectOption>) => {
+    const ids = selectedOptions ? selectedOptions.map(opt => opt.value) : [];
+    if (ids.includes('all')) {
+      const realContactIds = companyContactOptions
+        .filter(opt => opt.value !== 'all' && !opt.isDisabled)
+        .map(opt => opt.value);
+      const allSelected = realContactIds.every(id => opportunity.contactIds?.includes(id));
+      setOpportunity(prev => ({
+        ...prev,
+        contactIds: allSelected ? [] : realContactIds,
+      }));
+    } else {
+      setOpportunity(prev => ({
+        ...prev,
+        contactIds: ids,
+      }));
+    }
   };
 
   const executiveOptions: SelectOption[] = useMemo(() => executives.map(exec => ({
     value: exec.id!,
-    label: `${exec.username} ${!exec.isActive ? '(Inactivo)' : ''}`, // Añadir (Inactivo) si el ejecutivo no está activo
-    // Deshabilita la opción si el ejecutivo está inactivo, a menos que ya esté seleccionado en la oportunidad que se edita.
+    label: `${exec.username} ${!exec.isActive ? '(Inactivo)' : ''}`,
     isDisabled: !exec.isActive && exec.id !== initialData?.ejecutivo_id,
-  })), [executives, initialData?.ejecutivo_id]); // Añadir initialData?.ejecutivo_id a las dependencias
+  })), [executives, initialData?.ejecutivo_id]);
 
   const handleExecutiveChange = (selectedOption: SingleValue<SelectOption>) => {
     setOpportunity({
@@ -188,16 +258,21 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     });
   };
 
-  // Encuentra el objeto de opción completo para el valor actual
   const selectedClientValue = clientOptions.find(option => option.value === opportunity.cliente_id);
-  // Encuentra el objeto de opción completo para el valor actual del ejecutivo
   const selectedExecutiveValue = executiveOptions.find(option => option.value === opportunity.ejecutivo_id);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Añadir validación más robusta
-    if (!opportunity.nombre_proyecto || !opportunity.cliente_id || !opportunity.ejecutivo_id) {
+    if (!opportunity.nombre_proyecto || !opportunity.ejecutivo_id) {
         alert('Por favor, completa los campos requeridos.');
+        return;
+    }
+    if (linkType === 'company' && !opportunity.companyId) {
+        alert('Por favor, seleccione una Empresa.');
+        return;
+    }
+    if (linkType === 'contact' && !opportunity.cliente_id) {
+        alert('Por favor, seleccione un Contacto.');
         return;
     }
 
@@ -206,8 +281,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     if (estimated_closure_date) {
         const dateString = estimated_closure_date as unknown as string;
         const parts = dateString.split('-');
-        // Asegurarse de que la fecha se cree en la zona horaria local para evitar problemas de un día menos
-        closureDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12); // Usar mediodía para estar seguros
+        closureDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12);
     }
 
     let creationDate: Date | undefined = undefined;
@@ -217,7 +291,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       creationDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12);
     }
 
-    // Aseguramos que los valores monetarios se envíen como números
     const finalOpportunity: Partial<Opportunity> = {
       ...rest,
       monto_licenciamiento: Number(opportunity.monto_licenciamiento) || 0,
@@ -226,8 +299,18 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       estimated_closure_date: closureDate,
       createdAt: creationDate,
     };
+
+    if (linkType === 'company') {
+      finalOpportunity.cliente_id = null;
+      // rest of values (companyId, contactIds, empresa) are already in rest
+    } else {
+      finalOpportunity.companyId = null;
+      finalOpportunity.contactIds = opportunity.cliente_id ? [opportunity.cliente_id] : [];
+    }
+
     onSubmit(finalOpportunity);
   };
+
 
   const handleCreateClient = async (newClient: Client) => {
     try {
@@ -277,15 +360,43 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-700">Cliente</label>
-                <button type="button" onClick={() => setIsClientModalOpen(true)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-                  + Nuevo Cliente
-                </button>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Vinculación</label>
+              <div className="flex gap-4 mt-1">
+                <label className="inline-flex items-center cursor-pointer">
+                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="company" checked={linkType === 'company'} onChange={() => setLinkType('company')} />
+                  <span className="ml-2 text-sm text-gray-700">Empresa (Cuenta)</span>
+                </label>
+                <label className="inline-flex items-center cursor-pointer">
+                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="contact" checked={linkType === 'contact'} onChange={() => setLinkType('contact')} />
+                  <span className="ml-2 text-sm text-gray-700">Contacto Individual</span>
+                </label>
               </div>
-              <Select inputId="cliente_id" name="cliente_id" options={clientOptions} value={selectedClientValue} onChange={handleClientChange} placeholder="-- Seleccione un Cliente --" isClearable isSearchable required />
             </div>
+
+            {linkType === 'company' ? (
+              <>
+                <div>
+                  <label htmlFor="companyId" className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
+                  <Select inputId="companyId" name="companyId" options={companyOptions} value={selectedCompanyValue} onChange={handleCompanyChange} placeholder="-- Seleccione una Empresa --" isClearable isSearchable required />
+                </div>
+                <div>
+                  <label htmlFor="contactIds" className="block text-sm font-medium text-gray-700 mb-1">Contactos Asociados (Opcional)</label>
+                  <Select inputId="contactIds" name="contactIds" isMulti options={companyContactOptions} value={selectedContactsValue} onChange={handleContactsChange} placeholder={opportunity.companyId ? "-- Seleccione uno o más contactos --" : "-- Seleccione primero una empresa --"} isClearable isSearchable isDisabled={!opportunity.companyId} />
+                </div>
+              </>
+            ) : (
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-700">Contacto</label>
+                  <button type="button" onClick={() => setIsClientModalOpen(true)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                    + Nuevo Contacto
+                  </button>
+                </div>
+                <Select inputId="cliente_id" name="cliente_id" options={clientOptions} value={selectedClientValue} onChange={handleClientChange} placeholder="-- Seleccione un Contacto --" isClearable isSearchable required />
+              </div>
+            )}
+
             {isAdmin && (
               <div>
                 <label htmlFor="ejecutivo_id" className="block text-sm font-medium text-gray-700 mb-1">Ejecutivo Asignado</label>
@@ -293,6 +404,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               </div>
             )}
           </div>
+
         </fieldset>
 
         <fieldset className="space-y-6">

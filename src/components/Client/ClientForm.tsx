@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import { ClientCategory, type Client } from '../../core/models/Client';
 import { getUsers } from '../../services/usersService';
 import type { User } from '../../core/models/User';
-
+import { getCompanies } from '../../services/companiesService';
+import type { Company } from '../../core/models/Company';
 
 interface Props {
     initialData?: Client;
@@ -21,22 +23,27 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         telefono: '',
         estatus: true, // Default to active
         ejecutivo_id: '',
+        companyId: null,
         category: ClientCategory.CONTACTO,
         ...initialData,
     });
     const [executives, setExecutives] = useState<User[]>([]);
+    const [companies, setCompanies] = useState<Company[]>([]);
 
     useEffect(() => {
-        const loadExecutives = async () => {
+        const loadData = async () => {
             try {
-                const users = await getUsers();
-            
+                const [users, companiesData] = await Promise.all([
+                    getUsers(),
+                    getCompanies()
+                ]);
                 setExecutives(users);
+                setCompanies(companiesData.filter(c => c.estatus));
             } catch (error) {
-                console.error('Failed to fetch executives:', error);
+                console.error('Failed to fetch loadData:', error);
             }
         };
-        loadExecutives();
+        loadData();
     }, []);
 
     const executiveOptions = executives.map(user => ({
@@ -44,7 +51,18 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         label: user.username,
     }));
 
+    const companyOptions = companies.map(c => ({
+        value: c.id,
+        label: c.nombre,
+    }));
+
     const selectedExecutiveValue = executiveOptions.find(option => option.value === form.ejecutivo_id);
+
+    const selectedCompanyValue = form.companyId 
+        ? companyOptions.find(opt => opt.value === form.companyId)
+        : form.empresa 
+            ? { value: '', label: form.empresa }
+            : null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -58,11 +76,22 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         setForm(prevForm => ({ ...prevForm, ejecutivo_id: selectedOption ? selectedOption.value : '' }));
     };
 
+    const handleCompanyChange = (selectedOption: any) => {
+        if (!selectedOption) {
+            setForm(prev => ({ ...prev, companyId: null, empresa: '' }));
+        } else if (selectedOption.__isNew__) {
+            setForm(prev => ({ ...prev, companyId: null, empresa: selectedOption.label }));
+        } else {
+            setForm(prev => ({ ...prev, companyId: selectedOption.value, empresa: selectedOption.label }));
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         e.stopPropagation();
         onSubmit(form as Client);
     };
+
 
     return (
         <form onSubmit={handleSubmit} className="space-y-8 p-2">
@@ -95,8 +124,19 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="empresa" className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
-                        <input id="empresa" name="empresa" value={form.empresa} onChange={handleChange} placeholder="Nombre de la empresa" required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+                        <CreatableSelect
+                            id="empresa"
+                            name="empresa"
+                            options={companyOptions}
+                            value={selectedCompanyValue}
+                            onChange={handleCompanyChange}
+                            placeholder="Buscar o escribir empresa..."
+                            isClearable
+                            isSearchable
+                            formatCreateLabel={(inputValue) => `Usar empresa de texto libre "${inputValue}"`}
+                        />
                     </div>
+
                     <div>
                         <label htmlFor="puesto" className="block text-sm font-medium text-gray-700 mb-1">Puesto</label>
                         <input id="puesto" name="puesto" value={form.puesto} onChange={handleChange} placeholder="Puesto del cliente" required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />

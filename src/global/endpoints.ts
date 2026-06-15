@@ -10,6 +10,11 @@ export const CLIENTS = {
     CLIENTS: urlBase + 'clients'
 };
 
+export const COMPANIES = {
+    COMPANIES: urlBase + 'companies'
+};
+
+
 export const OPPORTUNITIES = {
     OPPORTUNITIES: urlBase + 'opportunities'
 };

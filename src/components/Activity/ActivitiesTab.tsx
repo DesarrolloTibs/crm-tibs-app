@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getActivitiesByOpportunity, createActivity, updateActivity, deleteActivity } from '../../services/activitiesService';
+import { getActivitiesByOpportunity, createActivity, updateActivity, deleteActivity, getActivityTypes } from '../../services/activitiesService';
 
 import Modal from '../Modal/Modal';
 import Loader from '../Loader/Loader';
@@ -7,7 +7,7 @@ import Loader from '../Loader/Loader';
 import { Plus, Search } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import Notification from '../Modal/Notification';
-import type { Activity } from '../../core/models/Activity';
+import type { Activity, TypeActivity } from '../../core/models/Activity';
 import ActivitiesTable from './ActivitiesTable';
 import ActivityForm from './ActivityForm';
 
@@ -20,6 +20,7 @@ const PAGE_SIZE = 5;
 const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
     const { isAdmin } = useAuth();
     const [activities, setActivities] = useState<Activity[]>([]);
+    const [activityTypes, setActivityTypes] = useState<TypeActivity[]>([]);
     const [editing, setEditing] = useState<Activity | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -53,6 +54,15 @@ const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
 
     useEffect(() => {
         fetchActivities();
+        const fetchTypes = async () => {
+            try {
+                const types = await getActivityTypes();
+                setActivityTypes(types.filter(t => t.blnstatus));
+            } catch (error) {
+                console.error("Failed to fetch activity types", error);
+            }
+        };
+        fetchTypes();
     }, [fetchActivities]);
 
     const handleCreate = async (activity: Partial<Activity>) => {
@@ -135,7 +145,7 @@ const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
         if (!search) return true;
 
         const activityText = activity.activity?.toLowerCase() || '';
-        const activityTypeText = activity.activityType?.toLowerCase() || '';
+        const activityTypeText = activity.typeActivity?.strname?.toLowerCase() || '';
         const dateText = new Date(activity.date).toLocaleString('es-MX').toLowerCase();
         const userText = activity.user?.username?.toLowerCase() || '';
 
@@ -193,6 +203,7 @@ const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
             <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
                 <ActivityForm
                     initialData={editing || { opportunityId }}
+                    activityTypes={activityTypes}
                     onSubmit={editing ? handleUpdate : handleCreate}
                     onCancel={() => setModalOpen(false)}
                 />

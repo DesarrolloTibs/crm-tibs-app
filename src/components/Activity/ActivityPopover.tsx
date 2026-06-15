@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, Clock, User, Briefcase, Edit, Trash2 } from 'lucide-react';
+import { X, Calendar, Clock, User, Briefcase, Edit, Trash2, Building } from 'lucide-react';
 import type { Activity } from '../../core/models/Activity';
 import { getActivityColor } from './activityColors';
 
@@ -103,8 +103,19 @@ const ActivityPopover: React.FC<Props> = ({ activity, position, onEdit, onDelete
                                 <span className="truncate">{activity.opportunity.nombre_proyecto}</span>
                             </DetailRow>
                         )}
+
+                        {activity.company?.nombre ? (
+                            <DetailRow icon={<Building size={14} />}>
+                                <span className="truncate">{activity.company.nombre}</span>
+                            </DetailRow>
+                        ) : activity.client?.nombre ? (
+                            <DetailRow icon={<User size={14} />}>
+                                <span className="truncate">{activity.client.nombre} {activity.client.apellido}</span>
+                            </DetailRow>
+                        ) : null}
                     </div>
                 </div>
+
 
                 {/* Footer de acciones */}
                 <div className="border-t border-gray-100 px-4 py-3 flex justify-end gap-2 bg-gray-50">

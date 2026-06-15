@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import Select, { type SingleValue } from 'react-select';
+import Select, { type SingleValue, type MultiValue } from 'react-select';
 
 import { getOpportunities } from '../../services/opportunitiesService';
 import { getActiveClients } from '../../services/clientsService';
@@ -7,6 +7,8 @@ import type { Activity, TypeActivity } from '../../core/models/Activity';
 import type { Opportunity } from '../../core/models/Opportunity';
 import type { Client } from '../../core/models/Client';
 import { useAuth } from '../../hooks/useAuth';
+import { getCompanies } from '../../services/companiesService';
+import type { Company } from '../../core/models/Company';
 
 interface Props {
     initialData?: Partial<Activity>;
@@ -20,12 +22,10 @@ interface SelectOption {
     label: string;
 }
 
-
 const formatDateTimeForInput = (isoString?: string) => {
     if (!isoString) return '';
     try {
         const date = new Date(isoString);
-        // Restamos el offset de la zona horaria para que la hora se muestre correctamente en el input local
         date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
         return date.toISOString().slice(0, 16);
     } catch (error) {
@@ -35,11 +35,17 @@ const formatDateTimeForInput = (isoString?: string) => {
 
 const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, onCancel }) => {
     const { user, isAdmin } = useAuth();
-    const [form, setForm] = useState<Partial<Activity>>({
+    const [linkType, setLinkType] = useState<'company' | 'contact'>(
+        initialData?.companyId ? 'company' : 'contact'
+    );
+    const [companies, setCompanies] = useState<Company[]>([]);
+    const [form, setForm] = useState<Partial<Activity & { contactIds?: string[] }>>({
         activity: '',
         typeActivityId: initialData?.typeActivityId ?? (activityTypes[0]?.id || null),
         opportunityId: initialData?.opportunityId ?? null,
         clientId: initialData?.clientId ?? null,
+        companyId: initialData?.companyId ?? null,
+        contactIds: initialData?.contacts?.map(c => c.id!) || [],
         flaghistory: initialData?.flaghistory || false,
         ...initialData,
         date: formatDateTimeForInput(initialData?.date || new Date().toISOString()),
@@ -50,7 +56,11 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const allOpportunities = await getOpportunities();
+                const [allOpportunities, activeClients, allCompanies] = await Promise.all([
+                    getOpportunities(),
+                    getActiveClients(),
+                    getCompanies()
+                ]);
                 let userOpportunities = allOpportunities;
 
                 if (!isAdmin && user?.sub) {
@@ -58,9 +68,8 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                 }
 
                 setOpportunities(userOpportunities);
-
-                const activeClients = await getActiveClients();
                 setClients(activeClients);
+                setCompanies(allCompanies.filter(c => c.estatus));
 
             } catch (error) {
                 console.error('Failed to fetch data', error);
@@ -69,27 +78,52 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         fetchData();
     }, [isAdmin, user]);
 
-    const opportunityOptions: SelectOption[] = useMemo(() => {
+    const opportunityOptions = useMemo(() => {
         let filteredOpportunities = opportunities;
 
-        if (form.clientId) {
+        if (linkType === 'company' && form.companyId) {
             filteredOpportunities = opportunities.filter(
-                op => op.cliente?.id === form.clientId
+                op => op.companyId === form.companyId
+            );
+        } else if (linkType === 'contact' && form.clientId) {
+            filteredOpportunities = opportunities.filter(
+                op => op.cliente_id === form.clientId
             );
         }
 
         return filteredOpportunities.map(op => ({
             value: op.id,
-            label: `${op.nombre_proyecto} (${op.cliente?.nombre} - ${op.empresa})`,
+            label: `${op.nombre_proyecto} (${op.company?.nombre || op.cliente?.nombre || op.empresa || 'Sin asociar'})`,
         }));
-    }, [opportunities, form.clientId]);
+    }, [opportunities, linkType, form.companyId, form.clientId]);
 
-    const clientOptions: SelectOption[] = useMemo(() =>
-        clients.filter(client => client.id !== undefined).map(client => ({
-            value: client.id as string,
-            label: `${client.nombre} (${client.empresa})`,
+    const companyOptions = useMemo(() =>
+        companies.map(c => ({
+            value: c.id!,
+            label: c.nombre,
+        })),
+    [companies]);
+
+    const clientOptions = useMemo(() =>
+        clients.map(c => ({
+            value: c.id!,
+            label: `${c.nombre} ${c.apellido} (${c.company?.nombre || c.empresa || 'Sin empresa'})`,
         })),
     [clients]);
+
+    const companyContactOptions = useMemo(() => {
+        if (!form.companyId) return [];
+        const list = clients
+            .filter(c => c.companyId === form.companyId || !c.companyId)
+            .map(c => ({
+                value: c.id!,
+                label: `${c.nombre} ${c.apellido}`,
+            }));
+        if (list.length > 0) {
+            return [{ value: 'all', label: 'Seleccionar todos' }, ...list];
+        }
+        return list;
+    }, [clients, form.companyId]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type, checked } = e.target as HTMLInputElement;
@@ -115,25 +149,70 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         });
     };
 
+    const handleCompanyChange = (selectedOption: SingleValue<SelectOption>) => {
+        setForm(prev => ({
+            ...prev,
+            companyId: selectedOption ? selectedOption.value : null,
+            contactIds: [],
+            opportunityId: null,
+        }));
+    };
+
+    const handleContactsChange = (selectedOptions: MultiValue<SelectOption>) => {
+        const ids = selectedOptions ? selectedOptions.map(opt => opt.value) : [];
+        if (ids.includes('all')) {
+            const realContactIds = companyContactOptions
+                .filter(opt => opt.value !== 'all')
+                .map(opt => opt.value);
+            const allSelected = realContactIds.every(id => form.contactIds?.includes(id));
+            setForm(prev => ({
+                ...prev,
+                contactIds: allSelected ? [] : realContactIds,
+            }));
+        } else {
+            setForm(prev => ({
+                ...prev,
+                contactIds: ids,
+            }));
+        }
+    };
+
     const handleClientChange = (selectedOption: SingleValue<SelectOption>) => {
-        setForm({
-            ...form,
+        setForm(prev => ({
+            ...prev,
             clientId: selectedOption ? selectedOption.value : null,
-            opportunityId: null, // Resetear la oportunidad al cambiar el cliente
-            flaghistory: false, // Resetear el historial al cambiar el cliente
-        });
+            opportunityId: null,
+        }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit(form);
+        const finalActivity = { ...form };
+        if (linkType === 'company') {
+            finalActivity.clientId = null;
+        } else {
+            finalActivity.companyId = null;
+            finalActivity.contactIds = form.clientId ? [form.clientId] : [];
+        }
+        onSubmit(finalActivity);
     };
 
-    // Determina el valor para el Select de Oportunidad.
-    // Si opportunityId es null, el valor del Select debe ser null para que se reinicie visualmente.
     const selectedOpportunityValue = form.opportunityId
         ? opportunityOptions.find(option => option.value === form.opportunityId) || null
         : null;
+
+    const selectedCompanyValue = form.companyId
+        ? companyOptions.find(option => option.value === form.companyId) || null
+        : null;
+
+    const selectedClientValue = form.clientId
+        ? clientOptions.find(option => option.value === form.clientId) || null
+        : null;
+
+    const selectedContactsValue = companyContactOptions.filter(option =>
+        option.value !== 'all' && form.contactIds?.includes(option.value)
+    );
+
     return (
         <form onSubmit={handleSubmit} className="space-y-8 p-2">
             <h2 className="text-2xl font-bold text-gray-800">{initialData?.id ? 'Editar' : 'Nueva'} Actividad</h2>
@@ -156,22 +235,73 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                     </div>
                     <div className="md:col-span-2">
                         <label htmlFor="activity" className="block text-sm font-medium text-gray-700 mb-1">Actividad</label>
-                        <input id="activity" name="activity" value={form.activity} onChange={handleChange} placeholder="Descripción breve de la actividad" required maxLength={80} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+                        <input id="activity" name="activity" value={form.activity || ''} onChange={handleChange} placeholder="Descripción breve de la actividad" required maxLength={80} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
                     </div>
+                    
                     <div className="md:col-span-2">
-                        <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">Cliente (Opcional)</label>
-                        <Select
-                            inputId="clientId"
-                            name="clientId"
-                            options={clientOptions}
-                            value={clientOptions.find(option => option.value === form.clientId)}
-                            onChange={handleClientChange}
-                            placeholder="-- Seleccione un cliente --"
-                            isClearable
-                            isSearchable
-                            noOptionsMessage={() => 'No se encontraron clientes'}
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Vinculación</label>
+                        <div className="flex gap-4 mt-1">
+                            <label className="inline-flex items-center cursor-pointer">
+                                <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="company" checked={linkType === 'company'} onChange={() => { setLinkType('company'); setForm(prev => ({ ...prev, clientId: null })); }} />
+                                <span className="ml-2 text-sm text-gray-700">Empresa (Cuenta)</span>
+                            </label>
+                            <label className="inline-flex items-center cursor-pointer">
+                                <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="contact" checked={linkType === 'contact'} onChange={() => { setLinkType('contact'); setForm(prev => ({ ...prev, companyId: null, contactIds: [] })); }} />
+                                <span className="ml-2 text-sm text-gray-700">Contacto Individual</span>
+                            </label>
+                        </div>
                     </div>
+
+                    {linkType === 'company' ? (
+                        <>
+                            <div className="md:col-span-2">
+                                <label htmlFor="companyId" className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
+                                <Select
+                                    inputId="companyId"
+                                    name="companyId"
+                                    options={companyOptions}
+                                    value={selectedCompanyValue}
+                                    onChange={handleCompanyChange}
+                                    placeholder="-- Seleccione una empresa --"
+                                    isClearable
+                                    isSearchable
+                                    noOptionsMessage={() => 'No se encontraron empresas'}
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label htmlFor="contactIds" className="block text-sm font-medium text-gray-700 mb-1">Contactos Asociados (Opcional)</label>
+                                <Select
+                                    inputId="contactIds"
+                                    name="contactIds"
+                                    isMulti
+                                    options={companyContactOptions}
+                                    value={selectedContactsValue}
+                                    onChange={handleContactsChange}
+                                    placeholder={form.companyId ? "-- Seleccione uno o más contactos --" : "-- Seleccione primero una empresa --"}
+                                    isClearable
+                                    isSearchable
+                                    isDisabled={!form.companyId}
+                                    noOptionsMessage={() => 'No se encontraron contactos'}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <div className="md:col-span-2">
+                            <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">Contacto</label>
+                            <Select
+                                inputId="clientId"
+                                name="clientId"
+                                options={clientOptions}
+                                value={selectedClientValue}
+                                onChange={handleClientChange}
+                                placeholder="-- Seleccione un contacto --"
+                                isClearable
+                                isSearchable
+                                noOptionsMessage={() => 'No se encontraron contactos'}
+                            />
+                        </div>
+                    )}
+
                     <div className="md:col-span-2">
                         <label htmlFor="opportunityId" className="block text-sm font-medium text-gray-700 mb-1">Oportunidad (Opcional)</label>
                         <Select

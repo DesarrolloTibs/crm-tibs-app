@@ -3,6 +3,7 @@
 import type { Client } from "./Client";
 import type { Opportunity } from "./Opportunity";
 import type { User } from "./User";
+import type { Company } from "./Company";
 
 export interface TypeActivity {
     id: number;
@@ -21,8 +22,13 @@ export interface Activity {
     userId: string;
     opportunityId: string | null;
     clientId: string | null;
+    companyId: string | null;
     flaghistory: boolean | null;
     user?: User;
     opportunity?: Opportunity;
     client?: Client;
+    company?: Company;
+    contacts?: Client[];
+    contactIds?: string[];
 }
+

@@ -208,7 +208,7 @@ const OpportunitiesHistoryPage: React.FC = () => {
       const matchesSearch =
         opp.nombre_proyecto.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (opp.cliente?.nombre && opp.cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        opp.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (opp.company?.nombre || opp.empresa || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (opp.ejecutivo?.username && opp.ejecutivo.username.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;

@@ -66,10 +66,22 @@ const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDel
                   <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
                     <div className="flex flex-col md:block">
                       <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Cliente / Empresa</span>
-                      <p className="text-gray-800">{opp.cliente?.nombre} {opp.cliente?.apellido}</p>
-                      <p className="text-gray-500 text-xs">{opp.empresa}</p>
+                      {opp.company ? (
+                        <>
+                          <p className="text-gray-800 font-semibold">{opp.company.nombre}</p>
+                          <p className="text-gray-500 text-xs">
+                            {opp.contacts?.map(c => `${c.nombre} ${c.apellido}`).join(', ') || 'Sin contactos'}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-gray-800">{opp.cliente ? `${opp.cliente.nombre} ${opp.cliente.apellido}` : '-'}</p>
+                          <p className="text-gray-500 text-xs">{opp.empresa || '-'}</p>
+                        </>
+                      )}
                     </div>
                   </td>
+
                   <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
                     <div className="flex flex-col md:block">
                       <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Ejecutivo</span>

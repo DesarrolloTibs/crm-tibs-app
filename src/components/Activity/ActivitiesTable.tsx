@@ -29,6 +29,7 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>
+                        <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Relación</th>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Oportunidad</th>
                         <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
@@ -65,10 +66,23 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                                     </td>
                                     <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
                                         <div className="flex flex-col md:block">
+                                            <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Relación</span>
+                                            {activity.company ? (
+                                                <p className="font-semibold text-gray-800">Empresa: {activity.company.nombre}</p>
+                                            ) : activity.client ? (
+                                                <p>Contacto: {activity.client.nombre} {activity.client.apellido}</p>
+                                            ) : (
+                                                <p>-</p>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
+                                        <div className="flex flex-col md:block">
                                             <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Oportunidad</span>
                                             <p>{activity.opportunity?.nombre_proyecto || 'N/A'}</p>
                                         </div>
                                     </td>
+
                                     <td className="p-4 block md:table-cell md:rounded-r-lg text-right">
                                         <div className="flex justify-between md:justify-end items-center mt-2 md:mt-0">
                                             <button 

@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import type { Client } from '../../core/models/Client';
-import { Edit, Inbox, UserCheck, UserX, ChevronDown, ChevronUp } from 'lucide-react';
+import type { Company } from '../../core/models/Company';
+import { Edit, Inbox, UserCheck, UserX, ChevronDown, ChevronUp, Building } from 'lucide-react';
 
 interface Props {
-  clients: Client[];
-  onEdit: (client: Client) => void;
-  onUpdateStatus: (client: Client) => void;
+  companies: Company[];
+  onEdit: (company: Company) => void;
+  onUpdateStatus: (company: Company) => void;
   isAdmin: boolean;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
 }
 
-const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmin, currentPage, totalPages, onPageChange }) => {
+const CompaniesTable: React.FC<Props> = ({ companies, onEdit, onUpdateStatus, isAdmin, currentPage, totalPages, onPageChange }) => {
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   const toggleRow = (id: string) => {
@@ -24,78 +24,83 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
       <table className="min-w-full border-separate block md:table" style={{ borderSpacing: '0 0.75rem' }}>
         <thead className="hidden md:table-header-group">
           <tr>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Empresa</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Correo</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Teléfono</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Categoría</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Sitio Web</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Puesto</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Ejecutivo</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Contactos</th>
             <th className="p-4"></th>
           </tr>
         </thead>
         <tbody className="block md:table-row-group">
-          {clients.length > 0 ? (
-            clients.map(client => {
-              const isExpanded = expandedRows[client.id!];
+          {companies.length > 0 ? (
+            companies.map(company => {
+              const isExpanded = expandedRows[company.id!];
+              const contactNames = company.contacts?.map(c => `${c.nombre} ${c.apellido}`).join(', ') || 'Sin contactos';
               return (
-                <tr key={client.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px block md:table-row mb-4 md:mb-0">
+                <tr key={company.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px block md:table-row mb-4 md:mb-0">
                   <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none md:rounded-l-lg">
                     <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Cliente</span>
-                      <p className="font-semibold text-gray-900">{client.nombre} {client.apellido}</p>
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Empresa</span>
+                      <div className="flex items-center gap-2">
+                        <Building size={16} className="text-gray-400" />
+                        <p className="font-semibold text-gray-900">{company.nombre}</p>
+                      </div>
                     </div>
                   </td>
                   <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Empresa</span>
-                      <p className="text-gray-700">{client.company?.nombre || client.empresa || '-'}</p>
-                    </div>
-                  </td>
-                  <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
                     <div className="flex flex-col md:block">
                       <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Correo</span>
-                      <p className="text-gray-700">{client.correo}</p>
-                    </div>
-                  </td>
-                  <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Teléfono</span>
-                      <p className="text-gray-700">{client.telefono}</p>
+                      <p className="text-gray-700">{company.correo || '-'}</p>
                     </div>
                   </td>
                   <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
                     <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Categoría</span>
-                      <p className="text-gray-700">{client.category ?? 'N/A'}</p>
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Teléfono</span>
+                      <p className="text-gray-700">{company.telefono || '-'}</p>
+                    </div>
+                  </td>
+                  <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
+                    <div className="flex flex-col md:block">
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Sitio Web</span>
+                      {company.website ? (
+                        <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          {company.website}
+                        </a>
+                      ) : (
+                        <p className="text-gray-700">-</p>
+                      )}
                     </div>
                   </td>
                   <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
                     <div className="flex flex-col md:block">
                       <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Estado</span>
-                      <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${client.estatus ? 'text-green-900' : 'text-red-900'} max-w-fit`}>
-                        <span aria-hidden className={`absolute inset-0 ${client.estatus ? 'bg-green-200' : 'bg-red-200'} opacity-50 rounded-full`}></span>
-                        <span className="relative">{client.estatus ? 'Activo' : 'Inactivo'}</span>
+                      <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${company.estatus ? 'text-green-900' : 'text-red-900'} max-w-fit`}>
+                        <span aria-hidden className={`absolute inset-0 ${company.estatus ? 'bg-green-200' : 'bg-red-200'} opacity-50 rounded-full`}></span>
+                        <span className="relative">{company.estatus ? 'Activo' : 'Inactivo'}</span>
                       </span>
                     </div>
                   </td>
                   <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
                     <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Puesto</span>
-                      <p className="text-gray-700">{client.puesto}</p>
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Ejecutivo</span>
+                      <p className="text-gray-700">{company.ejecutivo?.username ?? 'N/A'}</p>
                     </div>
                   </td>
                   <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
                     <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Ejecutivo</span>
-                      <p className="text-gray-700">{client.ejecutivo?.username ?? 'N/A'}</p>
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Contactos</span>
+                      <p className="text-gray-700 text-sm truncate max-w-xs" title={contactNames}>
+                        {company.contacts?.length || 0} ({contactNames})
+                      </p>
                     </div>
                   </td>
                   <td className="p-4 block md:table-cell md:rounded-r-lg">
                     <div className="flex justify-between md:justify-end items-center mt-2 md:mt-0">
                       <button 
-                        onClick={() => toggleRow(client.id!)} 
+                        onClick={() => toggleRow(company.id!)} 
                         className="md:hidden text-blue-600 font-medium text-sm flex items-center hover:bg-blue-50 px-2 py-1 rounded"
                       >
                         {isExpanded ? <ChevronUp size={16} className="mr-1"/> : <ChevronDown size={16} className="mr-1"/>}
@@ -103,7 +108,7 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
                       </button>
                       <div className="flex space-x-1">
                         <button
-                          onClick={() => onEdit(client)}
+                          onClick={() => onEdit(company)}
                           className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full"
                           title="Editar"
                         >
@@ -111,11 +116,11 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
                         </button>
                         {isAdmin && (
                           <button
-                            onClick={() => onUpdateStatus(client)}
-                            className={`p-2 text-gray-500 rounded-full ${client.estatus ? 'hover:text-yellow-600 hover:bg-yellow-100' : 'hover:text-green-600 hover:bg-green-100'}`}
-                            title={client.estatus ? 'Desactivar' : 'Reactivar'}
+                            onClick={() => onUpdateStatus(company)}
+                            className={`p-2 text-gray-500 rounded-full ${company.estatus ? 'hover:text-yellow-600 hover:bg-yellow-100' : 'hover:text-green-600 hover:bg-green-100'}`}
+                            title={company.estatus ? 'Desactivar' : 'Reactivar'}
                           >
-                            {client.estatus ? <UserX size={18} /> : <UserCheck size={18} />}
+                            {company.estatus ? <UserX size={18} /> : <UserCheck size={18} />}
                           </button>
                         )}
                       </div>
@@ -126,11 +131,11 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
             })
           ) : (
             <tr className="block md:table-row w-full">
-              <td colSpan={9} className="text-center py-16 block md:table-cell w-full">
+              <td colSpan={8} className="text-center py-16 block md:table-cell w-full">
                 <div className="flex flex-col items-center justify-center text-center text-gray-500 w-full mx-auto">
                   <Inbox size={48} className="mb-4 mx-auto" />
-                  <h3 className="text-xl font-semibold text-center w-full">No se encontraron clientes</h3>
-                  <p className="text-sm text-center w-full mt-1">Intenta ajustar los filtros o crear un nuevo cliente.</p>
+                  <h3 className="text-xl font-semibold text-center w-full">No se encontraron empresas</h3>
+                  <p className="text-sm text-center w-full mt-1">Intenta ajustar los filtros o crear una nueva empresa.</p>
                 </div>
               </td>
             </tr>
@@ -156,4 +161,4 @@ const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmi
   );
 };
 
-export default ClientsTable;
+export default CompaniesTable;
