@@ -330,6 +330,9 @@ const PipelinePage: React.FC = () => {
         const newIndex = visibleStageIds.indexOf(targetStageId);
 
         if (oldIndex !== -1 && newIndex !== -1) {
+          const originalVisibleStageIds = [...visibleStageIds];
+          const originalStages = [...stages];
+
           const newVisibleIds = [...visibleStageIds];
           const [removed] = newVisibleIds.splice(oldIndex, 1);
           newVisibleIds.splice(newIndex, 0, removed);
@@ -359,7 +362,6 @@ const PipelinePage: React.FC = () => {
                 pipeline_id: s.pipeline_id,
               })),
             });
-            fetchPipelineAndOpportunities();
           } catch (error) {
             setNotification({
               show: true,
@@ -369,7 +371,8 @@ const PipelinePage: React.FC = () => {
               onConfirm: hideNotification,
               onCancel: hideNotification,
             });
-            fetchPipelineAndOpportunities();
+            setStages(originalStages);
+            setVisibleStageIds(originalVisibleStageIds);
           }
         }
       }
