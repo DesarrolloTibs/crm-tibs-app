@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Opportunity, OpportunityStageType } from '../../core/models/Opportunity';
+import type { Opportunity } from '../../core/models/Opportunity';
 import { Edit, Trash2, Archive, ArchiveRestore, Inbox, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Props {
@@ -12,18 +12,6 @@ interface Props {
   totalPages: number;
   onPageChange: (page: number) => void;
 }
-
-const stageColors: Record<OpportunityStageType, { bg: string; text: string }> = {
-  'Nuevo': { bg: 'bg-gray-100', text: 'text-gray-800' },
-  'Descubrimiento': { bg: 'bg-blue-100', text: 'text-blue-800' },
-  'Estimación': { bg: 'bg-cyan-100', text: 'text-cyan-800' },
-  'Propuesta': { bg: 'bg-indigo-100', text: 'text-indigo-800' },
-  'Negociación': { bg: 'bg-purple-100', text: 'text-purple-800' },
-  'Ganada': { bg: 'bg-green-100', text: 'text-green-800' },
-  'Perdida': { bg: 'bg-red-100', text: 'text-red-800' },
-  'Cancelada': { bg: 'bg-orange-100', text: 'text-orange-800' },
-  'Standby': { bg: 'bg-pink-100', text: 'text-pink-800' },
-};
 
 const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDelete, onArchive, isAdmin, currentPage, totalPages, onPageChange }) => {
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -53,8 +41,9 @@ const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDel
         <tbody className="block md:table-row-group">
           {opportunities.length > 0 ? (
             opportunities.map(opp => {
-              const stageStyle = stageColors[opp.etapa] || { bg: 'bg-gray-100', text: 'text-gray-800' };
               const isExpanded = expandedRows[opp.id!];
+              const stageName = opp.stage?.strname || 'Sin etapa';
+              const stageColor = opp.stage?.strcolor || '#6B7280';
               return (
                 <tr key={opp.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px block md:table-row mb-4 md:mb-0">
                   <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none md:rounded-l-lg">
@@ -91,8 +80,15 @@ const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDel
                   <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
                     <div className="flex flex-col md:block">
                       <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Etapa</span>
-                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full w-fit ${stageStyle.bg} ${stageStyle.text}`}>
-                        {opp.etapa}
+                      <span 
+                        className="px-2.5 py-1 text-xs font-semibold rounded-full w-fit border"
+                        style={{
+                          backgroundColor: `${stageColor}1A`, // ~10% opacity
+                          color: stageColor,
+                          borderColor: `${stageColor}33`, // ~20% opacity
+                        }}
+                      >
+                        {stageName}
                       </span>
                     </div>
                   </td>

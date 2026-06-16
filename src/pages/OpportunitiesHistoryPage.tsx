@@ -6,8 +6,8 @@ import {
   deleteOpportunity,
   archiveOpportunity
 } from '../services/opportunitiesService';
-import type { Opportunity } from '../core/models/Opportunity';
-import { OpportunityStage } from '../core/models/Opportunity';
+import type { Opportunity, Stage } from '../core/models/Opportunity';
+import { getActiveStages } from '../services/pipelinesService';
 import Modal from '../components/Modal/Modal';
 import ConfirmModal from '../components/Modal/ConfirmModal';
 import Loader from '../components/Loader/Loader';
@@ -39,6 +39,7 @@ const OpportunitiesHistoryPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   // Por defecto, en el historial mostramos todo (activos y archivados)
   const [archivedFilter, setArchivedFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [stages, setStages] = useState<Stage[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [notification, setNotification] = useState({
@@ -71,8 +72,18 @@ const OpportunitiesHistoryPage: React.FC = () => {
     }
   };
 
+  const fetchStages = async () => {
+    try {
+      const data = await getActiveStages();
+      setStages(data);
+    } catch (error) {
+      console.error('Error al cargar las etapas del pipeline:', error);
+    }
+  };
+
   useEffect(() => {
     fetchOpportunities();
+    fetchStages();
   }, []);
 
   const handleCreate = async (opportunity: Partial<Opportunity>) => {
@@ -102,7 +113,7 @@ const OpportunitiesHistoryPage: React.FC = () => {
     if (!opportunity.id) return;
     try {
       // Desestructuramos para quitar los campos que no se deben enviar en el update.
-      const { id, cliente, ejecutivo, proposalDocumentPath, archived, ...updateData } = opportunity as any; // Corrected line
+      const { id, cliente, ejecutivo, stage, proposalDocumentPath, archived, ...updateData } = opportunity as any; // Corrected line
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
       setIsFormModalOpen(false);
@@ -201,8 +212,6 @@ const OpportunitiesHistoryPage: React.FC = () => {
     return Array.from(execs.values());
   }, [opportunities]);
 
-  const STAGES = Object.values(OpportunityStage);
-
   const filteredOpportunities = useMemo(() =>
     opportunities.filter(opp => {
       const matchesSearch =
@@ -212,7 +221,7 @@ const OpportunitiesHistoryPage: React.FC = () => {
         (opp.ejecutivo?.username && opp.ejecutivo.username.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
-      const matchesStatus = statusFilter ? opp.etapa === statusFilter : true;
+      const matchesStatus = statusFilter ? opp.stage_id === statusFilter : true;
       const matchesArchived = archivedFilter === 'all'
         ? true
         : archivedFilter === 'archived'
@@ -331,8 +340,8 @@ const OpportunitiesHistoryPage: React.FC = () => {
                 className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
               >
                 <option value="">Todas las Etapas</option>
-                {STAGES.map(stage => (
-                  <option key={stage} value={stage}>{stage}</option>
+                {stages.map(stage => (
+                  <option key={stage.id} value={stage.id}>{stage.strname}</option>
                 ))}
               </select>
             </div>

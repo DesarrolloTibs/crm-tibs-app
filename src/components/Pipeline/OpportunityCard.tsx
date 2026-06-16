@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Opportunity, OpportunityStageType} from '../../core/models/Opportunity';
+import type { Opportunity, Stage } from '../../core/models/Opportunity';
 import { useAuth } from '../../hooks/useAuth';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -13,19 +13,8 @@ interface Props {
   onDelete: (opportunity: Opportunity) => void;
   onArchive: (opportunity: Opportunity) => void;
   isOverlay?: boolean;
+  stages?: Stage[];
 }
-
-const stageProgress: Record<OpportunityStageType, { percent: number; color: string }> = {
-  'Nuevo': { percent: 0, color: '#c0c9d8' },
-  'Descubrimiento': { percent: 20, color: '#80d3f4' },
-  'Estimación': { percent: 40, color: '#25b4ad' },
-  'Propuesta': { percent: 60, color: '#3174b8' },
-  'Negociación': { percent: 80, color: '#a7d05e' },
-  'Ganada': { percent: 100, color: '#309b47' },
-  'Perdida': { percent: 100, color: '#a92c56' },
-  'Cancelada': { percent: 100, color: '#f68547' },
-  'Standby': { percent: 100, color: '#921e82ff' },
-};
 
 const businessLineColors: Record<string, string> = {
   'Datos': '#dbed74 #707a10',
@@ -94,7 +83,7 @@ const Avatar: React.FC<{ opportunity: Opportunity }> = ({ opportunity }) => {
   );
 };
 
-const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArchive, isOverlay = false }) => {
+const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArchive, isOverlay = false, stages = [] }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { isAdmin, user: currentUser } = useAuth();
@@ -127,7 +116,21 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
   const canDrag = (isAdmin || isOwner) && !isOverlay;
   const isDraggingStyle = isDragging && !isOverlay;
 
-  const progress = stageProgress[opportunity.etapa] || { percent: 0, color: 'bg-gray-400' };
+  // Calcular progreso en base a la lista de etapas activas ordenadas
+  const getProgress = () => {
+    const activeStages = stages.filter(s => s.blnstatus).sort((a, b) => a.display_order - b.display_order);
+    const index = activeStages.findIndex(s => s.id === opportunity.stage_id);
+    if (index === -1 || activeStages.length <= 1) {
+      return { percent: 0, color: opportunity.stage?.strcolor || '#9ca3af' };
+    }
+    const percent = Math.round((index / (activeStages.length - 1)) * 100);
+    return {
+      percent,
+      color: opportunity.stage?.strcolor || '#9ca3af'
+    };
+  };
+
+  const progress = getProgress();
   const tagColorString = businessLineColors[opportunity.linea_negocio] || '#f3f4f6 #1f2937'; // Default to gray-100 and gray-800
   const [tagBgColor, tagTextColor] = tagColorString.split(' ');
   const tagStyle = {

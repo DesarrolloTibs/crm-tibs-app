@@ -1,6 +1,18 @@
 import type { Client } from "./Client";
 import type { Company } from "./Company";
 
+export interface Stage {
+  id: string;
+  strname: string;
+  blnstatus: boolean;
+  pipeline_id: string;
+  display_order: number;
+  strcolor: string | null;
+  blninitial: boolean;
+  dtmcreated?: Date;
+  dtmlastmodified?: Date;
+}
+
 export interface Opportunity  {
   id: string;
   nombre_proyecto: string;
@@ -14,7 +26,8 @@ export interface Opportunity  {
   contactIds?: string[];
   ejecutivo_id: string;
   ejecutivo: any; 
-  etapa: OpportunityStageType;
+  stage_id: string;
+  stage?: Stage;
   monto_licenciamiento: number;
   monto_servicios: number;
   monto_total: number;
@@ -30,20 +43,6 @@ export interface Opportunity  {
   estimated_closure_date?: Date;
   createdAt?: Date;
 }
-
-
-export const OpportunityStage = {
-  NUEVO: 'Nuevo',
-  DESCUBRIMIENTO: 'Descubrimiento',
-  ESTIMACION: 'Estimación',
-  PROPUESTA: 'Propuesta',
-  NEGOCIACION: 'Negociación',
-  GANADA: 'Ganada',
-  PERDIDA: 'Perdida',
-  CANCELADA: 'Cancelada',
-  STANDBY: 'Standby',
-} as const;
-export type OpportunityStageType = (typeof OpportunityStage)[keyof typeof OpportunityStage];
 
 export const Currency = {
   USD: 'USD',

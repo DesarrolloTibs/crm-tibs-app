@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Opportunity, CurrencyType } from '../../core/models/Opportunity';
-import { OpportunityStage, Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
+import type { Opportunity, CurrencyType, Stage } from '../../core/models/Opportunity';
+import { Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
 import Select, { type SingleValue, type MultiValue } from 'react-select';
+import { getActiveStages } from '../../services/pipelinesService';
 import type { Client } from '../../core/models/Client';
 import { getClients, createClient } from '../../services/clientsService';
 import { getUsers } from '../../services/usersService'; // Importar getUsers
@@ -43,8 +44,9 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     initialData?.companyId ? 'company' : 'contact'
   );
 
+  const [stages, setStages] = useState<Stage[]>([]);
   const [opportunity, setOpportunity] = useState<OpportunityFormData>(
-    initialData ? {
+    initialData && initialData.id ? {
       ...initialData,
       estimated_closure_date: initialData.estimated_closure_date ? new Date(initialData.estimated_closure_date).toISOString().split('T')[0] : '',
       createdAt: initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : '',
@@ -57,7 +59,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       contactIds: [],
       empresa: '',
       ejecutivo_id: '', 
-      etapa: 'Nuevo',
+      stage_id: initialData?.stage_id || '',
       monto_licenciamiento: 0,
       monto_servicios: 0,
       moneda: 'USD',
@@ -73,18 +75,28 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [allClients, allCompanies] = await Promise.all([
+        const [allClients, allCompanies, activeStages] = await Promise.all([
           getClients(),
-          getCompanies()
+          getCompanies(),
+          getActiveStages()
         ]);
         setClients(allClients);
         setCompanies(allCompanies.filter(c => c.estatus));
+        setStages(activeStages);
+
+        // Si es creación y no viene un stage_id pre-seleccionado, pre-seleccionar la etapa inicial por defecto
+        if ((!initialData || !initialData.id) && !opportunity.stage_id) {
+          const initialStage = activeStages.find(s => s.blninitial) || activeStages[0];
+          if (initialStage) {
+            setOpportunity(prev => ({ ...prev, stage_id: initialStage.id }));
+          }
+        }
       } catch (error) {
-        console.error("Error loading clients and companies:", error);
+        console.error("Error loading form dependencies:", error);
       }
     };
     loadData();
-  }, []); 
+  }, [initialData]); 
 
   
   useEffect(() => {
@@ -446,9 +458,10 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Clasificación</legend>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="etapa" className="block text-sm font-medium text-gray-700 mb-1">Etapa</label>
-              <select id="etapa" name="etapa" value={opportunity.etapa} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                {Object.values(OpportunityStage).map(s => <option key={s} value={s}>{s}</option>)}
+              <label htmlFor="stage_id" className="block text-sm font-medium text-gray-700 mb-1">Etapa</label>
+              <select id="stage_id" name="stage_id" value={opportunity.stage_id} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="" disabled>-- Seleccione una etapa --</option>
+                {stages.map(s => <option key={s.id} value={s.id}>{s.strname}</option>)}
               </select>
             </div>
             <div>

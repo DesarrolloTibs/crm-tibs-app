@@ -37,6 +37,10 @@ export const ACTIVITIES = {
 export const EXPENSES = {
     EXPENSES: urlBase + 'expenses',
 };
+
+export const PIPELINES = {
+    PIPELINES: urlBase + 'pipelines',
+};
 /*export const ENDPOINTS = {
     LOGIN: '/auth/login',
     CLIENTS: 'http://localhost:3090/clients',

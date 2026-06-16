@@ -32,14 +32,20 @@ const SettingsPage: React.FC = () => {
                 },
             ],
         },
-        // En el futuro, se pueden añadir más secciones aquí:
-        // {
-        //     title: 'Clientes',
-        //     options: [
-        //         { id: 'client-categories', label: 'Categorías de Cliente', icon: <Users size={16} /> }
-        //     ]
-        // }
     ];
+    // En el futuro, se pueden añadir más secciones aquí:
+    // {
+    //     title: 'Oportunidades',
+    //     options: [
+    //         { id: 'pipeline-stages', label: 'Configuración de Pipeline', icon: <Sliders size={16} /> }
+    //     ]
+    // }
+    // {
+    //     title: 'Clientes',
+    //     options: [
+    //         { id: 'client-categories', label: 'Categorías de Cliente', icon: <Users size={16} /> }
+    //     ]
+    // }
 
     if (!isAdmin) {
         return (
