@@ -356,6 +356,7 @@ const PipelinePage: React.FC = () => {
                 display_order: s.display_order,
                 strcolor: s.strcolor,
                 blninitial: s.blninitial,
+                pipeline_id: s.pipeline_id,
               })),
             });
             fetchPipelineAndOpportunities();
@@ -502,6 +503,7 @@ const PipelinePage: React.FC = () => {
           display_order: s.display_order,
           strcolor: s.strcolor || '#3b82f6',
           blninitial: s.blninitial,
+          pipeline_id: s.pipeline_id,
         })),
       });
       setEditingStage(null);
@@ -549,6 +551,7 @@ const PipelinePage: React.FC = () => {
           display_order: s.display_order,
           strcolor: s.strcolor || '#3b82f6',
           blninitial: s.blninitial,
+          pipeline_id: s.pipeline_id,
         })),
       });
       setNotification({
