@@ -28,7 +28,18 @@ export const getOpportunities = async (startDate?: string, endDate?: string): Pr
  * @returns Una promesa que se resuelve en la oportunidad creada.
  */
 export const createOpportunity = async (opportunityData: Partial<Opportunity>): Promise<Opportunity> => {
-  const response = await axiosInstance.post<Opportunity>(OPPORTUNITIES.OPPORTUNITIES, opportunityData);
+  const {
+    id: _,
+    cliente: _1,
+    company: _2,
+    contacts: _3,
+    ejecutivo: _4,
+    interactions: _5,
+    reminders: _6,
+    createdAt: _7,
+    ...cleanOpportunity
+  } = opportunityData as any;
+  const response = await axiosInstance.post<Opportunity>(OPPORTUNITIES.OPPORTUNITIES, cleanOpportunity);
   return response.data;
 };
 
@@ -39,7 +50,18 @@ export const createOpportunity = async (opportunityData: Partial<Opportunity>): 
  * @returns Una promesa que se resuelve en la oportunidad actualizada.
  */
 export const updateOpportunity = async (id: string, opportunityData: Partial<Opportunity>): Promise<Opportunity> => {
-  const response = await axiosInstance.patch<Opportunity>(`${OPPORTUNITIES.OPPORTUNITIES}/${id}`, opportunityData);
+  const {
+    id: _,
+    cliente: _1,
+    company: _2,
+    contacts: _3,
+    ejecutivo: _4,
+    interactions: _5,
+    reminders: _6,
+    createdAt: _7,
+    ...cleanOpportunity
+  } = opportunityData as any;
+  const response = await axiosInstance.patch<Opportunity>(`${OPPORTUNITIES.OPPORTUNITIES}/${id}`, cleanOpportunity);
   return response.data;
 };
 

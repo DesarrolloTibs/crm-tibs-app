@@ -10,7 +10,7 @@ import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import ClientsTable from '../components/Client/ClientsTable';
 import CompaniesTable from '../components/Company/CompaniesTable';
-import { User, Filter, XCircle, Search, Building, Mail, User as UserIcon, LayoutGrid } from 'lucide-react';
+import { Filter, XCircle, Search, Building, Mail, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
 import Select from 'react-select';

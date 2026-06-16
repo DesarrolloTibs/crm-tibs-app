@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Users, Briefcase, BarChart3, LogOut, History, ClipboardList, DollarSign, Building } from 'lucide-react';
+import { Users, Briefcase, BarChart3, LogOut, History, ClipboardList, DollarSign, Settings } from 'lucide-react';
 
 interface Props {
     isSidebarOpen: boolean;
@@ -36,6 +36,7 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
                     <li><NavLink to="/expenses" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><DollarSign size={20} /> Gastos</NavLink></li>
                     <li><NavLink to="/history" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><History size={20} /> Historial</NavLink></li>
                     {isAdmin && <li><NavLink to="/users" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><Users size={20} /> Usuarios</NavLink></li>}
+                    {isAdmin && <li><NavLink to="/settings" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><Settings size={20} /> Configuración</NavLink></li>}
                 </ul>
             </nav>
             <div className="p-4 border-t border-blue-700">

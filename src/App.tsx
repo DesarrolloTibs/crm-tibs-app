@@ -13,6 +13,7 @@ import ExpensesPage from './pages/ExpensesPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import CompaniesPage from './pages/CompaniesPage';
+import SettingsPage from './pages/SettingsPage';
 
 const App: React.FC = () => (
     <BrowserRouter>
@@ -87,6 +88,16 @@ const App: React.FC = () => (
                     <ProtectedRoute adminOnly={true}>
                         <Layout>
                             <UsersPage />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/settings"
+                element={
+                    <ProtectedRoute adminOnly={true}>
+                        <Layout>
+                            <SettingsPage />
                         </Layout>
                     </ProtectedRoute>
                 }

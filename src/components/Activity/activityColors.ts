@@ -9,7 +9,7 @@ export interface ActivityColor {
  * Esto asegura que el mismo tipo de actividad siempre tenga el mismo color aleatorio.
  */
 export const getActivityColor = (typeName?: string): ActivityColor => {
-    if (!typeName) {
+    if (!typeName || typeName === 'Tipo de actividad eliminada') {
         return { bg: '#6B7280', border: '#4B5563', text: '#ffffff' };
     }
 

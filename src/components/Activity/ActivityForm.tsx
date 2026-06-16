@@ -78,6 +78,20 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         fetchData();
     }, [isAdmin, user]);
 
+    const extendedActivityTypes = useMemo(() => {
+        const hasCurrentType = activityTypes.some(type => type.id === form.typeActivityId);
+        if (form.typeActivityId === null && initialData?.typeActivity) {
+            const hasNullType = activityTypes.some(type => type.id === null);
+            if (!hasNullType) {
+                return [...activityTypes, initialData.typeActivity];
+            }
+        }
+        if (form.typeActivityId && !hasCurrentType && initialData?.typeActivity) {
+            return [...activityTypes, initialData.typeActivity];
+        }
+        return activityTypes;
+    }, [activityTypes, form.typeActivityId, initialData?.typeActivity]);
+
     const opportunityOptions = useMemo(() => {
         let filteredOpportunities = opportunities;
 
@@ -130,7 +144,11 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         
         let parsedValue: any = value;
         if (name === 'typeActivityId') {
-            parsedValue = value ? parseInt(value, 10) : null;
+            if (value === 'null') {
+                parsedValue = null;
+            } else {
+                parsedValue = value ? parseInt(value, 10) : null;
+            }
         } else if (type === 'checkbox') {
             parsedValue = checked;
         }
@@ -222,10 +240,10 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="typeActivityId" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Actividad</label>
-                        <select id="typeActivityId" name="typeActivityId" value={form.typeActivityId || ''} onChange={handleChange} required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                        <select id="typeActivityId" name="typeActivityId" value={form.typeActivityId === null ? 'null' : (form.typeActivityId ?? '')} onChange={handleChange} required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">Seleccione un tipo</option>
-                            {activityTypes.map(type => (
-                                <option key={type.id} value={type.id}>{type.strname}</option>
+                            {extendedActivityTypes.map(type => (
+                                <option key={type.id ?? 'null'} value={type.id === null ? 'null' : type.id}>{type.strname}</option>
                             ))}
                         </select>
                     </div>
