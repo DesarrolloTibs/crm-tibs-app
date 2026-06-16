@@ -535,6 +535,7 @@ const PipelinePage: React.FC = () => {
                 onEdit={() => {}} // No-op durante el drag
                 onDelete={() => {}} // No-op durante el drag
                 onArchive={() => {}} // No-op durante el drag
+                isOverlay
               />
             ) : null}
           </DragOverlay>

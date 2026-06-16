@@ -12,6 +12,7 @@ interface Props {
   onEdit: (opportunity: Opportunity) => void;
   onDelete: (opportunity: Opportunity) => void;
   onArchive: (opportunity: Opportunity) => void;
+  isOverlay?: boolean;
 }
 
 const stageProgress: Record<OpportunityStageType, { percent: number; color: string }> = {
@@ -93,7 +94,7 @@ const Avatar: React.FC<{ opportunity: Opportunity }> = ({ opportunity }) => {
   );
 };
 
-const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArchive }) => {
+const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArchive, isOverlay = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { isAdmin, user: currentUser } = useAuth();
@@ -111,17 +112,21 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: opportunity.id,
-    disabled: !(isAdmin || isOwner), // Deshabilita el drag si no es admin o dueño
+    disabled: !(isAdmin || isOwner) || isOverlay, // Deshabilita el drag si no es admin/dueño o si es el overlay visual
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const style = isOverlay
+    ? undefined
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+      };
 
-  const canDrag = isAdmin || isOwner;
+  const canDrag = (isAdmin || isOwner) && !isOverlay;
+  const isDraggingStyle = isDragging && !isOverlay;
+
   const progress = stageProgress[opportunity.etapa] || { percent: 0, color: 'bg-gray-400' };
   const tagColorString = businessLineColors[opportunity.linea_negocio] || '#f3f4f6 #1f2937'; // Default to gray-100 and gray-800
   const [tagBgColor, tagTextColor] = tagColorString.split(' ');
@@ -134,8 +139,19 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white m-2 p-2 pt-2 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative group w-[250px] h-[120px] touch-none ${!canDrag ? 'cursor-not-allowed' : ''}`}
+      className={`bg-white m-2 p-2 pt-2 rounded-xl border border-gray-200 flex flex-col justify-between transition-all relative group w-[250px] h-[120px] touch-none ${
+        isDraggingStyle
+          ? 'opacity-30 blur-[1.5px] pointer-events-none shadow-none border-dashed border-gray-300'
+          : isOverlay
+          ? 'shadow-xl scale-[1.03] rotate-1 cursor-grabbing border-blue-200 bg-white/95 backdrop-blur-sm'
+          : `shadow-sm hover:shadow-lg hover:-translate-y-1 ${!canDrag ? 'cursor-not-allowed' : ''}`
+      }`}
       {...attributes}
+      onDoubleClick={() => {
+        if ((isAdmin || isOwner) && !isOverlay) {
+          onEdit(opportunity);
+        }
+      }}
     >
       {/* Action buttons are outside the draggable area */}
       <div className="absolute top-2 right-2 z-10" ref={menuRef}>
