@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { uploadOpportunityFile, downloadOpportunityFile, deleteOpportunityFile } from '../../services/opportunitiesService';
+import { uploadOpportunityFile, downloadOpportunityFile, deleteOpportunityFile, getOpportunity } from '../../services/opportunitiesService';
 import { 
   Paperclip, 
   UploadCloud, 
@@ -31,8 +31,10 @@ interface StagedFile {
 }
 
 const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => {
+  const [currentOpportunity, setCurrentOpportunity] = useState<Opportunity>(opportunity);
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [loadingFiles, setLoadingFiles] = useState(false);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -47,6 +49,37 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
   });
 
   const hideNotification = () => setNotification((prev) => ({ ...prev, show: false }));
+
+  // Sincronizar el estado interno si el prop cambia
+  React.useEffect(() => {
+    setCurrentOpportunity(opportunity);
+  }, [opportunity]);
+
+  // Cargar los archivos actualizados desde el servidor al montar o cuando cambie la oportunidad
+  React.useEffect(() => {
+    let active = true;
+    const fetchLatestFiles = async () => {
+      setLoadingFiles(true);
+      try {
+        const latestOpp = await getOpportunity(opportunity.id);
+        if (active) {
+          setCurrentOpportunity(latestOpp);
+          // Sincronizar con el estado del componente padre
+          onUploadSuccess(latestOpp);
+        }
+      } catch (err) {
+        console.error("Error al cargar archivos de la oportunidad:", err);
+      } finally {
+        if (active) {
+          setLoadingFiles(false);
+        }
+      }
+    };
+    fetchLatestFiles();
+    return () => {
+      active = false;
+    };
+  }, [opportunity.id]);
 
   // Helper to determine icon based on file extension
   const getFileIcon = (fileName: string) => {
@@ -131,9 +164,9 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
 
     setUploading(true);
     try {
-      let lastUpdatedOpportunity = opportunity;
+      let lastUpdatedOpportunity = currentOpportunity;
       for (const sf of stagedFiles) {
-        lastUpdatedOpportunity = await uploadOpportunityFile(opportunity.id, sf.file, sf.title, sf.date);
+        lastUpdatedOpportunity = await uploadOpportunityFile(currentOpportunity.id, sf.file, sf.title, sf.date);
       }
       onUploadSuccess(lastUpdatedOpportunity);
       setStagedFiles([]);
@@ -164,7 +197,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
   const handleDownload = async (file: OpportunityFile) => {
     setDownloadingFileId(file.id);
     try {
-      const blob = await downloadOpportunityFile(opportunity.id, file.id);
+      const blob = await downloadOpportunityFile(currentOpportunity.id, file.id);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -199,7 +232,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
         hideNotification();
         setDeletingFileId(file.id);
         try {
-          const updatedOpportunity = await deleteOpportunityFile(opportunity.id, file.id);
+          const updatedOpportunity = await deleteOpportunityFile(currentOpportunity.id, file.id);
           onUploadSuccess(updatedOpportunity);
           setNotification({
             show: true,
@@ -241,7 +274,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
     }
   };
 
-  const filesList = opportunity.files || [];
+  const filesList = currentOpportunity.files || [];
 
   return (
     <div className="p-4 flex flex-col h-full max-h-[70vh] overflow-y-auto">
@@ -358,7 +391,12 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
           Archivos adjuntos ({filesList.length})
         </h4>
 
-        {filesList.length === 0 ? (
+        {loadingFiles && filesList.length === 0 ? (
+          <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center bg-white flex flex-col items-center">
+            <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+            <p className="text-xs font-semibold text-slate-400">Cargando archivos adjuntos...</p>
+          </div>
+        ) : filesList.length === 0 ? (
           <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center bg-white flex flex-col items-center">
             <FolderOpen size={36} className="text-slate-300 mb-2" />
             <p className="text-xs font-semibold text-slate-400">No hay archivos en esta oportunidad</p>
