@@ -96,6 +96,16 @@ export const getAllOpportunities = async (): Promise<Opportunity[]> => {
 };
 
 /**
+ * Obtiene una oportunidad por su ID.
+ * @param id - El ID de la oportunidad.
+ * @returns Una promesa que se resuelve en la oportunidad.
+ */
+export const getOpportunity = async (id: string): Promise<Opportunity> => {
+  const response = await axiosInstance.get<Opportunity>(`${OPPORTUNITIES.OPPORTUNITIES}/${id}`);
+  return response.data;
+};
+
+/**
  * Sube un archivo para una oportunidad.
  * @param id - El ID de la oportunidad.
  * @param file - El archivo a subir.
