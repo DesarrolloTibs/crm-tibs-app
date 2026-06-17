@@ -37,6 +37,8 @@ export const createOpportunity = async (opportunityData: Partial<Opportunity>): 
     interactions: _5,
     reminders: _6,
     createdAt: _7,
+    files: _8,
+    proposalDocumentPath: _9,
     ...cleanOpportunity
   } = opportunityData as any;
   const response = await axiosInstance.post<Opportunity>(OPPORTUNITIES.OPPORTUNITIES, cleanOpportunity);
@@ -59,6 +61,8 @@ export const updateOpportunity = async (id: string, opportunityData: Partial<Opp
     interactions: _5,
     reminders: _6,
     createdAt: _7,
+    files: _8,
+    proposalDocumentPath: _9,
     ...cleanOpportunity
   } = opportunityData as any;
   const response = await axiosInstance.patch<Opportunity>(`${OPPORTUNITIES.OPPORTUNITIES}/${id}`, cleanOpportunity);
@@ -92,17 +96,26 @@ export const getAllOpportunities = async (): Promise<Opportunity[]> => {
 };
 
 /**
- * Sube un documento de propuesta para una oportunidad.
+ * Sube un archivo para una oportunidad.
  * @param id - El ID de la oportunidad.
  * @param file - El archivo a subir.
+ * @param title - El título o etiqueta del archivo.
+ * @param date - La fecha asociada al archivo.
  * @returns Una promesa que se resuelve en la oportunidad actualizada.
  */
-export const uploadProposalDocument = async (id: string, file: File): Promise<Opportunity> => {
+export const uploadOpportunityFile = async (
+  id: string,
+  file: File,
+  title?: string,
+  date?: string
+): Promise<Opportunity> => {
   const formData = new FormData();
   formData.append('file', file);
+  if (title) formData.append('title', title);
+  if (date) formData.append('date', date);
 
   const response = await axiosInstance.post<Opportunity>(
-    `${OPPORTUNITIES.OPPORTUNITIES}/${id}/proposal`,
+    `${OPPORTUNITIES.OPPORTUNITIES}/${id}/files`,
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } }
   );
@@ -110,16 +123,30 @@ export const uploadProposalDocument = async (id: string, file: File): Promise<Op
 };
 
 /**
- * Descarga el documento de propuesta de una oportunidad.
- * @param id - El ID de la oportunidad.
+ * Descarga un archivo específico de una oportunidad.
+ * @param opportunityId - El ID de la oportunidad.
+ * @param fileId - El ID del archivo.
  * @returns Una promesa que se resuelve en un objeto Blob con los datos del archivo.
  */
-export const downloadProposalDocument = async (id: string): Promise<Blob> => {
+export const downloadOpportunityFile = async (opportunityId: string, fileId: string): Promise<Blob> => {
   const response = await axiosInstance.get(
-    `${OPPORTUNITIES.OPPORTUNITIES}/${id}/proposal/download`,
+    `${OPPORTUNITIES.OPPORTUNITIES}/${opportunityId}/files/${fileId}/download`,
     {
-      responseType: 'blob', // Esencial para manejar la respuesta como un archivo
+      responseType: 'blob',
     }
+  );
+  return response.data;
+};
+
+/**
+ * Elimina un archivo específico de una oportunidad.
+ * @param opportunityId - El ID de la oportunidad.
+ * @param fileId - El ID del archivo.
+ * @returns Una promesa que se resuelve en la oportunidad actualizada.
+ */
+export const deleteOpportunityFile = async (opportunityId: string, fileId: string): Promise<Opportunity> => {
+  const response = await axiosInstance.delete<Opportunity>(
+    `${OPPORTUNITIES.OPPORTUNITIES}/${opportunityId}/files/${fileId}`
   );
   return response.data;
 };
