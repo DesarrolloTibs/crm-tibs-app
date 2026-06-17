@@ -18,7 +18,7 @@ import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';
 import RemindersTab from '../Reminder/RemindersTab';
 import InteractionsTab from '../Interaction/InteractionsTab';
-import ProposalTab from '../Proposal/ProposalTab';
+import FilesTab from '../Files/FilesTab';
 import Notification from '../Modal/Notification';
 import ActivitiesTab from '../Activity/ActivitiesTab';
 
@@ -216,7 +216,7 @@ const PipelinePage: React.FC = () => {
   const handleUpdate = async (opportunity: Partial<Opportunity>) => {
     if (!opportunity.id) return;
     try {
-      const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, archived, ...updateData } = opportunity as any;
+      const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, files, archived, ...updateData } = opportunity as any;
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
       setIsFormModalOpen(false);
@@ -440,7 +440,7 @@ const PipelinePage: React.FC = () => {
       const opportunityToUpdate = updatedOpportunities.find(o => o.id === activeId);
 
       if (opportunityToUpdate) {
-        const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, archived, tipoCambio, ...rest } = opportunityToUpdate as any;
+        const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, files, archived, tipoCambio, ...rest } = opportunityToUpdate as any;
         const updateData = {
           ...rest,
           stage_id: overStageId,
@@ -938,8 +938,7 @@ const PipelinePage: React.FC = () => {
       { label: 'Actividades', content: <ActivitiesTab opportunityId={editingOpportunity.id} /> },
       { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
       { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> },
-      {
-        label: 'Propuesta', content: <ProposalTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
+      { label: 'Archivos', content: <FilesTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
           setEditingOpportunity(updatedOpp);
           setOpportunities(prev => prev.map(o => o.id === updatedOpp.id ? updatedOpp : o));
         }} />

@@ -40,10 +40,21 @@ export interface Opportunity  {
   reminders: any[]; // You might want to create a Reminder model
   archived?: boolean;
   proposalDocumentPath?: string;
+  files?: OpportunityFile[];
   tipoCambio?: number;
   estimated_closure_date?: Date;
   createdAt?: Date;
   stage_entered_at?: Date | string;
+}
+
+export interface OpportunityFile {
+  id: string;
+  fileName: string;
+  filePath: string;
+  title: string | null;
+  date: string | null;
+  opportunityId: string;
+  uploadedAt: string;
 }
 
 export const Currency = {

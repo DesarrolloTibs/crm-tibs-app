@@ -20,7 +20,7 @@ import { Plus, Search, Filter, XCircle, User, Tag, Archive } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth';
 import OpportunityHistoryTable from '../components/Pipeline/OpportunityHistoryTable';
 import Notification from '../components/Modal/Notification';
-import ProposalTab from '../components/Proposal/ProposalTab';
+import FilesTab from '../components/Files/FilesTab';
 import ActivitiesTab from '../components/Activity/ActivitiesTab';
 
 const PAGE_SIZE = 10;
@@ -113,7 +113,7 @@ const OpportunitiesHistoryPage: React.FC = () => {
     if (!opportunity.id) return;
     try {
       // Desestructuramos para quitar los campos que no se deben enviar en el update.
-      const { id, cliente, ejecutivo, stage, proposalDocumentPath, archived, ...updateData } = opportunity as any; // Corrected line
+      const { id, cliente, ejecutivo, stage, proposalDocumentPath, files, archived, ...updateData } = opportunity as any; // Corrected line
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
       setIsFormModalOpen(false);
@@ -266,7 +266,7 @@ const OpportunitiesHistoryPage: React.FC = () => {
       
       { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
       { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> },
-        { label: 'Propuesta', content: <ProposalTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
+        { label: 'Archivos', content: <FilesTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
           // Actualizamos el estado local para reflejar el cambio en la UI sin recargar todo
           setEditingOpportunity(updatedOpp);
           setOpportunities(prev => prev.map(o => o.id === updatedOpp.id ? updatedOpp : o));
