@@ -206,3 +206,23 @@
         font-size: 0.75rem !important;
     }
 }
+
+/* Permitir envoltura de texto en eventos de FullCalendar con límite de 2 líneas */
+.tibs-calendar .fc-event-title,
+.tibs-calendar .fc-event-title-container {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: hidden !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+.tibs-calendar .fc-daygrid-event {
+    white-space: normal !important;
+    height: auto !important;
+}
+
+.tibs-calendar .fc-daygrid-event-h-card {
+    height: auto !important;
+}

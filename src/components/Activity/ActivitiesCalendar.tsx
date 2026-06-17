@@ -6,6 +6,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import type { EventClickArg, DateSelectArg, EventContentArg } from '@fullcalendar/core';
 import esLocale from '@fullcalendar/core/locales/es';
+import { Bell } from 'lucide-react';
 
 import type { Activity, TypeActivity } from '../../core/models/Activity';
 import { getActivityColor } from './activityColors';
@@ -42,11 +43,29 @@ const toLocalDateTimeString = (date: Date): string => {
     return copy.toISOString().slice(0, 16);
 };
 
+/* ── Sub-componente: chip de recordatorio en el calendario ────────────────── */
+
+const ReminderEventCard: React.FC<{ eventInfo: EventContentArg }> = ({ eventInfo }) => {
+    return (
+        <div
+            className="flex items-start gap-1 px-1.5 py-0.5 rounded-md w-full h-auto min-h-full"
+            style={{ backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' }}
+        >
+            <Bell size={10} className="flex-shrink-0 mt-0.5" style={{ color: '#d97706' }} />
+            <span className="text-xs font-semibold break-words line-clamp-2 leading-tight">
+                {eventInfo.event.title}
+            </span>
+        </div>
+    );
+};
+
 /* ── Componente ───────────────────────────────────────────────────────────── */
 
 /**
  * Vista de calendario de actividades estilo Google Calendar.
- * Orquesta los sub-componentes: ActivityTypeLegend, ActivityEventCard, ActivityPopover.
+ * Muestra:
+ *  - Actividades → chips de color según tipo
+ *  - Recordatorios → chips amber separados en su propia fecha/hora
  */
 const ActivitiesCalendar: React.FC<Props> = ({
     activities,
@@ -62,24 +81,39 @@ const ActivitiesCalendar: React.FC<Props> = ({
         position: { x: 0, y: 0 },
     });
 
-    /* Convertir actividades al formato de FullCalendar.
-       backgroundColor/borderColor se pasan en 'transparent' porque el color
-       lo aplica directamente ActivityEventCard via inline style. */
-    const events = activities.map((activity) => ({
-        id: activity.id,
+    /* ── Eventos de actividades ──────────────────────────────────────────── */
+    const activityEvents = activities.map((activity) => ({
+        id: `activity-${activity.id}`,
         title: activity.activity,
         start: activity.date,
         backgroundColor: 'transparent',
         borderColor: 'transparent',
-        extendedProps: { activity },
-        // Necesario para la vista de Lista, que usa el dot de color
+        extendedProps: { type: 'activity', activity },
         color: getActivityColor(activity.typeActivity?.strname).bg,
     }));
+
+    /* ── Eventos de recordatorios (fecha propia del reminder) ────────────── */
+    const reminderEvents = activities
+        .filter((a) => !!a.reminder)
+        .map((activity) => ({
+            id: `reminder-${activity.id}`,
+            title: activity.reminder!.title,
+            start: activity.reminder!.date,
+            backgroundColor: '#fef3c7',
+            borderColor: '#fcd34d',
+            textColor: '#92400e',
+            extendedProps: { type: 'reminder', activity },
+        }));
+
+    const events = [...activityEvents, ...reminderEvents];
 
     /* ── Handlers ───────────────────────────────────────────────────────── */
 
     const handleEventClick = useCallback((info: EventClickArg) => {
+        const eventType = info.event.extendedProps.type as string;
         const activity = info.event.extendedProps.activity as Activity;
+
+        // Los recordatorios abren el popover de su actividad (para editar/eliminar)
         const rect = info.el.getBoundingClientRect();
         setPopover({
             visible: true,
@@ -117,7 +151,13 @@ const ActivitiesCalendar: React.FC<Props> = ({
     /* ── Render de evento personalizado ─────────────────────────────────── */
 
     const renderEventContent = useCallback(
-        (eventInfo: EventContentArg) => <ActivityEventCard eventInfo={eventInfo} />,
+        (eventInfo: EventContentArg) => {
+            const eventType = eventInfo.event.extendedProps.type as string;
+            if (eventType === 'reminder') {
+                return <ReminderEventCard eventInfo={eventInfo} />;
+            }
+            return <ActivityEventCard eventInfo={eventInfo} />;
+        },
         [],
     );
 

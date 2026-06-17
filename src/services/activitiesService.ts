@@ -23,6 +23,7 @@ export async function createActivity(activity: Partial<Activity>): Promise<Activ
         userId: _9,
         ...cleanActivity
     } = activity as any;
+    // reminder se incluye en cleanActivity para enviarlo al backend
     const response = await axiosInstance.post(ACTIVITIES.ACTIVITIES, cleanActivity);
     return response.data;
 }
@@ -41,6 +42,7 @@ export async function updateActivity(id: string, activity: Partial<Activity>): P
         userId: _9,
         ...cleanActivity
     } = activity as any;
+    // reminder se incluye en cleanActivity para enviarlo al backend
     const response = await axiosInstance.patch(`${ACTIVITIES.ACTIVITIES}/${id}`, cleanActivity);
     return response.data;
 }

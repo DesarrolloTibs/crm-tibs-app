@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Select, { type SingleValue, type MultiValue } from 'react-select';
+import { Bell, BellOff } from 'lucide-react';
 
 import { getOpportunities } from '../../services/opportunitiesService';
 import { getActiveClients } from '../../services/clientsService';
-import type { Activity, TypeActivity } from '../../core/models/Activity';
+import type { Activity, TypeActivity, ActivityReminder } from '../../core/models/Activity';
 import type { Opportunity } from '../../core/models/Opportunity';
 import type { Client } from '../../core/models/Client';
 import { useAuth } from '../../hooks/useAuth';
@@ -53,6 +54,13 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
 
+    // ── Reminder state ────────────────────────────────────────────────────────
+    const [reminderEnabled, setReminderEnabled] = useState<boolean>(!!initialData?.reminder);
+    const [reminderForm, setReminderForm] = useState<{ title: string; date: string }>({
+        title: initialData?.reminder?.title || '',
+        date: formatDateTimeForInput(initialData?.reminder?.date) || '',
+    });
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -93,23 +101,11 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
     }, [activityTypes, form.typeActivityId, initialData?.typeActivity]);
 
     const opportunityOptions = useMemo(() => {
-        let filteredOpportunities = opportunities;
-
-        if (linkType === 'company' && form.companyId) {
-            filteredOpportunities = opportunities.filter(
-                op => op.companyId === form.companyId
-            );
-        } else if (linkType === 'contact' && form.clientId) {
-            filteredOpportunities = opportunities.filter(
-                op => op.cliente_id === form.clientId
-            );
-        }
-
-        return filteredOpportunities.map(op => ({
+        return opportunities.map(op => ({
             value: op.id,
             label: `${op.nombre_proyecto} (${op.company?.nombre || op.cliente?.nombre || op.empresa || 'Sin asociar'})`,
         }));
-    }, [opportunities, linkType, form.companyId, form.clientId]);
+    }, [opportunities]);
 
     const companyOptions = useMemo(() =>
         companies.map(c => ({
@@ -160,10 +156,30 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
     };
 
     const handleOpportunityChange = (selectedOption: SingleValue<SelectOption>) => {
-        setForm({
-            ...form,
-            opportunityId: selectedOption?.value ?? null,
-            flaghistory: !!selectedOption && form.flaghistory,
+        const oppId = selectedOption?.value ?? null;
+        const selectedOpp = opportunities.find(op => op.id === oppId);
+
+        setForm(prev => {
+            const updated = {
+                ...prev,
+                opportunityId: oppId,
+                flaghistory: !!selectedOption && prev.flaghistory,
+            };
+
+            if (selectedOpp) {
+                if (selectedOpp.companyId) {
+                    setLinkType('company');
+                    updated.companyId = selectedOpp.companyId;
+                    updated.clientId = null;
+                    updated.contactIds = selectedOpp.contacts?.map(c => c.id!) || [];
+                } else if (selectedOpp.cliente_id) {
+                    setLinkType('contact');
+                    updated.clientId = selectedOpp.cliente_id;
+                    updated.companyId = null;
+                    updated.contactIds = [];
+                }
+            }
+            return updated;
         });
     };
 
@@ -203,15 +219,22 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         }));
     };
 
+    const handleReminderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setReminderForm(prev => ({ ...prev, [name]: value }));
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const finalActivity = { ...form };
+        const finalActivity: Partial<Activity & { contactIds?: string[]; reminder?: ActivityReminder | null }> = { ...form };
         if (linkType === 'company') {
             finalActivity.clientId = null;
         } else {
             finalActivity.companyId = null;
             finalActivity.contactIds = form.clientId ? [form.clientId] : [];
         }
+        // Incluir reminder o null para eliminarlo
+        finalActivity.reminder = reminderEnabled ? reminderForm : null;
         onSubmit(finalActivity);
     };
 
@@ -253,7 +276,16 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                     </div>
                     <div className="md:col-span-2">
                         <label htmlFor="activity" className="block text-sm font-medium text-gray-700 mb-1">Actividad</label>
-                        <input id="activity" name="activity" value={form.activity || ''} onChange={handleChange} placeholder="Descripción breve de la actividad" required maxLength={80} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+                        <textarea 
+                            id="activity" 
+                            name="activity" 
+                            value={form.activity || ''} 
+                            onChange={handleChange} 
+                            placeholder="Descripción de la actividad" 
+                            required 
+                            rows={3}
+                            className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
+                        />
                     </div>
                     
                     <div className="md:col-span-2">
@@ -351,6 +383,67 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                         </div>
                     )}
                 </div>
+            </fieldset>
+
+            {/* ── Sección Recordatorio ───────────────────────────────────── */}
+            <fieldset className="space-y-4">
+                <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">
+                    <div className="flex items-center justify-between">
+                        <span>Recordatorio</span>
+                        <button
+                            type="button"
+                            onClick={() => setReminderEnabled(!reminderEnabled)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                reminderEnabled
+                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            }`}
+                            title={reminderEnabled ? 'Desactivar recordatorio' : 'Activar recordatorio'}
+                        >
+                            {reminderEnabled ? (
+                                <Bell size={16} className="animate-pulse" />
+                            ) : (
+                                <BellOff size={16} />
+                            )}
+                            {reminderEnabled ? 'Activado' : 'Desactivado'}
+                        </button>
+                    </div>
+                </legend>
+
+                {reminderEnabled && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-amber-50 border border-amber-200 rounded-lg p-4 animate-fade-in-down">
+                        <div className="md:col-span-2">
+                            <label htmlFor="reminderTitle" className="block text-sm font-medium text-gray-700 mb-1">
+                                Título del Recordatorio <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                id="reminderTitle"
+                                name="title"
+                                type="text"
+                                value={reminderForm.title}
+                                onChange={handleReminderChange}
+                                placeholder="Ej: Llamar al cliente para seguimiento"
+                                maxLength={100}
+                                required={reminderEnabled}
+                                className="w-full border rounded px-3 py-2 border-amber-300 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label htmlFor="reminderDate" className="block text-sm font-medium text-gray-700 mb-1">
+                                Fecha y Hora del Recordatorio <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                id="reminderDate"
+                                name="date"
+                                type="datetime-local"
+                                value={reminderForm.date}
+                                onChange={handleReminderChange}
+                                required={reminderEnabled}
+                                className="w-full border rounded px-3 py-2 border-amber-300 focus:ring-amber-500 focus:border-amber-500 bg-white appearance-none min-w-0"
+                            />
+                        </div>
+                    </div>
+                )}
             </fieldset>
 
             <div className="flex justify-end space-x-2 pt-4">

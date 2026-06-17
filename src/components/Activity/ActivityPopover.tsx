@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Calendar, Clock, User, Briefcase, Edit, Trash2, Building } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Calendar, Clock, User, Briefcase, Edit, Trash2, Building, Bell } from 'lucide-react';
 import type { Activity } from '../../core/models/Activity';
 import { getActivityColor } from './activityColors';
 
@@ -19,9 +19,9 @@ interface DetailRowProps {
 }
 
 const DetailRow: React.FC<DetailRowProps> = ({ icon, children }) => (
-    <div className="flex items-center gap-2 text-sm text-gray-600">
-        <span className="text-indigo-500 flex-shrink-0">{icon}</span>
-        {children}
+    <div className="flex items-start gap-2 text-xs sm:text-sm text-gray-600 w-full min-w-0">
+        <span className="text-indigo-500 flex-shrink-0 mt-0.5">{icon}</span>
+        <div className="flex-1 min-w-0 break-words whitespace-normal leading-normal">{children}</div>
     </div>
 );
 
@@ -31,12 +31,9 @@ const DetailRow: React.FC<DetailRowProps> = ({ icon, children }) => (
  * Popover que aparece al hacer click en un evento del calendario.
  * Muestra los detalles de la actividad y botones de editar / eliminar.
  */
-const ActivityPopover: React.FC<Props> = ({ activity, position, onEdit, onDelete, onClose }) => {
+const ActivityPopover: React.FC<Props> = ({ activity, onEdit, onDelete, onClose }) => {
     const typeName = activity.typeActivity?.strname;
     const color = getActivityColor(typeName);
-
-    const popoverLeft = Math.min(position.x - 160, window.innerWidth - 340);
-    const popoverTop  = Math.min(position.y + 8,   window.innerHeight - 300);
 
     const formattedDate = new Date(activity.date).toLocaleDateString('es-MX', {
         weekday: 'long',
@@ -52,20 +49,19 @@ const ActivityPopover: React.FC<Props> = ({ activity, position, onEdit, onDelete
 
     return (
         <>
-            {/* Overlay transparente para cerrar al clickear fuera */}
-            <div className="fixed inset-0 z-40" onClick={onClose} />
+            {/* Overlay/Backdrop oscuro para todos los tamaños */}
+            <div className="fixed inset-0 z-40 bg-black/45 transition-opacity animate-fade-in" onClick={onClose} />
 
-            {/* Popover */}
+            {/* Popover Centrado en Pantalla */}
             <div
-                className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-100 w-80 overflow-hidden"
-                style={{ left: popoverLeft, top: popoverTop }}
+                className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-100 w-[90vw] max-w-[340px] md:w-80 overflow-hidden left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-scale-up"
             >
                 {/* Header con el color del tipo de actividad */}
                 <div
                     className="px-4 py-3 flex items-center justify-between"
                     style={{ backgroundColor: color.bg }}
                 >
-                    <span className="text-white text-xs font-bold uppercase tracking-wider">
+                    <span className="text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider">
                         {typeName || 'Sin tipo'}
                     </span>
                     <button
@@ -79,7 +75,7 @@ const ActivityPopover: React.FC<Props> = ({ activity, position, onEdit, onDelete
 
                 {/* Cuerpo con detalles */}
                 <div className="p-4 space-y-3">
-                    <h3 className="font-semibold text-gray-800 text-[0.95rem] leading-snug">
+                    <h3 className="font-semibold text-gray-800 text-xs sm:text-sm md:text-[0.95rem] leading-snug break-words line-clamp-4" title={activity.activity}>
                         {activity.activity}
                     </h3>
 
@@ -100,19 +96,38 @@ const ActivityPopover: React.FC<Props> = ({ activity, position, onEdit, onDelete
 
                         {activity.opportunity?.nombre_proyecto && (
                             <DetailRow icon={<Briefcase size={14} />}>
-                                <span className="truncate">{activity.opportunity.nombre_proyecto}</span>
+                                <span className="break-words whitespace-normal" title={activity.opportunity.nombre_proyecto}>{activity.opportunity.nombre_proyecto}</span>
                             </DetailRow>
                         )}
 
                         {activity.company?.nombre ? (
                             <DetailRow icon={<Building size={14} />}>
-                                <span className="truncate">{activity.company.nombre}</span>
+                                <span className="break-words whitespace-normal" title={activity.company.nombre}>{activity.company.nombre}</span>
                             </DetailRow>
                         ) : activity.client?.nombre ? (
                             <DetailRow icon={<User size={14} />}>
-                                <span className="truncate">{activity.client.nombre} {activity.client.apellido}</span>
+                                <span className="break-words whitespace-normal" title={`${activity.client.nombre} ${activity.client.apellido}`}>{activity.client.nombre} {activity.client.apellido}</span>
                             </DetailRow>
                         ) : null}
+
+                        {activity.reminder && (
+                            <div className="mt-2 pt-2 border-t border-amber-200 space-y-1">
+                                <DetailRow icon={<Bell size={14} className="text-amber-500" />}>
+                                    <span className="font-medium text-amber-700 break-words line-clamp-3" title={activity.reminder.title}>{activity.reminder.title}</span>
+                                </DetailRow>
+                                <DetailRow icon={<Clock size={14} className="text-amber-400" />}>
+                                    <span className="text-amber-600 text-[10px] sm:text-xs">
+                                        {new Date(activity.reminder.date).toLocaleString('es-MX', {
+                                            weekday: 'short',
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })}
+                                    </span>
+                                </DetailRow>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -121,14 +136,14 @@ const ActivityPopover: React.FC<Props> = ({ activity, position, onEdit, onDelete
                 <div className="border-t border-gray-100 px-4 py-3 flex justify-end gap-2 bg-gray-50">
                     <button
                         onClick={onDelete}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                         <Trash2 size={14} />
                         Eliminar
                     </button>
                     <button
                         onClick={onEdit}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white rounded-lg transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-white rounded-lg transition-colors"
                         style={{ backgroundColor: color.bg }}
                     >
                         <Edit size={14} />

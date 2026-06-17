@@ -151,6 +151,19 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
   const isRed = stageLimit !== undefined && stageLimit !== null && stageLimit > 0 && days > stageLimit;
   const isYellow = stageLimit !== undefined && stageLimit !== null && stageLimit > 0 && !isRed && days >= (stageLimit / 2);
 
+  const lastTap = useRef<number>(0);
+
+  const handleTouchStart = () => {
+    const now = Date.now();
+    const DOUBLE_PRESS_DELAY = 300;
+    if (now - lastTap.current < DOUBLE_PRESS_DELAY) {
+      if ((isAdmin || isOwner) && !isOverlay) {
+        onEdit(opportunity);
+      }
+    }
+    lastTap.current = now;
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -174,6 +187,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
           onEdit(opportunity);
         }
       }}
+      onTouchStart={handleTouchStart}
     >
       {opportunity.archived && (
         <div className="absolute top-0 left-0 w-16 h-16 overflow-hidden rounded-tl-xl pointer-events-none z-20">

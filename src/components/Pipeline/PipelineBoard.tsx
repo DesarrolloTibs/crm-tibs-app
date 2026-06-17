@@ -16,7 +16,6 @@ import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square,
 import PipelineStagesSettings from './PipelineStagesSettings';
 import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';
-import RemindersTab from '../Reminder/RemindersTab';
 import InteractionsTab from '../Interaction/InteractionsTab';
 import FilesTab from '../Files/FilesTab';
 import Notification from '../Modal/Notification';
@@ -937,7 +936,6 @@ const PipelinePage: React.FC = () => {
       { label: 'Datos', content: <OpportunityForm initialData={editingOpportunity} onSubmit={handleUpdate} onCancel={() => setIsFormModalOpen(false)} /> },
       { label: 'Actividades', content: <ActivitiesTab opportunityId={editingOpportunity.id} /> },
       { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
-      { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> },
       { label: 'Archivos', content: <FilesTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
           setEditingOpportunity(updatedOpp);
           setOpportunities(prev => prev.map(o => o.id === updatedOpp.id ? updatedOpp : o));

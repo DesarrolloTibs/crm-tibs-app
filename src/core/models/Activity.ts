@@ -11,6 +11,12 @@ export interface TypeActivity {
     blnstatus: boolean;
 }
 
+export interface ActivityReminder {
+    id?: string;
+    title: string;
+    date: string;
+}
+
 export interface Activity {
     id: string;
     activity: string;
@@ -30,5 +36,5 @@ export interface Activity {
     company?: Company;
     contacts?: Client[];
     contactIds?: string[];
+    reminder?: ActivityReminder | null;
 }
-
