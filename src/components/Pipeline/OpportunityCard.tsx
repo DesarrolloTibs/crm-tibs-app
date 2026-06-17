@@ -3,7 +3,7 @@ import type { Opportunity, Stage } from '../../core/models/Opportunity';
 import { useAuth } from '../../hooks/useAuth';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Edit, Trash2, Building2, Archive, ArchiveRestore, MoreVertical, Mail, User } from 'lucide-react';
+import { Edit, Trash2, Building2, Archive, ArchiveRestore, MoreVertical, Mail, User, Clock } from 'lucide-react';
 import Popover from './Popover';
 
 
@@ -138,16 +138,35 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
     color: tagTextColor,
   };
 
+  const getDaysInCurrentStage = () => {
+    const enteredDate = opportunity.stage_entered_at 
+      ? new Date(opportunity.stage_entered_at) 
+      : new Date(opportunity.createdAt || Date.now());
+    const diffTime = Math.max(0, Date.now() - enteredDate.getTime());
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const days = getDaysInCurrentStage();
+  const stageLimit = opportunity.stage?.intmaxdays;
+  const isRed = stageLimit !== undefined && stageLimit !== null && stageLimit > 0 && days > stageLimit;
+  const isYellow = stageLimit !== undefined && stageLimit !== null && stageLimit > 0 && !isRed && days >= (stageLimit / 2);
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white m-2 p-2 pt-2 rounded-xl border border-gray-200 flex flex-col justify-between transition-all relative group w-[250px] h-[120px] touch-none ${
+      className={`m-2 p-2 pt-2 rounded-xl border flex flex-col justify-between transition-all relative group w-[250px] h-[130px] touch-none ${
         isDraggingStyle
           ? 'opacity-30 blur-[1.5px] pointer-events-none shadow-none border-dashed border-gray-300'
           : isOverlay
           ? 'shadow-xl scale-[1.03] rotate-1 cursor-grabbing border-blue-200 bg-white/95 backdrop-blur-sm'
-          : `shadow-sm hover:shadow-lg hover:-translate-y-1 ${!canDrag ? 'cursor-not-allowed' : ''}`
+          : opportunity.archived
+          ? 'border-gray-300 bg-gray-50/70 opacity-70 shadow-sm hover:shadow-md hover:-translate-y-1'
+          : isRed
+          ? 'border-red-300 bg-gradient-to-br from-red-50 to-white shadow-sm hover:shadow-lg hover:-translate-y-1'
+          : isYellow
+          ? 'border-amber-300 bg-gradient-to-br from-amber-50/60 to-white shadow-sm hover:shadow-lg hover:-translate-y-1'
+          : `bg-white border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 ${!canDrag ? 'cursor-not-allowed' : ''}`
       }`}
       {...attributes}
       onDoubleClick={() => {
@@ -156,6 +175,13 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
         }
       }}
     >
+      {opportunity.archived && (
+        <div className="absolute top-0 left-0 w-16 h-16 overflow-hidden rounded-tl-xl pointer-events-none z-20">
+          <div className="absolute top-[12px] left-[-20px] w-[82px] bg-red-500 text-white text-[8px] font-black uppercase text-center py-0.5 -rotate-[45deg] shadow-sm">
+            ARCHIVADA
+          </div>
+        </div>
+      )}
       {/* Action buttons are outside the draggable area */}
       <div className="absolute top-2 right-2 z-10" ref={menuRef}>
         {(isAdmin || isOwner) && (
@@ -208,7 +234,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
 
       {/* This div is the main content and the draggable handle */}
       <div {...listeners} className={`${canDrag ? 'cursor-grab' : 'cursor-default'} flex-grow flex flex-col h-full`}>
-        <h4 className="font-bold text-[#000000] text-sm top-0 leading-snug truncate pr-8" title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
+        <h4 className={`font-bold text-[#000000] text-sm top-0 leading-snug truncate pr-8 ${opportunity.archived ? 'pl-7' : ''}`} title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
         <p className="flex items-center gap-2 font-semibold italic text-[#579bd3] text-xs truncate pt-1" title={opportunity.company?.nombre || opportunity.empresa || ''}><Building2 size={14} /> {opportunity.company?.nombre || opportunity.empresa || 'Sin empresa'}</p>
         <div className="text-right flex-shrink-0 mt-0">
           <span className="text-lg font-bold text-[#2f5367]">${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
@@ -216,7 +242,25 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
         </div>
         <div className="mt-0">
           <div className="bg-gray-200 rounded-full h-1 w-full relative"><div className="h-1 rounded-full transition-all duration-300" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div><div className="h-1 rounded-full transition-all duration-300 blur opacity-60 absolute top-0" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div></div>
-          <span className="px-2 py-0.5 text-xs font-semibold rounded-full mt-2 inline-block" style={tagStyle}>{opportunity.linea_negocio}</span>
+          <div className="flex flex-col items-start gap-0.5 mt-1">
+            <span className="px-2 py-0.5 text-[9px] font-semibold rounded-full inline-block" style={tagStyle}>
+              {opportunity.linea_negocio}
+            </span>
+            <span 
+              className={`text-[8px] font-bold flex items-center gap-1 shrink-0 ${
+                isRed 
+                  ? 'text-red-500 bg-red-50/70 px-1 py-0.5 rounded border border-red-200/50' 
+                  : isYellow
+                  ? 'text-amber-600 bg-amber-50/70 px-1 py-0.5 rounded border border-amber-200/50'
+                  : 'text-gray-400 bg-gray-50/50 px-1 py-0.5 rounded border border-gray-100/40'
+              }`}
+              title={stageLimit ? `Límite de la etapa: ${stageLimit} días` : 'Sin límite de días en esta etapa'}
+            >
+              <Clock size={9} />
+              {days === 1 ? '1 día' : `${days} días`}
+              {stageLimit ? ` / ${stageLimit}d` : ''}
+            </span>
+          </div>
         </div>
       </div>
       

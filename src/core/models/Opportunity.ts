@@ -9,6 +9,7 @@ export interface Stage {
   display_order: number;
   strcolor: string | null;
   blninitial: boolean;
+  intmaxdays?: number | null;
   dtmcreated?: Date;
   dtmlastmodified?: Date;
 }
@@ -42,6 +43,7 @@ export interface Opportunity  {
   tipoCambio?: number;
   estimated_closure_date?: Date;
   createdAt?: Date;
+  stage_entered_at?: Date | string;
 }
 
 export const Currency = {

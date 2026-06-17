@@ -275,7 +275,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!opportunity.nombre_proyecto || !opportunity.ejecutivo_id) {
+    if (!opportunity.nombre_proyecto || !opportunity.description?.trim() || !opportunity.ejecutivo_id) {
         alert('Por favor, completa los campos requeridos.');
         return;
     }
@@ -357,8 +357,8 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-            <textarea id=".description" name="description" value={opportunity.description} onChange={handleChange} placeholder="Añade una descripción detallada de la oportunidad..." rows={3} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
+            <textarea id="description" name="description" value={opportunity.description} onChange={handleChange} placeholder="Añade una descripción detallada de la oportunidad..." rows={3} required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
 
           <div>

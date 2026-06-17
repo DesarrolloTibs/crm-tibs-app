@@ -95,6 +95,7 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
       display_order: stages.length,
       strcolor: '#3b82f6',
       blninitial: false,
+      intmaxdays: null,
     };
     setStages(prev => enforceFirstActiveIsInitial([...prev, newStage]));
   };
@@ -185,6 +186,7 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
           display_order: s.display_order,
           strcolor: s.strcolor || '#3b82f6',
           blninitial: s.blninitial,
+          intmaxdays: s.intmaxdays !== undefined && s.intmaxdays !== null ? Number(s.intmaxdays) : null,
         };
         if (s.id && !s.id.startsWith('temp-')) {
           payloadItem.id = s.id;
@@ -294,6 +296,20 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
             </div>
 
             <div className="flex flex-col gap-3">
+              {stages.length > 0 && !onlyPipelineDetails && (
+                <div 
+                  className="hidden md:grid md:gap-3 px-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-2 mb-1 items-center text-center"
+                  style={{ gridTemplateColumns: '24px 24px 1fr 72px 56px 96px 28px' }}
+                >
+                  <div className="text-center"></div>
+                  <div className="text-center">Color</div>
+                  <div className="pl-2">Nombre</div>
+                  <div className="text-center">Días Límite</div>
+                  <div className="text-center">Estado</div>
+                  <div className="text-center">Tipo</div>
+                  <div></div>
+                </div>
+              )}
               {stages.map((stage, idx) => {
                 const isNew = stage.id && stage.id.startsWith('temp-');
 
@@ -315,6 +331,11 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                           {stage.blninitial && (
                             <span className="text-[10px] font-bold bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full">
                               Inicial
+                            </span>
+                          )}
+                          {stage.intmaxdays !== undefined && stage.intmaxdays !== null && (
+                            <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded-full">
+                              Límite: {stage.intmaxdays} días
                             </span>
                           )}
                         </span>
@@ -339,12 +360,13 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                 return (
                   <div
                     key={stage.id}
-                    className={`flex flex-col md:flex-row items-center gap-4 bg-white border rounded-xl p-4 transition-all shadow-sm ${
+                    className={`flex flex-col md:grid md:gap-3 items-stretch md:items-center bg-white border rounded-xl p-4 transition-all shadow-sm ${
                       !stage.blnstatus ? 'opacity-60 bg-gray-50 border-gray-200' : 'border-gray-100 hover:border-gray-300'
                     }`}
+                    style={{ gridTemplateColumns: '24px 24px 1fr 72px 56px 96px 28px' }}
                   >
                     {/* Reordenamiento */}
-                    <div className="flex md:flex-col gap-1">
+                    <div className="flex md:flex-col gap-1 items-center justify-center">
                       <button
                         type="button"
                         onClick={() => moveStage(idx, 'up')}
@@ -352,7 +374,7 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                         className="p-1 rounded hover:bg-gray-100 text-gray-500 disabled:opacity-30 disabled:hover:bg-transparent"
                         title="Subir orden"
                       >
-                        <ArrowUp size={16} />
+                        <ArrowUp size={14} />
                       </button>
                       <button
                         type="button"
@@ -361,14 +383,14 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                         className="p-1 rounded hover:bg-gray-100 text-gray-500 disabled:opacity-30 disabled:hover:bg-transparent"
                         title="Bajar orden"
                       >
-                        <ArrowDown size={16} />
+                        <ArrowDown size={14} />
                       </button>
                     </div>
 
                     {/* Color Dot Picker */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 justify-center">
                       <label className="text-xs font-semibold text-gray-500 md:hidden">Color</label>
-                      <div className="relative w-8 h-8 rounded-full border border-gray-200 overflow-hidden cursor-pointer shadow-sm hover:scale-105 transition-transform" style={{ backgroundColor: stage.strcolor || '#3b82f6' }}>
+                      <div className="relative w-6 h-6 rounded-full border border-gray-200 overflow-hidden cursor-pointer shadow-sm hover:scale-105 transition-transform" style={{ backgroundColor: stage.strcolor || '#3b82f6' }}>
                         <input
                           type="color"
                           value={stage.strcolor || '#3b82f6'}
@@ -379,7 +401,8 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                     </div>
 
                     {/* Stage Name Input */}
-                    <div className="flex-1 w-full flex flex-col gap-1">
+                    <div className="w-full flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-500 md:hidden">Nombre de la Etapa</label>
                       <input
                         type="text"
                         value={stage.strname}
@@ -390,8 +413,25 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                       />
                     </div>
 
+                    {/* Max Days Expected Input */}
+                    <div className="w-full flex flex-col gap-1 md:items-center">
+                      <label className="text-xs font-semibold text-gray-500 md:hidden">Días Límite en Etapa</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Sin límite"
+                        value={stage.intmaxdays !== undefined && stage.intmaxdays !== null ? stage.intmaxdays : ''}
+                        onChange={e => {
+                          const val = e.target.value;
+                          updateStageField(idx, 'intmaxdays', val === '' ? null : parseInt(val, 10));
+                        }}
+                        className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center font-medium w-full md:w-14 bg-white"
+                        title="Límite de días esperados en esta etapa"
+                      />
+                    </div>
+
                     {/* Active Checkbox */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 justify-center">
                       <input
                         type="checkbox"
                         id={`active-${stage.id}`}
@@ -399,27 +439,27 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                         onChange={e => updateStageField(idx, 'blnstatus', e.target.checked)}
                         className="w-4 h-4 rounded text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
                       />
-                      <label htmlFor={`active-${stage.id}`} className="text-xs font-semibold text-gray-600 cursor-pointer select-none">
+                      <label htmlFor={`active-${stage.id}`} className="text-xs font-semibold text-gray-600 cursor-pointer select-none md:hidden">
                         Activo
                       </label>
                     </div>
 
                     {/* Initial Badge */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 justify-center">
                       {stage.blninitial ? (
-                        <span className="text-xs font-bold bg-green-50 text-green-700 border border-green-200 px-2 py-1 rounded-full flex items-center gap-1">
-                          Etapa Inicial
-                          <Check size={12} className="text-green-600" />
+                        <span className="text-[10px] font-bold bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 justify-center">
+                          Inicial
+                          <Check size={10} className="text-green-600" />
                         </span>
                       ) : stage.blnstatus ? (
-                        <span className="text-xs text-slate-400 font-medium italic">
+                        <span className="text-[10px] text-slate-400 font-medium italic">
                           (Secundaria)
                         </span>
                       ) : null}
                     </div>
 
                     {/* Remove Action (Only for unsaved stages) */}
-                    <div className="w-10 flex justify-end">
+                    <div className="w-full flex justify-end md:justify-center">
                       {isNew ? (
                         <button
                           type="button"
@@ -427,10 +467,10 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                           className="p-1.5 rounded text-red-500 hover:text-red-700 hover:bg-red-50"
                           title="Eliminar etapa nueva"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       ) : (
-                        <br/>
+                        <div className="w-4 h-4" />
                       )}
                     </div>
                   </div>

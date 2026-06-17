@@ -52,6 +52,25 @@ const PipelineColumn: React.FC<Props> = ({
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const sortedOpportunities = useMemo(() => {
+    return [...opportunities].sort((a, b) => {
+      const aDate = a.stage_entered_at ? new Date(a.stage_entered_at) : new Date(a.createdAt || Date.now());
+      const aDays = Math.floor(Math.max(0, Date.now() - aDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      const bDate = b.stage_entered_at ? new Date(b.stage_entered_at) : new Date(b.createdAt || Date.now());
+      const bDays = Math.floor(Math.max(0, Date.now() - bDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      const limit = stage.intmaxdays;
+      const aIsRed = limit !== undefined && limit !== null && limit > 0 && aDays > limit;
+      const bIsRed = limit !== undefined && limit !== null && limit > 0 && bDays > limit;
+
+      if (aIsRed && !bIsRed) return -1;
+      if (!aIsRed && bIsRed) return 1;
+
+      return bDays - aDays;
+    });
+  }, [opportunities, stage.intmaxdays]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -97,7 +116,8 @@ const PipelineColumn: React.FC<Props> = ({
   if (isFolded) {
     const foldedColumnStyles = `
       flex flex-col
-      min-h-[850px]
+      h-[75vh] md:h-[calc(100vh-180px)]
+      min-h-[500px]
       w-[45px] sm:w-[50px] flex-shrink-0 snap-center
       rounded-xl
       bg-slate-100/90 backdrop-blur-sm
@@ -142,7 +162,8 @@ const PipelineColumn: React.FC<Props> = ({
 
   const columnStyles = `
     flex flex-col
-    min-h-[850px]
+    h-[75vh] md:h-[calc(100vh-180px)]
+    min-h-[500px]
     w-[85vw] md:w-[300px] flex-shrink-0 snap-center
     rounded-xl
     bg-slate-50/80 backdrop-blur-sm
@@ -260,9 +281,9 @@ const PipelineColumn: React.FC<Props> = ({
         </div>
       </div>
 
-      <SortableContext items={opportunities.map(o => o.id)} >
-        <div className="flex-grow p-2 overflow-y-auto bg-[#fafafa] flex flex-col items-center" style={{ maxHeight: 'calc(100vh - 120px)' }}>
-          {opportunities.map(opportunity => (
+      <SortableContext items={sortedOpportunities.map(o => o.id)} >
+        <div className="flex-1 p-2 overflow-y-auto hide-scrollbar bg-[#fafafa] flex flex-col items-center gap-2 rounded-b-xl">
+          {sortedOpportunities.map(opportunity => (
             <OpportunityCard 
               key={opportunity.id} 
               opportunity={opportunity}

@@ -12,7 +12,7 @@ import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
 import OpportunityCard from './OpportunityCard';
-import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square, ChevronUp, ChevronDown, Settings2, X } from 'lucide-react';
+import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square, ChevronUp, ChevronDown, Settings2, X, Archive, Trash2 } from 'lucide-react';
 import PipelineStagesSettings from './PipelineStagesSettings';
 import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';
@@ -21,6 +21,12 @@ import InteractionsTab from '../Interaction/InteractionsTab';
 import ProposalTab from '../Proposal/ProposalTab';
 import Notification from '../Modal/Notification';
 import ActivitiesTab from '../Activity/ActivitiesTab';
+
+interface FilterRule {
+  field: string;
+  operator: string;
+  value: string;
+}
 
 const PipelinePage: React.FC = () => {
   const sensors = useSensors(
@@ -66,12 +72,21 @@ const PipelinePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [executiveFilter, setExecutiveFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [archivedFilter, setArchivedFilter] = useState<'active' | 'archived' | 'all'>('active');
   const [showFilters, setShowFilters] = useState(false);
   const [showStageSelector, setShowStageSelector] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
   const [showStagesConfig, setShowStagesConfig] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
   const stageSelectorRef = useRef<HTMLDivElement>(null);
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const [customRules, setCustomRules] = useState<FilterRule[]>([]);
+  const [matchType, setMatchType] = useState<'any' | 'all'>('any');
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const [isCustomFilterModalOpen, setIsCustomFilterModalOpen] = useState(false);
+  const [isCustomFilterActive, setIsCustomFilterActive] = useState(false);
 
   const [isAddingStage, setIsAddingStage] = useState(false);
   const [newStageName, setNewStageName] = useState('');
@@ -88,6 +103,9 @@ const PipelinePage: React.FC = () => {
       if (stageSelectorRef.current && !stageSelectorRef.current.contains(event.target as Node)) {
         setShowStageSelector(false);
       }
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -98,8 +116,8 @@ const PipelinePage: React.FC = () => {
     type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
     title: '',
     message: '',
-    onConfirm: () => {},
-    onCancel: () => {},
+    onConfirm: () => { },
+    onCancel: () => { },
   });
 
   const hideNotification = () => setNotification({ ...notification, show: false });
@@ -140,7 +158,17 @@ const PipelinePage: React.FC = () => {
         return [...stillVisible, ...newlyActive];
       });
 
-      const data = await getOpportunities();
+      let data: Opportunity[] = [];
+      if (archivedFilter === 'all') {
+        const [activeData, archivedData] = await Promise.all([
+          getOpportunities(undefined, undefined, false),
+          getOpportunities(undefined, undefined, true),
+        ]);
+        data = [...activeData, ...archivedData];
+      } else {
+        const showArchived = archivedFilter === 'archived';
+        data = await getOpportunities(undefined, undefined, showArchived);
+      }
       if (Array.isArray(data)) {
         setOpportunities(data);
       } else {
@@ -360,6 +388,7 @@ const PipelinePage: React.FC = () => {
                 strcolor: s.strcolor,
                 blninitial: s.blninitial,
                 pipeline_id: s.pipeline_id,
+                intmaxdays: s.intmaxdays,
               })),
             });
           } catch (error) {
@@ -390,12 +419,19 @@ const PipelinePage: React.FC = () => {
 
     if (activeStageId && overStageId && activeStageId !== overStageId) {
       const originalOpportunities = [...opportunities];
+      const targetStage = stages.find(s => s.id === overStageId);
       const updatedOpportunities = opportunities.map(o =>
-        o.id === activeId ? { ...o, stage_id: overStageId! } : o
+        o.id === activeId
+          ? {
+            ...o,
+            stage_id: overStageId!,
+            stage_entered_at: new Date().toISOString(),
+            stage: targetStage || o.stage,
+          }
+          : o
       );
       setOpportunities(updatedOpportunities);
 
-      const targetStage = stages.find(s => s.id === overStageId);
       if (targetStage && targetStage.strname === 'Ganada') {
         setIsExploding(true);
         setTimeout(() => setIsExploding(false), 4000);
@@ -451,6 +487,7 @@ const PipelinePage: React.FC = () => {
           ...s,
           strname: nameTrimmed,
           blnstatus: editingStage.blnstatus,
+          intmaxdays: editingStage.intmaxdays,
         };
       }
       return s;
@@ -507,6 +544,7 @@ const PipelinePage: React.FC = () => {
           strcolor: s.strcolor || '#3b82f6',
           blninitial: s.blninitial,
           pipeline_id: s.pipeline_id,
+          intmaxdays: s.intmaxdays,
         })),
       });
       setEditingStage(null);
@@ -555,6 +593,7 @@ const PipelinePage: React.FC = () => {
           strcolor: s.strcolor || '#3b82f6',
           blninitial: s.blninitial,
           pipeline_id: s.pipeline_id,
+          intmaxdays: s.intmaxdays,
         })),
       });
       setNotification({
@@ -610,6 +649,7 @@ const PipelinePage: React.FC = () => {
       display_order: nextDisplayOrder,
       strcolor: '#3b82f6',
       blninitial: false,
+      intmaxdays: null,
     };
 
     const updatedStages = enforceFirstActiveIsInitial([...stages, newStage]);
@@ -624,6 +664,7 @@ const PipelinePage: React.FC = () => {
             display_order: s.display_order,
             strcolor: s.strcolor || '#3b82f6',
             blninitial: s.blninitial,
+            intmaxdays: s.intmaxdays,
           };
           if (s.id && !s.id.startsWith('temp-')) {
             payloadItem.id = s.id;
@@ -669,17 +710,191 @@ const PipelinePage: React.FC = () => {
   }, [opportunities]);
 
   const filteredOpportunities = opportunities.filter(opp => {
-    const matchesSearch = opp.nombre_proyecto.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
-    const matchesStatus = statusFilter ? opp.stage_id === statusFilter : true;
-    const matchesArchived = opp.archived === false || opp.archived === undefined;
-    return matchesSearch && matchesExecutive && matchesStatus && matchesArchived;
+    if (!isCustomFilterActive) {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        opp.nombre_proyecto.toLowerCase().includes(term) ||
+        (opp.cliente?.nombre && opp.cliente.nombre.toLowerCase().includes(term)) ||
+        (opp.company?.nombre || opp.empresa || '').toLowerCase().includes(term);
+
+      const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
+      const matchesStatus = statusFilter ? opp.stage_id === statusFilter : true;
+      const matchesArchived =
+        archivedFilter === 'all'
+          ? true
+          : archivedFilter === 'archived'
+            ? opp.archived === true
+            : (opp.archived === false || opp.archived === undefined);
+      return matchesSearch && matchesExecutive && matchesStatus && matchesArchived;
+    }
+
+    if (!includeArchived && opp.archived) {
+      return false;
+    }
+
+    const matchesRule = (rule: FilterRule): boolean => {
+      let fieldValue: any = '';
+      if (rule.field === 'nombre_proyecto') fieldValue = opp.nombre_proyecto;
+      else if (rule.field === 'empresa') fieldValue = opp.company?.nombre || opp.empresa || '';
+      else if (rule.field === 'linea_negocio') fieldValue = opp.linea_negocio;
+      else if (rule.field === 'monto_total') fieldValue = Number(opp.monto_total) || 0;
+      else if (rule.field === 'stage_id') fieldValue = opp.stage_id;
+      else if (rule.field === 'ejecutivo_id') fieldValue = opp.ejecutivo_id;
+
+      const val = rule.value.toLowerCase();
+      const op = rule.operator;
+
+      if (rule.field === 'monto_total') {
+        const numVal = Number(rule.value) || 0;
+        if (op === 'eq') return fieldValue === numVal;
+        if (op === 'gt') return fieldValue > numVal;
+        if (op === 'lt') return fieldValue < numVal;
+        return true;
+      }
+
+      const strFieldValue = String(fieldValue || '').toLowerCase();
+      if (op === 'eq') return strFieldValue === val;
+      if (op === 'neq') return strFieldValue !== val;
+      if (op === 'contains') return strFieldValue.includes(val);
+      if (op === 'not_contains') return !strFieldValue.includes(val);
+      return true;
+    };
+
+    if (customRules.length === 0) return true;
+
+    if (matchType === 'any') {
+      return customRules.some(matchesRule);
+    } else {
+      return customRules.every(matchesRule);
+    }
   });
 
   const handleClearFilters = () => {
     setSearchTerm('');
     setExecutiveFilter('');
     setStatusFilter('');
+    setArchivedFilter('active');
+    setIsCustomFilterActive(false);
+    setCustomRules([]);
+  };
+
+  const getOperatorsForField = (field: string) => {
+    if (field === 'nombre_proyecto' || field === 'empresa') {
+      return [
+        { value: 'contains', label: 'contiene' },
+        { value: 'eq', label: 'es igual a' },
+        { value: 'not_contains', label: 'no contiene' },
+      ];
+    }
+    if (field === 'monto_total') {
+      return [
+        { value: 'eq', label: 'es igual a' },
+        { value: 'gt', label: 'es mayor que' },
+        { value: 'lt', label: 'es menor que' },
+      ];
+    }
+    return [
+      { value: 'eq', label: 'es igual a' },
+      { value: 'neq', label: 'es diferente a' },
+    ];
+  };
+
+  const handleRuleFieldChange = (idx: number, field: string) => {
+    let defaultOperator = 'eq';
+    if (field === 'nombre_proyecto' || field === 'empresa') {
+      defaultOperator = 'contains';
+    }
+    
+    let defaultValue = '';
+    if (field === 'linea_negocio') defaultValue = 'Desarrollo';
+    else if (field === 'stage_id') defaultValue = stages[0]?.id || '';
+    else if (field === 'ejecutivo_id') defaultValue = executives[0]?.id || '';
+    
+    setCustomRules(prev => prev.map((rule, i) => i === idx ? { field, operator: defaultOperator, value: defaultValue } : rule));
+  };
+
+  const handleRuleChange = (idx: number, key: keyof FilterRule, value: string) => {
+    setCustomRules(prev => prev.map((rule, i) => i === idx ? { ...rule, [key]: value } : rule));
+  };
+
+  const renderRuleValueInput = (rule: FilterRule, idx: number) => {
+    if (rule.field === 'linea_negocio') {
+      return (
+        <select
+          value={rule.value}
+          onChange={e => handleRuleChange(idx, 'value', e.target.value)}
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full cursor-pointer"
+        >
+          <option value="Desarrollo">Desarrollo</option>
+          <option value="Datos">Datos</option>
+          <option value="RH">RH</option>
+          <option value="IA">IA</option>
+        </select>
+      );
+    }
+    if (rule.field === 'stage_id') {
+      return (
+        <select
+          value={rule.value}
+          onChange={e => handleRuleChange(idx, 'value', e.target.value)}
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full cursor-pointer"
+        >
+          {stages.map(s => (
+            <option key={s.id} value={s.id}>{s.strname}</option>
+          ))}
+        </select>
+      );
+    }
+    if (rule.field === 'ejecutivo_id') {
+      return (
+        <select
+          value={rule.value}
+          onChange={e => handleRuleChange(idx, 'value', e.target.value)}
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full cursor-pointer"
+        >
+          {executives.map(e => (
+            <option key={e.id} value={e.id}>{e.username}</option>
+          ))}
+        </select>
+      );
+    }
+    if (rule.field === 'monto_total') {
+      return (
+        <input
+          type="number"
+          value={rule.value}
+          onChange={e => handleRuleChange(idx, 'value', e.target.value)}
+          placeholder="Monto..."
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full"
+          min="0"
+          required
+        />
+      );
+    }
+    return (
+      <input
+        type="text"
+        value={rule.value}
+        onChange={e => handleRuleChange(idx, 'value', e.target.value)}
+        placeholder="Valor..."
+        className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full"
+        required
+      />
+    );
+  };
+
+  const handleApplyCustomFilter = () => {
+    setIsCustomFilterActive(true);
+    setIsCustomFilterModalOpen(false);
+    if (includeArchived) {
+      if (archivedFilter !== 'all') {
+        setArchivedFilter('all');
+      }
+    } else {
+      if (archivedFilter !== 'active') {
+        setArchivedFilter('active');
+      }
+    }
   };
 
   const handleStageVisibilityChange = (stageId: string) => {
@@ -705,7 +920,7 @@ const PipelinePage: React.FC = () => {
 
   useEffect(() => {
     fetchPipelineAndOpportunities();
-  }, []);
+  }, [archivedFilter]);
 
   const getModalContent = () => {
     if (!editingOpportunity || !editingOpportunity.id) {
@@ -723,10 +938,11 @@ const PipelinePage: React.FC = () => {
       { label: 'Actividades', content: <ActivitiesTab opportunityId={editingOpportunity.id} /> },
       { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
       { label: 'Recordatorios', content: <RemindersTab opportunityId={editingOpportunity.id} /> },
-      { label: 'Propuesta', content: <ProposalTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
+      {
+        label: 'Propuesta', content: <ProposalTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
           setEditingOpportunity(updatedOpp);
           setOpportunities(prev => prev.map(o => o.id === updatedOpp.id ? updatedOpp : o));
-        }} /> 
+        }} />
       },
     ];
     return <Tabs tabs={tabs} />;
@@ -744,249 +960,351 @@ const PipelinePage: React.FC = () => {
 
   return (
     <>
-        {isExploding && (          
-          <div className="fixed top-0 left-0 w-full h-full z-[100] pointer-events-none">
-            <Confetti
-              deg={270}
-              mode="boom"
-              particleCount={150}
-              spreadDeg={45}
-              launchSpeed={3}
-              effectCount={1}
-              shapeSize={10}
-              colors={['#22c55e', '#3b82f6', '#8b5cf6', '#a855f7', '#ffffff']}
-            />
-          </div>
-        )}
-        <Notification {...notification} />
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
-          <div className="flex justify-between items-start w-full md:w-auto">
-            <div className="flex flex-col">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 leading-tight">{pipelineName}</h1>
-              {pipelineDescription && (
-                <p className="text-sm text-gray-500 mt-0.5">{pipelineDescription}</p>
-              )}
-            </div>
-            <button 
-                className="md:hidden p-2 text-gray-500 hover:text-indigo-600 bg-gray-100 rounded-full transition-colors"
-                onClick={() => setShowToolbar(!showToolbar)}
-            >
-                {showToolbar ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-          </div>
-          <div className={`${showToolbar ? 'flex' : 'hidden'} md:flex flex-col sm:flex-row w-full md:w-auto gap-3`}>
-            <div className="relative w-full sm:w-auto" ref={stageSelectorRef}>
-              <button
-                className="w-full bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors whitespace-nowrap shadow-sm"
-                onClick={() => setShowStageSelector(!showStageSelector)}
-              >
-                <Columns size={16} />
-                <span>Etapas</span>
-              </button>
-              {showStageSelector && (
-                <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-4">
-                  <h4 className="font-semibold text-sm mb-2">Mostrar/Ocultar Etapas</h4>
-                  <div className="space-y-2">
-                    {activeStages.map(stage => {
-                      const isChecked = visibleStageIds.includes(stage.id);
-                      const isDisabled = isChecked && visibleStageIds.length <= 3;
-                      return (
-                        <label key={stage.id} className={`flex items-center space-x-2 text-sm ${isDisabled ? 'cursor-not-allowed text-gray-500' : 'cursor-pointer'}`}>
-                           <input
-                            type="checkbox"
-                            checked={isChecked}
-                            disabled={isDisabled}
-                            onChange={() => handleStageVisibilityChange(stage.id)}
-                            className="hidden"
-                          />
-                          {isChecked ? <CheckSquare size={16} className={isDisabled ? 'text-gray-400' : 'text-blue-600'} /> : <Square size={16} className="text-gray-400" />}
-                          <span>{stage.strname}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-            <button
-                className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors whitespace-nowrap shadow-sm"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter size={16} />
-                <span>Filtros</span>
-              </button>
-            <button
-              className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 whitespace-nowrap shadow-sm"
-              onClick={openCreateModal}
-            >
-              <Plus size={18} /> Nueva Oportunidad
-            </button>
-            <button
-              title="Configurar Pipeline"
-              className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-700 flex items-center justify-center gap-2 whitespace-nowrap shadow-sm transition-colors"
-              onClick={() => setShowStagesConfig(true)}
-            >
-              <Settings2 size={18} />
-              <span className="sm:hidden">Configurar Pipeline</span>
-            </button>
-          </div>
+      {isExploding && (
+        <div className="fixed top-0 left-0 w-full h-full z-[100] pointer-events-none">
+          <Confetti
+            deg={270}
+            mode="boom"
+            particleCount={150}
+            spreadDeg={45}
+            launchSpeed={3}
+            effectCount={1}
+            shapeSize={10}
+            colors={['#22c55e', '#3b82f6', '#8b5cf6', '#a855f7', '#ffffff']}
+          />
         </div>
-        {showFilters && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 animate-fade-in-down">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">Filtros</h3>
-              <button onClick={handleClearFilters} className="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                <XCircle size={16} className="mr-1" />
-                Limpiar filtros
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                  <Search size={20} />
-                </span>
+      )}
+      <Notification {...notification} />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+        <div className="flex justify-between items-start w-full md:w-auto">
+          <div className="flex flex-col">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 leading-tight">{pipelineName}</h1>
+            {pipelineDescription && (
+              <p className="text-sm text-gray-500 mt-0.5">{pipelineDescription}</p>
+            )}
+          </div>
+          <button
+            className="md:hidden p-2 text-gray-500 hover:text-indigo-600 bg-gray-100 rounded-full transition-colors"
+            onClick={() => setShowToolbar(!showToolbar)}
+          >
+            {showToolbar ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </button>
+        </div>
+        <div className={`${showToolbar ? 'flex' : 'hidden'} md:flex flex-col sm:flex-row w-full md:w-auto gap-3`}>
+
+          {/* Odoo style search bar */}
+          <div className="relative w-full sm:w-[320px] md:w-[380px]" ref={searchDropdownRef}>
+            <div
+              className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 shadow-sm hover:border-gray-400 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 min-h-[38px] cursor-text transition-all"
+              onClick={() => searchInputRef.current?.focus()}
+            >
+              <Search size={16} className="text-gray-400 shrink-0" />
+
+              {/* Active Filter Badges */}
+              <div className="flex flex-wrap gap-1.5 items-center max-w-[85%]">
+                {isCustomFilterActive ? (
+                  <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
+                    <Filter size={10} />
+                    Filtro Personalizado
+                    <button onClick={(e) => { e.stopPropagation(); setIsCustomFilterActive(false); setCustomRules([]); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
+                  </span>
+                ) : (
+                  <>
+                    {archivedFilter === 'archived' && (
+                      <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
+                        <Filter size={10} />
+                        Archivadas
+                        <button onClick={(e) => { e.stopPropagation(); setArchivedFilter('active'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
+                      </span>
+                    )}
+                    {archivedFilter === 'all' && (
+                      <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
+                        <Filter size={10} />
+                        Todas
+                        <button onClick={(e) => { e.stopPropagation(); setArchivedFilter('active'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
+                      </span>
+                    )}
+                    {executiveFilter && (
+                      <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
+                        <User size={10} className="shrink-0" />
+                        <span className="max-w-[80px] truncate shrink-0">
+                          {executives.find(e => e.id === executiveFilter)?.username || 'Ejecutivo'}
+                        </span>
+                        <button onClick={(e) => { e.stopPropagation(); setExecutiveFilter(''); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer shrink-0"><X size={10} /></button>
+                      </span>
+                    )}
+                    {statusFilter && (
+                      <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
+                        <Tag size={10} className="shrink-0" />
+                        <span className="max-w-[80px] truncate shrink-0">
+                          {activeStages.find(s => s.id === statusFilter)?.strname || 'Estatus'}
+                        </span>
+                        <button onClick={(e) => { e.stopPropagation(); setStatusFilter(''); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer shrink-0"><X size={10} /></button>
+                      </span>
+                    )}
+                  </>
+                )}
+
+                {/* Text Input */}
                 <input
+                  ref={searchInputRef}
                   type="text"
-                  placeholder="Buscar por proyecto..."
+                  placeholder={!executiveFilter && !statusFilter && archivedFilter === 'active' && !isCustomFilterActive ? "Buscar..." : ""}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="border-none outline-none focus:ring-0 p-0 text-xs sm:text-sm bg-transparent placeholder-gray-400 min-w-[50px] flex-grow focus:outline-none"
                 />
               </div>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                  <User size={20} />
-                </span>
-                <select
-                  value={executiveFilter}
-                  onChange={e => setExecutiveFilter(e.target.value)}
-                  className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
-                >
-                  <option value="">Todos los Ejecutivos</option>
-                  {executives.map(exec => (
-                    <option key={exec.id} value={exec.id}>{exec.username}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                  <Tag size={20} />
-                </span>
-                <select
-                  value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}
-                  className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
-                >
-                  <option value="">Todos los Estatus</option>
-                  {activeStages.map(stage => (
-                    <option key={stage.id} value={stage.id}>{stage.strname}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar ${!activeOpportunity ? 'snap-x snap-mandatory' : ''}`}>
-            <SortableContext 
-              items={activeStages.filter(stage => visibleStageIds.includes(stage.id)).map(s => s.id)}
-              strategy={horizontalListSortingStrategy}
-            >
-              {activeStages.filter(stage => visibleStageIds.includes(stage.id)).map(stage => (
-                <PipelineColumn key={stage.id}
-                  stage={stage}
-                  opportunities={filteredOpportunities.filter(opp => opp.stage_id === stage.id)}
-                  onEdit={openEditModal}
-                  onDelete={openDeleteConfirm}
-                  onArchive={handleArchive}
-                  stages={stages}
-                  onEditStage={setEditingStage}
-                  onDisableStage={handleDisableStage}
-                  onAddOpportunity={openCreateModal}
-                  isFolded={foldedStageIds.includes(stage.id)}
-                  onFoldStage={stageId => setFoldedStageIds(prev => [...prev, stageId])}
-                  onUnfoldStage={stageId => setFoldedStageIds(prev => prev.filter(id => id !== stageId))}
-                />
-              ))}
-            </SortableContext>
-            {/* Odoo-style quick stage creator column */}
-            {!isAddingStage ? (
-              <div
-                onClick={() => setIsAddingStage(true)}
-                className="flex flex-col min-h-[850px] w-[45px] sm:w-[50px] flex-shrink-0 snap-center rounded-xl bg-slate-100/50 hover:bg-slate-200/50 border border-dashed border-gray-300 hover:border-slate-400 transition-all duration-200 ease-in-out cursor-pointer items-center justify-start pt-6 shadow-sm select-none"
+
+              {/* Dropdown Toggle Button */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setShowFilters(!showFilters); }}
+                className="p-1 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition-colors ml-auto shrink-0 cursor-pointer"
               >
-                <div
-                  className="flex items-center justify-center font-bold text-slate-500 hover:text-slate-700 tracking-wide text-[13px] sm:text-[14px] whitespace-nowrap"
-                  style={{ writingMode: 'vertical-rl' }}
-                >
-                  » Agregar Etapa
+                <ChevronDown size={14} className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+
+            {/* Odoo style dropdown menu */}
+            {showFilters && (
+              <div className="absolute right-0 mt-1.5 w-[380px] max-w-[95vw] bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 flex gap-4 animate-fade-in text-left">
+                {/* Column 1: Filters */}
+                <div className="flex-1 flex flex-col gap-1.5 max-h-[320px] overflow-y-auto pr-1">
+                  <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
+                    <Filter size={12} /> Filtros
+                  </h4>
+
+                  {/* Archived Filter options */}
+                  <button
+                    type="button"
+                    onClick={() => setArchivedFilter(archivedFilter === 'archived' ? 'active' : 'archived')}
+                    className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+                  >
+                    <span>Oportunidades Archivadas</span>
+                    {archivedFilter === 'archived' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setArchivedFilter(archivedFilter === 'all' ? 'active' : 'all')}
+                    className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+                  >
+                    <span>Todas las Oportunidades</span>
+                    {archivedFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+                  </button>
+
+                  <div className="border-t border-gray-100 my-1 shrink-0"></div>
+
+                  {/* Stages List */}
+                  <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-1 shrink-0 select-none">Etapas</h5>
+                  {activeStages.map(stage => {
+                    const isSelected = statusFilter === stage.id;
+                    return (
+                      <button
+                        key={stage.id}
+                        type="button"
+                        onClick={() => setStatusFilter(isSelected ? '' : stage.id)}
+                        className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+                      >
+                        <span className="truncate">{stage.strname}</span>
+                        {isSelected && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+                      </button>
+                    );
+                  })}
+                  <div className="border-t border-gray-100 my-1 shrink-0"></div>
+                  <button
+                    type="button"
+                    onClick={() => { setShowFilters(false); setIsCustomFilterModalOpen(true); }}
+                    className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1.5 rounded w-full text-left hover:bg-indigo-50 transition-colors cursor-pointer shrink-0 font-bold"
+                  >
+                    <span>+ Filtro personalizado...</span>
+                  </button>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col w-[85vw] md:w-[280px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[160px] h-fit snap-center transition-all duration-200">
-                <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
-                <form onSubmit={handleCreateStage} className="flex flex-col gap-3">
-                  <input
-                    ref={addStageInputRef}
-                    type="text"
-                    value={newStageName}
-                    onChange={e => setNewStageName(e.target.value)}
-                    placeholder="Nombre de la etapa..."
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
-                    required
-                  />
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex-1 shadow-sm transition-colors cursor-pointer"
-                    >
-                      Añadir
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAddingStage(false);
-                        setNewStageName('');
-                      }}
-                      className="bg-gray-100 hover:bg-gray-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex-1 border border-gray-200 transition-colors cursor-pointer"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
+
+                {/* Column 2: Executives */}
+                <div className="flex-1 flex flex-col gap-1.5 border-l border-gray-100 pl-4 max-h-[320px] overflow-y-auto">
+                  <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
+                    <User size={12} /> Ejecutivos
+                  </h4>
+                  {executives.map(exec => {
+                    const isSelected = executiveFilter === exec.id;
+                    return (
+                      <button
+                        key={exec.id}
+                        type="button"
+                        onClick={() => setExecutiveFilter(isSelected ? '' : exec.id)}
+                        className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+                      >
+                        <span className="truncate">{exec.username}</span>
+                        {isSelected && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+                      </button>
+                    );
+                  })}
+
+                  {/* Clear Filters option at bottom */}
+                  <div className="border-t border-gray-100 my-1 mt-auto shrink-0"></div>
+                  <button
+                    type="button"
+                    onClick={handleClearFilters}
+                    className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                  >
+                    <XCircle size={12} />
+                    Limpiar Filtros
+                  </button>
+                </div>
               </div>
             )}
           </div>
-          <DragOverlay>
-            {activeOpportunity ? (
-              <OpportunityCard
-                opportunity={activeOpportunity}
-                onEdit={() => {}}
-                onDelete={() => {}}
-                onArchive={() => {}}
-                stages={stages}
-                isOverlay
-              />
-            ) : activeStage ? (
-              <div className="opacity-95 shadow-2xl scale-[1.02] rotate-1 cursor-grabbing">
-                <PipelineColumn
-                  stage={activeStage}
-                  opportunities={filteredOpportunities.filter(opp => opp.stage_id === activeStage.id)}
-                  onEdit={() => {}}
-                  onDelete={() => {}}
-                  onArchive={() => {}}
-                  stages={stages}
-                  onEditStage={() => {}}
-                  onDisableStage={() => {}}
-                  onAddOpportunity={() => {}}
-                  isOverlay
-                  isFolded={foldedStageIds.includes(activeStage.id)}
-                  onFoldStage={() => {}}
-                  onUnfoldStage={() => {}}
-                />
+          <div className="relative w-full sm:w-auto" ref={stageSelectorRef}>
+            <button
+              className="w-full bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors whitespace-nowrap shadow-sm"
+              onClick={() => setShowStageSelector(!showStageSelector)}
+            >
+              <Columns size={16} />
+              <span>Etapas</span>
+            </button>
+            {showStageSelector && (
+              <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-4">
+                <h4 className="font-semibold text-sm mb-2">Mostrar/Ocultar Etapas</h4>
+                <div className="space-y-2">
+                  {activeStages.map(stage => {
+                    const isChecked = visibleStageIds.includes(stage.id);
+                    const isDisabled = isChecked && visibleStageIds.length <= 3;
+                    return (
+                      <label key={stage.id} className={`flex items-center space-x-2 text-sm ${isDisabled ? 'cursor-not-allowed text-gray-500' : 'cursor-pointer'}`}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          disabled={isDisabled}
+                          onChange={() => handleStageVisibilityChange(stage.id)}
+                          className="hidden"
+                        />
+                        {isChecked ? <CheckSquare size={16} className={isDisabled ? 'text-gray-400' : 'text-blue-600'} /> : <Square size={16} className="text-gray-400" />}
+                        <span>{stage.strname}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-            ) : null}
-          </DragOverlay>
+            )}
+          </div>
+          <button
+            className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 whitespace-nowrap shadow-sm"
+            onClick={openCreateModal}
+          >
+            <Plus size={18} /> Nueva Oportunidad
+          </button>
+          <button
+            title="Configurar Pipeline"
+            className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-700 flex items-center justify-center gap-2 whitespace-nowrap shadow-sm transition-colors"
+            onClick={() => setShowStagesConfig(true)}
+          >
+            <Settings2 size={18} />
+            <span className="sm:hidden">Configurar Pipeline</span>
+          </button>
+        </div>
+      </div>
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar ${!activeOpportunity ? 'snap-x snap-mandatory' : ''}`}>
+          <SortableContext
+            items={activeStages.filter(stage => visibleStageIds.includes(stage.id)).map(s => s.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            {activeStages.filter(stage => visibleStageIds.includes(stage.id)).map(stage => (
+              <PipelineColumn key={stage.id}
+                stage={stage}
+                opportunities={filteredOpportunities.filter(opp => opp.stage_id === stage.id)}
+                onEdit={openEditModal}
+                onDelete={openDeleteConfirm}
+                onArchive={handleArchive}
+                stages={stages}
+                onEditStage={setEditingStage}
+                onDisableStage={handleDisableStage}
+                onAddOpportunity={openCreateModal}
+                isFolded={foldedStageIds.includes(stage.id)}
+                onFoldStage={stageId => setFoldedStageIds(prev => [...prev, stageId])}
+                onUnfoldStage={stageId => setFoldedStageIds(prev => prev.filter(id => id !== stageId))}
+              />
+            ))}
+          </SortableContext>
+          {/* Odoo-style quick stage creator column */}
+          {!isAddingStage ? (
+            <div
+              onClick={() => setIsAddingStage(true)}
+              className="flex flex-col min-h-[850px] w-[45px] sm:w-[50px] flex-shrink-0 snap-center rounded-xl bg-slate-100/50 hover:bg-slate-200/50 border border-dashed border-gray-300 hover:border-slate-400 transition-all duration-200 ease-in-out cursor-pointer items-center justify-start pt-6 shadow-sm select-none"
+            >
+              <div
+                className="flex items-center justify-center font-bold text-slate-500 hover:text-slate-700 tracking-wide text-[13px] sm:text-[14px] whitespace-nowrap"
+                style={{ writingMode: 'vertical-rl' }}
+              >
+                » Agregar Etapa
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col w-[85vw] md:w-[280px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[160px] h-fit snap-center transition-all duration-200">
+              <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
+              <form onSubmit={handleCreateStage} className="flex flex-col gap-3">
+                <input
+                  ref={addStageInputRef}
+                  type="text"
+                  value={newStageName}
+                  onChange={e => setNewStageName(e.target.value)}
+                  placeholder="Nombre de la etapa..."
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
+                  required
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex-1 shadow-sm transition-colors cursor-pointer"
+                  >
+                    Añadir
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingStage(false);
+                      setNewStageName('');
+                    }}
+                    className="bg-gray-100 hover:bg-gray-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex-1 border border-gray-200 transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
+        <DragOverlay>
+          {activeOpportunity ? (
+            <OpportunityCard
+              opportunity={activeOpportunity}
+              onEdit={() => { }}
+              onDelete={() => { }}
+              onArchive={() => { }}
+              stages={stages}
+              isOverlay
+            />
+          ) : activeStage ? (
+            <div className="opacity-95 shadow-2xl scale-[1.02] rotate-1 cursor-grabbing">
+              <PipelineColumn
+                stage={activeStage}
+                opportunities={filteredOpportunities.filter(opp => opp.stage_id === activeStage.id)}
+                onEdit={() => { }}
+                onDelete={() => { }}
+                onArchive={() => { }}
+                stages={stages}
+                onEditStage={() => { }}
+                onDisableStage={() => { }}
+                onAddOpportunity={() => { }}
+                isOverlay
+                isFolded={foldedStageIds.includes(activeStage.id)}
+                onFoldStage={() => { }}
+                onUnfoldStage={() => { }}
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
       <ConfirmModal
         open={isConfirmModalOpen}
@@ -1019,6 +1337,20 @@ const PipelinePage: React.FC = () => {
                   required
                 />
               </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-600 uppercase">Límite de Días</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editingStage.intmaxdays !== undefined && editingStage.intmaxdays !== null ? editingStage.intmaxdays : ''}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setEditingStage({ ...editingStage, intmaxdays: val === '' ? null : parseInt(val, 10) });
+                  }}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Ej. 15 (dejar vacío para sin límite)"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 mt-6">
@@ -1049,7 +1381,7 @@ const PipelinePage: React.FC = () => {
             onClick={() => setShowStagesConfig(false)}
           />
           {/* Panel */}
-          <div className="relative w-full max-w-2xl h-full bg-white shadow-2xl flex flex-col animate-slide-in-right">
+          <div className="relative w-full max-w-3xl h-full bg-white shadow-2xl flex flex-col animate-slide-in-right">
             {/* Drawer Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
               <div className="flex items-center gap-2">
@@ -1071,6 +1403,151 @@ const PipelinePage: React.FC = () => {
                   fetchPipelineAndOpportunities();
                 }}
               />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Odoo style custom filter builder modal */}
+      {isCustomFilterModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Filter size={18} className="text-indigo-600" />
+                Filtro Personalizado
+              </h3>
+              <button 
+                onClick={() => setIsCustomFilterModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6 flex-grow overflow-y-auto flex flex-col gap-6">
+              {/* Top Controls */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/60 shrink-0">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <span>Buscar oportunidades que cumplan</span>
+                  <select
+                    value={matchType}
+                    onChange={e => setMatchType(e.target.value as 'any' | 'all')}
+                    className="border border-slate-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-semibold text-indigo-700 cursor-pointer"
+                  >
+                    <option value="any">cualquiera de</option>
+                    <option value="all">todas</option>
+                  </select>
+                  <span>las siguientes reglas:</span>
+                </div>
+                
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={includeArchived}
+                    onChange={e => setIncludeArchived(e.target.checked)}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer h-4 w-4"
+                  />
+                  <span>Incluir archivadas</span>
+                </label>
+              </div>
+              
+              {/* Rules List */}
+              <div className="flex flex-col gap-3">
+                {customRules.length === 0 ? (
+                  <div className="text-center py-8 border border-dashed border-slate-300 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center gap-3">
+                    <p className="text-slate-500 text-sm">No has añadido ninguna regla de filtrado.</p>
+                    <button
+                      type="button"
+                      onClick={() => setCustomRules([{ field: 'nombre_proyecto', operator: 'contains', value: '' }])}
+                      className="bg-white border border-slate-300 text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors cursor-pointer"
+                    >
+                      + Añadir primera regla
+                    </button>
+                  </div>
+                ) : (
+                  customRules.map((rule, idx) => {
+                    const availableOperators = getOperatorsForField(rule.field);
+                    return (
+                      <div key={idx} className="flex flex-col sm:flex-row items-center gap-3 bg-white p-3 border border-slate-200 rounded-xl shadow-sm hover:border-slate-300 transition-all">
+                        {/* Field Selector */}
+                        <select
+                          value={rule.field}
+                          onChange={e => handleRuleFieldChange(idx, e.target.value)}
+                          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full sm:w-48 cursor-pointer"
+                        >
+                          <option value="nombre_proyecto">Nombre del Proyecto</option>
+                          <option value="empresa">Empresa</option>
+                          <option value="linea_negocio">Línea de Negocio</option>
+                          <option value="monto_total">Monto Total</option>
+                          <option value="stage_id">Etapa</option>
+                          <option value="ejecutivo_id">Ejecutivo</option>
+                        </select>
+                        
+                        {/* Operator Selector */}
+                        <select
+                          value={rule.operator}
+                          onChange={e => handleRuleChange(idx, 'operator', e.target.value)}
+                          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full sm:w-40 cursor-pointer"
+                        >
+                          {availableOperators.map(op => (
+                            <option key={op.value} value={op.value}>{op.label}</option>
+                          ))}
+                        </select>
+                        
+                        {/* Value input / selector */}
+                        <div className="flex-1 w-full">
+                          {renderRuleValueInput(rule, idx)}
+                        </div>
+                        
+                        {/* Trash Button */}
+                        <button
+                          type="button"
+                          onClick={() => setCustomRules(prev => prev.filter((_, i) => i !== idx))}
+                          className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                          title="Eliminar regla"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="flex justify-between items-center px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0">
+              <button
+                type="button"
+                onClick={() => setCustomRules(prev => [...prev, { field: 'nombre_proyecto', operator: 'contains', value: '' }])}
+                className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors cursor-pointer"
+              >
+                + Añadir regla
+              </button>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomFilterModalOpen(false)}
+                  className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplyCustomFilter}
+                  disabled={customRules.length === 0}
+                  className={`px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors cursor-pointer ${
+                    customRules.length === 0
+                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                  }`}
+                >
+                  Aplicar filtro
+                </button>
+              </div>
             </div>
           </div>
         </div>

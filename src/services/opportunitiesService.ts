@@ -16,8 +16,8 @@ const buildQueryString = (params: Record<string, string | undefined>): string =>
  * @param endDate - Fecha de fin para filtrar oportunidades (opcional).
  * @returns Una promesa que se resuelve en un array de oportunidades.
  */
-export const getOpportunities = async (startDate?: string, endDate?: string): Promise<Opportunity[]> => {
-  const query = buildQueryString({ startDate, endDate });
+export const getOpportunities = async (startDate?: string, endDate?: string, showArchived?: boolean): Promise<Opportunity[]> => {
+  const query = buildQueryString({ startDate, endDate, showArchived: showArchived !== undefined ? String(showArchived) : undefined });
   const response = await axiosInstance.get<Opportunity[]>(`${OPPORTUNITIES.OPPORTUNITIES}${query}`);
   return response.data;
 };

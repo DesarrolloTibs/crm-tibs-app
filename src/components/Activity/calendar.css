@@ -173,3 +173,36 @@
 .tibs-calendar .fc-timegrid-now-indicator-arrow {
     border-top-color: #ef4444 !important;
 }
+
+/* ── Responsivo (Móvil) ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .tibs-calendar .fc-toolbar {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        padding: 0.75rem 0.5rem !important;
+        align-items: center !important;
+    }
+
+    .tibs-calendar .fc-toolbar-title {
+        font-size: 1rem !important;
+        text-align: center !important;
+        margin: 0.25rem 0 !important;
+    }
+
+    .tibs-calendar .fc-toolbar-chunk {
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        gap: 0.375rem !important;
+        width: 100% !important;
+    }
+
+    .tibs-calendar .fc-button {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .tibs-calendar .fc-event {
+        font-size: 0.75rem !important;
+    }
+}
