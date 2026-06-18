@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { X, Calendar, Clock, User, Briefcase, Edit, Trash2, Building, Bell } from 'lucide-react';
 import type { Activity } from '../../core/models/Activity';
 import { getActivityColor } from './activityColors';

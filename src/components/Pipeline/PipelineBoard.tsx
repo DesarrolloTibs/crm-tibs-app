@@ -12,7 +12,7 @@ import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
 import OpportunityCard from './OpportunityCard';
-import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square, ChevronUp, ChevronDown, Settings2, X, Archive, Trash2 } from 'lucide-react';
+import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square, ChevronUp, ChevronDown, Settings2, X, Trash2 } from 'lucide-react';
 import PipelineStagesSettings from './PipelineStagesSettings';
 import OpportunityForm from './OpportunityForm';
 import Tabs from '../Tabs/Tabs';

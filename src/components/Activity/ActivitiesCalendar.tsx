@@ -110,7 +110,6 @@ const ActivitiesCalendar: React.FC<Props> = ({
     /* ── Handlers ───────────────────────────────────────────────────────── */
 
     const handleEventClick = useCallback((info: EventClickArg) => {
-        const eventType = info.event.extendedProps.type as string;
         const activity = info.event.extendedProps.activity as Activity;
 
         // Los recordatorios abren el popover de su actividad (para editar/eliminar)

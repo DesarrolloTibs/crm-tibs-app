@@ -3,6 +3,7 @@ import type { Opportunity, CurrencyType, Stage } from '../../core/models/Opportu
 import { Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
 import Select, { type SingleValue, type MultiValue } from 'react-select';
 import { getActiveStages } from '../../services/pipelinesService';
+import { FileText, ChevronDown } from 'lucide-react';
 import type { Client } from '../../core/models/Client';
 import { getClients, createClient } from '../../services/clientsService';
 import { getUsers } from '../../services/usersService'; // Importar getUsers
@@ -11,6 +12,8 @@ import type { User } from '../../core/models/User';
 import ClientForm from '../Client/ClientForm';
 import { getCompanies } from '../../services/companiesService';
 import type { Company } from '../../core/models/Company';
+import type { Product } from '../../core/models/Product';
+import { getProducts, downloadProductFile } from '../../services/productsService';
 
 
 
@@ -31,6 +34,7 @@ type OpportunityFormData = Omit<Partial<Opportunity>, 'estimated_closure_date' |
     estimated_closure_date?: string;
     createdAt?: string;
     contactIds?: string[];
+    productIds?: string[];
 };
 
 const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
@@ -38,6 +42,29 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const [clients, setClients] = useState<Client[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [executives, setExecutives] = useState<User[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const baseUrl = import.meta.env.VITE_BASE_URL || '';
+  const [isDocsSectionOpen, setIsDocsSectionOpen] = useState(false);
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+
+  const handleDownloadProductFile = async (productId: string, file: any) => {
+    setDownloadingFileId(file.id);
+    try {
+      const blob = await downloadProductFile(productId, file.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', file.fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al descargar el archivo del producto:", error);
+    } finally {
+      setDownloadingFileId(null);
+    }
+  };
   const [editingField, setEditingField] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [linkType, setLinkType] = useState<'company' | 'contact'>(
@@ -51,12 +78,14 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       estimated_closure_date: initialData.estimated_closure_date ? new Date(initialData.estimated_closure_date).toISOString().split('T')[0] : '',
       createdAt: initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : '',
       contactIds: initialData.contacts?.map(c => c.id!) || [],
+      productIds: initialData.products?.map(p => p.id!) || [],
     } : {
       nombre_proyecto: '',
       description: '',
       cliente_id: '', 
       companyId: '',
       contactIds: [],
+      productIds: [],
       empresa: '',
       ejecutivo_id: '', 
       stage_id: initialData?.stage_id || '',
@@ -75,14 +104,19 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [allClients, allCompanies, activeStages] = await Promise.all([
+        const [allClients, allCompanies, activeStages, allProducts] = await Promise.all([
           getClients(),
           getCompanies(),
-          getActiveStages()
+          getActiveStages(),
+          getProducts()
         ]);
         setClients(allClients);
         setCompanies(allCompanies.filter(c => c.estatus));
         setStages(activeStages);
+
+        const associatedProductIds = initialData?.products?.map(p => p.id!) || [];
+        const filteredProducts = allProducts.filter(p => p.status || associatedProductIds.includes(p.id!));
+        setProducts(filteredProducts);
 
         // Si es creación y no viene un stage_id pre-seleccionado, pre-seleccionar la etapa inicial por defecto
         if ((!initialData || !initialData.id) && !opportunity.stage_id) {
@@ -122,12 +156,29 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     }
   }, [user, isEjecutivo, initialData]);
 
+  const productsPriceSum = useMemo(() => {
+    if (!opportunity.productIds || opportunity.productIds.length === 0) return 0;
+    return products
+      .filter(p => opportunity.productIds?.includes(p.id!))
+      .reduce((sum, p) => sum + (Number(p.precioBase) || 0), 0);
+  }, [opportunity.productIds, products]);
+
+  const convertedProductsPrice = useMemo(() => {
+    if (opportunity.moneda === 'USD') {
+      const rate = Number(opportunity.tipoCambio) || 0;
+      return rate > 0 ? (productsPriceSum / rate) : 0;
+    }
+    return productsPriceSum;
+  }, [opportunity.moneda, opportunity.tipoCambio, productsPriceSum]);
+
   useEffect(() => {
     const licenciamiento = Number(opportunity.monto_licenciamiento) || 0;
     const servicios = Number(opportunity.monto_servicios) || 0;
-    const total = licenciamiento + servicios;
+    const total = licenciamiento + servicios + convertedProductsPrice;
     setOpportunity(o => ({ ...o, monto_total: total }));
-  }, [opportunity.monto_licenciamiento, opportunity.monto_servicios]);
+  }, [opportunity.monto_licenciamiento, opportunity.monto_servicios, convertedProductsPrice]);
+
+
 
   const formatCurrency = (value: number | undefined | string) => {
     if (value === undefined || value === null || value === '') return '';
@@ -270,6 +321,23 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     });
   };
 
+  const productOptions = useMemo(() => products.map(product => ({
+    value: product.id!,
+    label: `${product.nombre} (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(product.precioBase)})`,
+  })), [products]);
+
+  const selectedProductsValue = productOptions.filter(option =>
+    opportunity.productIds?.includes(option.value)
+  );
+
+  const handleProductsChange = (selectedOptions: MultiValue<SelectOption>) => {
+    const ids = selectedOptions ? selectedOptions.map(opt => opt.value) : [];
+    setOpportunity(prev => ({
+      ...prev,
+      productIds: ids,
+    }));
+  };
+
   const selectedClientValue = clientOptions.find(option => option.value === opportunity.cliente_id);
   const selectedExecutiveValue = executiveOptions.find(option => option.value === opportunity.ejecutivo_id);
 
@@ -288,7 +356,23 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         return;
     }
 
-    const { estimated_closure_date, createdAt, ...rest } = opportunity;
+    const { 
+      estimated_closure_date, 
+      createdAt, 
+      products, 
+      contacts, 
+      cliente, 
+      company, 
+      ejecutivo, 
+      stage, 
+      interactions, 
+      reminders, 
+      files, 
+      archived,
+      proposalDocumentPath,
+      ...rest 
+    } = opportunity;
+
     let closureDate: Date | undefined = undefined;
     if (estimated_closure_date) {
         const dateString = estimated_closure_date as unknown as string;
@@ -310,6 +394,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       tipoCambio: Number(opportunity.tipoCambio) || 0,
       estimated_closure_date: closureDate,
       createdAt: creationDate,
+      productIds: opportunity.productIds || [],
     };
 
     if (linkType === 'company') {
@@ -426,15 +511,35 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               <label htmlFor="monto_licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Monto Licenciamiento</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                <input id="monto_licenciamiento" type="text" name="monto_licenciamiento" value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrency(opportunity.monto_licenciamiento)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
+                <input id="monto_licenciamiento" type="text" name="monto_licenciamiento" value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrency(opportunity.monto_licenciamiento)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right font-medium" />
               </div>
             </div>
             <div>
               <label htmlFor="monto_servicios" className="block text-sm font-medium text-gray-700 mb-1">Monto Servicios</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                <input id="monto_servicios" type="text" name="monto_servicios" value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrency(opportunity.monto_servicios)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
+                <input id="monto_servicios" type="text" name="monto_servicios" value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrency(opportunity.monto_servicios)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right font-medium" />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Total de Productos {opportunity.moneda === 'USD' ? '(USD convertido)' : '(MXN)'}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+                <input
+                  type="text"
+                  value={formatCurrency(convertedProductsPrice)}
+                  readOnly
+                  disabled
+                  className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 bg-gray-50 text-gray-500 text-right cursor-not-allowed font-medium"
+                />
+              </div>
+              {opportunity.moneda === 'USD' && (
+                <span className="text-[10px] text-gray-400 mt-1 block">
+                  Original: {formatCurrency(productsPriceSum)} MXN
+                </span>
+              )}
             </div>
             <div>
               <label htmlFor="moneda" className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
@@ -447,10 +552,23 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                 <label htmlFor="tipoCambio" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Cambio (USD a MXN)</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                  <input id="tipoCambio" type="text" name="tipoCambio" value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" required={opportunity.moneda === 'USD'} className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right" />
+                  <input id="tipoCambio" type="text" name="tipoCambio" value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" required={opportunity.moneda === 'USD'} className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right font-medium" />
                 </div>
               </div>
             )}
+            <div className={opportunity.moneda === 'USD' ? '' : 'md:col-span-2'}>
+              <label className="block text-sm font-semibold text-indigo-950 mb-1">Monto Total de la Oportunidad</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-indigo-700 font-bold">$</span>
+                <input
+                  type="text"
+                  value={formatCurrency(opportunity.monto_total || 0)}
+                  readOnly
+                  disabled
+                  className="w-full border border-indigo-200 rounded pl-7 pr-3 py-2 bg-indigo-50/50 text-indigo-700 text-right cursor-not-allowed font-bold"
+                />
+              </div>
+            </div>
           </div>
         </fieldset>
 
@@ -482,8 +600,140 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                 {Object.values(Licensing).map(l => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
+            <div className="md:col-span-2">
+              <label htmlFor="productIds" className="block text-sm font-medium text-gray-700 mb-1">Productos</label>
+              <Select inputId="productIds" name="productIds" isMulti options={productOptions} value={selectedProductsValue} onChange={handleProductsChange} placeholder="-- Seleccione uno o más productos --" isClearable isSearchable />
+            </div>
           </div>
         </fieldset>
+
+        {/* Collapsible Product Specs Viewer Section */}
+        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm mt-4">
+          <button
+            type="button"
+            onClick={() => setIsDocsSectionOpen(!isDocsSectionOpen)}
+            className="w-full px-5 py-4 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition-colors focus:outline-none"
+          >
+            <div className="flex items-center gap-2">
+              <FileText size={18} className="text-indigo-600" />
+              <span className="font-semibold text-gray-800 text-sm">
+                Productos seleccionados
+              </span>
+              {opportunity.productIds && opportunity.productIds.length > 0 && (
+                <span className="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
+                  {opportunity.productIds.length}
+                </span>
+              )}
+            </div>
+            <ChevronDown
+              size={18}
+              className={`text-gray-500 transition-transform duration-300 ${isDocsSectionOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {isDocsSectionOpen && (
+            <div className="p-5 border-t border-gray-150 bg-white space-y-4 animate-fade-in">
+              {!opportunity.productIds || opportunity.productIds.length === 0 ? (
+                <div className="text-center py-6 text-gray-500 text-xs">
+                  Ningún producto seleccionado. Agrega productos en la sección de Clasificación para consultar sus documentos.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {products
+                    .filter(p => opportunity.productIds?.includes(p.id!))
+                    .map((p) => {
+                      const imageSrc = p.imagenPortada 
+                        ? (p.imagenPortada.startsWith('http') 
+                            ? p.imagenPortada 
+                            : `${baseUrl}${p.imagenPortada.startsWith('/') ? '' : '/'}${p.imagenPortada}`)
+                        : null;
+                      const files = p.files || [];
+
+                      return (
+                        <div key={p.id} className="border border-slate-150 rounded-xl p-4 bg-slate-50/20 space-y-3">
+                          {/* Info del Producto con Imagen */}
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 bg-white flex items-center justify-center shrink-0 shadow-sm">
+                              {imageSrc ? (
+                                <img 
+                                  src={imageSrc} 
+                                  alt={p.nombre} 
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://placehold.co/150x150?text=Producto';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-lg">
+                                  {p.nombre.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-left min-w-0 flex-1">
+                              <h4 className="text-sm font-bold text-slate-800 truncate">{p.nombre}</h4>
+                              {p.descripcion && (
+                                <p className="text-xs text-slate-500 line-clamp-2 mt-0.5" title={p.descripcion}>
+                                  {p.descripcion}
+                                </p>
+                              )}
+                              <p className="text-xs font-semibold text-indigo-600 mt-1">
+                                Precio Base: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(p.precioBase)}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Documentos del Producto */}
+                          <div className="border-t border-slate-100 pt-3">
+                            <h5 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                              Fichas técnicas y documentos
+                            </h5>
+                            {files.length === 0 ? (
+                              <div className="text-left text-gray-500 text-xs italic py-1">
+                                Este producto no tiene fichas técnicas o documentos adjuntos registrados.
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {files.map((file) => {
+                                  return (
+                                    <button
+                                      key={file.id}
+                                      type="button"
+                                      onClick={() => handleDownloadProductFile(p.id!, file)}
+                                      disabled={downloadingFileId === file.id}
+                                      className="flex items-center justify-between p-3 border border-slate-150 rounded-xl bg-white hover:bg-slate-50 hover:border-indigo-300 transition-all group cursor-pointer disabled:opacity-50 w-full text-left"
+                                    >
+                                      <div className="flex items-center gap-2.5 truncate pr-4">
+                                        <FileText size={16} className="text-indigo-500 flex-shrink-0 group-hover:scale-105 transition-transform" />
+                                        <div className="truncate text-left">
+                                          <p className="text-xs font-semibold text-slate-800 truncate" title={file.title || file.fileName}>
+                                            {file.title || file.fileName}
+                                          </p>
+                                          <p className="text-[10px] text-slate-400 truncate">
+                                            {file.fileName}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <span className="text-[10px] font-bold text-indigo-600 group-hover:translate-x-0.5 transition-transform flex-shrink-0 flex items-center gap-1">
+                                        {downloadingFileId === file.id ? (
+                                          <div className="w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                          <span>Descargar →</span>
+                                        )}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="flex justify-end space-x-2">
           <button type="button" onClick={onCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">

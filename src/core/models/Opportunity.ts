@@ -1,5 +1,6 @@
 import type { Client } from "./Client";
 import type { Company } from "./Company";
+import type { Product } from "./Product";
 
 export interface Stage {
   id: string;
@@ -41,6 +42,8 @@ export interface Opportunity  {
   archived?: boolean;
   proposalDocumentPath?: string;
   files?: OpportunityFile[];
+  productIds?: string[];
+  products?: Product[];
   tipoCambio?: number;
   estimated_closure_date?: Date;
   createdAt?: Date;

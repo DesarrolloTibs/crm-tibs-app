@@ -14,6 +14,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import CompaniesPage from './pages/CompaniesPage';
 import SettingsPage from './pages/SettingsPage';
+import ProductsPage from './pages/ProductsPage';
 
 const App: React.FC = () => (
     <BrowserRouter>
@@ -38,6 +39,16 @@ const App: React.FC = () => (
                     <ProtectedRoute>
                         <Layout>
                             <ClientsPage />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/products"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <ProductsPage />
                         </Layout>
                     </ProtectedRoute>
                 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Users, Briefcase, BarChart3, LogOut, History, ClipboardList, DollarSign, Settings } from 'lucide-react';
+import { Users, Briefcase, BarChart3, LogOut, History, ClipboardList, DollarSign, Settings, Package } from 'lucide-react';
 
 interface Props {
     isSidebarOpen: boolean;
@@ -30,6 +30,7 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
             <nav className="flex-grow p-4">
                 <ul className="space-y-2">
                     <li><NavLink to="/clients" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><Briefcase size={20} /> Clientes</NavLink></li>
+                    <li><NavLink to="/products" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><Package size={20} /> Productos</NavLink></li>
 
                     <li><NavLink to="/pipeline" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><BarChart3 size={20} /> Pipeline</NavLink></li>
                     <li><NavLink to="/activities" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><ClipboardList size={20} /> Actividades</NavLink></li>
