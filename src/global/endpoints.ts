@@ -45,6 +45,10 @@ export const PIPELINES = {
 export const PRODUCTS = {
     PRODUCTS: urlBase + 'products',
 };
+
+export const OPPORTUNITY_LABELS = {
+    OPPORTUNITY_LABELS: urlBase + 'opportunity-labels',
+};
 /*export const ENDPOINTS = {
     LOGIN: '/auth/login',
     CLIENTS: 'http://localhost:3090/clients',

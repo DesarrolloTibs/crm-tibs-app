@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { XCircle, ClipboardList, Settings } from 'lucide-react';
+import { XCircle, ClipboardList, Settings, Sliders } from 'lucide-react';
 import ActivityTypesSettings from '../components/ActivityType/ActivityTypesSettings';
+import OpportunityLabelsSettings from '../components/OpportunityLabel/OpportunityLabelsSettings';
 
-type SettingTab = 'activity-types';
+type SettingTab = 'activity-types' | 'opportunity-labels';
 
 interface SettingOption {
     id: SettingTab;
@@ -32,14 +33,18 @@ const SettingsPage: React.FC = () => {
                 },
             ],
         },
+        {
+            title: 'Oportunidades',
+            options: [
+                {
+                    id: 'opportunity-labels',
+                    label: 'Etiquetas de Oportunidad',
+                    icon: <Sliders size={16} />,
+                },
+            ],
+        },
     ];
     // En el futuro, se pueden añadir más secciones aquí:
-    // {
-    //     title: 'Oportunidades',
-    //     options: [
-    //         { id: 'pipeline-stages', label: 'Configuración de Pipeline', icon: <Sliders size={16} /> }
-    //     ]
-    // }
     // {
     //     title: 'Clientes',
     //     options: [
@@ -61,6 +66,8 @@ const SettingsPage: React.FC = () => {
         switch (activeTab) {
             case 'activity-types':
                 return <ActivityTypesSettings />;
+            case 'opportunity-labels':
+                return <OpportunityLabelsSettings />;
             default:
                 return (
                     <div className="p-6 text-center text-gray-500">

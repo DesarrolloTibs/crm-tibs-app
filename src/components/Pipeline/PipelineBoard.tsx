@@ -439,7 +439,7 @@ const PipelinePage: React.FC = () => {
       const opportunityToUpdate = updatedOpportunities.find(o => o.id === activeId);
 
       if (opportunityToUpdate) {
-        const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, files, archived, tipoCambio, ...rest } = opportunityToUpdate as any;
+        const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, files, archived, tipoCambio, products, ...rest } = opportunityToUpdate as any;
         const updateData = {
           ...rest,
           stage_id: overStageId,

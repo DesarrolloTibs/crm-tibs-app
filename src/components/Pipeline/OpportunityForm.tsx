@@ -14,6 +14,8 @@ import { getCompanies } from '../../services/companiesService';
 import type { Company } from '../../core/models/Company';
 import type { Product } from '../../core/models/Product';
 import { getProducts, downloadProductFile } from '../../services/productsService';
+import { getOpportunityLabels } from '../../services/opportunityLabelsService';
+import type { OpportunityLabel } from '../../core/models/OpportunityLabel';
 
 
 
@@ -46,6 +48,12 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const baseUrl = import.meta.env.VITE_BASE_URL || '';
   const [isDocsSectionOpen, setIsDocsSectionOpen] = useState(false);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+  const [opportunityLabels, setOpportunityLabels] = useState<OpportunityLabel[]>([]);
+
+  const getLabelName = (uuid: string, defaultName: string) => {
+    const label = opportunityLabels.find(l => l.id === uuid);
+    return label && label.strname ? label.strname : defaultName;
+  };
 
   const handleDownloadProductFile = async (productId: string, file: any) => {
     setDownloadingFileId(file.id);
@@ -104,15 +112,20 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [allClients, allCompanies, activeStages, allProducts] = await Promise.all([
+        const [allClients, allCompanies, activeStages, allProducts, allLabels] = await Promise.all([
           getClients(),
           getCompanies(),
           getActiveStages(),
-          getProducts()
+          getProducts(),
+          getOpportunityLabels().catch(err => {
+            console.error("Error al obtener etiquetas de oportunidad:", err);
+            return [];
+          })
         ]);
         setClients(allClients);
         setCompanies(allCompanies.filter(c => c.estatus));
         setStages(activeStages);
+        setOpportunityLabels(allLabels);
 
         const associatedProductIds = initialData?.products?.map(p => p.id!) || [];
         const filteredProducts = allProducts.filter(p => p.status || associatedProductIds.includes(p.id!));
@@ -508,14 +521,18 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Detalles Financieros</legend>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="monto_licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Monto Licenciamiento</label>
+              <label htmlFor="monto_licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">
+                Monto {getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento')}
+              </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
                 <input id="monto_licenciamiento" type="text" name="monto_licenciamiento" value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrency(opportunity.monto_licenciamiento)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right font-medium" />
               </div>
             </div>
             <div>
-              <label htmlFor="monto_servicios" className="block text-sm font-medium text-gray-700 mb-1">Monto Servicios</label>
+              <label htmlFor="monto_servicios" className="block text-sm font-medium text-gray-700 mb-1">
+                Monto {getLabelName('7d90d810-74d3-4613-882d-8e814a029db5', 'Servicios')}
+              </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
                 <input id="monto_servicios" type="text" name="monto_servicios" value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrency(opportunity.monto_servicios)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right font-medium" />
@@ -583,19 +600,25 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               </select>
             </div>
             <div>
-              <label htmlFor="linea_negocio" className="block text-sm font-medium text-gray-700 mb-1">Línea de Negocio</label>
+              <label htmlFor="linea_negocio" className="block text-sm font-medium text-gray-700 mb-1">
+                {getLabelName('f509fa84-0b73-45f8-b3ab-b8471e98822e', 'Línea de Negocio')}
+              </label>
               <select id="linea_negocio" name="linea_negocio" value={opportunity.linea_negocio} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
                 {Object.values(BusinessLine).map(bl => <option key={bl} value={bl}>{bl}</option>)}
               </select>
             </div>
             <div>
-              <label htmlFor="tipo_entrega" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Entrega</label>
+              <label htmlFor="tipo_entrega" className="block text-sm font-medium text-gray-700 mb-1">
+                {getLabelName('7d90d810-74d3-4613-882d-8e814a029db5', 'Tipo de Entrega')}
+              </label>
               <select id="tipo_entrega" name="tipo_entrega" value={opportunity.tipo_entrega} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
                 {Object.values(DeliveryType).map(dt => <option key={dt} value={dt}>{dt}</option>)}
               </select>
             </div>
             <div>
-              <label htmlFor="licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">Licenciamiento</label>
+              <label htmlFor="licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">
+                {getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento')}
+              </label>
               <select id="licenciamiento" name="licenciamiento" value={opportunity.licenciamiento} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
                 {Object.values(Licensing).map(l => <option key={l} value={l}>{l}</option>)}
               </select>
