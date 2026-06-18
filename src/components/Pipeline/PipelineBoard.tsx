@@ -1309,7 +1309,7 @@ const PipelinePage: React.FC = () => {
         onConfirm={handleDelete}
         message={`¿Seguro que deseas eliminar la oportunidad "${opportunityToDelete?.nombre_proyecto}"?`}
       />
-      <Modal open={isFormModalOpen} onClose={() => setIsFormModalOpen(false)}>
+      <Modal open={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} maxWidth="max-w-6xl">
         {getModalContent()}
       </Modal>
 
