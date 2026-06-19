@@ -655,7 +655,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                 {getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento')}
               </label>
               <select id="licenciamiento_id" name="licenciamiento_id" value={opportunity.licenciamiento_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="">-- No Aplica / Ninguno --</option>
                 {licensings.map(l => <option key={l.id} value={l.id}>{l.strname}</option>)}
               </select>
             </div>
