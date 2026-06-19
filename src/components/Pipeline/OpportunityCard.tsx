@@ -131,7 +131,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
   };
 
   const progress = getProgress();
-  const tagColorString = businessLineColors[opportunity.linea_negocio] || '#f3f4f6 #1f2937'; // Default to gray-100 and gray-800
+  const tagColorString = businessLineColors[opportunity.linea_negocio?.strname || ''] || '#f3f4f6 #1f2937'; // Default to gray-100 and gray-800
   const [tagBgColor, tagTextColor] = tagColorString.split(' ');
   const tagStyle = {
     backgroundColor: tagBgColor,
@@ -258,7 +258,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
           <div className="bg-gray-200 rounded-full h-1 w-full relative"><div className="h-1 rounded-full transition-all duration-300" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div><div className="h-1 rounded-full transition-all duration-300 blur opacity-60 absolute top-0" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div></div>
           <div className="flex flex-col items-start gap-0.5 mt-1">
             <span className="px-2 py-0.5 text-[9px] font-semibold rounded-full inline-block" style={tagStyle}>
-              {opportunity.linea_negocio}
+              {opportunity.linea_negocio?.strname || ''}
             </span>
             <span 
               className={`text-[8px] font-bold flex items-center gap-1 shrink-0 ${

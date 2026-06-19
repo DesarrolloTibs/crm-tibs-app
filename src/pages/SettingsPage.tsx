@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { XCircle, ClipboardList, Settings, Sliders } from 'lucide-react';
+import { XCircle, ClipboardList, Settings, Sliders, Database } from 'lucide-react';
 import ActivityTypesSettings from '../components/ActivityType/ActivityTypesSettings';
 import OpportunityLabelsSettings from '../components/OpportunityLabel/OpportunityLabelsSettings';
+import OpportunityCatalogSettings from '../components/OpportunityLabel/OpportunityCatalogSettings';
+import { getOpportunityLabels } from '../services/opportunityLabelsService';
+import type { OpportunityLabel } from '../core/models/OpportunityLabel';
 
-type SettingTab = 'activity-types' | 'opportunity-labels';
+type SettingTab = 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs';
 
 interface SettingOption {
     id: SettingTab;
@@ -20,6 +23,26 @@ interface SettingSection {
 const SettingsPage: React.FC = () => {
     const { isAdmin } = useAuth();
     const [activeTab, setActiveTab] = useState<SettingTab>('activity-types');
+    const [activeCatalogSubTab, setActiveCatalogSubTab] = useState<'business-lines' | 'delivery-types' | 'licensings'>('business-lines');
+    const [labels, setLabels] = useState<OpportunityLabel[]>([]);
+
+    const fetchLabels = async () => {
+        try {
+            const data = await getOpportunityLabels();
+            setLabels(data);
+        } catch (err) {
+            console.error('Error al cargar etiquetas en Configuración:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchLabels();
+    }, [activeTab]);
+
+    const getLabelName = (uuid: string, defaultName: string) => {
+        const label = labels.find(l => l.id === uuid);
+        return label && label.strname ? label.strname : defaultName;
+    };
 
     // Estructura de secciones de configuración escalable para el futuro
     const sections: SettingSection[] = [
@@ -38,19 +61,17 @@ const SettingsPage: React.FC = () => {
             options: [
                 {
                     id: 'opportunity-labels',
-                    label: 'Etiquetas de Oportunidad',
+                    label: 'Etiquetas de Catálogos',
                     icon: <Sliders size={16} />,
+                },
+                {
+                    id: 'opportunity-catalogs',
+                    label: 'Valores de Catálogos',
+                    icon: <Database size={16} />,
                 },
             ],
         },
     ];
-    // En el futuro, se pueden añadir más secciones aquí:
-    // {
-    //     title: 'Clientes',
-    //     options: [
-    //         { id: 'client-categories', label: 'Categorías de Cliente', icon: <Users size={16} /> }
-    //     ]
-    // }
 
     if (!isAdmin) {
         return (
@@ -67,7 +88,61 @@ const SettingsPage: React.FC = () => {
             case 'activity-types':
                 return <ActivityTypesSettings />;
             case 'opportunity-labels':
-                return <OpportunityLabelsSettings />;
+                return <OpportunityLabelsSettings onLabelsUpdated={fetchLabels} />;
+            case 'opportunity-catalogs':
+                return (
+                    <div className="flex flex-col gap-6 text-left">
+                        {/* Sub-pestañas internas */}
+                        <div className="border-b border-gray-150">
+                            <nav className="flex -mb-px space-x-6 overflow-x-auto no-scrollbar">
+                                {(
+                                    [
+                                        { id: 'business-lines', label: getLabelName('f509fa84-0b73-45f8-b3ab-b8471e98822e', 'Línea de Negocio') },
+                                        { id: 'delivery-types', label: getLabelName('7d90d810-74d3-4613-882d-8e814a029db5', 'Tipo de Entrega') },
+                                        { id: 'licensings', label: getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento') },
+                                    ] as const
+                                ).map((tab) => {
+                                    const isActive = activeCatalogSubTab === tab.id;
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveCatalogSubTab(tab.id)}
+                                            className={`pb-4 px-1 border-b-2 font-bold text-xs sm:text-sm transition-all whitespace-nowrap cursor-pointer ${
+                                                isActive
+                                                    ? 'border-indigo-600 text-indigo-600'
+                                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    );
+                                })}
+                            </nav>
+                        </div>
+                        
+                        {/* Contenido del Catálogo Seleccionado */}
+                        <div className="animate-fade-in" key={activeCatalogSubTab}>
+                            {activeCatalogSubTab === 'business-lines' && (
+                                <OpportunityCatalogSettings
+                                    catalogType="business-lines"
+                                    catalogTitle={getLabelName('f509fa84-0b73-45f8-b3ab-b8471e98822e', 'Línea de Negocio')}
+                                />
+                            )}
+                            {activeCatalogSubTab === 'delivery-types' && (
+                                <OpportunityCatalogSettings
+                                    catalogType="delivery-types"
+                                    catalogTitle={getLabelName('7d90d810-74d3-4613-882d-8e814a029db5', 'Tipo de Entrega')}
+                                />
+                            )}
+                            {activeCatalogSubTab === 'licensings' && (
+                                <OpportunityCatalogSettings
+                                    catalogType="licensings"
+                                    catalogTitle={getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento')}
+                                />
+                            )}
+                        </div>
+                    </div>
+                );
             default:
                 return (
                     <div className="p-6 text-center text-gray-500">
@@ -85,18 +160,41 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col lg:flex-row bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[600px]">
-                {/* Menú lateral de configuración */}
-                <aside className="w-full lg:w-64 bg-gray-50/50 border-r border-gray-100 p-4 flex flex-col gap-6">
+                {/* Selector para móvil (oculto en pantallas grandes) */}
+                <div className="lg:hidden p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col gap-2">
+                    <label htmlFor="settings-tab-select" className="text-xs font-bold uppercase tracking-wider text-gray-400 select-none text-left">
+                        Categoría de Configuración
+                    </label>
+                    <select
+                        id="settings-tab-select"
+                        value={activeTab}
+                        onChange={(e) => setActiveTab(e.target.value as SettingTab)}
+                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    >
+                        {sections.map((section) => (
+                            <optgroup key={section.title} label={section.title}>
+                                {section.options.map((option) => (
+                                    <option key={option.id} value={option.id}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Menú lateral de configuración (escritorio) */}
+                <aside className="hidden lg:flex w-full lg:w-64 bg-gray-50/50 border-b lg:border-b-0 lg:border-r border-gray-100 p-4 flex-col gap-4 lg:gap-6 shrink-0">
                     {sections.map((section, idx) => (
                         <div key={idx} className="flex flex-col gap-1.5">
                             <span className="px-3 text-xs font-bold uppercase tracking-wider text-gray-400 select-none">
                                 {section.title}
                             </span>
-                            <ul className="flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
+                            <ul className="flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible no-scrollbar">
                                 {section.options.map(option => {
                                     const isActive = activeTab === option.id;
                                     return (
-                                        <li key={option.id} className="w-full">
+                                        <li key={option.id} className="w-auto lg:w-full shrink-0">
                                             <button
                                                 onClick={() => setActiveTab(option.id)}
                                                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left whitespace-nowrap lg:whitespace-normal ${
@@ -117,7 +215,7 @@ const SettingsPage: React.FC = () => {
                 </aside>
 
                 {/* Panel de contenido derecho */}
-                <main className="flex-grow p-6 lg:p-8 bg-white">
+                <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-white overflow-hidden">
                     {renderActiveContent()}
                 </main>
             </div>

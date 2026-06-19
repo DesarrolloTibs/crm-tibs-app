@@ -113,7 +113,7 @@ const OpportunitiesHistoryPage: React.FC = () => {
     if (!opportunity.id) return;
     try {
       // Desestructuramos para quitar los campos que no se deben enviar en el update.
-      const { id, cliente, ejecutivo, stage, proposalDocumentPath, files, archived, ...updateData } = opportunity as any; // Corrected line
+      const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, files, archived, products, linea_negocio, tipo_entrega, licenciamiento, ...updateData } = opportunity as any; // Corrected line
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
       setIsFormModalOpen(false);

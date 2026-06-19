@@ -49,6 +49,13 @@ export const PRODUCTS = {
 export const OPPORTUNITY_LABELS = {
     OPPORTUNITY_LABELS: urlBase + 'opportunity-labels',
 };
+
+export const OPPORTUNITY_CATALOGS = {
+    BUSINESS_LINES: urlBase + 'business-lines',
+    DELIVERY_TYPES: urlBase + 'delivery-types',
+    LICENSINGS: urlBase + 'licensings',
+};
+
 /*export const ENDPOINTS = {
     LOGIN: '/auth/login',
     CLIENTS: 'http://localhost:3090/clients',

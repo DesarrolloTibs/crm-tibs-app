@@ -1,6 +1,7 @@
 import type { Client } from "./Client";
 import type { Company } from "./Company";
 import type { Product } from "./Product";
+import type { OpportunityCatalogOption } from "./OpportunityCatalog";
 
 export interface Stage {
   id: string;
@@ -34,9 +35,12 @@ export interface Opportunity  {
   monto_servicios: number;
   monto_total: number;
   moneda: CurrencyType;
-  linea_negocio: BusinessLineType;
-  tipo_entrega: DeliveryTypeType;
-  licenciamiento?: LicensingType;
+  linea_negocio_id?: string | null;
+  linea_negocio?: OpportunityCatalogOption | null;
+  tipo_entrega_id?: string | null;
+  tipo_entrega?: OpportunityCatalogOption | null;
+  licenciamiento_id?: string | null;
+  licenciamiento?: OpportunityCatalogOption | null;
   interactions: any[]; // You might want to create an Interaction model
   reminders: any[]; // You might want to create a Reminder model
   archived?: boolean;
@@ -65,28 +69,3 @@ export const Currency = {
   MXN: 'MXN',
 } as const;
 export type CurrencyType = (typeof Currency)[keyof typeof Currency];
-
-export const BusinessLine = {
-  DATOS: 'Datos',
-  DESARROLLO: 'Desarrollo',
-  RH: 'RH',
-} as const;
-export type BusinessLineType = (typeof BusinessLine)[keyof typeof BusinessLine];
-
-export const DeliveryType = {
-  PROYECTO: 'Proyecto',
-  LICENCIA: 'Licencia',
-  ASIGNACION: 'Asignacion',
-  BOLSA_DE_HORAS: 'Bolsa de Horas',
-} as const;
-export type DeliveryTypeType = (typeof DeliveryType)[keyof typeof DeliveryType];
-
-export const Licensing = {
-  MICROSOFT: 'Microsoft',
-  IBM: 'IBM',
-  QLIK: 'Qlik',
-  ALTERYX: 'Alteryx',
-  KNIME: 'KNIME',
-  NO_APLICA: 'No Aplica',
-} as const;
-export type LicensingType = (typeof Licensing)[keyof typeof Licensing];

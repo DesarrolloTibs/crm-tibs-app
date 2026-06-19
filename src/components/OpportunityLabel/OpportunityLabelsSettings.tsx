@@ -6,7 +6,11 @@ import Loader from '../Loader/Loader';
 import { Pencil, Sliders } from 'lucide-react';
 import Notification from '../Modal/Notification';
 
-const OpportunityLabelsSettings: React.FC = () => {
+interface Props {
+    onLabelsUpdated?: () => void;
+}
+
+const OpportunityLabelsSettings: React.FC<Props> = ({ onLabelsUpdated }) => {
     const [labels, setLabels] = useState<OpportunityLabel[]>([]);
     const [editing, setEditing] = useState<OpportunityLabel | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -81,6 +85,9 @@ const OpportunityLabelsSettings: React.FC = () => {
                 onCancel: hideNotification,
             });
             fetchLabels();
+            if (onLabelsUpdated) {
+                onLabelsUpdated();
+            }
         } catch (error: any) {
             const msg = error.response?.data?.message || 'No se pudo actualizar la etiqueta';
             setNotification({
@@ -127,7 +134,7 @@ const OpportunityLabelsSettings: React.FC = () => {
             {loading && labels.length === 0 ? (
                 <Loader />
             ) : (
-                <div className="border border-slate-150 rounded-xl overflow-hidden bg-white shadow-sm max-w-4xl animate-fade-in text-left">
+                <div className="border border-slate-150 rounded-xl overflow-x-auto bg-white shadow-sm max-w-4xl animate-fade-in text-left">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50 border-b border-slate-150 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -153,7 +160,7 @@ const OpportunityLabelsSettings: React.FC = () => {
                                             title="Editar etiqueta"
                                         >
                                             <Pencil size={12} />
-                                            <span>Editar</span>
+                                            <span className="hidden sm:inline">Editar</span>
                                         </button>
                                     </td>
                                 </tr>

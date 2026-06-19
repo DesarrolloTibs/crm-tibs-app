@@ -5,6 +5,8 @@ import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortabl
 import Confetti from 'react-confetti-boom';
 import type { Opportunity, Stage } from '../../core/models/Opportunity';
 import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity, archiveOpportunity } from '../../services/opportunitiesService';
+import { getActiveCatalogOptions } from '../../services/opportunityCatalogsService';
+import type { OpportunityCatalogOption } from '../../core/models/OpportunityCatalog';
 import { getMainPipeline, updateMainPipeline } from '../../services/pipelinesService';
 import Loader from '../Loader/Loader';
 import PipelineColumn from './PipelineColumn';
@@ -47,6 +49,19 @@ const PipelinePage: React.FC = () => {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [pipelineName, setPipelineName] = useState('');
   const [pipelineDescription, setPipelineDescription] = useState('');
+  const [businessLines, setBusinessLines] = useState<OpportunityCatalogOption[]>([]);
+
+  useEffect(() => {
+    const loadCatalogs = async () => {
+      try {
+        const blOptions = await getActiveCatalogOptions('business-lines');
+        setBusinessLines(blOptions);
+      } catch (err) {
+        console.error('Error loading business lines catalog in PipelineBoard:', err);
+      }
+    };
+    loadCatalogs();
+  }, []);
   const [loading, setLoading] = useState(true);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [opportunityToDelete, setOpportunityToDelete] = useState<Opportunity | null>(null);
@@ -215,7 +230,7 @@ const PipelinePage: React.FC = () => {
   const handleUpdate = async (opportunity: Partial<Opportunity>) => {
     if (!opportunity.id) return;
     try {
-      const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, files, archived, ...updateData } = opportunity as any;
+      const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, files, archived, products, linea_negocio, tipo_entrega, licenciamiento, ...updateData } = opportunity as any;
       await updateOpportunity(id, updateData);
       setEditingOpportunity(null);
       setIsFormModalOpen(false);
@@ -439,7 +454,7 @@ const PipelinePage: React.FC = () => {
       const opportunityToUpdate = updatedOpportunities.find(o => o.id === activeId);
 
       if (opportunityToUpdate) {
-        const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, files, archived, tipoCambio, products, ...rest } = opportunityToUpdate as any;
+        const { id, cliente, company, contacts, ejecutivo, stage, proposalDocumentPath, files, archived, tipoCambio, products, linea_negocio, tipo_entrega, licenciamiento, ...rest } = opportunityToUpdate as any;
         const updateData = {
           ...rest,
           stage_id: overStageId,
@@ -735,7 +750,7 @@ const PipelinePage: React.FC = () => {
       let fieldValue: any = '';
       if (rule.field === 'nombre_proyecto') fieldValue = opp.nombre_proyecto;
       else if (rule.field === 'empresa') fieldValue = opp.company?.nombre || opp.empresa || '';
-      else if (rule.field === 'linea_negocio') fieldValue = opp.linea_negocio;
+      else if (rule.field === 'linea_negocio') fieldValue = opp.linea_negocio?.strname || '';
       else if (rule.field === 'monto_total') fieldValue = Number(opp.monto_total) || 0;
       else if (rule.field === 'stage_id') fieldValue = opp.stage_id;
       else if (rule.field === 'ejecutivo_id') fieldValue = opp.ejecutivo_id;
@@ -805,7 +820,7 @@ const PipelinePage: React.FC = () => {
     }
     
     let defaultValue = '';
-    if (field === 'linea_negocio') defaultValue = 'Desarrollo';
+    if (field === 'linea_negocio') defaultValue = businessLines[0]?.strname || '';
     else if (field === 'stage_id') defaultValue = stages[0]?.id || '';
     else if (field === 'ejecutivo_id') defaultValue = executives[0]?.id || '';
     
@@ -824,10 +839,10 @@ const PipelinePage: React.FC = () => {
           onChange={e => handleRuleChange(idx, 'value', e.target.value)}
           className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full cursor-pointer"
         >
-          <option value="Desarrollo">Desarrollo</option>
-          <option value="Datos">Datos</option>
-          <option value="RH">RH</option>
-          <option value="IA">IA</option>
+          <option value="" disabled>-- Seleccione --</option>
+          {businessLines.map(bl => (
+            <option key={bl.id} value={bl.strname}>{bl.strname}</option>
+          ))}
         </select>
       );
     }
@@ -920,6 +935,22 @@ const PipelinePage: React.FC = () => {
   useEffect(() => {
     fetchPipelineAndOpportunities();
   }, [archivedFilter]);
+
+  useEffect(() => {
+    if (!loading && opportunities.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const opportunityId = params.get('opportunityId');
+      if (opportunityId) {
+        const found = opportunities.find(o => o.id === opportunityId);
+        if (found) {
+          setEditingOpportunity(found);
+          setIsFormModalOpen(true);
+          // Limpiar el parámetro de la URL
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+    }
+  }, [loading, opportunities]);
 
   const getModalContent = () => {
     if (!editingOpportunity || !editingOpportunity.id) {

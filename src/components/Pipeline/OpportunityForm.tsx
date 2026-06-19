@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Opportunity, CurrencyType, Stage } from '../../core/models/Opportunity';
-import { Currency, BusinessLine, DeliveryType, Licensing } from '../../core/models/Opportunity';
+import { Currency } from '../../core/models/Opportunity';
+import { getActiveCatalogOptions } from '../../services/opportunityCatalogsService';
+import type { OpportunityCatalogOption } from '../../core/models/OpportunityCatalog';
 import Select, { type SingleValue, type MultiValue } from 'react-select';
 import { getActiveStages } from '../../services/pipelinesService';
 import { FileText, ChevronDown } from 'lucide-react';
@@ -49,6 +51,9 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const [isDocsSectionOpen, setIsDocsSectionOpen] = useState(false);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
   const [opportunityLabels, setOpportunityLabels] = useState<OpportunityLabel[]>([]);
+  const [businessLines, setBusinessLines] = useState<OpportunityCatalogOption[]>([]);
+  const [deliveryTypes, setDeliveryTypes] = useState<OpportunityCatalogOption[]>([]);
+  const [licensings, setLicensings] = useState<OpportunityCatalogOption[]>([]);
 
   const getLabelName = (uuid: string, defaultName: string) => {
     const label = opportunityLabels.find(l => l.id === uuid);
@@ -87,6 +92,9 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       createdAt: initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : '',
       contactIds: initialData.contacts?.map(c => c.id!) || [],
       productIds: initialData.products?.map(p => p.id!) || [],
+      linea_negocio_id: initialData.linea_negocio_id || initialData.linea_negocio?.id || '',
+      tipo_entrega_id: initialData.tipo_entrega_id || initialData.tipo_entrega?.id || '',
+      licenciamiento_id: initialData.licenciamiento_id || initialData.licenciamiento?.id || '',
     } : {
       nombre_proyecto: '',
       description: '',
@@ -100,10 +108,10 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       monto_licenciamiento: 0,
       monto_servicios: 0,
       moneda: 'USD',
-      linea_negocio: 'Datos',
+      linea_negocio_id: '',
+      tipo_entrega_id: '',
+      licenciamiento_id: '',
       tipoCambio: 0,
-      tipo_entrega: 'Proyecto',
-      licenciamiento: Licensing.NO_APLICA,
       estimated_closure_date: new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString().split('T')[0], 
     }
@@ -112,7 +120,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [allClients, allCompanies, activeStages, allProducts, allLabels] = await Promise.all([
+        const [allClients, allCompanies, activeStages, allProducts, allLabels, blOptions, dtOptions, lOptions] = await Promise.all([
           getClients(),
           getCompanies(),
           getActiveStages(),
@@ -120,23 +128,45 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           getOpportunityLabels().catch(err => {
             console.error("Error al obtener etiquetas de oportunidad:", err);
             return [];
-          })
+          }),
+          getActiveCatalogOptions('business-lines').catch(err => {
+            console.error("Error al obtener líneas de negocio:", err);
+            return [];
+          }),
+          getActiveCatalogOptions('delivery-types').catch(err => {
+            console.error("Error al obtener tipos de entrega:", err);
+            return [];
+          }),
+          getActiveCatalogOptions('licensings').catch(err => {
+            console.error("Error al obtener licenciamientos:", err);
+            return [];
+          }),
         ]);
         setClients(allClients);
         setCompanies(allCompanies.filter(c => c.estatus));
         setStages(activeStages);
         setOpportunityLabels(allLabels);
+        setBusinessLines(blOptions);
+        setDeliveryTypes(dtOptions);
+        setLicensings(lOptions);
 
         const associatedProductIds = initialData?.products?.map(p => p.id!) || [];
         const filteredProducts = allProducts.filter(p => p.status || associatedProductIds.includes(p.id!));
         setProducts(filteredProducts);
 
-        // Si es creación y no viene un stage_id pre-seleccionado, pre-seleccionar la etapa inicial por defecto
-        if ((!initialData || !initialData.id) && !opportunity.stage_id) {
-          const initialStage = activeStages.find(s => s.blninitial) || activeStages[0];
-          if (initialStage) {
-            setOpportunity(prev => ({ ...prev, stage_id: initialStage.id }));
-          }
+        // Si es creación, pre-seleccionar los valores predeterminados
+        if (!initialData || !initialData.id) {
+          setOpportunity(prev => {
+            const updates: any = {};
+            if (!prev.stage_id) {
+              const initialStage = activeStages.find(s => s.blninitial) || activeStages[0];
+              if (initialStage) updates.stage_id = initialStage.id;
+            }
+            updates.linea_negocio_id = prev.linea_negocio_id || blOptions[0]?.id || '';
+            updates.tipo_entrega_id = prev.tipo_entrega_id || dtOptions[0]?.id || '';
+            updates.licenciamiento_id = prev.licenciamiento_id || lOptions[0]?.id || '';
+            return { ...prev, ...updates };
+          });
         }
       } catch (error) {
         console.error("Error loading form dependencies:", error);
@@ -383,6 +413,9 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       files, 
       archived,
       proposalDocumentPath,
+      linea_negocio,
+      tipo_entrega,
+      licenciamiento,
       ...rest 
     } = opportunity;
 
@@ -600,27 +633,30 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               </select>
             </div>
             <div>
-              <label htmlFor="linea_negocio" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="linea_negocio_id" className="block text-sm font-medium text-gray-700 mb-1">
                 {getLabelName('f509fa84-0b73-45f8-b3ab-b8471e98822e', 'Línea de Negocio')}
               </label>
-              <select id="linea_negocio" name="linea_negocio" value={opportunity.linea_negocio} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                {Object.values(BusinessLine).map(bl => <option key={bl} value={bl}>{bl}</option>)}
+              <select id="linea_negocio_id" name="linea_negocio_id" value={opportunity.linea_negocio_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" required>
+                <option value="" disabled>-- Seleccione una opción --</option>
+                {businessLines.map(bl => <option key={bl.id} value={bl.id}>{bl.strname}</option>)}
               </select>
             </div>
             <div>
-              <label htmlFor="tipo_entrega" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="tipo_entrega_id" className="block text-sm font-medium text-gray-700 mb-1">
                 {getLabelName('7d90d810-74d3-4613-882d-8e814a029db5', 'Tipo de Entrega')}
               </label>
-              <select id="tipo_entrega" name="tipo_entrega" value={opportunity.tipo_entrega} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                {Object.values(DeliveryType).map(dt => <option key={dt} value={dt}>{dt}</option>)}
+              <select id="tipo_entrega_id" name="tipo_entrega_id" value={opportunity.tipo_entrega_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" required>
+                <option value="" disabled>-- Seleccione una opción --</option>
+                {deliveryTypes.map(dt => <option key={dt.id} value={dt.id}>{dt.strname}</option>)}
               </select>
             </div>
             <div>
-              <label htmlFor="licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="licenciamiento_id" className="block text-sm font-medium text-gray-700 mb-1">
                 {getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento')}
               </label>
-              <select id="licenciamiento" name="licenciamiento" value={opportunity.licenciamiento} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                {Object.values(Licensing).map(l => <option key={l} value={l}>{l}</option>)}
+              <select id="licenciamiento_id" name="licenciamiento_id" value={opportunity.licenciamiento_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">-- No Aplica / Ninguno --</option>
+                {licensings.map(l => <option key={l.id} value={l.id}>{l.strname}</option>)}
               </select>
             </div>
             <div className="md:col-span-2">
