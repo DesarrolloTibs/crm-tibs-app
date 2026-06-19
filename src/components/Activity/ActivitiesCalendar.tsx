@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -48,11 +48,11 @@ const toLocalDateTimeString = (date: Date): string => {
 const ReminderEventCard: React.FC<{ eventInfo: EventContentArg }> = ({ eventInfo }) => {
     return (
         <div
-            className="flex items-start gap-1 px-1.5 py-0.5 rounded-md w-full h-auto min-h-full"
-            style={{ backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' }}
+            className="flex items-start gap-1 px-1 sm:px-1.5 py-0.5 rounded-md w-full h-auto min-h-full shadow-sm border border-amber-300"
+            style={{ backgroundColor: '#fef3c7', color: '#92400e' }}
         >
-            <Bell size={10} className="flex-shrink-0 mt-0.5" style={{ color: '#d97706' }} />
-            <span className="text-xs font-semibold break-words line-clamp-2 leading-tight">
+            <Bell size={10} className="flex-shrink-0 mt-0.5 hidden sm:block" style={{ color: '#d97706' }} />
+            <span className="text-[10px] sm:text-xs font-semibold break-words line-clamp-2 leading-tight">
                 {eventInfo.event.title}
             </span>
         </div>
@@ -80,6 +80,16 @@ const ActivitiesCalendar: React.FC<Props> = ({
         activity: null,
         position: { x: 0, y: 0 },
     });
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     /* ── Eventos de actividades ──────────────────────────────────────────── */
     const activityEvents = activities.map((activity) => ({
@@ -170,8 +180,14 @@ const ActivitiesCalendar: React.FC<Props> = ({
                 <FullCalendar
                     ref={calendarRef}
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-                    initialView="dayGridMonth"
+                    initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
                     locale={esLocale}
+                    views={{
+                        timeGridWeek: {
+                            type: 'timeGrid',
+                            duration: { days: isMobile ? 3 : 7 }
+                        }
+                    }}
                     headerToolbar={{
                         left: 'prev,next today',
                         center: 'title',
@@ -183,14 +199,19 @@ const ActivitiesCalendar: React.FC<Props> = ({
                         week: 'Semana',
                         day: 'Día',
                         list: 'Agenda',
+                        timeGridWeek: 'Semana',
+                        timeGridDay: 'Día',
+                        listWeek: 'Agenda',
                     }}
                     events={events}
                     selectable
                     selectMirror
-                    dayMaxEvents={4}
+                    dayMaxEvents={isMobile ? 2 : 4}
                     weekends
                     nowIndicator
                     eventMaxStack={3}
+                    slotEventOverlap={false}
+                    eventMinHeight={26}
                     contentHeight={680}
                     eventClick={handleEventClick}
                     select={handleDateSelect}

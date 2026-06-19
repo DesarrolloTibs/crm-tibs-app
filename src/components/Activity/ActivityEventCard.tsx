@@ -19,14 +19,14 @@ const ActivityEventCard: React.FC<Props> = ({ eventInfo }) => {
 
     return (
         <div
-            className="flex items-start gap-1 px-1.5 py-0.5 rounded-md w-full h-auto min-h-full"
-            style={{ backgroundColor: color.bg, color: color.text }}
+            className="flex items-start gap-1 px-1.5 py-1 rounded-md w-full h-auto min-h-full shadow-sm border border-black/5 border-l-4"
+            style={{ backgroundColor: color.bg, color: color.text, borderLeftColor: color.border }}
         >
             <span
-                className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 hidden sm:inline-block"
                 style={{ backgroundColor: 'rgba(255,255,255,0.65)' }}
             />
-            <span className="text-xs font-semibold break-words line-clamp-2 leading-tight">
+            <span className="text-[10px] sm:text-xs font-semibold break-words line-clamp-2 leading-tight">
                 {eventInfo.event.title}
             </span>
         </div>
