@@ -367,21 +367,6 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                             noOptionsMessage={() => 'No se encontraron oportunidades'}
                         />
                     </div>
-                    {form.opportunityId && (
-                        <div className="md:col-span-2 flex items-center">
-                            <input
-                                id="flaghistory"
-                                name="flaghistory"
-                                type="checkbox"
-                                checked={form.flaghistory || false}
-                                onChange={handleChange}
-                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                            />
-                            <label htmlFor="flaghistory" className="ml-2 block text-sm font-medium text-gray-700">
-                                Agregar a Historial
-                            </label>
-                        </div>
-                    )}
                 </div>
             </fieldset>
 

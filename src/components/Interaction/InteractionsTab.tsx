@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getInteractionsByOpportunity, createInteraction, deleteInteraction } from '../../services/interactionsService'; // Asumiendo que se movió a src/services
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { getInteractionsByOpportunity, deleteInteraction } from '../../services/interactionsService'; // Asumiendo que se movió a src/services
+import { Search, Trash2 } from 'lucide-react';
 import type { Interaction } from '../../core/models/Interaction';
 import { useAuth } from '../../hooks/useAuth';
 import Notification from '../Modal/Notification';
-import Modal from '../Modal/Modal';
 
 interface InteractionsTabProps {
   opportunityId: string;
@@ -14,10 +13,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [newInteractionComment, setNewInteractionComment] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-
-  const [modalOpen, setModalOpen] = useState(false);
 
   const [notification, setNotification] = useState({
     show: false,
@@ -54,47 +50,6 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
     fetchInteractions();
   }, [opportunityId]);
 
-  const handleAddInteraction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newInteractionComment) {
-      setNotification({
-        show: true,
-        type: 'warning',
-        title: 'Atención',
-        message: 'El comentario es obligatorio.',
-        onConfirm: hideNotification,
-        onCancel: hideNotification,      });
-      return;
-    }
-
-    try {
-      await createInteraction({
-        comment: newInteractionComment,
-        opportunity_id: opportunityId,
-      });
-      setNewInteractionComment('');
-      setModalOpen(false);
-      setNotification({
-        show: true,
-        type: 'success',
-        title: '¡Éxito!',
-        message: 'Registro añadido al historial.',
-        onConfirm: hideNotification,
-        onCancel: hideNotification,
-      });
-      fetchInteractions(); // Recargar la lista
-    } catch (error) {
-      setNotification({
-        show: true,
-        type: 'error',
-        title: 'Error',
-        message: 'No se pudo añadir el registro.',
-        onConfirm: hideNotification,
-        onCancel: hideNotification,
-      });
-    }
-  };
-
   const handleDeleteInteraction = async (interactionId: string) => {
     setNotification({
       show: true,
@@ -125,7 +80,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
       <Notification {...notification} />
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-        <div className="relative flex-grow w-full sm:w-auto">
+        <div className="relative flex-grow w-full">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
             <Search size={20} />
           </span>
@@ -137,42 +92,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
             className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
-        <button
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm whitespace-nowrap"
-            onClick={() => setModalOpen(true)}
-        >
-            <Plus size={18} /> Nuevo Registro
-        </button>
       </div>
-
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Añadir al Historial</h2>
-        <form onSubmit={handleAddInteraction} className="space-y-4">
-          <div>
-            <label htmlFor="newInteractionComment" className="block text-sm font-medium text-gray-700 mb-1">Nuevo Comentario</label>
-            <textarea 
-              id="newInteractionComment"
-              value={newInteractionComment} 
-              onChange={e => setNewInteractionComment(e.target.value)} 
-              placeholder="Añadir un comentario o registrar un evento..." 
-              className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
-              rows={4}
-            ></textarea>
-          </div>
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors"
-            >
-                Cancelar
-            </button>
-            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                Guardar Registro
-            </button>
-          </div>
-        </form>
-      </Modal>
 
       <ul className="space-y-4 overflow-y-auto flex-grow pr-2">
         {filteredInteractions.map(interaction => (
@@ -201,7 +121,6 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
           ) : (
             <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
               <p>No hay registros en el historial para esta oportunidad.</p>
-              <p className="text-sm mt-1">¡Añade uno para no perder detalle!</p>
             </div>
           )
         )}
