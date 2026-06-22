@@ -39,8 +39,8 @@ const SettingsPage: React.FC = () => {
         fetchLabels();
     }, [activeTab]);
 
-    const getLabelName = (uuid: string, defaultName: string) => {
-        const label = labels.find(l => l.id === uuid);
+    const getLabelNameByKey = (key: 'linea_negocio' | 'tipo_entrega' | 'licenciamiento', defaultName: string) => {
+        const label = labels.find(l => l.field_key === key);
         return label && label.strname ? label.strname : defaultName;
     };
 
@@ -97,9 +97,9 @@ const SettingsPage: React.FC = () => {
                             <nav className="flex -mb-px space-x-6 overflow-x-auto no-scrollbar">
                                 {(
                                     [
-                                        { id: 'business-lines', label: getLabelName('f509fa84-0b73-45f8-b3ab-b8471e98822e', 'Línea de Negocio') },
-                                        { id: 'delivery-types', label: getLabelName('7d90d810-74d3-4613-882d-8e814a029db5', 'Tipo de Entrega') },
-                                        { id: 'licensings', label: getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento') },
+                                        { id: 'business-lines', label: getLabelNameByKey('linea_negocio', 'Línea de Negocio') },
+                                        { id: 'delivery-types', label: getLabelNameByKey('tipo_entrega', 'Tipo de Entrega') },
+                                        { id: 'licensings', label: getLabelNameByKey('licenciamiento', 'Licenciamiento') },
                                     ] as const
                                 ).map((tab) => {
                                     const isActive = activeCatalogSubTab === tab.id;
@@ -125,19 +125,19 @@ const SettingsPage: React.FC = () => {
                             {activeCatalogSubTab === 'business-lines' && (
                                 <OpportunityCatalogSettings
                                     catalogType="business-lines"
-                                    catalogTitle={getLabelName('f509fa84-0b73-45f8-b3ab-b8471e98822e', 'Línea de Negocio')}
+                                    catalogTitle={getLabelNameByKey('linea_negocio', 'Línea de Negocio')}
                                 />
                             )}
                             {activeCatalogSubTab === 'delivery-types' && (
                                 <OpportunityCatalogSettings
                                     catalogType="delivery-types"
-                                    catalogTitle={getLabelName('7d90d810-74d3-4613-882d-8e814a029db5', 'Tipo de Entrega')}
+                                    catalogTitle={getLabelNameByKey('tipo_entrega', 'Tipo de Entrega')}
                                 />
                             )}
                             {activeCatalogSubTab === 'licensings' && (
                                 <OpportunityCatalogSettings
                                     catalogType="licensings"
-                                    catalogTitle={getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento')}
+                                    catalogTitle={getLabelNameByKey('licenciamiento', 'Licenciamiento')}
                                 />
                             )}
                         </div>

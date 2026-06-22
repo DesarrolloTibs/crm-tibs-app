@@ -55,8 +55,8 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const [deliveryTypes, setDeliveryTypes] = useState<OpportunityCatalogOption[]>([]);
   const [licensings, setLicensings] = useState<OpportunityCatalogOption[]>([]);
 
-  const getLabelName = (uuid: string, defaultName: string) => {
-    const label = opportunityLabels.find(l => l.id === uuid);
+  const getLabelNameByKey = (key: 'linea_negocio' | 'tipo_entrega' | 'licenciamiento', defaultName: string) => {
+    const label = opportunityLabels.find(l => l.field_key === key);
     return label && label.strname ? label.strname : defaultName;
   };
 
@@ -564,7 +564,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="monto_licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">
-                Monto {getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento')}
+                Monto {getLabelNameByKey('licenciamiento', 'Licenciamiento')}
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
@@ -573,7 +573,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
             </div>
             <div>
               <label htmlFor="monto_servicios" className="block text-sm font-medium text-gray-700 mb-1">
-                Monto {getLabelName('7d90d810-74d3-4613-882d-8e814a029db5', 'Servicios')}
+                Monto {getLabelNameByKey('tipo_entrega', 'Servicios')}
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
@@ -643,7 +643,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
             </div>
             <div>
               <label htmlFor="linea_negocio_id" className="block text-sm font-medium text-gray-700 mb-1">
-                {getLabelName('f509fa84-0b73-45f8-b3ab-b8471e98822e', 'Línea de Negocio')}
+                {getLabelNameByKey('linea_negocio', 'Línea de Negocio')}
               </label>
               <select id="linea_negocio_id" name="linea_negocio_id" value={opportunity.linea_negocio_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" required>
                 <option value="" disabled>-- Seleccione una opción --</option>
@@ -652,7 +652,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
             </div>
             <div>
               <label htmlFor="tipo_entrega_id" className="block text-sm font-medium text-gray-700 mb-1">
-                {getLabelName('7d90d810-74d3-4613-882d-8e814a029db5', 'Tipo de Entrega')}
+                {getLabelNameByKey('tipo_entrega', 'Tipo de Entrega')}
               </label>
               <select id="tipo_entrega_id" name="tipo_entrega_id" value={opportunity.tipo_entrega_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" required>
                 <option value="" disabled>-- Seleccione una opción --</option>
@@ -661,7 +661,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
             </div>
             <div>
               <label htmlFor="licenciamiento_id" className="block text-sm font-medium text-gray-700 mb-1">
-                {getLabelName('c6d3df39-53e7-40b9-8e2b-f1de16b5394f', 'Licenciamiento')}
+                {getLabelNameByKey('licenciamiento', 'Licenciamiento')}
               </label>
               <select id="licenciamiento_id" name="licenciamiento_id" value={opportunity.licenciamiento_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
                 {licensings.map(l => <option key={l.id} value={l.id}>{l.strname}</option>)}
