@@ -426,41 +426,36 @@ const OpportunityLabelsSettings: React.FC<Props> = ({ onLabelsUpdated }) => {
             </div>
 
             {/* Indicador Visual de Pasos */}
-            <div className="max-w-3xl mx-auto mb-8 animate-fade-in">
-                <div className="flex items-center justify-center">
-                    <div className="flex items-center w-full max-w-md">
-                        {/* Paso 1 */}
-                        <div className="flex flex-col items-center relative">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                                step === 1 
-                                ? 'bg-indigo-600 text-white ring-4 ring-indigo-100' 
-                                : 'bg-green-500 text-white'
-                            }`}>
-                                {step > 1 ? <Check size={14} /> : '1'}
-                            </div>
-                            <span className="text-[11px] font-bold text-gray-500 mt-2 absolute top-8 whitespace-nowrap">
-                                Seleccionar Campo
-                            </span>
+            <div className="max-w-xl mx-auto mb-10 px-4 animate-fade-in">
+                <div className="flex items-center justify-center gap-2 sm:gap-6">
+                    {/* Paso 1 */}
+                    <div className={`flex items-center gap-2 pb-2.5 border-b-2 transition-all duration-300 ${
+                        step === 1 ? 'border-indigo-600 text-indigo-700 font-bold' : 'border-transparent text-gray-400 font-medium'
+                    }`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
+                            step === 1 ? 'bg-indigo-600 text-white ring-4 ring-indigo-100' : 'bg-green-500 text-white'
+                        }`}>
+                            {step > 1 ? <Check size={12} /> : '1'}
                         </div>
+                        <span className="text-xs whitespace-nowrap">
+                            Seleccionar Campo
+                        </span>
+                    </div>
 
-                        {/* Línea conectora */}
-                        <div className="flex-grow h-0.5 mx-4 transition-all duration-300 bg-gray-200">
-                            <div className={`h-full bg-indigo-600 transition-all duration-500 ${step === 2 ? 'w-full' : 'w-0'}`} />
-                        </div>
+                    <ArrowRight size={14} className="text-gray-300 shrink-0 mb-1" />
 
-                        {/* Paso 2 */}
-                        <div className="flex flex-col items-center relative">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                                step === 2 
-                                ? 'bg-indigo-600 text-white ring-4 ring-indigo-100' 
-                                : 'bg-gray-200 text-gray-500'
-                            }`}>
-                                2
-                            </div>
-                            <span className="text-[11px] font-bold text-gray-500 mt-2 absolute top-8 whitespace-nowrap">
-                                Modificar Etiqueta
-                            </span>
+                    {/* Paso 2 */}
+                    <div className={`flex items-center gap-2 pb-2.5 border-b-2 transition-all duration-300 ${
+                        step === 2 ? 'border-indigo-600 text-indigo-700 font-bold' : 'border-transparent text-gray-400 font-medium'
+                    }`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
+                            step === 2 ? 'bg-indigo-600 text-white ring-4 ring-indigo-100' : 'bg-gray-200 text-gray-500'
+                        }`}>
+                            2
                         </div>
+                        <span className="text-xs whitespace-nowrap">
+                            Modificar Etiqueta
+                        </span>
                     </div>
                 </div>
             </div>
