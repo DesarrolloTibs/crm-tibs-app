@@ -192,12 +192,13 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   }, [isAdmin]);
 
   useEffect(() => {
-    // Si el usuario es un ejecutivo y se está creando una nueva oportunidad,
+    // Si el usuario no es administrador y hay un usuario logueado,
+    // y no hay un ejecutivo asignado (en creación o edición de oportunidad sin ejecutivo),
     // asignarle su ID por defecto.
-    if (isEjecutivo && user && !initialData) {
+    if (!isAdmin && user && !opportunity.ejecutivo_id) {
       setOpportunity(o => ({ ...o, ejecutivo_id: user.sub }));
     }
-  }, [user, isEjecutivo, initialData]);
+  }, [user, isAdmin, opportunity.ejecutivo_id]);
 
   const productsPriceSum = useMemo(() => {
     if (!opportunity.productIds || opportunity.productIds.length === 0) return 0;
@@ -386,7 +387,14 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!opportunity.nombre_proyecto || !opportunity.description?.trim() || !opportunity.ejecutivo_id) {
+
+    // Si no es administrador y no tiene ejecutivo asignado, usar el id del usuario actual como fallback
+    let finalEjecutivoId = opportunity.ejecutivo_id;
+    if (!isAdmin && !finalEjecutivoId && user) {
+      finalEjecutivoId = user.sub;
+    }
+
+    if (!opportunity.nombre_proyecto || !opportunity.description?.trim() || !finalEjecutivoId) {
         alert('Por favor, completa los campos requeridos.');
         return;
     }
@@ -435,6 +443,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
     const finalOpportunity: Partial<Opportunity> = {
       ...rest,
+      ejecutivo_id: finalEjecutivoId,
       monto_licenciamiento: Number(opportunity.monto_licenciamiento) || 0,
       monto_servicios: Number(opportunity.monto_servicios) || 0,
       tipoCambio: Number(opportunity.tipoCambio) || 0,
