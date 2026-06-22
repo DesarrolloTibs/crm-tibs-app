@@ -42,7 +42,7 @@ type OpportunityFormData = Omit<Partial<Opportunity>, 'estimated_closure_date' |
 };
 
 const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
-  const { user, isAdmin, isEjecutivo } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [executives, setExecutives] = useState<User[]>([]);

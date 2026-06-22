@@ -31,7 +31,7 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Relación</th>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Oportunidad</th>
-                        <th className="p-4 w-12"></th> {/* Nueva columna vacía para campanita (sin header) */}
+                        <th className="p-4 w-12">{/* Nueva columna vacía para campanita (sin header) */}</th>
                         <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
@@ -86,8 +86,8 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                                             </div>
                                         </td>
 
-                                        {/* Columna de Recordatorio (Campanita) */}
                                         <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
+                                            {/* Columna de Recordatorio (Campanita) */}
                                             {activity.reminder ? (
                                                 <div 
                                                     className="relative group flex flex-col md:flex-row md:items-center md:justify-center cursor-pointer select-none w-full md:w-auto"
