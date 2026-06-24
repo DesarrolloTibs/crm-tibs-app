@@ -1252,7 +1252,7 @@ const PipelinePage: React.FC = () => {
             onClick={() => setShowStagesConfig(true)}
           >
             <Settings2 size={18} className="sm:mr-2" />
-            <span className="hidden sm:inline">Configurar Pipeline</span>
+            <span className="hidden sm:inline"></span>
           </Button>
         </div>
       </div>
