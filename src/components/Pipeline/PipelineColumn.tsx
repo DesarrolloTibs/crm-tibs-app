@@ -164,7 +164,7 @@ const PipelineColumn: React.FC<Props> = ({
     flex flex-col
     h-[75vh] md:h-[calc(100vh-180px)]
     min-h-[500px]
-    w-[85vw] md:w-[300px] flex-shrink-0 snap-center
+    w-[85vw] md:w-[350px] flex-shrink-0 snap-center
     rounded-xl
     bg-slate-50/80 backdrop-blur-sm
     transition-all duration-200 ease-in-out

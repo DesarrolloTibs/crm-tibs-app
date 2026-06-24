@@ -10,7 +10,8 @@ import {
   getTickets, 
   createTicket, 
   updateTicket, 
-  deleteTicket 
+  deleteTicket,
+  archiveTicket
 } from '../services/ticketsService';
 import { createOpportunity } from '../services/opportunitiesService';
 import { getActiveStages } from '../services/pipelinesService';
@@ -77,6 +78,7 @@ const HelpdeskPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<number | 'all'>('all');
   const [incidenceTypeFilter, setIncidenceTypeFilter] = useState<string>('all');
+  const [archivedFilter, setArchivedFilter] = useState<'active' | 'archived' | 'all'>('active');
 
   // Selected Ticket (Detail View / Modal)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -108,6 +110,18 @@ const HelpdeskPage: React.FC = () => {
   const [showToolbar, setShowToolbar] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [editingStage, setEditingStage] = useState<TicketStage | null>(null);
+
+  // States for quick adding stages from Kanban
+  const [isAddingStage, setIsAddingStage] = useState(false);
+  const [newStageName, setNewStageName] = useState('');
+  const [newStageMaxDays, setNewStageMaxDays] = useState('');
+  const addStageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isAddingStage && addStageInputRef.current) {
+      addStageInputRef.current.focus();
+    }
+  }, [isAddingStage]);
 
   // Resolution notes modal state
   const [resolutionTicketInfo, setResolutionTicketInfo] = useState<{ ticketId: string; overStageId: string } | null>(null);
@@ -181,7 +195,17 @@ const HelpdeskPage: React.FC = () => {
         return [...stillVisible, ...newlyActive];
       });
 
-      const tks = await getTickets();
+      let tks: Ticket[] = [];
+      if (archivedFilter === 'all') {
+        const [activeData, archivedData] = await Promise.all([
+          getTickets(undefined, false),
+          getTickets(undefined, true),
+        ]);
+        tks = [...activeData, ...archivedData];
+      } else {
+        const showArchived = archivedFilter === 'archived';
+        tks = await getTickets(undefined, showArchived);
+      }
       setTickets(tks);
 
       // Cargar etapas comerciales por si convierten a oportunidad
@@ -197,7 +221,7 @@ const HelpdeskPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [archivedFilter]);
 
   useEffect(() => {
     const socketUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
@@ -255,9 +279,16 @@ const HelpdeskPage: React.FC = () => {
       const matchesPriority = priorityFilter === 'all' || t.priority === priorityFilter;
       const matchesIncidence = incidenceTypeFilter === 'all' || t.tipo_incidencia === incidenceTypeFilter;
 
-      return matchesSearch && matchesPriority && matchesIncidence;
+      const matchesArchived =
+        archivedFilter === 'all'
+          ? true
+          : archivedFilter === 'archived'
+            ? t.archived === true
+            : (t.archived === false || t.archived === undefined);
+
+      return matchesSearch && matchesPriority && matchesIncidence && matchesArchived;
     });
-  }, [tickets, searchTerm, priorityFilter, incidenceTypeFilter]);
+  }, [tickets, searchTerm, priorityFilter, incidenceTypeFilter, archivedFilter]);
 
   // Unique incidence types for filter dropdown
   const uniqueIncidenceTypes = useMemo(() => {
@@ -297,20 +328,23 @@ const HelpdeskPage: React.FC = () => {
     }
   };
 
-  const handleDeleteTicket = async () => {
-    if (!selectedTicket) return;
+  const handleDeleteTicket = async (ticketToDeleteParam?: Ticket) => {
+    const ticketToDelete = ticketToDeleteParam || selectedTicket;
+    if (!ticketToDelete) return;
     
     setNotification({
       show: true,
       type: 'confirmation',
       title: 'Eliminar Ticket',
-      message: `¿Estás seguro de que deseas eliminar permanentemente el ticket #${selectedTicket.ticket_number.toString().padStart(5, '0')}?`,
+      message: `¿Estás seguro de que deseas eliminar permanentemente el ticket #${ticketToDelete.ticket_number.toString().padStart(5, '0')}?`,
       onConfirm: async () => {
         hideNotification();
         setActionLoading(true);
         try {
-          await deleteTicket(selectedTicket.id);
-          setSelectedTicket(null);
+          await deleteTicket(ticketToDelete.id);
+          if (selectedTicket?.id === ticketToDelete.id) {
+            setSelectedTicket(null);
+          }
           showSuccess('Ticket eliminado.');
           const tks = await getTickets();
           setTickets(tks);
@@ -353,6 +387,34 @@ const HelpdeskPage: React.FC = () => {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleArchive = async (ticket: Ticket) => {
+    const isArchiving = !ticket.archived;
+    setNotification({
+      show: true,
+      type: 'confirmation',
+      title: `¿Seguro que deseas ${isArchiving ? 'archivar' : 'desarchivar'} el ticket?`,
+      message: isArchiving ? 'El ticket se ocultará de la vista principal.' : 'El ticket volverá a estar visible.',
+      onConfirm: async () => {
+        hideNotification();
+        const originalTickets = [...tickets];
+        const updatedTickets = tickets.map(t =>
+          t.id === ticket.id ? { ...t, archived: isArchiving } : t
+        );
+        setTickets(updatedTickets);
+        setSelectedTicket(null);
+
+        try {
+          await archiveTicket(ticket.id, isArchiving);
+          showSuccess(`Ticket ${isArchiving ? 'archivado' : 'desarchivado'} correctamente.`);
+        } catch (error) {
+          showError(`No se pudo ${isArchiving ? 'archivar' : 'desarchivar'} el ticket.`);
+          setTickets(originalTickets);
+        }
+      },
+      onCancel: hideNotification,
+    });
   };
 
   // Drag and drop events handlers
@@ -609,6 +671,67 @@ const HelpdeskPage: React.FC = () => {
     }
   };
 
+  const handleCreateStage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const nameTrimmed = newStageName.trim();
+    if (!nameTrimmed) return;
+
+    const nameLower = nameTrimmed.toLowerCase();
+    const nameExists = stages.some(s => s.strname.trim().toLowerCase() === nameLower);
+    if (nameExists) {
+      showError('Ya existe una etapa con este nombre.');
+      return;
+    }
+
+    const daysLimit = newStageMaxDays.trim() === '' ? null : parseInt(newStageMaxDays, 10);
+    const nextDisplayOrder = stages.length;
+    const newStage: TicketStage = {
+      id: `temp-${Date.now()}`,
+      strname: nameTrimmed,
+      blnstatus: true,
+      helpdesk_id: helpdesk?.id || '',
+      display_order: nextDisplayOrder,
+      strcolor: '#6366f1',
+      blninitial: false,
+      intmaxdays: daysLimit,
+      dtmcreated: new Date().toISOString(),
+      dtmlastmodified: new Date().toISOString(),
+    };
+
+    const updatedStages = enforceFirstActiveIsInitial([...stages, newStage]);
+
+    try {
+      setLoading(true);
+      await updateMainHelpdesk({
+        stages: updatedStages.map(s => {
+          const payloadItem: any = {
+            strname: s.strname.trim(),
+            blnstatus: s.blnstatus,
+            display_order: s.display_order,
+            strcolor: s.strcolor || '#6366f1',
+            blninitial: s.blninitial,
+            intmaxdays: s.intmaxdays,
+          };
+          if (s.id && !s.id.startsWith('temp-')) {
+            payloadItem.id = s.id;
+          }
+          return payloadItem;
+        }),
+      });
+
+      showSuccess(`Etapa "${nameTrimmed}" creada correctamente`);
+      setNewStageName('');
+      setNewStageMaxDays('');
+      setIsAddingStage(false);
+      await loadData();
+    } catch (error: any) {
+      const msg = error.response?.data?.message || 'Ocurrió un error al crear la etapa.';
+      showError(Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleResolutionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resolutionTicketInfo) return;
@@ -663,7 +786,7 @@ const HelpdeskPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-4">
+    <div className="space-y-4">
       <Notification {...notification} />
 
       {/* Header Pipeline-style: título + toolbar en una sola fila */}
@@ -705,6 +828,20 @@ const HelpdeskPage: React.FC = () => {
 
               {/* Active filter badges */}
               <div className="flex flex-wrap gap-1 items-center flex-1 min-w-0">
+                {archivedFilter === 'archived' && (
+                  <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
+                    <Filter size={10} />
+                    Archivados
+                    <button onClick={e => { e.stopPropagation(); setArchivedFilter('active'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                {archivedFilter === 'all' && (
+                  <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
+                    <Filter size={10} />
+                    Todos
+                    <button onClick={e => { e.stopPropagation(); setArchivedFilter('active'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
                 {priorityFilter !== 'all' && (
                   <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
                     <Star size={10} />
@@ -748,6 +885,26 @@ const HelpdeskPage: React.FC = () => {
                   <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
                     <Filter size={11} /> Filtros
                   </h4>
+
+                  {/* Archived Filter options */}
+                  <button
+                    type="button"
+                    onClick={() => setArchivedFilter(archivedFilter === 'archived' ? 'active' : 'archived')}
+                    className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer font-semibold"
+                  >
+                    <span>Tickets Archivados</span>
+                    {archivedFilter === 'archived' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setArchivedFilter(archivedFilter === 'all' ? 'active' : 'all')}
+                    className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer font-semibold"
+                  >
+                    <span>Todos los Tickets</span>
+                    {archivedFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+                  </button>
+
+                  <div className="border-t border-gray-100 my-1 shrink-0" />
 
                   {/* Priority options */}
                   <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-0.5 shrink-0 select-none">Prioridad</h5>
@@ -814,7 +971,7 @@ const HelpdeskPage: React.FC = () => {
                   <div className="border-t border-gray-100 my-1 mt-auto shrink-0" />
                   <button
                     type="button"
-                    onClick={() => { setPriorityFilter('all'); setIncidenceTypeFilter('all'); setSearchTerm(''); }}
+                    onClick={() => { setPriorityFilter('all'); setIncidenceTypeFilter('all'); setSearchTerm(''); setArchivedFilter('active'); }}
                     className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
                   >
                     <XCircle size={12} />
@@ -946,6 +1103,7 @@ const HelpdeskPage: React.FC = () => {
             onCancel={() => setSelectedTicket(null)}
             onDelete={handleDeleteTicket}
             onConvertToOpportunity={handleConvertToOpportunityClick}
+            onArchive={handleArchive}
           />
         </div>
       ) : isCreatingTicket ? (
@@ -1033,9 +1191,76 @@ const HelpdeskPage: React.FC = () => {
                         isFolded={foldedStageIds.includes(stage.id)}
                         onFoldStage={stageId => setFoldedStageIds(prev => [...prev, stageId])}
                         onUnfoldStage={stageId => setFoldedStageIds(prev => prev.filter(id => id !== stageId))}
+                        onDeleteTicket={handleDeleteTicket}
+                        onArchiveTicket={handleArchive}
                       />
                     ))}
                 </SortableContext>
+
+                {/* Odoo-style quick stage creator column */}
+                {isAdmin && (
+                  !isAddingStage ? (
+                    <div
+                      onClick={() => setIsAddingStage(true)}
+                      className="flex flex-col min-h-[500px] w-[45px] sm:w-[50px] flex-shrink-0 snap-center rounded-xl bg-slate-100/50 hover:bg-slate-200/50 border border-dashed border-gray-300 hover:border-slate-400 transition-all duration-200 ease-in-out cursor-pointer items-center justify-start pt-6 shadow-sm select-none"
+                    >
+                      <div
+                        className="flex items-center justify-center font-bold text-slate-500 hover:text-slate-700 tracking-wide text-[13px] sm:text-[14px] whitespace-nowrap"
+                        style={{ writingMode: 'vertical-rl' }}
+                      >
+                        » Agregar Etapa
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col w-[85vw] md:w-[330px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[220px] h-fit snap-center transition-all duration-200">
+                      <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
+                      <form onSubmit={handleCreateStage} className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase">Nombre</label>
+                          <input
+                            ref={addStageInputRef}
+                            type="text"
+                            value={newStageName}
+                            onChange={e => setNewStageName(e.target.value)}
+                            placeholder="Nombre de la etapa..."
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full"
+                            required
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase">Límite de días (opcional)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={newStageMaxDays}
+                            onChange={e => setNewStageMaxDays(e.target.value)}
+                            placeholder="Ej. 15 (vacío = sin límite)"
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <button
+                            type="submit"
+                            className="bg-indigo-650 hover:bg-indigo-750 text-white text-xs font-semibold px-3 py-2 rounded-lg flex-1 shadow-sm transition-colors cursor-pointer"
+                          >
+                            Añadir
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsAddingStage(false);
+                              setNewStageName('');
+                              setNewStageMaxDays('');
+                            }}
+                            className="bg-gray-100 hover:bg-gray-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex-1 border border-gray-200 transition-colors cursor-pointer"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )
+                )}
               </div>
 
               {/* DragOverlay para la previsualización del arrastre */}

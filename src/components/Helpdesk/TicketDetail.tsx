@@ -15,6 +15,7 @@ interface Props {
   onCancel: () => void;
   onDelete?: () => void;
   onConvertToOpportunity?: (ticket: Ticket) => void;
+  onArchive?: (ticket: Ticket) => void;
 }
 
 interface SelectOption {
@@ -106,7 +107,7 @@ const formSelectStyles = {
   })
 };
 
-const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onDelete, onConvertToOpportunity }) => {
+const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onDelete, onConvertToOpportunity, onArchive }) => {
   const { user: currentUser, isAdmin, isEjecutivo } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -595,18 +596,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onDel
       )}
 
       {/* Botones de acción */}
-      <div className="flex justify-between items-center border-t border-slate-100 pt-5">
-        <div>
-          {ticket && onDelete && (
-            <button
-              type="button"
-              onClick={onDelete}
-              className="px-4 py-2 border border-red-200 hover:bg-red-50 text-red-600 text-sm font-semibold rounded-lg transition-all cursor-pointer shadow-sm"
-            >
-              Eliminar Ticket
-            </button>
-          )}
-        </div>
+      <div className="flex justify-end items-center border-t border-slate-100 pt-5">
         <div className="flex gap-3">
           <button
             type="button"

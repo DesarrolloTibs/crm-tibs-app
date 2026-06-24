@@ -27,12 +27,21 @@ export const getActiveTicketStages = async (): Promise<TicketStage[]> => {
 };
 
 /**
- * Obtiene la lista de todos los tickets (con filtro opcional de etapa).
+ * Obtiene la lista de todos los tickets (con filtro opcional de etapa y archivado).
  */
-export const getTickets = async (stage_id?: string): Promise<Ticket[]> => {
-  const query = stage_id ? `?stage_id=${encodeURIComponent(stage_id)}` : '';
-  const response = await axiosInstance.get<Ticket[]>(`${TICKETS.TICKETS}${query}`);
+export const getTickets = async (stage_id?: string, showArchived = false): Promise<Ticket[]> => {
+  const params = new URLSearchParams();
+  if (stage_id) params.append('stage_id', stage_id);
+  params.append('showArchived', String(showArchived));
+  const response = await axiosInstance.get<Ticket[]>(`${TICKETS.TICKETS}?${params.toString()}`);
   return response.data;
+};
+
+/**
+ * Archiva o desarchiva un ticket.
+ */
+export const archiveTicket = async (id: string, archived: boolean): Promise<void> => {
+  await axiosInstance.patch(`${TICKETS.TICKETS}/${id}/archive`, { archived });
 };
 
 /**

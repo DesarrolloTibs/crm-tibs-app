@@ -35,6 +35,7 @@ export interface Ticket {
   notas_resolucion: string | null;
   priority: number;
   alert_sent: boolean;
+  archived?: boolean;
   cliente_id: string | null;
   cliente: Client | null;
   responsable_id: string | null;

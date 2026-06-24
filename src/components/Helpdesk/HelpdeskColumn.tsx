@@ -19,6 +19,8 @@ interface Props {
   isFolded?: boolean;
   onFoldStage: (stageId: string) => void;
   onUnfoldStage: (stageId: string) => void;
+  onDeleteTicket?: (ticket: Ticket) => void;
+  onArchiveTicket?: (ticket: Ticket) => void;
 }
 
 const HelpdeskColumn: React.FC<Props> = ({ 
@@ -32,7 +34,9 @@ const HelpdeskColumn: React.FC<Props> = ({
   isOverlay = false,
   isFolded = false,
   onFoldStage,
-  onUnfoldStage
+  onUnfoldStage,
+  onDeleteTicket,
+  onArchiveTicket
 }) => {
   const { isAdmin } = useAuth();
   const {
@@ -152,7 +156,7 @@ const HelpdeskColumn: React.FC<Props> = ({
     flex flex-col
     h-[75vh] md:h-[calc(100vh-180px)]
     min-h-[500px]
-    w-[85vw] md:w-[300px] flex-shrink-0 snap-center
+    w-[85vw] md:w-[350px] flex-shrink-0 snap-center
     rounded-xl
     bg-slate-50/80 backdrop-blur-sm
     transition-all duration-200 ease-in-out
@@ -294,6 +298,9 @@ const HelpdeskColumn: React.FC<Props> = ({
               key={ticket.id} 
               ticket={ticket}
               onClick={() => onClickTicket(ticket)}
+              onEdit={onClickTicket}
+              onDelete={onDeleteTicket}
+              onArchive={onArchiveTicket}
             />
           ))}
         </div>

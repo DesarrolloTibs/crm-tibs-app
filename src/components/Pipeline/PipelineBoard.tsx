@@ -104,6 +104,7 @@ const PipelinePage: React.FC = () => {
 
   const [isAddingStage, setIsAddingStage] = useState(false);
   const [newStageName, setNewStageName] = useState('');
+  const [newStageMaxDays, setNewStageMaxDays] = useState('');
   const addStageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -654,6 +655,7 @@ const PipelinePage: React.FC = () => {
       return;
     }
 
+    const daysLimit = newStageMaxDays.trim() === '' ? null : parseInt(newStageMaxDays, 10);
     const nextDisplayOrder = stages.length;
     const newStage: Stage = {
       id: `temp-${Date.now()}`,
@@ -663,7 +665,7 @@ const PipelinePage: React.FC = () => {
       display_order: nextDisplayOrder,
       strcolor: '#3b82f6',
       blninitial: false,
-      intmaxdays: null,
+      intmaxdays: daysLimit,
     };
 
     const updatedStages = enforceFirstActiveIsInitial([...stages, newStage]);
@@ -696,6 +698,7 @@ const PipelinePage: React.FC = () => {
         onCancel: hideNotification,
       });
       setNewStageName('');
+      setNewStageMaxDays('');
       setIsAddingStage(false);
       await fetchPipelineAndOpportunities();
     } catch (error: any) {
@@ -1132,10 +1135,11 @@ const PipelinePage: React.FC = () => {
                         key={stage.id}
                         type="button"
                         onClick={() => setStatusFilter(isSelected ? '' : stage.id)}
-                        className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+                        className="flex items-center gap-2 text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
                       >
-                        <span className="truncate">{stage.strname}</span>
-                        {isSelected && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.strcolor || '#3b82f6' }} />
+                        <span className="truncate flex-grow">{stage.strname}</span>
+                        {isSelected && <span className="text-indigo-600 font-extrabold text-sm ml-auto">✓</span>}
                       </button>
                     );
                   })}
@@ -1269,19 +1273,33 @@ const PipelinePage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col w-[85vw] md:w-[280px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[160px] h-fit snap-center transition-all duration-200">
+            <div className="flex flex-col w-[85vw] md:w-[330px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[220px] h-fit snap-center transition-all duration-200">
               <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
               <form onSubmit={handleCreateStage} className="flex flex-col gap-3">
-                <input
-                  ref={addStageInputRef}
-                  type="text"
-                  value={newStageName}
-                  onChange={e => setNewStageName(e.target.value)}
-                  placeholder="Nombre de la etapa..."
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
-                  required
-                />
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-semibold text-gray-500 uppercase">Nombre</label>
+                  <input
+                    ref={addStageInputRef}
+                    type="text"
+                    value={newStageName}
+                    onChange={e => setNewStageName(e.target.value)}
+                    placeholder="Nombre de la etapa..."
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
+                    required
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-semibold text-gray-500 uppercase">Límite de días (opcional)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newStageMaxDays}
+                    onChange={e => setNewStageMaxDays(e.target.value)}
+                    placeholder="Ej. 15 (vacío = sin límite)"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
+                  />
+                </div>
+                <div className="flex items-center gap-2 mt-1">
                   <button
                     type="submit"
                     className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex-1 shadow-sm transition-colors cursor-pointer"
@@ -1293,6 +1311,7 @@ const PipelinePage: React.FC = () => {
                     onClick={() => {
                       setIsAddingStage(false);
                       setNewStageName('');
+                      setNewStageMaxDays('');
                     }}
                     className="bg-gray-100 hover:bg-gray-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex-1 border border-gray-200 transition-colors cursor-pointer"
                   >
