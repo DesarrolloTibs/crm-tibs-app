@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, RefreshCw, Save, CheckCircle, AlertCircle, Loader2, Bell } from 'lucide-react';
+import { Clock, RefreshCw, Save, CheckCircle, AlertCircle, Bell } from 'lucide-react';
 import { getHelpdeskCronConfig, saveHelpdeskCronConfig } from '../../services/helpdeskCronService';
 import type { HelpdeskCronConfig } from '../../core/models/HelpdeskCronConfig';
+import Input from '../shared/Input';
+import Button from '../shared/Button';
 
 type CronMode = 'fixed' | 'interval';
 
@@ -187,12 +189,12 @@ const HelpdeskCronSettings: React.FC = () => {
             <label htmlFor="cron-fixed-time" className="text-xs font-bold uppercase tracking-wider text-gray-400">
               Hora de ejecución
             </label>
-            <input
+            <Input
               id="cron-fixed-time"
               type="time"
               value={fixedTime}
               onChange={(e) => setFixedTime(e.target.value)}
-              className="w-44 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-44 bg-white"
             />
             <p className="text-xs text-gray-400 mt-0.5">El correo se enviará una vez al día a esta hora.</p>
           </div>
@@ -203,28 +205,28 @@ const HelpdeskCronSettings: React.FC = () => {
             </span>
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <input
+                <Input
                   id="cron-interval-hours"
                   type="number"
                   min={0}
                   max={23}
                   value={intervalHours}
                   onChange={(e) => setIntervalHours(Math.max(0, Math.min(23, parseInt(e.target.value, 10) || 0)))}
-                  className="w-20 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center"
+                  className="w-20 text-center"
                 />
                 <label htmlFor="cron-interval-hours" className="text-sm text-gray-600 font-medium">
                   horas
                 </label>
               </div>
               <div className="flex items-center gap-2">
-                <input
+                <Input
                   id="cron-interval-minutes"
                   type="number"
                   min={0}
                   max={59}
                   value={intervalMinutes}
                   onChange={(e) => setIntervalMinutes(Math.max(0, Math.min(59, parseInt(e.target.value, 10) || 0)))}
-                  className="w-20 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center"
+                  className="w-20 text-center"
                 />
                 <label htmlFor="cron-interval-minutes" className="text-sm text-gray-600 font-medium">
                   minutos
@@ -262,19 +264,16 @@ const HelpdeskCronSettings: React.FC = () => {
 
       {/* Botón Guardar */}
       <div>
-        <button
+        <Button
           type="button"
           onClick={handleSave}
-          disabled={saveStatus === 'saving' || !isValidInterval()}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          disabled={!isValidInterval()}
+          loading={saveStatus === 'saving'}
+          variant="indigo"
         >
-          {saveStatus === 'saving' ? (
-            <Loader2 size={15} className="animate-spin" />
-          ) : (
-            <Save size={15} />
-          )}
-          {saveStatus === 'saving' ? 'Guardando...' : 'Guardar configuración'}
-        </button>
+          <Save size={15} className="mr-2" />
+          Guardar configuración
+        </Button>
       </div>
     </div>
   );

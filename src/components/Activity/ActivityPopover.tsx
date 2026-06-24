@@ -58,15 +58,16 @@ const ActivityPopover: React.FC<Props> = ({ activity, onEdit, onDelete, onClose 
             >
                 {/* Header con el color del tipo de actividad */}
                 <div
-                    className="px-4 py-3 flex items-center justify-between"
-                    style={{ backgroundColor: color.bg }}
+                    className="px-4 py-3 flex items-center justify-between border-b"
+                    style={{ backgroundColor: color.bg, borderColor: color.border }}
                 >
-                    <span className="text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider" style={{ color: color.text }}>
                         {typeName || 'Sin tipo'}
                     </span>
                     <button
                         onClick={onClose}
-                        className="text-white/80 hover:text-white transition-colors rounded-full p-0.5 hover:bg-white/20"
+                        className="transition-colors rounded-full p-0.5 hover:bg-black/10"
+                        style={{ color: color.text }}
                         aria-label="Cerrar"
                     >
                         <X size={15} />
@@ -143,8 +144,8 @@ const ActivityPopover: React.FC<Props> = ({ activity, onEdit, onDelete, onClose 
                     </button>
                     <button
                         onClick={onEdit}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-white rounded-lg transition-colors"
-                        style={{ backgroundColor: color.bg }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors border hover:brightness-95"
+                        style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text }}
                     >
                         <Edit size={14} />
                         Editar

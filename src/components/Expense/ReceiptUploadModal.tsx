@@ -1,8 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { uploadReceipt, downloadReceipt } from '../../services/expensesService';
-import { Paperclip, UploadCloud, X, Download } from 'lucide-react';
+import { Paperclip, X, Download } from 'lucide-react';
 import type { Expense } from '../../core/models/Expense';
 import Notification from '../Modal/Notification';
+import Dropzone from '../shared/Dropzone';
+import Button from '../shared/Button';
 
 interface ReceiptUploadModalProps {
     expense: Expense;
@@ -13,7 +15,6 @@ interface ReceiptUploadModalProps {
 const ReceiptUploadModal: React.FC<ReceiptUploadModalProps> = ({ expense, onClose, onUploadSuccess }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
-    const [dragOver, setDragOver] = useState(false);
 
     const [notification, setNotification] = useState({
         show: false,
@@ -24,43 +25,6 @@ const ReceiptUploadModal: React.FC<ReceiptUploadModalProps> = ({ expense, onClos
     });
 
     const hideNotification = () => setNotification({ ...notification, show: false });
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            if (!file.type.startsWith('image/')) {
-                setNotification({ show: true, type: 'error', title: 'Error', message: 'Solo se permiten archivos de imagen.', onConfirm: hideNotification });
-                return;
-            }
-            setSelectedFile(file);
-        }
-    };
-
-    const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragOver(false);
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            const file = e.dataTransfer.files[0];
-            if (!file.type.startsWith('image/')) {
-                setNotification({ show: true, type: 'error', title: 'Error', message: 'Solo se permiten archivos de imagen.', onConfirm: hideNotification });
-                return;
-            }
-            setSelectedFile(file);
-        }
-    }, []);
-
-    const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragOver(true);
-    }, []);
-
-    const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragOver(false);
-    }, []);
 
     const handleUpload = async () => {
         if (!selectedFile || !expense.id) return;
@@ -92,26 +56,22 @@ const ReceiptUploadModal: React.FC<ReceiptUploadModalProps> = ({ expense, onClos
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Subir Comprobante</h2>
             <p className="text-gray-600 mb-6">Para el gasto: <span className="font-semibold">{expense.concepto}</span></p>
 
-            <div
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50'}`}
-            >
-                <input
-                    type="file"
-                    id="receipt-upload"
-                    className="hidden"
-                    onChange={handleFileChange}
-                    accept="image/*"
-                />
-                <label htmlFor="receipt-upload" className="cursor-pointer flex flex-col items-center">
-                    <UploadCloud size={48} className="text-gray-400 mb-2" />
-                    <span className="text-gray-600">Arrastra y suelta un archivo aquí</span>
-                    <span className="text-sm text-gray-500 mt-1">o</span>
-                    <span className="mt-2 text-blue-600 font-semibold">Selecciona un archivo</span>
-                </label>
-            </div>
+            <Dropzone
+                id="receipt-upload"
+                accept="image/*"
+                onFilesSelected={(files) => {
+                    if (files && files[0]) {
+                        const file = files[0];
+                        if (!file.type.startsWith('image/')) {
+                            setNotification({ show: true, type: 'error', title: 'Error', message: 'Solo se permiten archivos de imagen.', onConfirm: hideNotification });
+                            return;
+                        }
+                        setSelectedFile(file);
+                    }
+                }}
+                helpText="Arrastra y suelta tu comprobante aquí"
+                buttonText="Seleccionar imagen"
+            />
 
             {expense.receiptUrl && !selectedFile && (
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -136,8 +96,8 @@ const ReceiptUploadModal: React.FC<ReceiptUploadModalProps> = ({ expense, onClos
             )}
 
             <div className="flex justify-end space-x-2 pt-6">
-                <button type="button" onClick={onClose} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Cancelar</button>
-                <button onClick={handleUpload} disabled={!selectedFile || uploading} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400">{uploading ? 'Subiendo...' : 'Subir Comprobante'}</button>
+                <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
+                <Button onClick={handleUpload} disabled={!selectedFile} loading={uploading} variant="primary">Subir Comprobante</Button>
             </div>
         </div>
     );

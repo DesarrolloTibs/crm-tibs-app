@@ -24,7 +24,7 @@ const ActivityEventCard: React.FC<Props> = ({ eventInfo }) => {
         >
             <span
                 className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 hidden sm:inline-block"
-                style={{ backgroundColor: 'rgba(255,255,255,0.65)' }}
+                style={{ backgroundColor: color.border }}
             />
             <span className="text-[10px] sm:text-xs font-semibold break-words line-clamp-2 leading-tight">
                 {eventInfo.event.title}

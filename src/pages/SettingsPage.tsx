@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import Select from '../components/shared/Select';
 import { useAuth } from '../hooks/useAuth';
 import { XCircle, ClipboardList, Settings, Sliders, Database, Bell } from 'lucide-react';
 import ActivityTypesSettings from '../components/ActivityType/ActivityTypesSettings';
@@ -26,6 +27,13 @@ const SettingsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<SettingTab>('activity-types');
     const [activeCatalogSubTab, setActiveCatalogSubTab] = useState<'business-lines' | 'delivery-types' | 'licensings'>('business-lines');
     const [labels, setLabels] = useState<OpportunityLabel[]>([]);
+
+    const mobileOptions = useMemo(() => [
+        { value: 'activity-types', label: 'Tipos de Actividad' },
+        { value: 'opportunity-labels', label: 'Etiquetas de Catálogos' },
+        { value: 'opportunity-catalogs', label: 'Valores de Catálogos' },
+        { value: 'helpdesk-cron', label: 'Notificaciones automáticas' },
+    ], []);
 
     const fetchLabels = async () => {
         try {
@@ -178,22 +186,15 @@ const SettingsPage: React.FC = () => {
                     <label htmlFor="settings-tab-select" className="text-xs font-bold uppercase tracking-wider text-gray-400 select-none text-left">
                         Categoría de Configuración
                     </label>
-                    <select
-                        id="settings-tab-select"
-                        value={activeTab}
-                        onChange={(e) => setActiveTab(e.target.value as SettingTab)}
-                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                    >
-                        {sections.map((section) => (
-                            <optgroup key={section.title} label={section.title}>
-                                {section.options.map((option) => (
-                                    <option key={option.id} value={option.id}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </optgroup>
-                        ))}
-                    </select>
+                    <Select
+                        inputId="settings-tab-select"
+                        value={mobileOptions.find(opt => opt.value === activeTab)}
+                        onChange={(selected) => {
+                            if (selected) setActiveTab(selected.value as SettingTab);
+                        }}
+                        options={mobileOptions}
+                        isSearchable={false}
+                    />
                 </div>
 
                 {/* Menú lateral de configuración (escritorio) */}

@@ -2,7 +2,7 @@
    y no pueden controlarse con Tailwind, por eso viven en un archivo CSS dedicado. */
 
 .tibs-calendar .fc {
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Open Sans', sans-serif !important;
 }
 
 /* ── Toolbar ─────────────────────────────────────────────────────────────── */

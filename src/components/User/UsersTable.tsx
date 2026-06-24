@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { User } from '../../core/models/User';
 import { Edit, Inbox, UserCheck, UserX, Camera, ChevronDown, ChevronUp } from 'lucide-react';
+import Button from '../shared/Button';
 
 interface Props {
   users: User[];
@@ -136,13 +137,14 @@ const UsersTable: React.FC<Props> = ({ users, onEdit, onUpdateStatus, onUploadIm
         <div className="flex justify-center items-center mt-6 p-4">
           <div className="flex space-x-2">
             {Array.from({ length: totalPages }, (_, i) => (
-              <button
+              <Button
                 key={i + 1}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === i + 1 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'}`}
+                variant={currentPage === i + 1 ? 'primary' : 'secondary'}
+                className="!py-2 !px-4 !text-[11px] !rounded-lg"
                 onClick={() => onPageChange(i + 1)}
               >
                 {i + 1}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

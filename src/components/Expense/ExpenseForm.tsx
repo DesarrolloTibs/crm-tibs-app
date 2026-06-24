@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
+import Select from '../shared/Select';
+import Input from '../shared/Input';
+import Button from '../shared/Button';
 import type { Expense } from '../../core/models/Expense';
 import { getActiveClients } from '../../services/clientsService';
 import { getAllOpportunities } from '../../services/opportunitiesService'; // Assuming getAll exists or using getOpportunities
@@ -159,8 +161,8 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
 
                 {associationType === 'client' ? (
                     <div className="animate-fade-in">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Cliente</label>
                         <Select
+                            label="Seleccionar Cliente"
                             options={clientOptions}
                             value={clientOptions.find(c => c.value === form.client_id)}
                             onChange={(opt) => handleSelectChange(opt, 'client_id')}
@@ -171,8 +173,8 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                     </div>
                 ) : (
                     <div className="animate-fade-in">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Oportunidad</label>
                         <Select
+                            label="Seleccionar Oportunidad"
                             options={opportunityOptions}
                             value={opportunityOptions.find(o => o.value === form.opportunity_id)}
                             onChange={(opt) => handleSelectChange(opt, 'opportunity_id')}
@@ -185,57 +187,48 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                    <input
-                        type="date"
-                        name="fecha"
-                        value={form.fecha}
-                        onChange={handleChange}
-                        required
-                        className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Monto</label>
-                    <div className="relative">
-                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                        <input
-                            type="number"
-                            name="monto"
-                            value={form.monto}
-                            onChange={handleChange}
-                            required
-                            min="0"
-                            step="0.01"
-                            onBlur={handleAmountBlur}
-                            onKeyDown={handleAmountKeyDown}
-                            placeholder="0.00"
-                            className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                    </div>
-                </div>
+                <Input
+                    label="Fecha"
+                    type="date"
+                    name="fecha"
+                    value={form.fecha}
+                    onChange={handleChange}
+                    required
+                />
+                <Input
+                    label="Monto"
+                    type="number"
+                    name="monto"
+                    value={form.monto}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                    step="0.01"
+                    onBlur={handleAmountBlur}
+                    onKeyDown={handleAmountKeyDown}
+                    placeholder="0.00"
+                    inputPrefix="$"
+                />
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
-                    <input
+                    <Input
+                        label="Concepto"
                         type="text"
                         name="concepto"
                         value={form.concepto}
                         onChange={handleChange}
                         required
                         placeholder="Descripción del gasto"
-                        className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                 </div>
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
-                <button type="button" onClick={onCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+                <Button type="button" variant="secondary" onClick={onCancel}>
                     Cancelar
-                </button>
-                <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                </Button>
+                <Button type="submit" variant="success">
                     Guardar Gasto
-                </button>
+                </Button>
             </div>
         </form>
     );

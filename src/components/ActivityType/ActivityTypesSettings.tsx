@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { getActivityTypes, createActivityType, updateActivityType, deleteActivityType } from '../../services/activitiesService';
 import type { TypeActivity } from '../../core/models/Activity';
 import ActivityTypeForm from './ActivityTypeForm';
 import ActivityTypesTable from './ActivityTypesTable';
 import Modal from '../Modal/Modal';
 import Loader from '../Loader/Loader';
-import { Filter, XCircle, Search, Plus } from 'lucide-react';
+import { Filter, XCircle, Plus } from 'lucide-react';
 import Notification from '../Modal/Notification';
+import Button from '../shared/Button';
+import Select from '../shared/Select';
+import UnifiedSearchBar from '../shared/UnifiedSearchBar';
+import type { SearchBadge } from '../shared/UnifiedSearchBar';
 
 const PAGE_SIZE = 10;
 
@@ -17,9 +21,22 @@ const ActivityTypesSettings: React.FC = () => {
 
     const [showFilters, setShowFilters] = useState(false);
     const [filterName, setFilterName] = useState('');
+    const [filterStatus, setFilterStatus] = useState<string>('all');
 
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(false);
+
+    const searchDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+                setShowFilters(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const [notification, setNotification] = useState({
         show: false,
@@ -163,10 +180,35 @@ const ActivityTypesSettings: React.FC = () => {
         setModalOpen(true);
     };
 
+    const statusOptions = useMemo(() => [
+        { value: 'all', label: 'Todos los Estados' },
+        { value: 'active', label: 'Activo' },
+        { value: 'inactive', label: 'Inactivo' },
+    ], []);
+
+    const badges = useMemo(() => {
+        const list: SearchBadge[] = [];
+        if (filterStatus && filterStatus !== 'all') {
+            const statusLabel = statusOptions.find(opt => opt.value === filterStatus)?.label || 'Estado';
+            list.push({
+                id: 'status',
+                label: `Estado: ${statusLabel}`,
+                icon: <Filter size={10} />,
+                onRemove: () => setFilterStatus('all')
+            });
+        }
+        return list;
+    }, [filterStatus, statusOptions]);
+
     // Filtrado
-    const filteredTypes = types.filter(type =>
-        type.strname.toLowerCase().includes(filterName.toLowerCase())
-    );
+    const filteredTypes = types.filter(type => {
+        const matchesName = type.strname.toLowerCase().includes(filterName.toLowerCase());
+        const matchesStatus =
+            filterStatus === 'all' ||
+            (filterStatus === 'active' && type.blnstatus) ||
+            (filterStatus === 'inactive' && !type.blnstatus);
+        return matchesName && matchesStatus;
+    });
 
     // Paginación
     const totalPages = Math.ceil(filteredTypes.length / PAGE_SIZE);
@@ -181,10 +223,11 @@ const ActivityTypesSettings: React.FC = () => {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterName]);
+    }, [filterName, filterStatus]);
 
     const handleClearFilters = () => {
         setFilterName('');
+        setFilterStatus('all');
     };
 
     return (
@@ -195,48 +238,47 @@ const ActivityTypesSettings: React.FC = () => {
                     <h2 className="text-xl font-bold text-gray-800">Tipos de Actividad</h2>
                     <p className="text-sm text-gray-500 mt-1">Crea, edita o elimina los tipos de actividades disponibles en tu CRM.</p>
                 </div>
-                <div className="flex w-full sm:w-auto gap-3">
-                    <button
-                        className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap text-sm"
-                        onClick={() => setShowFilters(!showFilters)}
+                <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 items-center">
+                    <UnifiedSearchBar
+                        ref={searchDropdownRef}
+                        searchTerm={filterName}
+                        onSearchChange={setFilterName}
+                        placeholder={badges.length === 0 ? "Buscar por nombre..." : ""}
+                        badges={badges}
+                        showFilters={showFilters}
+                        setShowFilters={setShowFilters}
+                        dropdownWidthClass="w-[300px]"
                     >
-                        <Filter size={14} />
-                        <span>Filtros</span>
-                    </button>
-                    <button
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap text-sm"
+                        <div className="w-full flex flex-col gap-3">
+                            <div>
+                                <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Estado</h4>
+                                <Select
+                                    options={statusOptions}
+                                    value={statusOptions.find(opt => opt.value === filterStatus)}
+                                    onChange={(selected) => setFilterStatus(selected ? selected.value : 'all')}
+                                    placeholder="Todos los Estados"
+                                />
+                            </div>
+                            <div className="border-t border-gray-100 my-1 pt-2 w-full" />
+                            <button
+                                type="button"
+                                onClick={handleClearFilters}
+                                className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                            >
+                                <XCircle size={12} />
+                                Limpiar Filtros
+                            </button>
+                        </div>
+                    </UnifiedSearchBar>
+                    <Button
+                        variant="success"
                         onClick={openCreateModal}
+                        className="w-full sm:w-auto h-[38px] py-0 px-4 flex items-center justify-center whitespace-nowrap"
                     >
-                        <Plus size={16} /> Nuevo Tipo
-                    </button>
+                        <Plus size={16} className="mr-2" /> Nuevo Tipo
+                    </Button>
                 </div>
             </div>
-
-            {showFilters && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 animate-fade-in-down">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-semibold text-gray-700">Filtros</h3>
-                        <button onClick={handleClearFilters} className="flex items-center text-xs text-blue-600 hover:text-blue-800">
-                            <XCircle size={14} className="mr-1" />
-                            Limpiar filtros
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                <Search size={16} />
-                            </span>
-                            <input
-                                type="text"
-                                placeholder="Filtrar por nombre del tipo"
-                                value={filterName}
-                                onChange={e => setFilterName(e.target.value)}
-                                className="w-full border rounded-lg pl-9 pr-4 py-1.5 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {loading ? (
                 <Loader />

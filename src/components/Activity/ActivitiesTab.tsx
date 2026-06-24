@@ -10,6 +10,8 @@ import Notification from '../Modal/Notification';
 import type { Activity, TypeActivity } from '../../core/models/Activity';
 import ActivitiesTable from './ActivitiesTable';
 import ActivityForm from './ActivityForm';
+import Input from '../shared/Input';
+import Button from '../shared/Button';
 
 interface Props {
     opportunityId: string;
@@ -167,25 +169,23 @@ const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
     return (
         <div className="p-4 flex flex-col h-full max-h-[80vh]">
             <Notification {...notification} />
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-                <div className="relative flex-grow w-full sm:w-auto">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                        <Search size={20} />
-                    </span>
-                    <input
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 w-full">
+                <div className="flex-grow w-full sm:w-auto">
+                    <Input
                         type="text"
                         placeholder="Buscar en actividades..."
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                        inputPrefix={<Search size={18} />}
                     />
                 </div>
-                <button
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm whitespace-nowrap"
+                <Button
+                    variant="success"
+                    className="w-full sm:w-auto whitespace-nowrap h-[54px]"
                     onClick={openCreateModal}
                 >
-                    <Plus size={18} /> Nueva Actividad
-                </button>
+                    <Plus size={18} className="mr-2" /> Nueva Actividad
+                </Button>
             </div>
             {loading ? (
                 <Loader />

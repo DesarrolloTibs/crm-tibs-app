@@ -3,12 +3,12 @@ import type { Opportunity, CurrencyType, Stage } from '../../core/models/Opportu
 import { Currency } from '../../core/models/Opportunity';
 import { getActiveCatalogOptions } from '../../services/opportunityCatalogsService';
 import type { OpportunityCatalogOption } from '../../core/models/OpportunityCatalog';
-import Select, { type SingleValue, type MultiValue } from 'react-select';
+import type { SingleValue, MultiValue } from 'react-select';
 import { getActiveStages } from '../../services/pipelinesService';
 import { FileText, ChevronDown } from 'lucide-react';
 import type { Client } from '../../core/models/Client';
 import { getClients, createClient } from '../../services/clientsService';
-import { getUsers } from '../../services/usersService'; // Importar getUsers
+import { getUsers } from '../../services/usersService';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../core/models/User';
 import ClientForm from '../Client/ClientForm';
@@ -18,8 +18,11 @@ import type { Product } from '../../core/models/Product';
 import { getProducts, downloadProductFile } from '../../services/productsService';
 import { getOpportunityLabels } from '../../services/opportunityLabelsService';
 import type { OpportunityLabel } from '../../core/models/OpportunityLabel';
-
-
+import Input from '../shared/Input';
+import TextArea from '../shared/TextArea';
+import Select from '../shared/Select';
+import Button from '../shared/Button';
+import StageStepper from '../shared/StageStepper';
 
 interface Props {
   initialData?: Opportunity;
@@ -27,7 +30,6 @@ interface Props {
   onCancel: () => void;
 }
 
-// Definir el tipo para las opciones del selector
 interface SelectOption {
   value: string;
   label: string;
@@ -78,6 +80,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       setDownloadingFileId(null);
     }
   };
+
   const [editingField, setEditingField] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [linkType, setLinkType] = useState<'company' | 'contact'>(
@@ -85,19 +88,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   );
 
   const [stages, setStages] = useState<Stage[]>([]);
-  const [showStageDropdown, setShowStageDropdown] = useState(false);
 
-  const getStageDuration = (enteredAtStr?: string | Date) => {
-    if (!enteredAtStr) return '';
-    const entered = new Date(enteredAtStr);
-    const diffMs = Date.now() - entered.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    if (diffMins < 60) return `${Math.max(1, diffMins)}m`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d`;
-  };
 
   const [opportunity, setOpportunity] = useState<OpportunityFormData>(
     initialData && initialData.id ? {
@@ -170,7 +161,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         const filteredProducts = allProducts.filter(p => p.status || associatedProductIds.includes(p.id!));
         setProducts(filteredProducts);
 
-        // Si es creación, pre-seleccionar los valores predeterminados
         if (!initialData || !initialData.id) {
           setOpportunity(prev => {
             const updates: any = {};
@@ -191,14 +181,12 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     loadData();
   }, [initialData]); 
 
-  
   useEffect(() => {
     const fetchExecutives = async () => {
       if (isAdmin) {
         try {
-          // getUsers ahora devuelve todos los usuarios (activos e inactivos)
           const allUsers = await getUsers();
-          setExecutives(allUsers); // Filtrar solo ejecutivos
+          setExecutives(allUsers);
         } catch (error) {
           console.error("Error fetching executives:", error);
         }
@@ -208,9 +196,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   }, [isAdmin]);
 
   useEffect(() => {
-    // Si el usuario no es administrador y hay un usuario logueado,
-    // y no hay un ejecutivo asignado (en creación o edición de oportunidad sin ejecutivo),
-    // asignarle su ID por defecto.
     if (!isAdmin && user && !opportunity.ejecutivo_id) {
       setOpportunity(o => ({ ...o, ejecutivo_id: user.sub }));
     }
@@ -238,8 +223,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     setOpportunity(o => ({ ...o, monto_total: total }));
   }, [opportunity.monto_licenciamiento, opportunity.monto_servicios, convertedProductsPrice]);
 
-
-
   const formatCurrency = (value: number | undefined | string) => {
     if (value === undefined || value === null || value === '') return '';
     const numberValue = Number(value);
@@ -252,11 +235,9 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   };
 
   const handleBlur = () => {
-    // Al salir del campo, parseamos el valor a un número con 2 decimales para evitar problemas de formato.
     if (editingField) {
       const currentValue = opportunity[editingField as keyof Opportunity] as string;
       const numericValue = parseFloat(currentValue);
-      // Redondea a 2 decimales y lo guarda como número
       const roundedValue = isNaN(numericValue) ? 0 : Number(numericValue.toFixed(2));
       setOpportunity(prev => ({ ...prev, [editingField]: roundedValue }));
     }
@@ -266,11 +247,8 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
-    // Lógica especial para el cambio de moneda
     if (name === 'moneda') {
       setOpportunity(prev => {
-        // Si la moneda es MXN, el tipo de cambio es 0.
-        // Si es USD, se mantiene o se resetea a 1, asegurando que tenga 2 decimales.
         const newTipoCambio = value === 'MXN' ? 0 : (prev.tipoCambio || 1);
         return {
           ...prev,
@@ -283,22 +261,10 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     }
   };
 
-  const handleStageClick = (stage: Stage) => {
-    setOpportunity(prev => ({
-      ...prev,
-      stage_id: stage.id
-    }));
-  };
-
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Limpiamos el valor para permitir solo números y un punto decimal.
     const sanitizedValue = value.replace(/[^0-9.]/g, '');
-
-    // Para evitar que se guarden valores no numéricos, parseamos inmediatamente.
     const numericValue = parseFloat(sanitizedValue);
-
-    // Guardamos el valor numérico o un string vacío si la entrada no es válida.
     setOpportunity({ ...opportunity, [name]: isNaN(numericValue) ? '' : sanitizedValue });
   };
 
@@ -324,7 +290,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     label: c.nombre,
   })), [companies]);
 
-  const selectedCompanyValue = companyOptions.find(option => option.value === opportunity.companyId);
+  const selectedCompanyValue = companyOptions.find(option => option.value === opportunity.companyId) || null;
 
   const handleCompanyChange = (selectedOption: SingleValue<SelectOption>) => {
     const companyId = selectedOption ? selectedOption.value : '';
@@ -405,13 +371,17 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     }));
   };
 
-  const selectedClientValue = clientOptions.find(option => option.value === opportunity.cliente_id);
-  const selectedExecutiveValue = executiveOptions.find(option => option.value === opportunity.ejecutivo_id);
+  const selectedClientValue = clientOptions.find(option => option.value === opportunity.cliente_id) || null;
+  const selectedExecutiveValue = executiveOptions.find(option => option.value === opportunity.ejecutivo_id) || null;
+
+  const blOptions = useMemo(() => businessLines.map(bl => ({ value: bl.id, label: bl.strname })), [businessLines]);
+  const dtOptions = useMemo(() => deliveryTypes.map(dt => ({ value: dt.id, label: dt.strname })), [deliveryTypes]);
+  const lOptions = useMemo(() => licensings.map(l => ({ value: l.id, label: l.strname })), [licensings]);
+  const currencyOptions = Object.values(Currency).map(c => ({ value: c, label: c }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Si no es administrador y no tiene ejecutivo asignado, usar el id del usuario actual como fallback
     let finalEjecutivoId = opportunity.ejecutivo_id;
     if (!isAdmin && !finalEjecutivoId && user) {
       finalEjecutivoId = user.sub;
@@ -477,7 +447,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
     if (linkType === 'company') {
       finalOpportunity.cliente_id = null;
-      // rest of values (companyId, contactIds, empresa) are already in rest
     } else {
       finalOpportunity.companyId = null;
       finalOpportunity.contactIds = opportunity.cliente_id ? [opportunity.cliente_id] : [];
@@ -486,332 +455,346 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     onSubmit(finalOpportunity);
   };
 
-
   const handleCreateClient = async (newClient: Client) => {
     try {
       const createdClient = await createClient(newClient);
-      // Añadir el nuevo cliente a la lista y seleccionarlo
       setClients(prevClients => [...prevClients, createdClient]);
       setOpportunity(prevOpp => ({
         ...prevOpp,
         cliente_id: createdClient.id,
         empresa: createdClient.empresa,
       }));
-      setIsClientModalOpen(false); // Cerrar el modal
+      setIsClientModalOpen(false);
     } catch (error) {
       console.error("Error creating client:", error);
-      // Aquí podrías mostrar una notificación de error al usuario
       alert('Hubo un error al crear el cliente.');
     }
   };
 
-
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-8 p-2">
-        {/* <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Nueva'} Oportunidad</h2> */}
+      <form onSubmit={handleSubmit} className="space-y-6 p-2 font-sans">
 
         {/* Barra superior de fases de la Oportunidad (stepper idéntico a tickets) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Etapa de la Oportunidad
           </div>
-          <div className="relative flex items-center self-end md:self-auto overflow-visible pb-1 md:pb-0">
-            <div className="odoo-statusbar select-none">
-              {(() => {
-                const foldedNames = ['resuelto', 'cancelado', 'cancelada', 'ganada', 'perdida', 'lost', 'won', 'cancelled', 'solved', 'standby'];
-                const activeStages = stages.filter(s => s.blnstatus);
-                
-                const mainStages = activeStages.filter(s => {
-                  const isFolded = foldedNames.includes(s.strname.trim().toLowerCase());
-                  return !isFolded || s.id === opportunity.stage_id;
-                });
-
-                const foldedStages = activeStages.filter(s => {
-                  const isFolded = foldedNames.includes(s.strname.trim().toLowerCase());
-                  return isFolded && s.id !== opportunity.stage_id;
-                });
-
-                return (
-                  <>
-                    {mainStages.map((s) => {
-                      const isActive = s.id === opportunity.stage_id;
-                      const duration = isActive && initialData ? getStageDuration(initialData.stage_entered_at || initialData.createdAt) : '';
-                      return (
-                        <button
-                          key={s.id}
-                          type="button"
-                          onClick={() => {
-                            handleStageClick(s);
-                            setShowStageDropdown(false);
-                          }}
-                          className={`odoo-step cursor-pointer ${isActive ? 'active' : ''}`}
-                        >
-                          <span>{s.strname}</span>
-                          {duration && (
-                            <span className="text-[10px] font-normal text-teal-650 opacity-90 ml-1">
-                              {duration}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                    
-                    {foldedStages.length > 0 && (
-                      <div className="relative flex">
-                        <button
-                          type="button"
-                          onClick={() => setShowStageDropdown(!showStageDropdown)}
-                          className="odoo-step cursor-pointer px-4 font-bold"
-                          title="Más etapas"
-                        >
-                          ...
-                        </button>
-                        
-                        {showStageDropdown && (
-                          <>
-                            <div 
-                              className="fixed inset-0 z-40 bg-transparent" 
-                              onClick={() => setShowStageDropdown(false)}
-                            />
-                            <div className="absolute right-0 top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-lg shadow-xl z-50 p-1 flex flex-col animate-in fade-in duration-100">
-                              {foldedStages.map((s) => (
-                                <button
-                                  key={s.id}
-                                  type="button"
-                                  onClick={() => {
-                                    handleStageClick(s);
-                                    setShowStageDropdown(false);
-                                  }}
-                                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md font-semibold transition-colors cursor-pointer"
-                                >
-                                  {s.strname}
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
-          </div>
+          <StageStepper
+            stages={stages}
+            currentStageId={opportunity.stage_id || ''}
+            stageEnteredAt={initialData?.stage_entered_at}
+            fallbackDate={initialData?.createdAt}
+            showDuration={!!initialData}
+            onStageClick={(s) => setOpportunity(prev => ({ ...prev, stage_id: s.id }))}
+          />
         </div>
 
-        <fieldset className="space-y-6">
-          <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Datos del Proyecto</legend>
+        <fieldset className="space-y-4">
+          <legend className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b border-slate-100 pb-2 mb-4 w-full">Datos del Proyecto</legend>
           
-          <div>
-            <label htmlFor="nombre_proyecto" className="block text-sm font-medium text-gray-700 mb-1">Nombre del Proyecto</label>
-            <input id="nombre_proyecto" name="nombre_proyecto" value={opportunity.nombre_proyecto} onChange={handleChange} placeholder="Ej: Implementación de CRM para Acme Corp" required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
-          </div>
+          <div className="space-y-4">
+            <Input
+              label="Nombre del Proyecto *"
+              id="nombre_proyecto"
+              name="nombre_proyecto"
+              value={opportunity.nombre_proyecto}
+              onChange={handleChange}
+              placeholder="Ej: Implementación de CRM para Acme Corp"
+              required
+            />
 
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
-            <textarea id="description" name="description" value={opportunity.description} onChange={handleChange} placeholder="Añade una descripción detallada de la oportunidad..." rows={3} required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" />
-          </div>
+            <TextArea
+              label="Descripción *"
+              id="description"
+              name="description"
+              value={opportunity.description}
+              onChange={handleChange}
+              placeholder="Añade una descripción detallada de la oportunidad..."
+              required
+            />
 
-          <div>
-            <label htmlFor="estimated_closure_date" className="block text-sm font-medium text-gray-700 mb-1">Fecha de Cierre Estimada</label>
-            <input type="date" id="estimated_closure_date" name="estimated_closure_date" value={opportunity.estimated_closure_date || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0" />
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Fecha de Cierre Estimada"
+                type="date"
+                id="estimated_closure_date"
+                name="estimated_closure_date"
+                value={opportunity.estimated_closure_date || ''}
+                onChange={handleChange}
+              />
+              <Input
+                label="Fecha de Creación"
+                type="date"
+                id="createdAt"
+                name="createdAt"
+                value={opportunity.createdAt || ''}
+                onChange={handleChange}
+              />
+            </div>
 
-          <div>
-            <label htmlFor="createdAt" className="block text-sm font-medium text-gray-700 mb-1">Fecha de Creación</label>
-            <input type="date" id="createdAt" name="createdAt" value={opportunity.createdAt || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0" />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
-            <div className="flex gap-2 items-center">
-              {[1, 2, 3].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setOpportunity(prev => ({ ...prev, priority: prev.priority === star ? 0 : star }))}
-                  className="focus:outline-none transition-transform active:scale-95 cursor-pointer"
-                >
-                  <svg
-                    className={`w-6 h-6 ${
-                      star <= (opportunity.priority ?? 0) ? 'text-amber-400 fill-current' : 'text-gray-300'
-                    }`}
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+            <div>
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Prioridad</label>
+              <div className="flex gap-2 items-center bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                {[1, 2, 3].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setOpportunity(prev => ({ ...prev, priority: prev.priority === star ? 0 : star }))}
+                    className="focus:outline-none transition-transform active:scale-95 cursor-pointer"
                   >
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                </button>
-              ))}
-              <span className="text-xs text-gray-500 ml-2 font-bold uppercase tracking-wider">
-                {opportunity.priority === 0 ? 'Sin prioridad' : opportunity.priority === 1 ? 'Baja' : opportunity.priority === 2 ? 'Media' : 'Alta'}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Vinculación</label>
-              <div className="flex gap-4 mt-1">
-                <label className="inline-flex items-center cursor-pointer">
-                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="company" checked={linkType === 'company'} onChange={() => setLinkType('company')} />
-                  <span className="ml-2 text-sm text-gray-700">Empresa (Cuenta)</span>
-                </label>
-                <label className="inline-flex items-center cursor-pointer">
-                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="contact" checked={linkType === 'contact'} onChange={() => setLinkType('contact')} />
-                  <span className="ml-2 text-sm text-gray-700">Contacto Individual</span>
-                </label>
-              </div>
-            </div>
-
-            {linkType === 'company' ? (
-              <>
-                <div>
-                  <label htmlFor="companyId" className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
-                  <Select inputId="companyId" name="companyId" options={companyOptions} value={selectedCompanyValue} onChange={handleCompanyChange} placeholder="-- Seleccione una Empresa --" isClearable isSearchable required />
-                </div>
-                <div>
-                  <label htmlFor="contactIds" className="block text-sm font-medium text-gray-700 mb-1">Contactos Asociados (Opcional)</label>
-                  <Select inputId="contactIds" name="contactIds" isMulti options={companyContactOptions} value={selectedContactsValue} onChange={handleContactsChange} placeholder={opportunity.companyId ? "-- Seleccione uno o más contactos --" : "-- Seleccione primero una empresa --"} isClearable isSearchable isDisabled={!opportunity.companyId} />
-                </div>
-              </>
-            ) : (
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-700">Contacto</label>
-                  <button type="button" onClick={() => setIsClientModalOpen(true)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-                    + Nuevo Contacto
+                    <svg
+                      className={`w-6 h-6 ${
+                        star <= (opportunity.priority ?? 0) ? 'text-amber-400 fill-current' : 'text-gray-300'
+                      }`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
                   </button>
+                ))}
+                <span className="text-xs text-slate-500 ml-2 font-black uppercase tracking-wider">
+                  {opportunity.priority === 0 ? 'Sin prioridad' : opportunity.priority === 1 ? 'Baja' : opportunity.priority === 2 ? 'Media' : 'Alta'}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Tipo de Vinculación</label>
+              <div className="flex gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                <label className="inline-flex items-center cursor-pointer select-none">
+                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="company" checked={linkType === 'company'} onChange={() => setLinkType('company')} />
+                  <span className="ml-2 text-xs font-black text-slate-600 uppercase tracking-wider">Empresa (Cuenta)</span>
+                </label>
+                <label className="inline-flex items-center cursor-pointer select-none">
+                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="contact" checked={linkType === 'contact'} onChange={() => setLinkType('contact')} />
+                  <span className="ml-2 text-xs font-black text-slate-600 uppercase tracking-wider">Contacto Individual</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {linkType === 'company' ? (
+                <>
+                  <Select
+                    label="Empresa *"
+                    inputId="companyId"
+                    name="companyId"
+                    options={companyOptions}
+                    value={selectedCompanyValue}
+                    onChange={handleCompanyChange}
+                    placeholder="-- Seleccione una Empresa --"
+                    isClearable
+                    isSearchable
+                    required
+                  />
+                  <Select
+                    label="Contactos Asociados (Opcional)"
+                    inputId="contactIds"
+                    name="contactIds"
+                    isMulti
+                    options={companyContactOptions}
+                    value={selectedContactsValue}
+                    onChange={handleContactsChange}
+                    placeholder={opportunity.companyId ? "-- Seleccione uno o más contactos --" : "-- Seleccione primero una empresa --"}
+                    isClearable
+                    isSearchable
+                    isDisabled={!opportunity.companyId}
+                  />
+                </>
+              ) : (
+                <div className="md:col-span-2">
+                  <div className="flex justify-between items-center mb-1 pr-1">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1Block block">Contacto *</label>
+                    <button type="button" onClick={() => setIsClientModalOpen(true)} className="text-[10px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-widest transition-colors">
+                      + Nuevo Contacto
+                    </button>
+                  </div>
+                  <Select
+                    inputId="cliente_id"
+                    name="cliente_id"
+                    options={clientOptions}
+                    value={selectedClientValue}
+                    onChange={handleClientChange}
+                    placeholder="-- Seleccione un Contacto --"
+                    isClearable
+                    isSearchable
+                    required
+                  />
                 </div>
-                <Select inputId="cliente_id" name="cliente_id" options={clientOptions} value={selectedClientValue} onChange={handleClientChange} placeholder="-- Seleccione un Contacto --" isClearable isSearchable required />
-              </div>
-            )}
+              )}
 
-            {isAdmin && (
-              <div>
-                <label htmlFor="ejecutivo_id" className="block text-sm font-medium text-gray-700 mb-1">Ejecutivo Asignado</label>
-                <Select inputId="ejecutivo_id" name="ejecutivo_id" options={executiveOptions} value={selectedExecutiveValue} onChange={handleExecutiveChange} placeholder="-- Asignar a un Ejecutivo --" isClearable isSearchable required />
-              </div>
-            )}
+              {isAdmin && (
+                <div className="md:col-span-2">
+                  <Select
+                    label="Ejecutivo Asignado *"
+                    inputId="ejecutivo_id"
+                    name="ejecutivo_id"
+                    options={executiveOptions}
+                    value={selectedExecutiveValue}
+                    onChange={handleExecutiveChange}
+                    placeholder="-- Asignar a un Ejecutivo --"
+                    isClearable
+                    isSearchable
+                    required
+                  />
+                </div>
+              )}
+            </div>
           </div>
-
         </fieldset>
 
-        <fieldset className="space-y-6">
-          <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Detalles Financieros</legend>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <fieldset className="space-y-4">
+          <legend className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b border-slate-100 pb-2 mb-4 w-full">Detalles Financieros</legend>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label={`Monto ${getLabelNameByKey('licenciamiento', 'Licenciamiento')}`}
+              id="monto_licenciamiento"
+              type="text"
+              name="monto_licenciamiento"
+              inputPrefix="$"
+              value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrency(opportunity.monto_licenciamiento)}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onChange={handleCurrencyChange}
+              placeholder="0.00"
+              className="text-right font-medium"
+            />
+            <Input
+              label={`Monto ${getLabelNameByKey('tipo_entrega', 'Servicios')}`}
+              id="monto_servicios"
+              type="text"
+              name="monto_servicios"
+              inputPrefix="$"
+              value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrency(opportunity.monto_servicios)}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onChange={handleCurrencyChange}
+              placeholder="0.00"
+              className="text-right font-medium"
+            />
+            
             <div>
-              <label htmlFor="monto_licenciamiento" className="block text-sm font-medium text-gray-700 mb-1">
-                Monto {getLabelNameByKey('licenciamiento', 'Licenciamiento')}
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                <input id="monto_licenciamiento" type="text" name="monto_licenciamiento" value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrency(opportunity.monto_licenciamiento)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right font-medium" />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="monto_servicios" className="block text-sm font-medium text-gray-700 mb-1">
-                Monto {getLabelNameByKey('tipo_entrega', 'Servicios')}
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                <input id="monto_servicios" type="text" name="monto_servicios" value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrency(opportunity.monto_servicios)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right font-medium" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total de Productos {opportunity.moneda === 'USD' ? '(USD convertido)' : '(MXN)'}
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                <input
-                  type="text"
-                  value={formatCurrency(convertedProductsPrice)}
-                  readOnly
-                  disabled
-                  className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 bg-gray-50 text-gray-500 text-right cursor-not-allowed font-medium"
-                />
-              </div>
+              <Input
+                label={`Total de Productos ${opportunity.moneda === 'USD' ? '(USD convertido)' : '(MXN)'}`}
+                type="text"
+                inputPrefix="$"
+                value={formatCurrency(convertedProductsPrice)}
+                readOnly
+                disabled
+                className="bg-slate-50/50 text-slate-500 text-right cursor-not-allowed font-medium"
+              />
               {opportunity.moneda === 'USD' && (
-                <span className="text-[10px] text-gray-400 mt-1 block">
+                <span className="text-[10px] text-slate-400 mt-1 ml-1 block font-bold uppercase tracking-wider">
                   Original: {formatCurrency(productsPriceSum)} MXN
                 </span>
               )}
             </div>
-            <div>
-              <label htmlFor="moneda" className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
-              <select id="moneda" name="moneda" value={opportunity.moneda} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                {Object.values(Currency).map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
+
+            <Select
+              label="Moneda *"
+              id="moneda"
+              name="moneda"
+              options={currencyOptions}
+              value={currencyOptions.find(opt => opt.value === opportunity.moneda)}
+              onChange={(val: any) => {
+                const value = val ? val.value : 'USD';
+                setOpportunity(prev => {
+                  const newTipoCambio = value === 'MXN' ? 0 : (prev.tipoCambio || 1);
+                  return {
+                    ...prev,
+                    moneda: value as CurrencyType,
+                    tipoCambio: Number(newTipoCambio.toFixed(2)),
+                  };
+                });
+              }}
+              required
+            />
+
             {opportunity.moneda === 'USD' && (
-              <div className="animate-fade-in">
-                <label htmlFor="tipoCambio" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Cambio (USD a MXN)</label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                  <input id="tipoCambio" type="text" name="tipoCambio" value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)} onFocus={handleFocus} onBlur={handleBlur} onChange={handleCurrencyChange} placeholder="0.00" required={opportunity.moneda === 'USD'} className="w-full border rounded pl-7 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right font-medium" />
-                </div>
-              </div>
+              <Input
+                label="Tipo de Cambio (USD a MXN) *"
+                id="tipoCambio"
+                type="text"
+                name="tipoCambio"
+                inputPrefix="$"
+                value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onChange={handleCurrencyChange}
+                placeholder="0.00"
+                required={opportunity.moneda === 'USD'}
+                className="text-right font-medium"
+              />
             )}
-            <div className={opportunity.moneda === 'USD' ? '' : 'md:col-span-2'}>
-              <label className="block text-sm font-semibold text-indigo-950 mb-1">Monto Total de la Oportunidad</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-indigo-700 font-bold">$</span>
-                <input
-                  type="text"
-                  value={formatCurrency(opportunity.monto_total || 0)}
-                  readOnly
-                  disabled
-                  className="w-full border border-indigo-200 rounded pl-7 pr-3 py-2 bg-indigo-50/50 text-indigo-700 text-right cursor-not-allowed font-bold"
-                />
-              </div>
+
+            <div className={opportunity.moneda === 'USD' ? 'md:col-span-1' : 'md:col-span-2'}>
+              <Input
+                label="Monto Total de la Oportunidad"
+                type="text"
+                inputPrefix="$"
+                value={formatCurrency(opportunity.monto_total || 0)}
+                readOnly
+                disabled
+                className="bg-indigo-50 border-indigo-200 text-indigo-700 text-right cursor-not-allowed font-bold"
+              />
             </div>
           </div>
         </fieldset>
 
-        <fieldset className="space-y-6">
-          <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Clasificación</legend>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="linea_negocio_id" className="block text-sm font-medium text-gray-700 mb-1">
-                {getLabelNameByKey('linea_negocio', 'Línea de Negocio')}
-              </label>
-              <select id="linea_negocio_id" name="linea_negocio_id" value={opportunity.linea_negocio_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" required>
-                <option value="" disabled>-- Seleccione una opción --</option>
-                {businessLines.map(bl => <option key={bl.id} value={bl.id}>{bl.strname}</option>)}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="tipo_entrega_id" className="block text-sm font-medium text-gray-700 mb-1">
-                {getLabelNameByKey('tipo_entrega', 'Tipo de Entrega')}
-              </label>
-              <select id="tipo_entrega_id" name="tipo_entrega_id" value={opportunity.tipo_entrega_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" required>
-                <option value="" disabled>-- Seleccione una opción --</option>
-                {deliveryTypes.map(dt => <option key={dt.id} value={dt.id}>{dt.strname}</option>)}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="licenciamiento_id" className="block text-sm font-medium text-gray-700 mb-1">
-                {getLabelNameByKey('licenciamiento', 'Licenciamiento')}
-              </label>
-              <select id="licenciamiento_id" name="licenciamiento_id" value={opportunity.licenciamiento_id || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                {licensings.map(l => <option key={l.id} value={l.id}>{l.strname}</option>)}
-              </select>
-            </div>
+        <fieldset className="space-y-4">
+          <legend className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b border-slate-100 pb-2 mb-4 w-full">Clasificación</legend>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              label={getLabelNameByKey('linea_negocio', 'Línea de Negocio') + " *"}
+              id="linea_negocio_id"
+              name="linea_negocio_id"
+              options={blOptions}
+              value={blOptions.find(opt => opt.value === opportunity.linea_negocio_id)}
+              onChange={(val: any) => setOpportunity(prev => ({ ...prev, linea_negocio_id: val ? val.value : '' }))}
+              required
+            />
+            <Select
+              label={getLabelNameByKey('tipo_entrega', 'Tipo de Entrega') + " *"}
+              id="tipo_entrega_id"
+              name="tipo_entrega_id"
+              options={dtOptions}
+              value={dtOptions.find(opt => opt.value === opportunity.tipo_entrega_id)}
+              onChange={(val: any) => setOpportunity(prev => ({ ...prev, tipo_entrega_id: val ? val.value : '' }))}
+              required
+            />
+            <Select
+              label={getLabelNameByKey('licenciamiento', 'Licenciamiento')}
+              id="licenciamiento_id"
+              name="licenciamiento_id"
+              options={lOptions}
+              value={lOptions.find(opt => opt.value === opportunity.licenciamiento_id)}
+              onChange={(val: any) => setOpportunity(prev => ({ ...prev, licenciamiento_id: val ? val.value : '' }))}
+            />
             <div className="md:col-span-2">
-              <label htmlFor="productIds" className="block text-sm font-medium text-gray-700 mb-1">Productos</label>
-              <Select inputId="productIds" name="productIds" isMulti options={productOptions} value={selectedProductsValue} onChange={handleProductsChange} placeholder="-- Seleccione uno o más productos --" isClearable isSearchable />
+              <Select
+                label="Productos"
+                inputId="productIds"
+                name="productIds"
+                isMulti
+                options={productOptions}
+                value={selectedProductsValue}
+                onChange={handleProductsChange}
+                placeholder="-- Seleccione uno o más productos --"
+                isClearable
+                isSearchable
+              />
             </div>
           </div>
         </fieldset>
 
         {/* Collapsible Product Specs Viewer Section */}
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm mt-4">
+        <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm mt-4">
           <button
             type="button"
             onClick={() => setIsDocsSectionOpen(!isDocsSectionOpen)}
@@ -854,7 +837,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
                       return (
                         <div key={p.id} className="border border-slate-150 rounded-xl p-4 bg-slate-50/20 space-y-3">
-                          {/* Info del Producto con Imagen */}
                           <div className="flex items-center gap-4">
                             <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 bg-white flex items-center justify-center shrink-0 shadow-sm">
                               {imageSrc ? (
@@ -885,7 +867,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                             </div>
                           </div>
 
-                          {/* Documentos del Producto */}
                           <div className="border-t border-slate-100 pt-3">
                             <h5 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                               Fichas técnicas y documentos
@@ -938,13 +919,22 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           )}
         </div>
 
-        <div className="flex justify-end space-x-2">
-          <button type="button" onClick={onCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+        <div className="flex justify-end space-x-3 pt-4">
+          <Button
+            type="button"
+            onClick={onCancel}
+            variant="secondary"
+            className="px-6 py-3"
+          >
             Cancelar
-          </button>
-          <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          </Button>
+          <Button
+            type="submit"
+            variant="success"
+            className="px-6 py-3"
+          >
             Guardar
-          </button>
+          </Button>
         </div>
       </form>
 

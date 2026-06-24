@@ -28,13 +28,9 @@ import {
   Kanban as KanbanIcon, 
   List as ListIcon, 
   Plus, 
-  Search, 
   X,
   XCircle,
   Settings2,
-  Columns,
-  CheckSquare,
-  Square,
   AlertTriangle,
   ChevronUp,
   ChevronDown,
@@ -44,6 +40,12 @@ import {
 } from 'lucide-react';
 import Notification from '../components/Modal/Notification';
 import Loader from '../components/Loader/Loader';
+import StageVisibilitySelector from '../components/shared/StageVisibilitySelector';
+import Input from '../components/shared/Input';
+import TextArea from '../components/shared/TextArea';
+import Button from '../components/shared/Button';
+import UnifiedSearchBar from '../components/shared/UnifiedSearchBar';
+import type { SearchBadge } from '../components/shared/UnifiedSearchBar';
 
 
 
@@ -106,7 +108,6 @@ const HelpdeskPage: React.FC = () => {
   }, [foldedStageIds]);
 
   const [showStagesConfig, setShowStagesConfig] = useState(false);
-  const [showStageSelector, setShowStageSelector] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [editingStage, setEditingStage] = useState<TicketStage | null>(null);
@@ -127,9 +128,7 @@ const HelpdeskPage: React.FC = () => {
   const [resolutionTicketInfo, setResolutionTicketInfo] = useState<{ ticketId: string; overStageId: string } | null>(null);
   const [resolutionNotesTemp, setResolutionNotesTemp] = useState('');
 
-  const stageSelectorRef = useRef<HTMLDivElement>(null);
   const searchDropdownRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Notification / Alert state
   const [notification, setNotification] = useState({
@@ -255,9 +254,6 @@ const HelpdeskPage: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (stageSelectorRef.current && !stageSelectorRef.current.contains(event.target as Node)) {
-        setShowStageSelector(false);
-      }
       if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
         setShowFilters(false);
       }
@@ -777,6 +773,43 @@ const HelpdeskPage: React.FC = () => {
     setResolutionNotesTemp('');
   };
 
+  const badges = useMemo(() => {
+    const list: SearchBadge[] = [];
+    if (archivedFilter === 'archived') {
+      list.push({
+        id: 'archived',
+        label: 'Archivados',
+        icon: <Filter size={10} />,
+        onRemove: () => setArchivedFilter('active')
+      });
+    }
+    if (archivedFilter === 'all') {
+      list.push({
+        id: 'all',
+        label: 'Todos',
+        icon: <Filter size={10} />,
+        onRemove: () => setArchivedFilter('active')
+      });
+    }
+    if (priorityFilter !== 'all') {
+      list.push({
+        id: 'priority',
+        label: priorityFilter === 0 ? 'Sin prioridad' : priorityFilter === 1 ? 'Baja' : priorityFilter === 2 ? 'Media' : 'Alta',
+        icon: <Star size={10} />,
+        onRemove: () => setPriorityFilter('all')
+      });
+    }
+    if (incidenceTypeFilter !== 'all') {
+      list.push({
+        id: 'incidence',
+        label: incidenceTypeFilter,
+        icon: <Tag size={10} />,
+        onRemove: () => setIncidenceTypeFilter('all')
+      });
+    }
+    return list;
+  }, [archivedFilter, priorityFilter, incidenceTypeFilter]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -819,168 +852,122 @@ const HelpdeskPage: React.FC = () => {
         {/* Toolbar (collapsible on mobile) */}
         <div className={`${showToolbar ? 'flex' : 'hidden'} md:flex flex-col sm:flex-row w-full md:w-auto gap-3 flex-wrap`}>
 
-          <div className="relative w-full sm:w-[340px]" ref={searchDropdownRef}>
-            <div
-              className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 shadow-sm hover:border-gray-400 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 min-h-[38px] cursor-text transition-all"
-              onClick={() => searchInputRef.current?.focus()}
-            >
-              <Search size={16} className="text-gray-400 shrink-0" />
+          <UnifiedSearchBar
+            ref={searchDropdownRef}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            placeholder={priorityFilter === 'all' && incidenceTypeFilter === 'all' ? 'Buscar ticket...' : ''}
+            badges={badges}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            dropdownWidthClass="w-[340px]"
+            dropdownAlign="left"
+          >
+            {/* Column 1: Priority + Stages */}
+            <div className="flex-1 flex flex-col gap-1 max-h-[300px] overflow-y-auto pr-1">
+              <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
+                <Filter size={11} /> Filtros
+              </h4>
 
-              {/* Active filter badges */}
-              <div className="flex flex-wrap gap-1 items-center flex-1 min-w-0">
-                {archivedFilter === 'archived' && (
-                  <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                    <Filter size={10} />
-                    Archivados
-                    <button onClick={e => { e.stopPropagation(); setArchivedFilter('active'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
-                  </span>
-                )}
-                {archivedFilter === 'all' && (
-                  <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                    <Filter size={10} />
-                    Todos
-                    <button onClick={e => { e.stopPropagation(); setArchivedFilter('active'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
-                  </span>
-                )}
-                {priorityFilter !== 'all' && (
-                  <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                    <Star size={10} />
-                    {priorityFilter === 0 ? 'Sin prioridad' : priorityFilter === 1 ? 'Baja' : priorityFilter === 2 ? 'Media' : 'Alta'}
-                    <button onClick={e => { e.stopPropagation(); setPriorityFilter('all'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
-                  </span>
-                )}
-                {incidenceTypeFilter !== 'all' && (
-                  <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                    <Tag size={10} />
-                    <span className="max-w-[80px] truncate">{incidenceTypeFilter}</span>
-                    <button onClick={e => { e.stopPropagation(); setIncidenceTypeFilter('all'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
-                  </span>
-                )}
-
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder={priorityFilter === 'all' && incidenceTypeFilter === 'all' ? 'Buscar ticket...' : ''}
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="border-none outline-none focus:ring-0 p-0 text-xs sm:text-sm bg-transparent placeholder-gray-400 min-w-[60px] flex-grow focus:outline-none"
-                />
-              </div>
-
-              {/* Dropdown toggle */}
+              {/* Archived Filter options */}
               <button
                 type="button"
-                onClick={e => { e.stopPropagation(); setShowFilters(!showFilters); }}
-                className="p-1 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition-colors ml-auto shrink-0 cursor-pointer"
+                onClick={() => setArchivedFilter(archivedFilter === 'archived' ? 'active' : 'archived')}
+                className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer font-semibold"
               >
-                <ChevronDown size={14} className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                <span>Tickets Archivados</span>
+                {archivedFilter === 'archived' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
               </button>
+              <button
+                type="button"
+                onClick={() => setArchivedFilter(archivedFilter === 'all' ? 'active' : 'all')}
+                className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer font-semibold"
+              >
+                <span>Todos los Tickets</span>
+                {archivedFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+              </button>
+
+              <div className="border-t border-gray-100 my-1 shrink-0" />
+
+              {/* Priority options — star UI */}
+              <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-0.5 shrink-0 select-none">Prioridad</h5>
+              <div className="flex items-center gap-0.5 px-2 py-1">
+
+                {[1, 2, 3].map(star => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setPriorityFilter(priorityFilter === star ? 'all' : star)}
+                    title={star === 1 ? 'Baja' : star === 2 ? 'Media' : 'Alta'}
+                    className="p-0.5 transition-transform hover:scale-110 cursor-pointer"
+                  >
+                    <Star
+                      size={18}
+                      className={priorityFilter !== 'all' && typeof priorityFilter === 'number' && priorityFilter > 0 && star <= priorityFilter ? 'text-amber-400 fill-current' : 'text-slate-300 hover:text-amber-300'}
+                    />
+                  </button>
+                ))}
+                {priorityFilter !== 'all' && (
+                  <span className="text-[10px] text-slate-500 ml-1">
+                    {priorityFilter === 0 ? 'Sin prioridad' : priorityFilter === 1 ? 'Baja' : priorityFilter === 2 ? 'Media' : 'Alta'}
+                  </span>
+                )}
+              </div>
+
+              <div className="border-t border-gray-100 my-1 shrink-0" />
+
+              {/* Stages quick filter */}
+              <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-0.5 shrink-0 select-none">Etapas</h5>
+              {stages.filter(s => s.blnstatus).map(stage => (
+                <button
+                  key={stage.id}
+                  type="button"
+                  onClick={() => {/* quick jump — optional: filter by stage */ setShowFilters(false);}}
+                  className="flex items-center gap-2 text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+                >
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.strcolor || '#6366f1' }} />
+                  <span className="truncate">{stage.strname}</span>
+                </button>
+              ))}
             </div>
 
-            {/* Dropdown panel */}
-            {showFilters && (
-              <div className="absolute left-0 mt-1.5 w-[340px] max-w-[95vw] bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 flex gap-4 animate-fade-in text-left">
-                {/* Column 1: Priority + Stages */}
-                <div className="flex-1 flex flex-col gap-1 max-h-[300px] overflow-y-auto pr-1">
-                  <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
-                    <Filter size={11} /> Filtros
-                  </h4>
+            {/* Column 2: Incidence types + clear */}
+            <div className="flex-1 flex flex-col gap-1 border-l border-gray-100 pl-4 max-h-[300px] overflow-y-auto">
+              <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
+                <Tag size={11} /> Tipo de Incidencia
+              </h4>
+              <button
+                type="button"
+                onClick={() => setIncidenceTypeFilter('all')}
+                className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+              >
+                <span>Todos</span>
+                {incidenceTypeFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+              </button>
+              {uniqueIncidenceTypes.filter(Boolean).map(type => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setIncidenceTypeFilter(incidenceTypeFilter === type ? 'all' : type)}
+                  className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+                >
+                  <span className="truncate">{type}</span>
+                  {incidenceTypeFilter === type && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+                </button>
+              ))}
 
-                  {/* Archived Filter options */}
-                  <button
-                    type="button"
-                    onClick={() => setArchivedFilter(archivedFilter === 'archived' ? 'active' : 'archived')}
-                    className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer font-semibold"
-                  >
-                    <span>Tickets Archivados</span>
-                    {archivedFilter === 'archived' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setArchivedFilter(archivedFilter === 'all' ? 'active' : 'all')}
-                    className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer font-semibold"
-                  >
-                    <span>Todos los Tickets</span>
-                    {archivedFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-                  </button>
-
-                  <div className="border-t border-gray-100 my-1 shrink-0" />
-
-                  {/* Priority options */}
-                  <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-0.5 shrink-0 select-none">Prioridad</h5>
-                  {[
-                    { value: 0, label: 'Sin prioridad' },
-                    { value: 1, label: 'Baja' },
-                    { value: 2, label: 'Media' },
-                    { value: 3, label: 'Alta' },
-                  ].map(opt => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setPriorityFilter(priorityFilter === opt.value ? 'all' : opt.value)}
-                      className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
-                    >
-                      <span>{opt.label}</span>
-                      {priorityFilter === opt.value && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-                    </button>
-                  ))}
-
-                  <div className="border-t border-gray-100 my-1 shrink-0" />
-
-                  {/* Stages quick filter */}
-                  <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-0.5 shrink-0 select-none">Etapas</h5>
-                  {stages.filter(s => s.blnstatus).map(stage => (
-                    <button
-                      key={stage.id}
-                      type="button"
-                      onClick={() => {/* quick jump — optional: filter by stage */ setShowFilters(false);}}
-                      className="flex items-center gap-2 text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
-                    >
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.strcolor || '#6366f1' }} />
-                      <span className="truncate">{stage.strname}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Column 2: Incidence types + clear */}
-                <div className="flex-1 flex flex-col gap-1 border-l border-gray-100 pl-4 max-h-[300px] overflow-y-auto">
-                  <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
-                    <Tag size={11} /> Tipo de Incidencia
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => setIncidenceTypeFilter('all')}
-                    className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
-                  >
-                    <span>Todos</span>
-                    {incidenceTypeFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-                  </button>
-                  {uniqueIncidenceTypes.filter(Boolean).map(type => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setIncidenceTypeFilter(incidenceTypeFilter === type ? 'all' : type)}
-                      className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
-                    >
-                      <span className="truncate">{type}</span>
-                      {incidenceTypeFilter === type && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-                    </button>
-                  ))}
-
-                  {/* Clear filters */}
-                  <div className="border-t border-gray-100 my-1 mt-auto shrink-0" />
-                  <button
-                    type="button"
-                    onClick={() => { setPriorityFilter('all'); setIncidenceTypeFilter('all'); setSearchTerm(''); setArchivedFilter('active'); }}
-                    className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
-                  >
-                    <XCircle size={12} />
-                    Limpiar Filtros
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+              {/* Clear filters */}
+              <div className="border-t border-gray-100 my-1 mt-auto shrink-0" />
+              <button
+                type="button"
+                onClick={() => { setPriorityFilter('all'); setIncidenceTypeFilter('all'); setSearchTerm(''); setArchivedFilter('active'); }}
+                className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+              >
+                <XCircle size={12} />
+                Limpiar Filtros
+              </button>
+            </div>
+          </UnifiedSearchBar>
 
           {/* View toggle + Etapas: always side-by-side */}
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -1010,68 +997,36 @@ const HelpdeskPage: React.FC = () => {
 
             {/* Etapas — next to the toggle */}
             {viewMode === 'kanban' && (
-              <div className="relative flex-1 sm:flex-none" ref={stageSelectorRef}>
-                <button
-                  className="w-full bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors whitespace-nowrap shadow-sm font-semibold cursor-pointer"
-                  onClick={() => setShowStageSelector(!showStageSelector)}
-                >
-                  <Columns size={16} />
-                  <span>Etapas</span>
-                </button>
-                {showStageSelector && (
-                  <div className="absolute left-0 sm:right-0 sm:left-auto mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4">
-                    <h4 className="font-semibold text-sm mb-2">Mostrar/Ocultar Etapas</h4>
-                    <div className="space-y-2">
-                      {stages.filter(s => s.blnstatus).map(stage => {
-                        const isChecked = visibleStageIds.includes(stage.id);
-                        const isDisabled = isChecked && visibleStageIds.length <= 3;
-                        return (
-                          <label
-                            key={stage.id}
-                            className={`flex items-center space-x-2 text-xs font-semibold ${
-                              isDisabled ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer text-slate-700'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              disabled={isDisabled}
-                              onChange={() => handleStageVisibilityChange(stage.id)}
-                              className="hidden"
-                            />
-                            {isChecked ? (
-                              <CheckSquare size={14} className={isDisabled ? 'text-gray-400' : 'text-indigo-600'} />
-                            ) : (
-                              <Square size={14} className="text-gray-400" />
-                            )}
-                            <span>{stage.strname}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <StageVisibilitySelector
+                stages={stages}
+                visibleStageIds={visibleStageIds}
+                onVisibilityChange={handleStageVisibilityChange}
+                zIndex={50}
+                labelSize="xs"
+                themeColor="indigo"
+                align="responsive"
+              />
             )}
           </div>
 
-          {/* Action buttons */}
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
+            <Button
               onClick={() => setIsCreatingTicket(true)}
-              className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer whitespace-nowrap"
+              variant="success"
+              className="flex-1 sm:flex-none"
             >
-              <Plus size={18} />
+              <Plus size={18} className="mr-2" />
               Nuevo Ticket
-            </button>
+            </Button>
             {isAdmin && (
-              <button
+              <Button
                 title="Configurar Mesa de Ayuda"
-                className="shrink-0 bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-700 flex items-center gap-2 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
+                variant="secondary"
+                className="shrink-0 !py-2.5 !px-3.5"
                 onClick={() => setShowStagesConfig(true)}
               >
                 <Settings2 size={18} />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -1169,7 +1124,7 @@ const HelpdeskPage: React.FC = () => {
           {viewMode === 'kanban' ? (
             /* Vista Kanban con Drag and Drop */
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-              <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 ${!activeTicket ? 'snap-x snap-mandatory' : ''}`}>
+              <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 ${!activeTicket && !activeStage ? 'snap-x snap-mandatory' : ''}`}>
                 <SortableContext
                   items={stages.filter(s => s.blnstatus && visibleStageIds.includes(s.id)).map(s => s.id)}
                   strategy={horizontalListSortingStrategy}
@@ -1215,47 +1170,43 @@ const HelpdeskPage: React.FC = () => {
                     <div className="flex flex-col w-[85vw] md:w-[330px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[220px] h-fit snap-center transition-all duration-200">
                       <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
                       <form onSubmit={handleCreateStage} className="flex flex-col gap-3">
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase">Nombre</label>
-                          <input
-                            ref={addStageInputRef}
-                            type="text"
-                            value={newStageName}
-                            onChange={e => setNewStageName(e.target.value)}
-                            placeholder="Nombre de la etapa..."
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full"
-                            required
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase">Límite de días (opcional)</label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={newStageMaxDays}
-                            onChange={e => setNewStageMaxDays(e.target.value)}
-                            placeholder="Ej. 15 (vacío = sin límite)"
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full"
-                          />
-                        </div>
+                        <Input
+                          label="Nombre"
+                          ref={addStageInputRef}
+                          type="text"
+                          value={newStageName}
+                          onChange={e => setNewStageName(e.target.value)}
+                          placeholder="Nombre de la etapa..."
+                          required
+                        />
+                        <Input
+                          label="Límite de días (opcional)"
+                          type="number"
+                          min="0"
+                          value={newStageMaxDays}
+                          onChange={e => setNewStageMaxDays(e.target.value)}
+                          placeholder="Ej. 15 (vacío = sin límite)"
+                        />
                         <div className="flex items-center gap-2 mt-1">
-                          <button
+                          <Button
                             type="submit"
-                            className="bg-indigo-650 hover:bg-indigo-750 text-white text-xs font-semibold px-3 py-2 rounded-lg flex-1 shadow-sm transition-colors cursor-pointer"
+                            variant="indigo"
+                            className="flex-1"
                           >
                             Añadir
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
                             onClick={() => {
                               setIsAddingStage(false);
                               setNewStageName('');
                               setNewStageMaxDays('');
                             }}
-                            className="bg-gray-100 hover:bg-gray-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex-1 border border-gray-200 transition-colors cursor-pointer"
+                            variant="secondary"
+                            className="flex-1"
                           >
                             Cancelar
-                          </button>
+                          </Button>
                         </div>
                       </form>
                     </div>
@@ -1348,47 +1299,41 @@ const HelpdeskPage: React.FC = () => {
             </h3>
 
             <div className="space-y-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600 uppercase">Nombre de la Etapa</label>
-                <input
-                  type="text"
-                  value={editingStage.strname}
-                  onChange={e => setEditingStage({ ...editingStage, strname: e.target.value })}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                  placeholder="Ej. En Espera"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600 uppercase">Límite de Días</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={editingStage.intmaxdays !== undefined && editingStage.intmaxdays !== null ? editingStage.intmaxdays : ''}
-                  onChange={e => {
-                    const val = e.target.value;
-                    setEditingStage({ ...editingStage, intmaxdays: val === '' ? null : parseInt(val, 10) });
-                  }}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                  placeholder="Ej. 15 (dejar vacío para sin límite)"
-                />
-              </div>
+              <Input
+                label="Nombre de la Etapa"
+                type="text"
+                value={editingStage.strname}
+                onChange={e => setEditingStage({ ...editingStage, strname: e.target.value })}
+                placeholder="Ej. En Espera"
+                required
+              />
+              <Input
+                label="Límite de Días"
+                type="number"
+                min="0"
+                value={editingStage.intmaxdays !== undefined && editingStage.intmaxdays !== null ? editingStage.intmaxdays : ''}
+                onChange={e => {
+                  const val = e.target.value;
+                  setEditingStage({ ...editingStage, intmaxdays: val === '' ? null : parseInt(val, 10) });
+                }}
+                placeholder="Ej. 15 (dejar vacío para sin límite)"
+              />
             </div>
 
             <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 mt-6">
-              <button
+              <Button
                 type="button"
                 onClick={() => setEditingStage(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                variant="secondary"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-750 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors shadow-sm cursor-pointer"
+                variant="indigo"
               >
                 Guardar
-              </button>
+              </Button>
             </div>
           </form>
         )}
@@ -1406,30 +1351,28 @@ const HelpdeskPage: React.FC = () => {
               <AlertTriangle size={15} className="text-rose-600 shrink-0" />
               <span>El ticket pasará a la etapa **Resuelto**. Las notas de resolución son obligatorias para continuar.</span>
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-650 uppercase">Comentarios / Notas</label>
-              <textarea
-                value={resolutionNotesTemp}
-                onChange={e => setResolutionNotesTemp(e.target.value)}
-                placeholder="Describe detalladamente cómo se resolvió la incidencia..."
-                className="w-full min-h-[100px] outline-none text-slate-750 text-sm font-medium border border-slate-200 rounded-lg p-3 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                required
-              />
-            </div>
+            <TextArea
+              label="Comentarios / Notas"
+              value={resolutionNotesTemp}
+              onChange={e => setResolutionNotesTemp(e.target.value)}
+              placeholder="Describe detalladamente cómo se resolvió la incidencia..."
+              className="w-full min-h-[100px]"
+              required
+            />
             <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 mt-6">
-              <button
+              <Button
                 type="button"
                 onClick={handleResolutionCancel}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                variant="secondary"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors shadow-sm cursor-pointer"
+                variant="indigo"
               >
                 Resolver Ticket
-              </button>
+              </Button>
             </div>
           </form>
         )}

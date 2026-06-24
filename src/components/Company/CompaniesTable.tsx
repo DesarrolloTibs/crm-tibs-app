@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Company } from '../../core/models/Company';
 import { Edit, Inbox, UserCheck, UserX, ChevronDown, ChevronUp, Building } from 'lucide-react';
+import Button from '../shared/Button';
 
 interface Props {
   companies: Company[];
@@ -146,13 +147,14 @@ const CompaniesTable: React.FC<Props> = ({ companies, onEdit, onUpdateStatus, is
         <div className="flex justify-center items-center mt-6 p-4">
           <div className="flex space-x-2">
             {Array.from({ length: totalPages }, (_, i) => (
-              <button
+              <Button
                 key={i + 1}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === i + 1 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'}`}
+                variant={currentPage === i + 1 ? 'primary' : 'secondary'}
                 onClick={() => onPageChange(i + 1)}
+                className="px-4 py-2 text-sm min-w-[38px]"
               >
                 {i + 1}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

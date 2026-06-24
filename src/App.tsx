@@ -16,11 +16,13 @@ import CompaniesPage from './pages/CompaniesPage';
 import SettingsPage from './pages/SettingsPage';
 import ProductsPage from './pages/ProductsPage';
 import HelpdeskPage from './pages/HelpdeskPage';
+import SupportTicketPage from './pages/SupportTicketPage';
 
 const App: React.FC = () => (
     <BrowserRouter>
         <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/support" element={<SupportTicketPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route

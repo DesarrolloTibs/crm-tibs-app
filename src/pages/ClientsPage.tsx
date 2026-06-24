@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { getClients, createClient, updateClient, updateClientStatus } from '../services/clientsService';
 import { getCompanies, createCompany, updateCompany, updateCompanyStatus } from '../services/companiesService';
 import { getActiveUsers } from '../services/usersService';
@@ -10,10 +10,14 @@ import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import ClientsTable from '../components/Client/ClientsTable';
 import CompaniesTable from '../components/Company/CompaniesTable';
-import { Filter, XCircle, Search, Building, Mail, User as UserIcon } from 'lucide-react';
+import { Filter, XCircle, Building, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
 import Select from 'react-select';
+import Input from '../components/shared/Input';
+import Button from '../components/shared/Button';
+import UnifiedSearchBar from '../components/shared/UnifiedSearchBar';
+import type { SearchBadge } from '../components/shared/UnifiedSearchBar';
 
 const PAGE_SIZE = 10;
 
@@ -54,6 +58,18 @@ const ClientsPage: React.FC = () => {
         onConfirm: () => {},
         onCancel: () => {},
     });
+
+    const searchDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+                setShowFilters(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const hideNotification = () => setNotification({ ...notification, show: false });
 
@@ -296,6 +312,43 @@ const ClientsPage: React.FC = () => {
         setFilterCategory(null);
     };
 
+    const badges = useMemo(() => {
+        const list: SearchBadge[] = [];
+        if (viewSubModule === 'contacts' && filterEmpresa) {
+            list.push({
+                id: 'empresa',
+                label: `Empresa: ${filterEmpresa}`,
+                icon: <Filter size={10} />,
+                onRemove: () => setFilterEmpresa('')
+            });
+        }
+        if (filterCorreo) {
+            list.push({
+                id: 'correo',
+                label: `Correo: ${filterCorreo}`,
+                icon: <Filter size={10} />,
+                onRemove: () => setFilterCorreo('')
+            });
+        }
+        if (filterEjecutivoId) {
+            list.push({
+                id: 'ejecutivo',
+                label: executives.find(e => e.value === filterEjecutivoId)?.label || 'Ejecutivo',
+                icon: <Filter size={10} />,
+                onRemove: () => setFilterEjecutivoId(null)
+            });
+        }
+        if (viewSubModule === 'contacts' && filterCategory) {
+            list.push({
+                id: 'categoria',
+                label: `Cat: ${filterCategory}`,
+                icon: <Filter size={10} />,
+                onRemove: () => setFilterCategory(null)
+            });
+        }
+        return list;
+    }, [viewSubModule, filterEmpresa, filterCorreo, filterEjecutivoId, filterCategory, executives]);
+
     return (
         <>
             <Notification {...notification} />
@@ -330,113 +383,97 @@ const ClientsPage: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
-                    <button
-                        className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
-                        onClick={() => setShowFilters(!showFilters)}
+                <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3 items-center">
+                    <UnifiedSearchBar
+                        ref={searchDropdownRef}
+                        searchTerm={filterNombre}
+                        onSearchChange={setFilterNombre}
+                        placeholder={!filterEmpresa && !filterCorreo && !filterEjecutivoId && !filterCategory ? "Buscar por nombre..." : ""}
+                        badges={badges}
+                        showFilters={showFilters}
+                        setShowFilters={setShowFilters}
+                        dropdownWidthClass="w-[320px]"
                     >
-                        <Filter size={16} />
-                        <span>Filtros</span>
-                    </button>
-                    <button
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
+                        <div className="w-full flex flex-col gap-3">
+                            {viewSubModule === 'contacts' && (
+                                <div>
+                                    <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Empresa</h4>
+                                    <Input
+                                        type="text"
+                                        placeholder="Filtrar por empresa"
+                                        value={filterEmpresa}
+                                        onChange={e => setFilterEmpresa(e.target.value)}
+                                    />
+                                </div>
+                            )}
+                            <div>
+                                <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Correo</h4>
+                                <Input
+                                    type="text"
+                                    placeholder="Filtrar por correo"
+                                    value={filterCorreo}
+                                    onChange={e => setFilterCorreo(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Ejecutivo</h4>
+                                <Select
+                                    inputId="ejecutivo-filter"
+                                    options={executives}
+                                    value={executives.find(option => option.value === filterEjecutivoId) || null}
+                                    onChange={(option: any) => setFilterEjecutivoId(option ? option.value : null)}
+                                    placeholder="Filtrar por ejecutivo"
+                                    isClearable
+                                    isSearchable
+                                    className="w-full"
+                                />
+                            </div>
+                            {viewSubModule === 'contacts' && (
+                                <div>
+                                    <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Categoría</h4>
+                                    <Select
+                                        options={[
+                                            { value: '', label: 'Todas las categorías' },
+                                            ...Object.values(ClientCategory).map(c => ({ value: c, label: c }))
+                                        ]}
+                                        value={filterCategory
+                                            ? { value: filterCategory, label: filterCategory }
+                                            : { value: '', label: 'Todas las categorías' }
+                                        }
+                                        onChange={(opt: any) => setFilterCategory(opt?.value || null)}
+                                        placeholder="Todas las categorías"
+                                    />
+                                </div>
+                            )}
+                            <div className="border-t border-gray-100 my-1 pt-2 w-full" />
+                            <button
+                                type="button"
+                                onClick={handleClearFilters}
+                                className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                            >
+                                <XCircle size={12} />
+                                Limpiar Filtros
+                            </button>
+                        </div>
+                    </UnifiedSearchBar>
+
+                    <Button
+                        variant="success"
+                        className="w-full sm:w-auto h-[38px] py-0 px-4 whitespace-nowrap flex items-center justify-center"
                         onClick={openCreateModal}
                     >
                         {viewSubModule === 'contacts' ? (
                             <>
-                                <UserIcon size={18} /> Nuevo Contacto
+                                <UserIcon size={18} className="mr-2" /> Nuevo Contacto
                             </>
                         ) : (
                             <>
-                                <Building size={18} /> Nueva Empresa
+                                <Building size={18} className="mr-2" /> Nueva Empresa
                             </>
                         )}
-                    </button>
+                    </Button>
                 </div>
             </div>
-            {showFilters && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 animate-fade-in-down">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold text-gray-700">Filtros</h3>
-                        <button onClick={handleClearFilters} className="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                            <XCircle size={16} className="mr-1" />
-                            Limpiar filtros
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                <Search size={20} />
-                            </span>
-                            <input
-                                type="text"
-                                placeholder="Filtrar por nombre"
-                                value={filterNombre}
-                                onChange={e => setFilterNombre(e.target.value)}
-                                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                        </div>
-                        {viewSubModule === 'contacts' && (
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                    <Building size={20} />
-                                </span>
-                                <input
-                                    type="text"
-                                    placeholder="Filtrar por empresa"
-                                    value={filterEmpresa}
-                                    onChange={e => setFilterEmpresa(e.target.value)}
-                                    className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                            </div>
-                        )}
-                        <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                <Mail size={20} />
-                            </span>
-                            <input
-                                type="text"
-                                placeholder="Filtrar por correo"
-                                value={filterCorreo}
-                                onChange={e => setFilterCorreo(e.target.value)}
-                                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                        </div>
-                        <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                <UserIcon size={20} />
-                            </span>
-                            <Select
-                                inputId="ejecutivo-filter"
-                                options={executives}
-                                value={executives.find(option => option.value === filterEjecutivoId) || null}
-                                onChange={option => setFilterEjecutivoId(option ? option.value : null)}
-                                placeholder="Filtrar por ejecutivo"
-                                isClearable
-                                isSearchable
-                                className="w-full"
-                                styles={{
-                                    input: (base) => ({ ...base, paddingLeft: '28px' }),
-                                    placeholder: (base) => ({ ...base, paddingLeft: '28px' }),
-                                    singleValue: (base) => ({...base, paddingLeft: '28px'})
-                                }}
-                            />
-                        </div>
-                        {viewSubModule === 'contacts' && (
-                            <div>
-                                <select
-                                    value={filterCategory || ''}
-                                    onChange={e => setFilterCategory(e.target.value || null)}
-                                    className="w-full border rounded-lg px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="">Todas las categorías</option>
-                                    {Object.values(ClientCategory).map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
             {/* Loader y Tablas */}
             {loading ? (
                 <Loader />

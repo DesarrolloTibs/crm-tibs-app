@@ -10,7 +10,7 @@ export interface ActivityColor {
  */
 export const getActivityColor = (typeName?: string): ActivityColor => {
     if (!typeName || typeName === 'Tipo de actividad eliminada') {
-        return { bg: '#6B7280', border: '#4B5563', text: '#ffffff' };
+        return { bg: '#F3F4F6', border: '#D1D5DB', text: '#374151' };
     }
 
     // Calcular un hash simple a partir del nombre
@@ -22,14 +22,17 @@ export const getActivityColor = (typeName?: string): ActivityColor => {
     // Generar un Hue (matiz) entre 0 y 360 grados
     const hue = Math.abs(hash) % 360;
     
-    // Usar valores fijos de saturación y luminosidad para asegurar legibilidad y armonía (tonos agradables)
-    const bg = `hsl(${hue}, 70%, 50%)`;
-    const border = `hsl(${hue}, 70%, 40%)`;
+    // Tonos pastel premium: 
+    // Saturación moderada (45%) y luminosidad alta (92% para el fondo)
+    // El texto tendrá un matiz idéntico pero con alta saturación (55%) y baja luminosidad (25%) para legibilidad
+    const bg = `hsl(${hue}, 45%, 92%)`;
+    const border = `hsl(${hue}, 35%, 82%)`;
+    const text = `hsl(${hue}, 55%, 25%)`;
 
     return {
         bg,
         border,
-        text: '#ffffff',
+        text,
     };
 };
 

@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import type { Product } from '../../core/models/Product';
 import { UploadCloud, X, DollarSign, Paperclip, Tag } from 'lucide-react';
+import Input from '../shared/Input';
+import TextArea from '../shared/TextArea';
+import Button from '../shared/Button';
+import Dropzone from '../shared/Dropzone';
 
 interface StagedSpecFile {
   id: string;
@@ -34,7 +38,6 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
 
   const [stagedCoverFile, setStagedCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
 
   // Staged technical specs for product creation
   const [stagedSpecs, setStagedSpecs] = useState<StagedSpecFile[]>([]);
@@ -81,44 +84,10 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setStagedCoverFile(file);
-      setCoverPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('image/')) {
-        setStagedCoverFile(file);
-        setCoverPreview(URL.createObjectURL(file));
-      }
-    }
-  };
-
   const removeCover = () => {
     setStagedCoverFile(null);
     setCoverPreview(null);
     setFormData(prev => ({ ...prev, imagenPortada: null }));
-  };
-
-  const handleSpecFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newStaged = Array.from(e.target.files).map((file, idx) => {
-        const defaultTitle = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-        return {
-          id: `${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
-          file,
-          title: defaultTitle,
-        };
-      });
-      setStagedSpecs(prev => [...prev, ...newStaged]);
-    }
   };
 
   const removeStagedSpec = (id: string) => {
@@ -157,10 +126,8 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         {/* Left side: Information fields */}
         <div className="space-y-4">
           <div>
-            <label htmlFor="nombre" className="block text-sm font-semibold text-gray-700 mb-1">
-              Nombre del Producto *
-            </label>
-            <input
+            <Input
+              label="Nombre del Producto *"
               id="nombre"
               type="text"
               name="nombre"
@@ -168,45 +135,35 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
               onChange={handleChange}
               placeholder="Ej: Licencia Anual Qlik Sense"
               required
-              className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
             />
           </div>
 
           <div>
-            <label htmlFor="descripcion" className="block text-sm font-semibold text-gray-700 mb-1">
-              Descripción
-            </label>
-            <textarea
+            <TextArea
+              label="Descripción"
               id="descripcion"
               name="descripcion"
               value={formData.descripcion || ''}
               onChange={handleChange}
               placeholder="Describe las características principales del producto..."
               rows={3}
-              className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
             />
           </div>
 
           <div>
-            <label htmlFor="precioBase" className="block text-sm font-semibold text-gray-700 mb-1">
-              Precio Base (MXN) *
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <DollarSign size={16} />
-              </span>
-              <input
-                id="precioBase"
-                type="number"
-                name="precioBase"
-                min="0"
-                step="0.01"
-                value={formData.precioBase}
-                onChange={handleChange}
-                placeholder="0.00"
-                className="w-full border rounded pl-8 pr-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-right bg-white"
-              />
-            </div>
+            <Input
+              label="Precio Base (MXN) *"
+              id="precioBase"
+              type="number"
+              name="precioBase"
+              min="0"
+              step="0.01"
+              value={formData.precioBase}
+              onChange={handleChange}
+              placeholder="0.00"
+              inputPrefix={<DollarSign size={16} />}
+              className="text-right"
+            />
             <span className="text-xs text-slate-400 mt-1 block">
               El precio base del catálogo se calcula y almacena estrictamente en Pesos Mexicanos (MXN).
             </span>
@@ -231,11 +188,11 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
           <label className="block text-sm font-semibold text-gray-700 mb-1">Imagen de Portada</label>
           
           {coverPreview ? (
-            <div className="border border-slate-200 rounded-xl p-3 bg-white shadow-sm flex flex-col items-center justify-center relative h-64 w-full">
+            <div className="border border-slate-200 rounded-2xl p-3 bg-white shadow-sm flex flex-col items-center justify-center relative h-64 w-full">
               <button
                 type="button"
                 onClick={removeCover}
-                className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-full transition-colors"
+                className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-full transition-colors cursor-pointer"
                 title="Quitar portada"
               >
                 <X size={16} />
@@ -247,35 +204,19 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
               />
             </div>
           ) : (
-            <div
-              onDrop={handleDrop}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
+            <Dropzone
+              id="product-cover-upload"
+              accept="image/*"
+              onFilesSelected={(files) => {
+                if (files.length > 0) {
+                  setStagedCoverFile(files[0]);
+                  setCoverPreview(URL.createObjectURL(files[0]));
+                }
               }}
-              onDragLeave={() => setDragOver(false)}
-              className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 h-64 flex flex-col items-center justify-center ${
-                dragOver
-                  ? 'border-indigo-500 bg-indigo-50/50 scale-[0.99]'
-                  : 'border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-400'
-              }`}
-            >
-              <input
-                type="file"
-                id="product-cover-upload"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <label htmlFor="product-cover-upload" className="cursor-pointer flex flex-col items-center select-none w-full">
-                <UploadCloud size={40} className="text-indigo-500 mb-2 animate-bounce-slow" />
-                <span className="text-sm font-semibold text-slate-700">Sube la imagen del producto</span>
-                <span className="text-xs text-slate-400 mt-1">Arrastra y suelta o haz clic para buscar</span>
-                <span className="mt-4 inline-flex items-center text-[12px] bg-white border border-slate-200 text-indigo-600 px-3 py-1.5 rounded-lg font-semibold shadow-sm hover:bg-indigo-50 transition-colors">
-                  Buscar imagen
-                </span>
-              </label>
-            </div>
+              helpText="Sube la imagen del producto"
+              buttonText="Buscar imagen"
+              className="h-64"
+            />
           )}
         </div>
       </div>
@@ -287,21 +228,25 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
             Fichas Técnicas y Documentos (Opcional)
           </legend>
           
-          <div className="border border-dashed border-slate-300 rounded-xl p-4 bg-slate-50/30 text-center hover:bg-slate-50 transition-all">
-            <input
-              type="file"
-              id="product-specs-upload-create"
-              className="hidden"
-              onChange={handleSpecFileChange}
-              multiple
-            />
-            <label htmlFor="product-specs-upload-create" className="cursor-pointer flex flex-col items-center w-full">
-              <UploadCloud size={30} className="text-indigo-400 mb-1" />
-              <span className="text-xs font-semibold text-slate-700">
-                Selecciona o arrastra documentos técnicos aquí para guardarlos con el producto
-              </span>
-            </label>
-          </div>
+          <Dropzone
+            id="product-specs-upload-create"
+            multiple
+            onFilesSelected={(files) => {
+              const newStaged = files.map((file, idx) => {
+                const defaultTitle = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                return {
+                  id: `${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
+                  file,
+                  title: defaultTitle,
+                };
+              });
+              setStagedSpecs(prev => [...prev, ...newStaged]);
+            }}
+            helpText="Selecciona o arrastra documentos técnicos aquí para guardarlos con el producto"
+            buttonText="Buscar documentos"
+            icon={<UploadCloud size={24} className="text-indigo-400 mb-1 animate-bounce" style={{ animationDuration: '3s' }} />}
+            className="min-h-[120px] py-4"
+          />
 
           {stagedSpecs.length > 0 && (
             <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1">
@@ -340,19 +285,19 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
       )}
 
       <div className="flex justify-end space-x-2 border-t border-gray-100 pt-4">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={onCancel}
-          className="bg-gray-150 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
         >
           Cancelar
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium text-sm shadow-sm"
+          variant="success"
         >
-          Guardar Producto
-        </button>
+          Guardar 
+        </Button>
       </div>
     </form>
   );

@@ -4,6 +4,8 @@ import type { TicketStage } from '../../core/models/Ticket';
 import { ArrowUp, ArrowDown, Plus, Trash2, Save, Info, Check, Sliders } from 'lucide-react';
 import Notification from '../Modal/Notification';
 import Loader from '../Loader/Loader';
+import Input from '../shared/Input';
+import Button from '../shared/Button';
 
 interface Props {
   onSaveSuccess?: () => void;
@@ -261,24 +263,22 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
           <div className="bg-gray-50/50 border border-gray-100 rounded-xl p-5 flex flex-col gap-4">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Detalles de la Mesa de Ayuda</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600 uppercase">Nombre de la Mesa de Ayuda</label>
-                <input
+              <div className="flex flex-col gap-1.5 w-full">
+                <Input
+                  label="Nombre de la Mesa de Ayuda"
                   type="text"
                   value={helpdeskName}
                   onChange={e => setHelpdeskName(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                   placeholder="Ej. Mesa de Ayuda Principal"
                   required
                 />
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600 uppercase">Descripción</label>
-                <input
+              <div className="flex flex-col gap-1.5 w-full">
+                <Input
+                  label="Descripción"
                   type="text"
                   value={helpdeskDescription}
                   onChange={e => setHelpdeskDescription(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                   placeholder="Descripción breve de la mesa"
                 />
               </div>
@@ -290,14 +290,15 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
             <div className="flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Etapas del Proceso</h3>
               {!onlyHelpdeskDetails && (
-                <button
+                <Button
                   type="button"
                   onClick={handleAddStage}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm"
+                  variant="indigo"
+                  className="!py-1.5 !px-3 !text-[10px] !tracking-wider flex items-center gap-1.5"
                 >
                   <Plus size={14} />
                   Agregar Etapa
-                </button>
+                </Button>
               )}
             </div>
 
@@ -350,18 +351,17 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
                       />
                     </div>
 
-                    {/* Name */}
-                    <input
+                    <Input
                       type="text"
                       value={stage.strname}
                       onChange={e => updateStageField(idx, 'strname', e.target.value)}
                       placeholder="Nombre de la etapa…"
-                      className="flex-1 min-w-0 border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium bg-white"
+                      className="flex-1 min-w-0 !py-1.5 !px-2.5 !rounded-lg shadow-none focus:shadow-none hover:border-slate-350"
                       required
                     />
 
                     {/* Days limit */}
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       placeholder="∞"
@@ -370,7 +370,7 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
                         const val = e.target.value;
                         updateStageField(idx, 'intmaxdays', val === '' ? null : parseInt(val, 10));
                       }}
-                      className="w-16 shrink-0 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center font-medium bg-white"
+                      className="w-16 shrink-0 !py-1.5 !px-2 !rounded-lg text-center shadow-none focus:shadow-none hover:border-slate-350"
                       title="Días límite en etapa (vacío = sin límite)"
                     />
 
@@ -415,24 +415,23 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
             </div>
           </div>
 
-          {/* Form Actions */}
           <div className="flex justify-end gap-3 border-t border-gray-100 pt-5 mt-4">
-            <button
+            <Button
               type="button"
               onClick={loadData}
+              variant="secondary"
               disabled={saving}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-150 transition-colors disabled:opacity-50"
             >
               Restablecer
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={saving}
-              className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm"
+              variant="indigo"
+              loading={saving}
             >
-              <Save size={16} />
-              {saving ? 'Guardando...' : 'Guardar Cambios'}
-            </button>
+              <Save size={16} className="mr-2" />
+              Guardar Cambios
+            </Button>
           </div>
         </form>
       </div>

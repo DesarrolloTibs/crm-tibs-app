@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import Select, { type SingleValue, type MultiValue } from 'react-select';
+import { type SingleValue, type MultiValue } from 'react-select';
 import { Bell, BellOff, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +11,11 @@ import type { Client } from '../../core/models/Client';
 import { useAuth } from '../../hooks/useAuth';
 import { getCompanies } from '../../services/companiesService';
 import type { Company } from '../../core/models/Company';
+
+import Input from '../shared/Input';
+import TextArea from '../shared/TextArea';
+import Select from '../shared/Select';
+import Button from '../shared/Button';
 
 interface Props {
     initialData?: Partial<Activity>;
@@ -270,21 +275,41 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                 <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Detalles de la Actividad</legend>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="typeActivityId" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Actividad</label>
-                        <select id="typeActivityId" name="typeActivityId" value={form.typeActivityId === null ? 'null' : (form.typeActivityId ?? '')} onChange={handleChange} required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Seleccione un tipo</option>
-                            {extendedActivityTypes.map(type => (
-                                <option key={type.id ?? 'null'} value={type.id === null ? 'null' : type.id}>{type.strname}</option>
-                            ))}
-                        </select>
+                        <Select
+                            label="Tipo de Actividad"
+                            name="typeActivityId"
+                            value={extendedActivityTypes
+                                .map(type => ({ value: type.id === null ? 'null' : String(type.id), label: type.strname }))
+                                .find(opt => opt.value === (form.typeActivityId === null ? 'null' : String(form.typeActivityId))) || null}
+                            onChange={(opt) => {
+                                const val = opt ? opt.value : 'null';
+                                setForm({
+                                    ...form,
+                                    typeActivityId: val === 'null' ? null : parseInt(val, 10),
+                                });
+                            }}
+                            options={extendedActivityTypes.map(type => ({
+                                value: type.id === null ? 'null' : String(type.id),
+                                label: type.strname
+                            }))}
+                            required
+                            placeholder="Seleccione un tipo"
+                        />
                     </div>
                     <div>
-                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                        <input id="date" name="date" type="datetime-local" value={form.date} onChange={handleChange} required className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0" />
+                        <Input
+                            label="Fecha"
+                            id="date"
+                            name="date"
+                            type="datetime-local"
+                            value={form.date}
+                            onChange={handleChange}
+                            required
+                        />
                     </div>
                     <div className="md:col-span-2">
-                        <label htmlFor="activity" className="block text-sm font-medium text-gray-700 mb-1">Actividad</label>
-                        <textarea 
+                        <TextArea 
+                            label="Actividad"
                             id="activity" 
                             name="activity" 
                             value={form.activity || ''} 
@@ -292,20 +317,19 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                             placeholder="Descripción de la actividad" 
                             required 
                             rows={3}
-                            className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
                         />
                     </div>
                     
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Vinculación</label>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tipo de Vinculación</label>
                         <div className="flex gap-4 mt-1">
                             <label className="inline-flex items-center cursor-pointer">
                                 <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="company" checked={linkType === 'company'} onChange={() => { setLinkType('company'); setForm(prev => ({ ...prev, clientId: null })); }} />
-                                <span className="ml-2 text-sm text-gray-700">Empresa (Cuenta)</span>
+                                <span className="ml-2 text-sm text-gray-700 font-medium">Empresa (Cuenta)</span>
                             </label>
                             <label className="inline-flex items-center cursor-pointer">
                                 <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="contact" checked={linkType === 'contact'} onChange={() => { setLinkType('contact'); setForm(prev => ({ ...prev, companyId: null, contactIds: [] })); }} />
-                                <span className="ml-2 text-sm text-gray-700">Contacto Individual</span>
+                                <span className="ml-2 text-sm text-gray-700 font-medium">Contacto Individual</span>
                             </label>
                         </div>
                     </div>
@@ -313,8 +337,8 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                     {linkType === 'company' ? (
                         <>
                             <div className="md:col-span-2">
-                                <label htmlFor="companyId" className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
                                 <Select
+                                    label="Empresa"
                                     inputId="companyId"
                                     name="companyId"
                                     options={companyOptions}
@@ -327,8 +351,8 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <label htmlFor="contactIds" className="block text-sm font-medium text-gray-700 mb-1">Contactos Asociados (Opcional)</label>
                                 <Select
+                                    label="Contactos Asociados (Opcional)"
                                     inputId="contactIds"
                                     name="contactIds"
                                     isMulti
@@ -345,8 +369,8 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                         </>
                     ) : (
                         <div className="md:col-span-2">
-                            <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">Contacto</label>
                             <Select
+                                label="Contacto"
                                 inputId="clientId"
                                 name="clientId"
                                 options={clientOptions}
@@ -361,10 +385,10 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                     )}
 
                     <div className="md:col-span-2">
-                        <label htmlFor="opportunityId" className="block text-sm font-medium text-gray-700 mb-1">Oportunidad (Opcional)</label>
                         <div className="flex items-center gap-2">
                             <div className="flex-grow">
                                 <Select
+                                    label="Oportunidad (Opcional)"
                                     inputId="opportunityId"
                                     name="opportunityId"
                                     options={opportunityOptions}
@@ -381,7 +405,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                 <button
                                     type="button"
                                     onClick={handleRedirectOpportunity}
-                                    className="text-indigo-600 hover:text-indigo-800 p-1.5 transition-colors cursor-pointer shrink-0 flex items-center justify-center"
+                                    className="text-indigo-650 hover:text-indigo-800 p-1.5 transition-colors cursor-pointer shrink-0 flex items-center justify-center mt-4"
                                     title="Ir a la Oportunidad en el Pipeline"
                                 >
                                     <ArrowRight size={22} className="stroke-[2.5]" />
@@ -420,10 +444,8 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                 {reminderEnabled && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-amber-50 border border-amber-200 rounded-lg p-4 animate-fade-in-down">
                         <div className="md:col-span-2">
-                            <label htmlFor="reminderTitle" className="block text-sm font-medium text-gray-700 mb-1">
-                                Título del Recordatorio <span className="text-red-500">*</span>
-                            </label>
-                            <input
+                            <Input
+                                label="Título del Recordatorio *"
                                 id="reminderTitle"
                                 name="title"
                                 type="text"
@@ -432,21 +454,19 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                 placeholder="Ej: Llamar al cliente para seguimiento"
                                 maxLength={100}
                                 required={reminderEnabled}
-                                className="w-full border rounded px-3 py-2 border-amber-300 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                                className="border-amber-300 focus:border-amber-500"
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label htmlFor="reminderDate" className="block text-sm font-medium text-gray-700 mb-1">
-                                Fecha y Hora del Recordatorio <span className="text-red-500">*</span>
-                            </label>
-                            <input
+                            <Input
+                                label="Fecha y Hora del Recordatorio *"
                                 id="reminderDate"
                                 name="date"
                                 type="datetime-local"
                                 value={reminderForm.date}
                                 onChange={handleReminderChange}
                                 required={reminderEnabled}
-                                className="w-full border rounded px-3 py-2 border-amber-300 focus:ring-amber-500 focus:border-amber-500 bg-white appearance-none min-w-0"
+                                className="border-amber-300 focus:border-amber-500"
                             />
                         </div>
                     </div>
@@ -454,12 +474,12 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
             </fieldset>
 
             <div className="flex justify-end space-x-2 pt-4">
-                <button type="button" onClick={onCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+                <Button type="button" variant="secondary" onClick={onCancel}>
                     Cancelar
-                </button>
-                <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                </Button>
+                <Button type="submit" variant="success">
                     Guardar
-                </button>
+                </Button>
             </div>
         </form>
     );

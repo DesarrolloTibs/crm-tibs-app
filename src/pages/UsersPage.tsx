@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { getUsers, createUser, updateUser, updateUserStatus } from '../services/usersService'; // Asumiendo que updateUserStatus existe
 import type { User } from '../core/models/User';
 import UserForm from '../components/User/UserForm';
 import UsersTable from '../components/User/UsersTable';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
-import { UserPlus, Filter, XCircle, Search, Mail, Shield } from 'lucide-react';
+import { UserPlus, Filter, XCircle, Mail } from 'lucide-react';
 import ProfileImageUploadModal from '../components/User/ProfileImageUploadModal';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
+import Select from '../components/shared/Select';
+import Input from '../components/shared/Input';
+import Button from '../components/shared/Button';
+import UnifiedSearchBar from '../components/shared/UnifiedSearchBar';
+import type { SearchBadge } from '../components/shared/UnifiedSearchBar';
 
 const PAGE_SIZE = 10;
 
@@ -24,6 +29,18 @@ const UsersPage: React.FC = () => {
     const [filterEmail, setFilterEmail] = useState('');
     const [filterRole, setFilterRole] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+
+    const searchDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+                setShowFilters(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const [notification, setNotification] = useState({
         show: false,
@@ -190,78 +207,90 @@ const UsersPage: React.FC = () => {
         setFilterRole('');
     };
 
+    const roleOptions = useMemo(() => [
+        { value: '', label: 'Todos los Roles' },
+        { value: 'admin', label: 'Admin' },
+        { value: 'executive', label: 'Executive' },
+    ], []);
+
+    const badges = useMemo(() => {
+        const list: SearchBadge[] = [];
+        if (filterEmail) {
+            list.push({
+                id: 'email',
+                label: `Email: ${filterEmail}`,
+                icon: <Filter size={10} />,
+                onRemove: () => setFilterEmail('')
+            });
+        }
+        if (filterRole) {
+            const roleLabel = roleOptions.find(opt => opt.value === filterRole)?.label || 'Rol';
+            list.push({
+                id: 'role',
+                label: `Rol: ${roleLabel}`,
+                icon: <Filter size={10} />,
+                onRemove: () => setFilterRole('')
+            });
+        }
+        return list;
+    }, [filterEmail, filterRole, roleOptions]);
+
     return (
         <>
                 <Notification {...notification} />
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <h1 className="text-2xl font-bold text-gray-800">Usuarios</h1>
-                    <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
-                        <button
-                            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm"
-                            onClick={() => setShowFilters(!showFilters)}
+                    <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3 items-center">
+                        <UnifiedSearchBar
+                            ref={searchDropdownRef}
+                            searchTerm={filterUsername}
+                            onSearchChange={setFilterUsername}
+                            placeholder={!filterEmail && !filterRole ? "Buscar por usuario..." : ""}
+                            badges={badges}
+                            showFilters={showFilters}
+                            setShowFilters={setShowFilters}
+                            dropdownWidthClass="w-[300px]"
                         >
-                            <Filter size={16} />
-                            <span>Filtros</span>
-                        </button>
-                        <button
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm"
+                            <div className="w-full flex flex-col gap-3">
+                                <div>
+                                    <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Email</h4>
+                                    <Input
+                                        type="text"
+                                        placeholder="Filtrar por email"
+                                        value={filterEmail}
+                                        onChange={e => setFilterEmail(e.target.value)}
+                                        inputPrefix={<Mail size={18} />}
+                                    />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Rol</h4>
+                                    <Select
+                                        options={roleOptions}
+                                        value={roleOptions.find(opt => opt.value === filterRole)}
+                                        onChange={(selected) => setFilterRole(selected ? selected.value : '')}
+                                        placeholder="Todos los Roles"
+                                    />
+                                </div>
+                                <div className="border-t border-gray-100 my-1 pt-2 w-full" />
+                                <button
+                                    type="button"
+                                    onClick={handleClearFilters}
+                                    className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                                >
+                                    <XCircle size={12} />
+                                    Limpiar Filtros
+                                </button>
+                            </div>
+                        </UnifiedSearchBar>
+                        <Button
+                            variant="primary"
                             onClick={openCreateModal}
+                            className="w-full sm:w-auto h-[38px] py-0 px-4 flex items-center justify-center whitespace-nowrap"
                         >
-                            <UserPlus size={18} /> Nuevo Usuario
-                        </button>
+                            <UserPlus size={18} className="mr-2" /> Nuevo Usuario
+                        </Button>
                     </div>
                 </div>
-                {showFilters && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 animate-fade-in-down">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold text-gray-700">Filtros</h3>
-                            <button onClick={handleClearFilters} className="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                                <XCircle size={16} className="mr-1" />
-                                Limpiar filtros
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                    <Search size={20} />
-                                </span>
-                                <input
-                                    type="text"
-                                    placeholder="Filtrar por usuario"
-                                    value={filterUsername}
-                                    onChange={e => setFilterUsername(e.target.value)}
-                                    className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                            </div>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                    <Mail size={20} />
-                                </span>
-                                <input
-                                    type="text"
-                                    placeholder="Filtrar por email"
-                                    value={filterEmail}
-                                    onChange={e => setFilterEmail(e.target.value)}
-                                    className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                            </div>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                    <Shield size={20} />
-                                </span>
-                                <select
-                                    value={filterRole}
-                                    onChange={e => setFilterRole(e.target.value)}
-                                    className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
-                                >
-                                    <option value="">Todos los Roles</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="executive">Executive</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                )}
                 {loading ? (
                     <Loader />
                 ) : (

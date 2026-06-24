@@ -4,6 +4,8 @@ import type { OpportunityLabel } from '../../core/models/OpportunityLabel';
 import Loader from '../Loader/Loader';
 import { Sliders, Check, ArrowRight, ArrowLeft, Info, HelpCircle, MousePointer, Edit2 } from 'lucide-react';
 import Notification from '../Modal/Notification';
+import Input from '../shared/Input';
+import Button from '../shared/Button';
 
 interface Props {
     onLabelsUpdated?: () => void;
@@ -533,17 +535,18 @@ const OpportunityLabelsSettings: React.FC<Props> = ({ onLabelsUpdated }) => {
                             {/* PASO 2: Edición e Ingreso de Etiqueta */}
                             {step === 2 && selectedLabel && (
                                 <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6 animate-fade-in">
-                                    <button
+                                    <Button
                                         type="button"
+                                        variant="secondary"
                                         onClick={() => {
                                             setStep(1);
                                             setSelectedLabel(null);
                                         }}
-                                        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                                        className="!py-2 !px-3.5 !text-[10px] w-fit font-bold"
                                     >
-                                        <ArrowLeft size={14} />
+                                        <ArrowLeft size={14} className="mr-1" />
                                         Volver al Paso 1
-                                    </button>
+                                    </Button>
 
                                     <div className="border-b border-slate-100 pb-4">
                                         <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase">
@@ -559,21 +562,18 @@ const OpportunityLabelsSettings: React.FC<Props> = ({ onLabelsUpdated }) => {
 
                                     <form onSubmit={handleSave} className="space-y-6">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">
-                                                Nuevo Nombre de la Etiqueta
-                                            </label>
-                                            <input
+                                            <Input
+                                                label="Nuevo Nombre de la Etiqueta"
                                                 type="text"
                                                 value={newName}
                                                 onChange={(e) => setNewName(e.target.value)}
-                                                className="w-full border border-slate-350 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-semibold text-slate-800"
                                                 placeholder="Escribe el nombre aquí..."
                                                 maxLength={100}
                                                 required
                                                 autoFocus
                                             />
-                                            <p className="text-[11px] text-slate-400 flex items-center gap-1">
-                                                <HelpCircle size={12} />
+                                            <p className="text-[11px] text-slate-400 flex items-center gap-1.5 ml-1">
+                                                <HelpCircle size={12} className="shrink-0" />
                                                 La etiqueta no puede estar vacía ni duplicada con las otras dos etiquetas del bloque.
                                             </p>
                                         </div>
@@ -589,26 +589,24 @@ const OpportunityLabelsSettings: React.FC<Props> = ({ onLabelsUpdated }) => {
                                         )}
 
                                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="secondary"
                                                 onClick={() => {
                                                     setStep(1);
                                                     setSelectedLabel(null);
                                                 }}
-                                                className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
                                             >
                                                 Cancelar
-                                            </button>
-                                            <button
+                                            </Button>
+                                            <Button
                                                 type="submit"
-                                                disabled={loading || !newName.trim() || isNameDuplicate()}
-                                                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-sm cursor-pointer flex items-center gap-1.5 hover:scale-[1.02]"
+                                                disabled={!newName.trim() || isNameDuplicate()}
+                                                loading={loading}
+                                                variant="success"
                                             >
-                                                {loading && (
-                                                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                )}
-                                                <span>Guardar y Reemplazar</span>
-                                            </button>
+                                                Guardar y Reemplazar
+                                            </Button>
                                         </div>
                                     </form>
                                 </div>

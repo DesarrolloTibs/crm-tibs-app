@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import {
   getProducts,
   createProduct,
@@ -15,9 +15,13 @@ import Modal from '../components/Modal/Modal';
 import Tabs from '../components/Tabs/Tabs';
 import Loader from '../components/Loader/Loader';
 import ProductsTable from '../components/Product/ProductsTable';
-import { Filter, XCircle, Search, Plus } from 'lucide-react';
+import { Filter, XCircle, Plus } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
+import Select from '../components/shared/Select';
+import Button from '../components/shared/Button';
+import UnifiedSearchBar from '../components/shared/UnifiedSearchBar';
+import type { SearchBadge } from '../components/shared/UnifiedSearchBar';
 
 const PAGE_SIZE = 10;
 
@@ -47,6 +51,18 @@ const ProductsPage: React.FC = () => {
     onConfirm: () => {},
     onCancel: () => {},
   });
+
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const hideNotification = () => setNotification((prev) => ({ ...prev, show: false }));
 
@@ -317,71 +333,71 @@ const ProductsPage: React.FC = () => {
     return <Tabs tabs={tabs} />;
   };
 
+  const badges = useMemo(() => {
+    const list: SearchBadge[] = [];
+    if (filterStatus !== 'all') {
+      list.push({
+        id: 'status',
+        label: filterStatus === 'active' ? 'Solo Activos' : 'Solo Inactivos',
+        icon: <Filter size={10} />,
+        onRemove: () => setFilterStatus('all')
+      });
+    }
+    return list;
+  }, [filterStatus]);
+
   return (
     <>
       <Notification {...notification} />
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Catálogo de Productos</h1>
-        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
-          <button
-            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
-            onClick={() => setShowFilters(!showFilters)}
+        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3 items-center">
+          <UnifiedSearchBar
+            ref={searchDropdownRef}
+            searchTerm={filterNombre}
+            onSearchChange={setFilterNombre}
+            placeholder={filterStatus === 'all' ? "Buscar por nombre o descripción..." : ""}
+            badges={badges}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            dropdownWidthClass="w-[300px]"
           >
-            <Filter size={16} />
-            <span>Filtros</span>
-          </button>
-          
-          <button
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
+            <div className="w-full flex flex-col gap-3">
+              <div>
+                <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Estado</h4>
+                <Select
+                  value={{ value: filterStatus, label: filterStatus === 'all' ? 'Todos los Estados' : filterStatus === 'active' ? 'Solo Activos' : 'Solo Inactivos' }}
+                  onChange={(opt) => setFilterStatus(opt ? opt.value : 'all')}
+                  options={[
+                    { value: 'all', label: 'Todos los Estados' },
+                    { value: 'active', label: 'Solo Activos' },
+                    { value: 'inactive', label: 'Solo Inactivos' }
+                  ]}
+                  placeholder="Todos los Estados"
+                />
+              </div>
+              <div className="border-t border-gray-100 my-1 pt-2 w-full" />
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+              >
+                <XCircle size={12} />
+                Limpiar Filtros
+              </button>
+            </div>
+          </UnifiedSearchBar>
+
+          <Button
+            variant="success"
+            className="w-full sm:w-auto whitespace-nowrap h-[38px] py-0 px-4 flex items-center justify-center"
             onClick={openCreateModal}
           >
-            <Plus size={18} /> Nuevo Producto
-          </button>
+            <Plus size={18} className="mr-2" /> Nuevo Producto
+          </Button>
         </div>
       </div>
-
-      {showFilters && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 animate-fade-in">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-700">Filtros</h3>
-            <button
-              onClick={handleClearFilters}
-              className="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              <XCircle size={16} className="mr-1" />
-              Limpiar filtros
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                <Search size={20} />
-              </span>
-              <input
-                type="text"
-                placeholder="Filtrar por nombre o descripción"
-                value={filterNombre}
-                onChange={(e) => setFilterNombre(e.target.value)}
-                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-              />
-            </div>
-
-            <div>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer font-medium"
-              >
-                <option value="all">Todos los Estados</option>
-                <option value="active">Solo Activos</option>
-                <option value="inactive">Solo Inactivos</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
 
       {loading ? (
         <Loader />

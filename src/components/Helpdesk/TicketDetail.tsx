@@ -5,7 +5,12 @@ import type { Client } from '../../core/models/Client';
 import { getClients } from '../../services/clientsService';
 import { getUsers } from '../../services/usersService';
 import { useAuth } from '../../hooks/useAuth';
-import Select, { type SingleValue } from 'react-select';
+import StageStepper from '../shared/StageStepper';
+import Select from '../shared/Select';
+import Input from '../shared/Input';
+import TextArea from '../shared/TextArea';
+import Button from '../shared/Button';
+import type { SingleValue } from 'react-select';
 import { User as UserIcon, LifeBuoy, AlertTriangle, ArrowRight, ShieldAlert } from 'lucide-react';
 
 interface Props {
@@ -22,90 +27,6 @@ interface SelectOption {
   value: string;
   label: string;
 }
-
-const formSelectStyles = {
-  control: (baseStyles: any, state: any) => ({
-    ...baseStyles,
-    borderRadius: '0.5rem',
-    borderColor: state.isFocused ? '#4f46e5' : '#cbd5e1',
-    minHeight: '38px',
-    backgroundColor: '#fff',
-    boxShadow: state.isFocused ? '0 0 0 1px #4f46e5' : 'none',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-    transition: 'all 0.2s ease',
-    '&:hover': {
-      borderColor: state.isFocused ? '#4f46e5' : '#94a3b8'
-    }
-  }),
-  valueContainer: (baseStyles: any) => ({
-    ...baseStyles,
-    padding: '0 12px',
-  }),
-  singleValue: (baseStyles: any) => ({
-    ...baseStyles,
-    color: '#334155',
-  }),
-  placeholder: (baseStyles: any) => ({
-    ...baseStyles,
-    color: '#94a3b8',
-  }),
-  menu: (baseStyles: any) => ({
-    ...baseStyles,
-    borderRadius: '0.5rem',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05)',
-    border: '1px solid #f1f5f9',
-    overflow: 'hidden',
-    marginTop: '4px',
-    backgroundColor: '#ffffff',
-    zIndex: 50,
-  }),
-  menuList: (baseStyles: any) => ({
-    ...baseStyles,
-    padding: '4px',
-    backgroundColor: '#ffffff'
-  }),
-  option: (baseStyles: any, state: any) => ({
-    ...baseStyles,
-    borderRadius: '0.375rem',
-    backgroundColor: state.isSelected 
-      ? '#4f46e5' 
-      : state.isFocused 
-      ? '#eff6ff' 
-      : 'transparent',
-    color: state.isSelected ? '#ffffff' : '#334155',
-    fontWeight: '500',
-    fontSize: '13px',
-    padding: '8px 12px',
-    margin: '1px 0',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-    '&:active': {
-      backgroundColor: '#4f46e5'
-    }
-  }),
-  indicatorSeparator: () => ({
-    display: 'none'
-  }),
-  dropdownIndicator: (baseStyles: any, state: any) => ({
-    ...baseStyles,
-    color: state.isFocused ? '#4f46e5' : '#94a3b8',
-    padding: '0 8px',
-    transition: 'color 0.2s ease',
-    '&:hover': {
-      color: '#4f46e5'
-    }
-  }),
-  clearIndicator: (baseStyles: any) => ({
-    ...baseStyles,
-    color: '#94a3b8',
-    padding: '0 4px',
-    '&:hover': {
-      color: '#ef4444'
-    }
-  })
-};
 
 const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onConvertToOpportunity }) => {
   const { user: currentUser, isAdmin, isEjecutivo } = useAuth();
@@ -131,19 +52,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
 
   const [activeTab, setActiveTab] = useState<'desc' | 'resol'>('desc');
   const [validationError, setValidationError] = useState('');
-  const [showStageDropdown, setShowStageDropdown] = useState(false);
 
-  const getStageDuration = (enteredAtStr?: string | Date) => {
-    if (!enteredAtStr) return '';
-    const entered = new Date(enteredAtStr);
-    const diffMs = Date.now() - entered.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    if (diffMins < 60) return `${Math.max(1, diffMins)}m`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d`;
-  };
 
   useEffect(() => {
     const loadDependencies = async () => {
@@ -267,123 +176,49 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
         <div className="flex flex-wrap gap-2 items-center">
           {ticket && (isAdmin || !ticket.responsable_id) && (
-            <button
+            <Button
               type="button"
               onClick={handleAssignToMe}
-              className="px-3.5 py-1.5 border border-slate-350 hover:bg-white text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition-all"
+              variant="secondary"
+              className="!py-1.5 !px-3.5 !text-[10px] !tracking-wider"
             >
               Asignarme a mí
-            </button>
+            </Button>
           )}
           {ticket && onConvertToOpportunity && (
-            <button
+            <Button
               type="button"
               onClick={() => onConvertToOpportunity(ticket)}
-              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1"
+              variant="primary"
+              className="!py-1.5 !px-3.5 !text-[10px] !tracking-wider flex items-center gap-1"
             >
               Convertir a Oportunidad
-              <ArrowRight size={13} />
-            </button>
+              <ArrowRight size={13} className="ml-1" />
+            </Button>
           )}
         </div>
 
         {/* Fases del Workflow (Odoo Stepper) */}
-        <div className="relative flex items-center self-end md:self-auto overflow-visible pb-1 md:pb-0">
-          <div className="odoo-statusbar select-none">
-            {(() => {
-              const foldedNames = ['resuelto', 'cancelado', 'cancelada', 'ganada', 'perdida', 'lost', 'won', 'cancelled', 'solved', 'standby'];
-              const activeStages = stages.filter(s => s.blnstatus);
-              
-              const mainStages = activeStages.filter(s => {
-                const isFolded = foldedNames.includes(s.strname.trim().toLowerCase());
-                return !isFolded || s.id === stageId;
-              });
-
-              const foldedStages = activeStages.filter(s => {
-                const isFolded = foldedNames.includes(s.strname.trim().toLowerCase());
-                return isFolded && s.id !== stageId;
-              });
-
-              return (
-                <>
-                  {mainStages.map((s) => {
-                    const isActive = s.id === stageId;
-                    const duration = isActive && ticket ? getStageDuration(ticket.stage_entered_at || ticket.fecha_apertura) : '';
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => {
-                          handleStageClick(s);
-                          setShowStageDropdown(false);
-                        }}
-                        className={`odoo-step cursor-pointer ${isActive ? 'active' : ''}`}
-                      >
-                        <span>{s.strname}</span>
-                        {duration && (
-                          <span className="text-[10px] font-normal text-teal-650 opacity-90 ml-1">
-                            {duration}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                  
-                  {foldedStages.length > 0 && (
-                    <div className="relative flex">
-                      <button
-                        type="button"
-                        onClick={() => setShowStageDropdown(!showStageDropdown)}
-                        className="odoo-step cursor-pointer px-4 font-bold"
-                        title="Más etapas"
-                      >
-                        ...
-                      </button>
-                      
-                      {showStageDropdown && (
-                        <>
-                          <div 
-                            className="fixed inset-0 z-40 bg-transparent" 
-                            onClick={() => setShowStageDropdown(false)}
-                          />
-                          <div className="absolute right-0 top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-lg shadow-xl z-50 p-1 flex flex-col animate-in fade-in duration-100">
-                            {foldedStages.map((s) => (
-                              <button
-                                key={s.id}
-                                type="button"
-                                onClick={() => {
-                                  handleStageClick(s);
-                                  setShowStageDropdown(false);
-                                }}
-                                className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md font-semibold transition-colors cursor-pointer"
-                              >
-                                {s.strname}
-                              </button>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        </div>
+        <StageStepper
+          stages={stages}
+          currentStageId={stageId}
+          stageEnteredAt={ticket?.stage_entered_at}
+          fallbackDate={ticket?.fecha_apertura}
+          showDuration={!!ticket}
+          onStageClick={(s) => handleStageClick(s as TicketStage)}
+        />
       </div>
 
       {/* Título Principal */}
-      <div className="space-y-1">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block ml-1">Asunto / Título del Ticket *</label>
-        <input
-          type="text"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder="Ej: Falla en servidor de base de datos"
-          className="w-full border-b border-slate-300 focus:border-indigo-600 outline-none text-2xl font-black text-slate-800 pb-2 px-1 transition-colors"
-          required
-        />
-      </div>
+      <Input
+        label="Asunto / Título del Ticket *"
+        id="ticket_title"
+        type="text"
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        placeholder="Ej: Falla en servidor de base de datos"
+        required
+      />
 
       {/* Grid de campos del ticket */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white border border-slate-100 rounded-xl p-5 shadow-sm">
@@ -395,32 +230,26 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
             Asignación e Incidencia
           </h3>
 
-          <div>
-            <label htmlFor="responsable_id_select" className="block text-xs font-semibold text-slate-600 mb-1">Agente Responsable</label>
-            <Select
-              inputId="responsable_id_select"
-              value={agentOptions.find(opt => opt.value === (responsableId || '')) || agentOptions[0]}
-              onChange={val => setResponsableId(val && val.value ? val.value : null)}
-              options={agentOptions}
-              placeholder="-- Seleccione un Agente --"
-              isSearchable
-              isDisabled={isEjecutivo && ticket && !!ticket.responsable_id}
-              styles={formSelectStyles}
-            />
-          </div>
+          <Select
+            label="Agente Responsable"
+            inputId="responsable_id_select"
+            value={agentOptions.find(opt => opt.value === (responsableId || '')) || agentOptions[0]}
+            onChange={(val: any) => setResponsableId(val && val.value ? val.value : null)}
+            options={agentOptions}
+            placeholder="-- Seleccione un Agente --"
+            isSearchable
+            isDisabled={isEjecutivo && ticket && !!ticket.responsable_id}
+          />
 
-          <div>
-            <label htmlFor="tipo_incidencia_select" className="block text-xs font-semibold text-slate-600 mb-1">Tipo de Incidencia *</label>
-            <Select
-              inputId="tipo_incidencia_select"
-              value={incidenceTypeOptions.find(opt => opt.value === incidenceType) || incidenceTypeOptions[0]}
-              onChange={val => setIncidenceType(val ? val.value : 'Soporte Técnico')}
-              options={incidenceTypeOptions}
-              placeholder="Seleccione el tipo de incidencia..."
-              isSearchable={false}
-              styles={formSelectStyles}
-            />
-          </div>
+          <Select
+            label="Tipo de Incidencia *"
+            inputId="tipo_incidencia_select"
+            value={incidenceTypeOptions.find(opt => opt.value === incidenceType) || incidenceTypeOptions[0]}
+            onChange={(val: any) => setIncidenceType(val ? val.value : 'Soporte Técnico')}
+            options={incidenceTypeOptions}
+            placeholder="Seleccione el tipo de incidencia..."
+            isSearchable={false}
+          />
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">Prioridad (Estrellas)</label>
@@ -458,69 +287,53 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
             <LifeBuoy size={14} className="text-slate-400" />
             Datos del Cliente / Contacto
           </h3>
+          <Select
+            label="Vincular Cliente Registrado"
+            inputId="cliente_id_select"
+            options={clientOptions}
+            value={selectedClientValue}
+            onChange={handleClientChange}
+            placeholder="-- Seleccione un Cliente --"
+            isClearable
+            isSearchable
+          />
 
-          <div>
-            <label htmlFor="cliente_id_select" className="block text-xs font-semibold text-slate-600 mb-1">Vincular Cliente Registrado</label>
-            <Select
-              inputId="cliente_id_select"
-              options={clientOptions}
-              value={selectedClientValue}
-              onChange={handleClientChange}
-              placeholder="-- Seleccione un Cliente --"
-              isClearable
-              isSearchable
-              styles={formSelectStyles}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              id="contact_name"
+              label="Nombre de Contacto"
+              type="text"
+              value={contactName}
+              onChange={e => setContactName(e.target.value)}
+              placeholder="Nombre del cliente"
+            />
+            <Input
+              id="contact_email"
+              label="Correo de Contacto"
+              type="email"
+              value={contactEmail}
+              onChange={e => setContactEmail(e.target.value)}
+              placeholder="correo@empresa.com"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="contact_name" className="block text-xs font-semibold text-slate-600 mb-1">Nombre de Contacto</label>
-              <input
-                id="contact_name"
-                type="text"
-                value={contactName}
-                onChange={e => setContactName(e.target.value)}
-                placeholder="Nombre del cliente"
-                className="w-full border rounded-lg px-3 py-2 border-slate-300 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-              />
-            </div>
-            <div>
-              <label htmlFor="contact_email" className="block text-xs font-semibold text-slate-600 mb-1">Correo de Contacto</label>
-              <input
-                id="contact_email"
-                type="email"
-                value={contactEmail}
-                onChange={e => setContactEmail(e.target.value)}
-                placeholder="correo@empresa.com"
-                className="w-full border rounded-lg px-3 py-2 border-slate-300 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="contact_phone" className="block text-xs font-semibold text-slate-600 mb-1">Teléfono</label>
-              <input
-                id="contact_phone"
-                type="text"
-                value={contactPhone}
-                onChange={e => setContactPhone(e.target.value)}
-                placeholder="Teléfono de contacto"
-                className="w-full border rounded-lg px-3 py-2 border-slate-300 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-              />
-            </div>
-            <div>
-              <label htmlFor="company_name" className="block text-xs font-semibold text-slate-600 mb-1">Empresa</label>
-              <input
-                id="company_name"
-                type="text"
-                value={companyName}
-                onChange={e => setCompanyName(e.target.value)}
-                placeholder="Empresa del cliente"
-                className="w-full border rounded-lg px-3 py-2 border-slate-300 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-              />
-            </div>
+            <Input
+              id="contact_phone"
+              label="Teléfono"
+              type="text"
+              value={contactPhone}
+              onChange={e => setContactPhone(e.target.value)}
+              placeholder="Teléfono de contacto"
+            />
+            <Input
+              id="company_name"
+              label="Empresa"
+              type="text"
+              value={companyName}
+              onChange={e => setCompanyName(e.target.value)}
+              placeholder="Empresa del cliente"
+            />
           </div>
         </div>
       </div>
@@ -558,11 +371,11 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
         <div className="p-5">
           {activeTab === 'desc' ? (
             <div className="space-y-1">
-              <textarea
+              <TextArea
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Por favor describe detalladamente la incidencia..."
-                className="w-full min-h-[140px] outline-none text-slate-700 text-sm font-medium border border-slate-200 rounded-lg p-3 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                className="w-full min-h-[140px]"
                 required
               />
             </div>
@@ -574,13 +387,12 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
                   <span>El ticket está en etapa **Resuelto**. Las notas de resolución son requeridas para poder guardar.</span>
                 </div>
               )}
-              <textarea
+              <TextArea
                 value={notasResolucion}
                 onChange={e => setNotasResolucion(e.target.value)}
                 placeholder="Ingresa las notas y comentarios sobre la resolución de este ticket..."
-                className={`w-full min-h-[140px] outline-none text-slate-700 text-sm font-medium border rounded-lg p-3 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white ${
-                  isResolvedStage && !notasResolucion.trim() ? 'border-rose-300 bg-rose-50/10' : 'border-slate-200'
-                }`}
+                className="w-full min-h-[140px]"
+                error={isResolvedStage && !notasResolucion.trim() ? 'Las notas de resolución son obligatorias.' : undefined}
               />
             </div>
           )}
@@ -598,19 +410,19 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
       {/* Botones de acción */}
       <div className="flex justify-end items-center border-t border-slate-100 pt-5">
         <div className="flex gap-3">
-          <button
+          <Button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-slate-350 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-lg transition-all cursor-pointer"
+            variant="secondary"
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
+            variant="indigo"
           >
             Guardar Cambios
-          </button>
+          </Button>
         </div>
       </div>
     </form>

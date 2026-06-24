@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { getActivities, createActivity, updateActivity, deleteActivity, getActivityTypes } from '../services/activitiesService';
-import Select, { type SingleValue } from 'react-select';
+import { type SingleValue } from 'react-select';
 import { getUsers } from '../services/usersService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -10,11 +10,17 @@ import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import ActivitiesTable from '../components/Activity/ActivitiesTable';
 import ActivitiesCalendar from '../components/Activity/ActivitiesCalendar';
-import { Plus, Filter, XCircle, Search, User, LayoutGrid, Table2, ChevronDown, FileSpreadsheet, FileText, X } from 'lucide-react';
+import { Plus, XCircle, User, LayoutGrid, Table2, FileSpreadsheet, FileText, CalendarDays, Tag } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
 import type { Activity, TypeActivity } from '../core/models/Activity';
 import type { User as UserModel } from '../core/models/User';
+
+import Input from '../components/shared/Input';
+import Select from '../components/shared/Select';
+import Button from '../components/shared/Button';
+import UnifiedSearchBar from '../components/shared/UnifiedSearchBar';
+import type { SearchBadge } from '../components/shared/UnifiedSearchBar';
 
 interface SelectOption {
     value: string;
@@ -39,12 +45,12 @@ const ActivitiesPage: React.FC = () => {
     const [filterTitle, setFilterTitle] = useState('');
     const [filterUser, setFilterUser] = useState('');
     const [filterDate, setFilterDate] = useState('');
+    const [filterType, setFilterType] = useState('');
 
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(false);
 
     const searchDropdownRef = useRef<HTMLDivElement>(null);
-    const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -212,7 +218,8 @@ const ActivitiesPage: React.FC = () => {
             
         return matchesTitle &&
             (filterUser ? activity.userId === filterUser : true) &&
-            (filterDate ? activity.date.startsWith(filterDate) : true);
+            (filterDate ? activity.date.startsWith(filterDate) : true) &&
+            (filterType ? String(activity.typeActivityId) === filterType : true);
     });
 
     const totalPages = Math.ceil(filteredActivities.length / PAGE_SIZE);
@@ -227,12 +234,13 @@ const ActivitiesPage: React.FC = () => {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterTitle, filterUser, filterDate]);
+    }, [filterTitle, filterUser, filterDate, filterType]);
 
     const handleClearFilters = () => {
         setFilterTitle('');
         setFilterUser('');
         setFilterDate('');
+        setFilterType('');
     };
 
     // Columnas idénticas a la tabla en pantalla:
@@ -336,6 +344,52 @@ const ActivitiesPage: React.FC = () => {
         document.body.removeChild(link);
     };
 
+    const typeOptions: SelectOption[] = useMemo(() =>
+        activityTypes.map(t => ({ value: String(t.id), label: t.strname })),
+        [activityTypes]
+    );
+
+    const formatDateBadge = (dateStr: string) => {
+        if (!dateStr) return '';
+        // dateStr is YYYY-MM-DD
+        const [year, month, day] = dateStr.split('-');
+        if (!year || !month) return dateStr;
+        if (day) {
+            const d = new Date(Number(year), Number(month) - 1, Number(day));
+            return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+        return dateStr;
+    };
+
+    const badges = useMemo(() => {
+        const list: SearchBadge[] = [];
+        if (filterUser) {
+            list.push({
+                id: 'user',
+                label: userOptions.find(o => o.value === filterUser)?.label || 'Usuario',
+                icon: <User size={10} />,
+                onRemove: () => setFilterUser('')
+            });
+        }
+        if (filterType) {
+            list.push({
+                id: 'type',
+                label: typeOptions.find(o => o.value === filterType)?.label || 'Tipo',
+                icon: <Tag size={10} />,
+                onRemove: () => setFilterType('')
+            });
+        }
+        if (filterDate) {
+            list.push({
+                id: 'date',
+                label: formatDateBadge(filterDate),
+                icon: <CalendarDays size={10} />,
+                onRemove: () => setFilterDate('')
+            });
+        }
+        return list;
+    }, [filterUser, filterType, filterDate, userOptions, typeOptions]);
+
     return (
         <>
             <Notification {...notification} />
@@ -395,57 +449,30 @@ const ActivitiesPage: React.FC = () => {
                         </button>
                     </div>
 
-                    {/* Búsqueda y Filtros estilo Odoo */}
-                    <div className="relative w-full sm:w-[280px]" ref={searchDropdownRef}>
-                        <div
-                            className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 shadow-sm hover:border-gray-400 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 min-h-[38px] cursor-text transition-all"
-                            onClick={() => searchInputRef.current?.focus()}
-                        >
-                            <Search size={16} className="text-gray-400 shrink-0" />
-                            <div className="flex flex-wrap gap-1 items-center flex-1 min-w-0">
-                                {filterUser && (
-                                    <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                                        <User size={10} />
-                                        {userOptions.find(o => o.value === filterUser)?.label || 'Usuario'}
-                                        <button onClick={e => { e.stopPropagation(); setFilterUser(''); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
-                                    </span>
-                                )}
-                                {filterDate && (
-                                    <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                                        <Filter size={10} />
-                                        {filterDate}
-                                        <button onClick={e => { e.stopPropagation(); setFilterDate(''); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
-                                    </span>
-                                )}
-                                <input
-                                    ref={searchInputRef}
-                                    type="text"
-                                    placeholder={!filterUser && !filterDate ? 'Buscar actividad...' : ''}
-                                    value={filterTitle}
-                                    onChange={e => setFilterTitle(e.target.value)}
-                                    className="border-none outline-none focus:ring-0 p-0 text-xs sm:text-sm bg-transparent placeholder-gray-400 min-w-[80px] flex-grow focus:outline-none"
-                                />
-                            </div>
-                            <button
-                                type="button"
-                                onClick={e => { e.stopPropagation(); setShowFilters(!showFilters); }}
-                                className="p-1 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition-colors ml-auto shrink-0 cursor-pointer"
-                            >
-                                <ChevronDown size={14} className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                            </button>
-                        </div>
-
-                        {showFilters && (
-                            <div className="absolute right-0 mt-1.5 w-[300px] max-w-[95vw] bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 flex flex-col gap-3 text-left animate-fade-in">
+                    <UnifiedSearchBar
+                        ref={searchDropdownRef}
+                        searchTerm={filterTitle}
+                        onSearchChange={setFilterTitle}
+                        placeholder={!filterUser && !filterDate && !filterType ? 'Buscar actividad...' : ''}
+                        badges={badges}
+                        showFilters={showFilters}
+                        setShowFilters={setShowFilters}
+                        dropdownWidthClass="w-[420px]"
+                    >
+                        <div className="flex gap-4 w-full">
+                            {/* Columna izquierda */}
+                            <div className="flex flex-col gap-3 flex-1 min-w-0">
                                 {isAdmin && (
                                     <div>
-                                        <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Usuario</h4>
+                                        <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none flex items-center gap-1">
+                                            <User size={9} /> Usuario
+                                        </h4>
                                         <Select
                                             inputId="user-filter"
                                             options={userOptions}
                                             value={filterUser ? userOptions.find(option => option.value === filterUser) : null}
                                             onChange={handleUserFilterChange}
-                                            placeholder="Seleccionar usuario..."
+                                            placeholder="Todos los usuarios"
                                             isClearable
                                             isSearchable
                                             noOptionsMessage={() => 'No se encontraron usuarios'}
@@ -453,53 +480,79 @@ const ActivitiesPage: React.FC = () => {
                                     </div>
                                 )}
                                 <div>
-                                    <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Fecha</h4>
-                                    <input
+                                    <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none flex items-center gap-1">
+                                        <Tag size={9} /> Tipo de Actividad
+                                    </h4>
+                                    <Select
+                                        inputId="type-filter"
+                                        options={typeOptions}
+                                        value={filterType ? typeOptions.find(o => o.value === filterType) : null}
+                                        onChange={(opt: any) => setFilterType(opt ? opt.value : '')}
+                                        placeholder="Todos los tipos"
+                                        isClearable
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Divisor vertical */}
+                            <div className="w-px bg-gray-100 self-stretch" />
+
+                            {/* Columna derecha */}
+                            <div className="flex flex-col gap-3 flex-1 min-w-0">
+                                <div>
+                                    <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none flex items-center gap-1">
+                                        <CalendarDays size={9} /> Fecha
+                                    </h4>
+                                    <Input
                                         type="date"
                                         value={filterDate}
                                         onChange={(e) => setFilterDate(e.target.value)}
-                                        className="w-full border rounded-lg px-2.5 py-1.5 border-gray-300 text-xs focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer"
+                                        className="text-xs bg-white cursor-pointer py-2 rounded-xl"
                                     />
                                 </div>
-                                <div className="border-t border-gray-100 my-1 pt-2" />
-                                <button
-                                    type="button"
-                                    onClick={handleClearFilters}
-                                    className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
-                                >
-                                    <XCircle size={12} />
-                                    Limpiar Filtros
-                                </button>
+                                <div className="border-t border-gray-100 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleClearFilters}
+                                        className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer"
+                                    >
+                                        <XCircle size={12} />
+                                        Limpiar Filtros
+                                    </button>
+                                </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    </UnifiedSearchBar>
 
                     {/* Botones de Exportación (solo visibles en vista Tabla) */}
                     {viewMode === 'table' && (
                         <>
-                            <button
+                            <Button
                                 onClick={handleExportPDF}
-                                className="bg-white border border-blue-100 text-red-500 px-4 py-2 rounded-xl hover:bg-red-50/50 flex items-center justify-center gap-2 transition-all w-full sm:w-auto shadow-sm whitespace-nowrap cursor-pointer font-bold text-xs tracking-wider"
+                                variant="secondary"
+                                className="text-red-500 border border-blue-100 hover:bg-red-50/50 w-full sm:w-auto h-[38px] py-0 px-4 flex items-center justify-center font-bold text-xs tracking-wider"
                             >
-                                <FileText size={16} className="text-red-500" />
+                                <FileText size={16} className="text-red-500 mr-2" />
                                 <span>PDF</span>
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={handleExportCSV}
-                                className="bg-white border border-blue-100 text-emerald-600 px-4 py-2 rounded-xl hover:bg-emerald-50/50 flex items-center justify-center gap-2 transition-all w-full sm:w-auto shadow-sm whitespace-nowrap cursor-pointer font-bold text-xs tracking-wider"
+                                variant="secondary"
+                                className="text-emerald-600 border border-blue-100 hover:bg-emerald-50/50 w-full sm:w-auto h-[38px] py-0 px-4 flex items-center justify-center font-bold text-xs tracking-wider"
                             >
-                                <FileSpreadsheet size={16} className="text-emerald-600" />
+                                <FileSpreadsheet size={16} className="text-emerald-600 mr-2" />
                                 <span>EXCEL</span>
-                            </button>
+                            </Button>
                         </>
                     )}
 
-                    <button
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap cursor-pointer"
+                    <Button
+                        variant="success"
+                        className="w-full sm:w-auto whitespace-nowrap h-[38px] py-0 px-4"
                         onClick={openCreateModal}
                     >
-                        <Plus size={18} /> Nueva Actividad
-                    </button>
+                        <Plus size={18} className="mr-2" /> Nueva Actividad
+                    </Button>
                 </div>
             </div>
             {loading ? (

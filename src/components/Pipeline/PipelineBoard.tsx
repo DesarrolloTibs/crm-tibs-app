@@ -14,14 +14,18 @@ import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
 import OpportunityCard from './OpportunityCard';
-import { Plus, Search, User, Tag, XCircle, Filter, Columns, CheckSquare, Square, ChevronUp, ChevronDown, Settings2, X, Trash2 } from 'lucide-react';
+import { Plus, User, Tag, XCircle, Filter, ChevronUp, ChevronDown, Settings2, X, Trash2, Star } from 'lucide-react';
 import PipelineStagesSettings from './PipelineStagesSettings';
 import OpportunityForm from './OpportunityForm';
+import StageVisibilitySelector from '../shared/StageVisibilitySelector';
 import Tabs from '../Tabs/Tabs';
 import InteractionsTab from '../Interaction/InteractionsTab';
 import FilesTab from '../Files/FilesTab';
 import Notification from '../Modal/Notification';
 import ActivitiesTab from '../Activity/ActivitiesTab';
+import Button from '../shared/Button';
+import UnifiedSearchBar from '../shared/UnifiedSearchBar';
+import type { SearchBadge } from '../shared/UnifiedSearchBar';
 
 interface FilterRule {
   field: string;
@@ -88,13 +92,11 @@ const PipelinePage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [archivedFilter, setArchivedFilter] = useState<'active' | 'archived' | 'all'>('active');
   const [showFilters, setShowFilters] = useState(false);
-  const [showStageSelector, setShowStageSelector] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
   const [showStagesConfig, setShowStagesConfig] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
-  const stageSelectorRef = useRef<HTMLDivElement>(null);
+  const [priorityFilter, setPriorityFilter] = useState<number | null>(null);
   const searchDropdownRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [customRules, setCustomRules] = useState<FilterRule[]>([]);
   const [matchType, setMatchType] = useState<'any' | 'all'>('any');
@@ -115,9 +117,6 @@ const PipelinePage: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (stageSelectorRef.current && !stageSelectorRef.current.contains(event.target as Node)) {
-        setShowStageSelector(false);
-      }
       if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
         setShowFilters(false);
       }
@@ -736,13 +735,14 @@ const PipelinePage: React.FC = () => {
 
       const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
       const matchesStatus = statusFilter ? opp.stage_id === statusFilter : true;
+      const matchesPriority = priorityFilter !== null ? (opp.priority ?? 0) >= priorityFilter : true;
       const matchesArchived =
         archivedFilter === 'all'
           ? true
           : archivedFilter === 'archived'
             ? opp.archived === true
             : (opp.archived === false || opp.archived === undefined);
-      return matchesSearch && matchesExecutive && matchesStatus && matchesArchived;
+      return matchesSearch && matchesExecutive && matchesStatus && matchesPriority && matchesArchived;
     }
 
     if (!includeArchived && opp.archived) {
@@ -757,6 +757,7 @@ const PipelinePage: React.FC = () => {
       else if (rule.field === 'monto_total') fieldValue = Number(opp.monto_total) || 0;
       else if (rule.field === 'stage_id') fieldValue = opp.stage_id;
       else if (rule.field === 'ejecutivo_id') fieldValue = opp.ejecutivo_id;
+      else if (rule.field === 'priority') fieldValue = opp.priority ?? 0;
 
       const val = rule.value.toLowerCase();
       const op = rule.operator;
@@ -790,6 +791,7 @@ const PipelinePage: React.FC = () => {
     setSearchTerm('');
     setExecutiveFilter('');
     setStatusFilter('');
+    setPriorityFilter(null);
     setArchivedFilter('active');
     setIsCustomFilterActive(false);
     setCustomRules([]);
@@ -803,7 +805,7 @@ const PipelinePage: React.FC = () => {
         { value: 'not_contains', label: 'no contiene' },
       ];
     }
-    if (field === 'monto_total') {
+    if (field === 'monto_total' || field === 'priority') {
       return [
         { value: 'eq', label: 'es igual a' },
         { value: 'gt', label: 'es mayor que' },
@@ -821,12 +823,13 @@ const PipelinePage: React.FC = () => {
     if (field === 'nombre_proyecto' || field === 'empresa') {
       defaultOperator = 'contains';
     }
-    
+
     let defaultValue = '';
     if (field === 'linea_negocio') defaultValue = businessLines[0]?.strname || '';
     else if (field === 'stage_id') defaultValue = stages[0]?.id || '';
     else if (field === 'ejecutivo_id') defaultValue = executives[0]?.id || '';
-    
+    else if (field === 'priority') { defaultOperator = 'gt'; defaultValue = '0'; }
+
     setCustomRules(prev => prev.map((rule, i) => i === idx ? { field, operator: defaultOperator, value: defaultValue } : rule));
   };
 
@@ -873,6 +876,29 @@ const PipelinePage: React.FC = () => {
             <option key={e.id} value={e.id}>{e.username}</option>
           ))}
         </select>
+      );
+    }
+    if (rule.field === 'priority') {
+      return (
+        <div className="flex items-center gap-1">
+          {[1, 2, 3].map(star => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => handleRuleChange(idx, 'value', String(star))}
+              className="p-0.5 transition-colors cursor-pointer"
+              title={star === 1 ? 'Baja' : star === 2 ? 'Media' : 'Alta'}
+            >
+              <Star
+                size={20}
+                className={Number(rule.value) >= star ? 'text-amber-400 fill-current' : 'text-slate-300'}
+              />
+            </button>
+          ))}
+          <span className="text-xs text-slate-500 ml-2">
+            {Number(rule.value) === 0 ? 'Sin prioridad' : Number(rule.value) === 1 ? 'Baja' : Number(rule.value) === 2 ? 'Media' : 'Alta'}
+          </span>
+        </div>
       );
     }
     if (rule.field === 'monto_total') {
@@ -970,7 +996,8 @@ const PipelinePage: React.FC = () => {
       { label: 'Datos', content: <OpportunityForm initialData={editingOpportunity} onSubmit={handleUpdate} onCancel={() => setIsFormModalOpen(false)} /> },
       { label: 'Actividades', content: <ActivitiesTab opportunityId={editingOpportunity.id} /> },
       { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
-      { label: 'Archivos', content: <FilesTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
+      {
+        label: 'Archivos', content: <FilesTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {
           setEditingOpportunity(updatedOpp);
           setOpportunities(prev => prev.map(o => o.id === updatedOpp.id ? updatedOpp : o));
         }} />
@@ -984,6 +1011,64 @@ const PipelinePage: React.FC = () => {
       .filter(s => s.blnstatus)
       .sort((a, b) => a.display_order - b.display_order);
   }, [stages]);
+
+  const badges = useMemo(() => {
+    const list: SearchBadge[] = [];
+    if (isCustomFilterActive) {
+      list.push({
+        id: 'custom',
+        label: 'Filtro Personalizado',
+        icon: <Filter size={10} />,
+        onRemove: () => {
+          setIsCustomFilterActive(false);
+          setCustomRules([]);
+        }
+      });
+    } else {
+      if (archivedFilter === 'archived') {
+        list.push({
+          id: 'archived',
+          label: 'Archivadas',
+          icon: <Filter size={10} />,
+          onRemove: () => setArchivedFilter('active')
+        });
+      }
+      if (archivedFilter === 'all') {
+        list.push({
+          id: 'all',
+          label: 'Todas',
+          icon: <Filter size={10} />,
+          onRemove: () => setArchivedFilter('active')
+        });
+      }
+      if (executiveFilter) {
+        list.push({
+          id: 'executive',
+          label: executives.find(e => e.id === executiveFilter)?.username || 'Ejecutivo',
+          icon: <User size={10} className="shrink-0" />,
+          onRemove: () => setExecutiveFilter('')
+        });
+      }
+      if (statusFilter) {
+        list.push({
+          id: 'status',
+          label: activeStages.find(s => s.id === statusFilter)?.strname || 'Estatus',
+          icon: <Tag size={10} className="shrink-0" />,
+          onRemove: () => setStatusFilter('')
+        });
+      }
+      if (priorityFilter !== null) {
+        const priorityLabel = priorityFilter === 1 ? '★ Baja+' : priorityFilter === 2 ? '★★ Media+' : '★★★ Alta';
+        list.push({
+          id: 'priority',
+          label: priorityLabel,
+          icon: <Star size={10} className="shrink-0" />,
+          onRemove: () => setPriorityFilter(null)
+        });
+      }
+    }
+    return list;
+  }, [isCustomFilterActive, archivedFilter, executiveFilter, statusFilter, priorityFilter, executives, activeStages]);
 
   if (loading) {
     return <Loader />;
@@ -1023,221 +1108,156 @@ const PipelinePage: React.FC = () => {
         </div>
         <div className={`${showToolbar ? 'flex' : 'hidden'} md:flex flex-col sm:flex-row w-full md:w-auto gap-3`}>
 
-          {/* Odoo style search bar */}
-          <div className="relative w-full sm:w-[320px] md:w-[380px]" ref={searchDropdownRef}>
-            <div
-              className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 shadow-sm hover:border-gray-400 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 min-h-[38px] cursor-text transition-all"
-              onClick={() => searchInputRef.current?.focus()}
-            >
-              <Search size={16} className="text-gray-400 shrink-0" />
+          <UnifiedSearchBar
+            ref={searchDropdownRef}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            placeholder={!executiveFilter && !statusFilter && priorityFilter === null && archivedFilter === 'active' && !isCustomFilterActive ? "Buscar..." : ""}
+            badges={badges}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            dropdownWidthClass="w-[380px]"
+          >
+            {/* Column 1: Filters */}
+            <div className="flex-1 flex flex-col gap-1.5 max-h-[320px] overflow-y-auto pr-1">
+              <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
+                <Filter size={12} /> Filtros
+              </h4>
 
-              {/* Active Filter Badges */}
-              <div className="flex flex-wrap gap-1.5 items-center max-w-[85%]">
-                {isCustomFilterActive ? (
-                  <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                    <Filter size={10} />
-                    Filtro Personalizado
-                    <button onClick={(e) => { e.stopPropagation(); setIsCustomFilterActive(false); setCustomRules([]); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
-                  </span>
-                ) : (
-                  <>
-                    {archivedFilter === 'archived' && (
-                      <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                        <Filter size={10} />
-                        Archivadas
-                        <button onClick={(e) => { e.stopPropagation(); setArchivedFilter('active'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
-                      </span>
-                    )}
-                    {archivedFilter === 'all' && (
-                      <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                        <Filter size={10} />
-                        Todas
-                        <button onClick={(e) => { e.stopPropagation(); setArchivedFilter('active'); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
-                      </span>
-                    )}
-                    {executiveFilter && (
-                      <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                        <User size={10} className="shrink-0" />
-                        <span className="max-w-[80px] truncate shrink-0">
-                          {executives.find(e => e.id === executiveFilter)?.username || 'Ejecutivo'}
-                        </span>
-                        <button onClick={(e) => { e.stopPropagation(); setExecutiveFilter(''); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer shrink-0"><X size={10} /></button>
-                      </span>
-                    )}
-                    {statusFilter && (
-                      <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
-                        <Tag size={10} className="shrink-0" />
-                        <span className="max-w-[80px] truncate shrink-0">
-                          {activeStages.find(s => s.id === statusFilter)?.strname || 'Estatus'}
-                        </span>
-                        <button onClick={(e) => { e.stopPropagation(); setStatusFilter(''); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer shrink-0"><X size={10} /></button>
-                      </span>
-                    )}
-                  </>
-                )}
-
-                {/* Text Input */}
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder={!executiveFilter && !statusFilter && archivedFilter === 'active' && !isCustomFilterActive ? "Buscar..." : ""}
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="border-none outline-none focus:ring-0 p-0 text-xs sm:text-sm bg-transparent placeholder-gray-400 min-w-[50px] flex-grow focus:outline-none"
-                />
-              </div>
-
-              {/* Dropdown Toggle Button */}
+              {/* Archived Filter options */}
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setShowFilters(!showFilters); }}
-                className="p-1 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition-colors ml-auto shrink-0 cursor-pointer"
+                onClick={() => setArchivedFilter(archivedFilter === 'archived' ? 'active' : 'archived')}
+                className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
               >
-                <ChevronDown size={14} className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                <span>Oportunidades Archivadas</span>
+                {archivedFilter === 'archived' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+              </button>
+              <button
+                type="button"
+                onClick={() => setArchivedFilter(archivedFilter === 'all' ? 'active' : 'all')}
+                className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+              >
+                <span>Todas las Oportunidades</span>
+                {archivedFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+              </button>
+
+              <div className="border-t border-gray-100 my-1 shrink-0"></div>
+
+
+
+              {/* Priority Quick Filter */}
+              <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-1 shrink-0 select-none">Prioridad</h5>
+              <div className="flex items-center gap-0.5 px-2 py-1">
+                {[1, 2, 3].map(star => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setPriorityFilter(priorityFilter === star ? null : star)}
+                    title={star === 1 ? 'Baja o mayor' : star === 2 ? 'Media o mayor' : 'Alta'}
+                    className="p-0.5 transition-transform hover:scale-110 cursor-pointer"
+                  >
+                    <Star
+                      size={18}
+                      className={priorityFilter !== null && star <= priorityFilter ? 'text-amber-400 fill-current' : 'text-slate-300 hover:text-amber-300'}
+                    />
+                  </button>
+                ))}
+                {priorityFilter !== null && (
+                  <span className="text-[10px] text-slate-500 ml-1">
+                    {priorityFilter === 1 ? 'Baja+' : priorityFilter === 2 ? 'Media+' : 'Alta'}
+                  </span>
+                )}
+              </div>
+              {/* Stages List */}
+              <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-1 shrink-0 select-none">Etapas</h5>
+              {activeStages.map(stage => {
+                const isSelected = statusFilter === stage.id;
+                return (
+                  <button
+                    key={stage.id}
+                    type="button"
+                    onClick={() => setStatusFilter(isSelected ? '' : stage.id)}
+                    className="flex items-center gap-2 text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
+                  >
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.strcolor || '#3b82f6' }} />
+                    <span className="truncate flex-grow">{stage.strname}</span>
+                    {isSelected && <span className="text-indigo-600 font-extrabold text-sm ml-auto">✓</span>}
+                  </button>
+                );
+              })}
+              <div className="border-t border-gray-100 my-1 shrink-0"></div>
+              <div className="border-t border-gray-100 my-1 shrink-0"></div>
+              <button
+                type="button"
+                onClick={() => { setShowFilters(false); setIsCustomFilterModalOpen(true); }}
+                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1.5 rounded w-full text-left hover:bg-indigo-50 transition-colors cursor-pointer shrink-0 font-bold"
+              >
+                <span>+ Filtro personalizado...</span>
               </button>
             </div>
 
-            {/* Odoo style dropdown menu */}
-            {showFilters && (
-              <div className="absolute right-0 mt-1.5 w-[380px] max-w-[95vw] bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 flex gap-4 animate-fade-in text-left">
-                {/* Column 1: Filters */}
-                <div className="flex-1 flex flex-col gap-1.5 max-h-[320px] overflow-y-auto pr-1">
-                  <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
-                    <Filter size={12} /> Filtros
-                  </h4>
-
-                  {/* Archived Filter options */}
+            {/* Column 2: Executives */}
+            <div className="flex-1 flex flex-col gap-1.5 border-l border-gray-100 pl-4 max-h-[320px] overflow-y-auto">
+              <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
+                <User size={12} /> Ejecutivos
+              </h4>
+              {executives.map(exec => {
+                const isSelected = executiveFilter === exec.id;
+                return (
                   <button
+                    key={exec.id}
                     type="button"
-                    onClick={() => setArchivedFilter(archivedFilter === 'archived' ? 'active' : 'archived')}
+                    onClick={() => setExecutiveFilter(isSelected ? '' : exec.id)}
                     className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
                   >
-                    <span>Oportunidades Archivadas</span>
-                    {archivedFilter === 'archived' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+                    <span className="truncate">{exec.username}</span>
+                    {isSelected && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setArchivedFilter(archivedFilter === 'all' ? 'active' : 'all')}
-                    className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
-                  >
-                    <span>Todas las Oportunidades</span>
-                    {archivedFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-                  </button>
+                );
+              })}
 
-                  <div className="border-t border-gray-100 my-1 shrink-0"></div>
-
-                  {/* Stages List */}
-                  <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-1 shrink-0 select-none">Etapas</h5>
-                  {activeStages.map(stage => {
-                    const isSelected = statusFilter === stage.id;
-                    return (
-                      <button
-                        key={stage.id}
-                        type="button"
-                        onClick={() => setStatusFilter(isSelected ? '' : stage.id)}
-                        className="flex items-center gap-2 text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
-                      >
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.strcolor || '#3b82f6' }} />
-                        <span className="truncate flex-grow">{stage.strname}</span>
-                        {isSelected && <span className="text-indigo-600 font-extrabold text-sm ml-auto">✓</span>}
-                      </button>
-                    );
-                  })}
-                  <div className="border-t border-gray-100 my-1 shrink-0"></div>
-                  <button
-                    type="button"
-                    onClick={() => { setShowFilters(false); setIsCustomFilterModalOpen(true); }}
-                    className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1.5 rounded w-full text-left hover:bg-indigo-50 transition-colors cursor-pointer shrink-0 font-bold"
-                  >
-                    <span>+ Filtro personalizado...</span>
-                  </button>
-                </div>
-
-                {/* Column 2: Executives */}
-                <div className="flex-1 flex flex-col gap-1.5 border-l border-gray-100 pl-4 max-h-[320px] overflow-y-auto">
-                  <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
-                    <User size={12} /> Ejecutivos
-                  </h4>
-                  {executives.map(exec => {
-                    const isSelected = executiveFilter === exec.id;
-                    return (
-                      <button
-                        key={exec.id}
-                        type="button"
-                        onClick={() => setExecutiveFilter(isSelected ? '' : exec.id)}
-                        className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer"
-                      >
-                        <span className="truncate">{exec.username}</span>
-                        {isSelected && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-                      </button>
-                    );
-                  })}
-
-                  {/* Clear Filters option at bottom */}
-                  <div className="border-t border-gray-100 my-1 mt-auto shrink-0"></div>
-                  <button
-                    type="button"
-                    onClick={handleClearFilters}
-                    className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
-                  >
-                    <XCircle size={12} />
-                    Limpiar Filtros
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="relative w-full sm:w-auto" ref={stageSelectorRef}>
-            <button
-              className="w-full bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors whitespace-nowrap shadow-sm"
-              onClick={() => setShowStageSelector(!showStageSelector)}
-            >
-              <Columns size={16} />
-              <span>Etapas</span>
-            </button>
-            {showStageSelector && (
-              <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-4">
-                <h4 className="font-semibold text-sm mb-2">Mostrar/Ocultar Etapas</h4>
-                <div className="space-y-2">
-                  {activeStages.map(stage => {
-                    const isChecked = visibleStageIds.includes(stage.id);
-                    const isDisabled = isChecked && visibleStageIds.length <= 3;
-                    return (
-                      <label key={stage.id} className={`flex items-center space-x-2 text-sm ${isDisabled ? 'cursor-not-allowed text-gray-500' : 'cursor-pointer'}`}>
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          disabled={isDisabled}
-                          onChange={() => handleStageVisibilityChange(stage.id)}
-                          className="hidden"
-                        />
-                        {isChecked ? <CheckSquare size={16} className={isDisabled ? 'text-gray-400' : 'text-blue-600'} /> : <Square size={16} className="text-gray-400" />}
-                        <span>{stage.strname}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-          <button
-            className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 whitespace-nowrap shadow-sm"
+              {/* Clear Filters option at bottom */}
+              <div className="border-t border-gray-100 my-1 mt-auto shrink-0"></div>
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+              >
+                <XCircle size={12} />
+                Limpiar Filtros
+              </button>
+            </div>
+          </UnifiedSearchBar>
+          <StageVisibilitySelector
+            stages={stages}
+            visibleStageIds={visibleStageIds}
+            onVisibilityChange={handleStageVisibilityChange}
+            zIndex={20}
+            labelSize="sm"
+            themeColor="blue"
+            align="left"
+          />
+          <Button
+            variant="success"
+            className="w-full sm:w-auto h-[38px] py-0 px-4 whitespace-nowrap"
             onClick={openCreateModal}
           >
-            <Plus size={18} /> Nueva Oportunidad
-          </button>
-          <button
+            <Plus size={18} className="mr-2" /> Nueva Oportunidad
+          </Button>
+          <Button
             title="Configurar Pipeline"
-            className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-700 flex items-center justify-center gap-2 whitespace-nowrap shadow-sm transition-colors"
+            variant="secondary"
+            className="w-full sm:w-auto h-[38px] py-0 px-3 whitespace-nowrap flex items-center justify-center"
             onClick={() => setShowStagesConfig(true)}
           >
-            <Settings2 size={18} />
-            <span className="sm:hidden">Configurar Pipeline</span>
-          </button>
+            <Settings2 size={18} className="sm:mr-2" />
+            <span className="hidden sm:inline">Configurar Pipeline</span>
+          </Button>
         </div>
       </div>
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar ${!activeOpportunity ? 'snap-x snap-mandatory' : ''}`}>
+        <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar ${!activeOpportunity && !activeStage ? 'snap-x snap-mandatory' : ''}`}>
           <SortableContext
             items={activeStages.filter(stage => visibleStageIds.includes(stage.id)).map(s => s.id)}
             strategy={horizontalListSortingStrategy}
@@ -1464,14 +1484,14 @@ const PipelinePage: React.FC = () => {
                 <Filter size={18} className="text-indigo-600" />
                 Filtro Personalizado
               </h3>
-              <button 
+              <button
                 onClick={() => setIsCustomFilterModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
-            
+
             {/* Content */}
             <div className="p-6 flex-grow overflow-y-auto flex flex-col gap-6">
               {/* Top Controls */}
@@ -1488,7 +1508,7 @@ const PipelinePage: React.FC = () => {
                   </select>
                   <span>las siguientes reglas:</span>
                 </div>
-                
+
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -1499,7 +1519,7 @@ const PipelinePage: React.FC = () => {
                   <span>Incluir archivadas</span>
                 </label>
               </div>
-              
+
               {/* Rules List */}
               <div className="flex flex-col gap-3">
                 {customRules.length === 0 ? (
@@ -1528,10 +1548,11 @@ const PipelinePage: React.FC = () => {
                           <option value="empresa">Empresa</option>
                           <option value="linea_negocio">Línea de Negocio</option>
                           <option value="monto_total">Monto Total</option>
+                          <option value="priority">Prioridad</option>
                           <option value="stage_id">Etapa</option>
                           <option value="ejecutivo_id">Ejecutivo</option>
                         </select>
-                        
+
                         {/* Operator Selector */}
                         <select
                           value={rule.operator}
@@ -1542,12 +1563,12 @@ const PipelinePage: React.FC = () => {
                             <option key={op.value} value={op.value}>{op.label}</option>
                           ))}
                         </select>
-                        
+
                         {/* Value input / selector */}
                         <div className="flex-1 w-full">
                           {renderRuleValueInput(rule, idx)}
                         </div>
-                        
+
                         {/* Trash Button */}
                         <button
                           type="button"
@@ -1563,7 +1584,7 @@ const PipelinePage: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             {/* Footer */}
             <div className="flex justify-between items-center px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0">
               <button
@@ -1573,7 +1594,7 @@ const PipelinePage: React.FC = () => {
               >
                 + Añadir regla
               </button>
-              
+
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -1586,11 +1607,10 @@ const PipelinePage: React.FC = () => {
                   type="button"
                   onClick={handleApplyCustomFilter}
                   disabled={customRules.length === 0}
-                  className={`px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors cursor-pointer ${
-                    customRules.length === 0
+                  className={`px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors cursor-pointer ${customRules.length === 0
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                       : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                  }`}
+                    }`}
                 >
                   Aplicar filtro
                 </button>

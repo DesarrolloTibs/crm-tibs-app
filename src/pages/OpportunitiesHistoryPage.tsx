@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import {
   getAllOpportunities,
   createOpportunity,
@@ -15,7 +15,11 @@ import OpportunityForm from '../components/Pipeline/OpportunityForm';
 import Tabs from '../components/Tabs/Tabs';
 import RemindersTab from '../components/Reminder/RemindersTab';
 import InteractionsTab from '../components/Interaction/InteractionsTab';
-import { Plus, Search, Filter, XCircle, User, Tag, Archive } from 'lucide-react';
+import { Plus, Filter, XCircle } from 'lucide-react';
+import Select from '../components/shared/Select';
+import Button from '../components/shared/Button';
+import UnifiedSearchBar from '../components/shared/UnifiedSearchBar';
+import type { SearchBadge } from '../components/shared/UnifiedSearchBar';
 
 import { useAuth } from '../hooks/useAuth';
 import OpportunityHistoryTable from '../components/Pipeline/OpportunityHistoryTable';
@@ -50,6 +54,18 @@ const OpportunitiesHistoryPage: React.FC = () => {
     onConfirm: () => {},
     onCancel: () => {},
   });
+
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const hideNotification = () => setNotification({ ...notification, show: false });
 
@@ -212,6 +228,22 @@ const OpportunitiesHistoryPage: React.FC = () => {
     return Array.from(execs.values());
   }, [opportunities]);
 
+  const executiveOptions = useMemo(() => [
+    { value: '', label: 'Todos los Ejecutivos' },
+    ...executives.map(exec => ({ value: exec.id, label: exec.username }))
+  ], [executives]);
+
+  const stageOptions = useMemo(() => [
+    { value: '', label: 'Todas las Etapas' },
+    ...stages.map(stage => ({ value: stage.id, label: stage.strname }))
+  ], [stages]);
+
+  const archivedOptions = useMemo(() => [
+    { value: 'all', label: 'Todos' },
+    { value: 'active', label: 'Activos' },
+    { value: 'archived', label: 'Archivados' },
+  ], []);
+
   const filteredOpportunities = useMemo(() =>
     opportunities.filter(opp => {
       const matchesSearch =
@@ -283,97 +315,102 @@ const OpportunitiesHistoryPage: React.FC = () => {
     setArchivedFilter('all');
   };
 
+  const badges = useMemo(() => {
+    const list: SearchBadge[] = [];
+    if (executiveFilter) {
+      list.push({
+        id: 'executive',
+        label: executives.find(e => e.id === executiveFilter)?.username || 'Ejecutivo',
+        icon: <Filter size={10} />,
+        onRemove: () => setExecutiveFilter('')
+      });
+    }
+    if (statusFilter) {
+      list.push({
+        id: 'status',
+        label: stages.find(s => s.id === statusFilter)?.strname || 'Etapa',
+        icon: <Filter size={10} />,
+        onRemove: () => setStatusFilter('')
+      });
+    }
+    if (archivedFilter !== 'all') {
+      list.push({
+        id: 'archived',
+        label: archivedFilter === 'archived' ? 'Archivadas' : 'Activas',
+        icon: <Filter size={10} />,
+        onRemove: () => setArchivedFilter('all')
+      });
+    }
+    return list;
+  }, [executiveFilter, statusFilter, archivedFilter, executives, stages]);
+
   return (
     <>
       <Notification {...notification} />
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Historial de Oportunidades</h1>
-        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
-          <button
-            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
-            onClick={() => setShowFilters(!showFilters)}
+        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3 items-center">
+          <UnifiedSearchBar
+            ref={searchDropdownRef}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            placeholder={!executiveFilter && !statusFilter && archivedFilter === 'all' ? "Buscar..." : ""}
+            badges={badges}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            dropdownWidthClass="w-[340px]"
           >
-            <Filter size={16} />
-            <span>Filtros</span>
-          </button>
-          <button
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap"
+            <div className="w-full flex flex-col gap-3">
+              <div>
+                <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Ejecutivo</h4>
+                <Select
+                  options={executiveOptions}
+                  value={executiveOptions.find(opt => opt.value === executiveFilter)}
+                  onChange={(selected) => setExecutiveFilter(selected ? selected.value : '')}
+                  placeholder="Todos los Ejecutivos"
+                  isSearchable
+                />
+              </div>
+              <div>
+                <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Etapa</h4>
+                <Select
+                  options={stageOptions}
+                  value={stageOptions.find(opt => opt.value === statusFilter)}
+                  onChange={(selected) => setStatusFilter(selected ? selected.value : '')}
+                  placeholder="Todas las Etapas"
+                  isSearchable
+                />
+              </div>
+              <div>
+                <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Estado</h4>
+                <Select
+                  options={archivedOptions}
+                  value={archivedOptions.find(opt => opt.value === archivedFilter)}
+                  onChange={(selected) => setArchivedFilter(selected ? selected.value as any : 'all')}
+                  placeholder="Estado"
+                />
+              </div>
+              <div className="border-t border-gray-100 my-1 pt-2 w-full" />
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+              >
+                <XCircle size={12} />
+                Limpiar Filtros
+              </button>
+            </div>
+          </UnifiedSearchBar>
+
+          <Button
+            variant="success"
             onClick={openCreateModal}
+            className="w-full sm:w-auto py-2.5 px-4 h-[38px] flex items-center justify-center whitespace-nowrap"
           >
-            <Plus size={18} /> Nueva Oportunidad
-          </button>
+            <Plus size={18} className="mr-2" /> Nueva Oportunidad
+          </Button>
         </div>
       </div>
-
-      {showFilters && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 animate-fade-in-down">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-700">Filtros</h3>
-            <button onClick={handleClearFilters} className="flex items-center text-sm text-blue-600 hover:text-blue-800">
-              <XCircle size={16} className="mr-1" />
-              Limpiar filtros
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                <User size={20} />
-              </span>
-              <select
-                value={executiveFilter}
-                onChange={e => setExecutiveFilter(e.target.value)}
-                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
-              >
-                <option value="">Todos los Ejecutivos</option>
-                {executives.map(exec => (
-                  <option key={exec.id} value={exec.id}>{exec.username}</option>
-                ))}
-              </select>
-            </div>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                <Tag size={20} />
-              </span>
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
-              >
-                <option value="">Todas las Etapas</option>
-                {stages.map(stage => (
-                  <option key={stage.id} value={stage.id}>{stage.strname}</option>
-                ))}
-              </select>
-            </div>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                <Archive size={20} />
-              </span>
-              <select
-                value={archivedFilter}
-                onChange={e => setArchivedFilter(e.target.value as any)}
-                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
-              >
-                <option value="all">Todos</option>
-                <option value="active">Activos</option>
-                <option value="archived">Archivados</option>
-              </select>
-            </div>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-              <Search size={20} />
-            </span>
-            <input
-              type="text"
-              placeholder="Buscar..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          </div>
-        </div>
-      )}
 
       {loading ? (
         <Loader />

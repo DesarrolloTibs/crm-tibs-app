@@ -9,8 +9,10 @@ import {
 import type { OpportunityCatalogOption } from '../../core/models/OpportunityCatalog';
 import Modal from '../Modal/Modal';
 import Loader from '../Loader/Loader';
-import { Pencil, Plus, Trash2, Sliders, Search, XCircle } from 'lucide-react';
+import { Pencil, Plus, Trash2, Sliders, Search } from 'lucide-react';
 import Notification from '../Modal/Notification';
+import Input from '../shared/Input';
+import Button from '../shared/Button';
 
 interface Props {
   catalogType: 'business-lines' | 'delivery-types' | 'licensings';
@@ -229,37 +231,26 @@ const OpportunityCatalogSettings: React.FC<Props> = ({ catalogType, catalogTitle
             Administra las opciones disponibles en el formulario de oportunidades para {catalogTitle}.
           </p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="success"
           onClick={openCreateModal}
-          className="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-1.5 shadow-sm transition-colors text-xs cursor-pointer"
+          className="!py-2 !px-3.5 !text-[11px]"
         >
-          <Plus size={14} />
-          <span>Nueva Opción</span>
-        </button>
+          <Plus size={14} className="mr-1.5" />
+          Nueva Opción
+        </Button>
       </div>
 
-      {/* Barra de Filtro */}
       <div className="mb-6 flex gap-4 text-left">
-        <div className="relative flex-1 max-w-md">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-            <Search size={16} />
-          </span>
-          <input
+        <div className="flex-1 max-w-md">
+          <Input
             type="text"
             placeholder={`Buscar ${catalogTitle.toLowerCase()}...`}
             value={filterName}
             onChange={e => setFilterName(e.target.value)}
-            className="w-full border rounded-lg pl-9 pr-8 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+            inputPrefix={<Search size={16} />}
           />
-          {filterName && (
-            <button
-              onClick={() => setFilterName('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-            >
-              <XCircle size={16} />
-            </button>
-          )}
         </div>
       </div>
 
@@ -368,22 +359,24 @@ const OpportunityCatalogSettings: React.FC<Props> = ({ catalogType, catalogTitle
                 Página {currentPage} de {totalPages}
               </span>
               <div className="flex gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border border-slate-200 rounded bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="!py-1.5 !px-3 !text-[10px] !rounded-md"
                 >
                   Anterior
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border border-slate-200 rounded bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="!py-1.5 !px-3 !text-[10px] !rounded-md"
                 >
                   Siguiente
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -404,14 +397,11 @@ const OpportunityCatalogSettings: React.FC<Props> = ({ catalogType, catalogTitle
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-600 uppercase">
-              Nombre de la Opción
-            </label>
-            <input
+            <Input
+              label="Nombre de la Opción"
               type="text"
               value={optionName}
               onChange={e => setOptionName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium"
               placeholder={`Escribe el nombre (ej. ${catalogTitle})...`}
               maxLength={100}
               required
@@ -420,23 +410,20 @@ const OpportunityCatalogSettings: React.FC<Props> = ({ catalogType, catalogTitle
           </div>
 
           <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => setModalOpen(false)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition-colors shadow-sm cursor-pointer flex items-center gap-1.5"
+              loading={loading}
+              variant="indigo"
             >
-              {loading && (
-                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              )}
-              <span>Guardar</span>
-            </button>
+              Guardar
+            </Button>
           </div>
         </form>
       </Modal>
@@ -469,13 +456,13 @@ const OpportunityCatalogSettings: React.FC<Props> = ({ catalogType, catalogTitle
           </div>
 
           <div className="flex justify-end pt-3 border-t border-gray-100">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => setSelectedOppList(null)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
             >
               Cerrar
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
