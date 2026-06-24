@@ -64,6 +64,11 @@ export const TICKETS = {
     TICKETS: urlBase + 'tickets',
 };
 
+export const HELPDESK_CRON = {
+    CRON_CONFIG: urlBase + 'helpdesks/cron-config',
+};
+
+
 /*export const ENDPOINTS = {
     LOGIN: '/auth/login',
     CLIENTS: 'http://localhost:3090/clients',

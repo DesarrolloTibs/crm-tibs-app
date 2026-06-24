@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { XCircle, ClipboardList, Settings, Sliders, Database } from 'lucide-react';
+import { XCircle, ClipboardList, Settings, Sliders, Database, Bell } from 'lucide-react';
 import ActivityTypesSettings from '../components/ActivityType/ActivityTypesSettings';
 import OpportunityLabelsSettings from '../components/OpportunityLabel/OpportunityLabelsSettings';
 import OpportunityCatalogSettings from '../components/OpportunityLabel/OpportunityCatalogSettings';
+import HelpdeskCronSettings from '../components/Helpdesk/HelpdeskCronSettings';
 import { getOpportunityLabels } from '../services/opportunityLabelsService';
 import type { OpportunityLabel } from '../core/models/OpportunityLabel';
 
-type SettingTab = 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs';
+type SettingTab = 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs' | 'helpdesk-cron';
 
 interface SettingOption {
     id: SettingTab;
@@ -71,6 +72,16 @@ const SettingsPage: React.FC = () => {
                 },
             ],
         },
+        {
+            title: 'Mesa de ayuda',
+            options: [
+                {
+                    id: 'helpdesk-cron',
+                    label: 'Notificaciones automáticas',
+                    icon: <Bell size={16} />,
+                },
+            ],
+        },
     ];
 
     if (!isAdmin) {
@@ -89,6 +100,8 @@ const SettingsPage: React.FC = () => {
                 return <ActivityTypesSettings />;
             case 'opportunity-labels':
                 return <OpportunityLabelsSettings onLabelsUpdated={fetchLabels} />;
+            case 'helpdesk-cron':
+                return <HelpdeskCronSettings />;
             case 'opportunity-catalogs':
                 return (
                     <div className="flex flex-col gap-6 text-left">

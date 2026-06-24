@@ -818,7 +818,7 @@ const HelpdeskPage: React.FC = () => {
 
         {/* Toolbar (collapsible on mobile) */}
         <div className={`${showToolbar ? 'flex' : 'hidden'} md:flex flex-col sm:flex-row w-full md:w-auto gap-3 flex-wrap`}>
-           {/* Odoo-style search + filter dropdown */}
+
           <div className="relative w-full sm:w-[340px]" ref={searchDropdownRef}>
             <div
               className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 shadow-sm hover:border-gray-400 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 min-h-[38px] cursor-text transition-all"
