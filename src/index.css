@@ -142,3 +142,60 @@
   display: none;
 }
 
+/* ── Estilos de Impresión (Exportación a PDF) ────────────────────────────── */
+@media print {
+  /* Ocultar elementos de navegación y acción no imprimibles */
+  aside,
+  header,
+  nav,
+  button,
+  .no-print,
+  .fc-header-toolbar,
+  .fc-button,
+  .fc-button-group,
+  [role="button"] {
+    display: none !important;
+  }
+
+  /* Ajustar el contenedor principal y el cuerpo de la página */
+  body, html, #root, .min-h-screen, main, .flex-grow, .p-4, .md\:p-6 {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  /* Mostrar la cabecera de impresión */
+  .print-only-block {
+    display: block !important;
+  }
+
+  /* Ajustar la tabla de actividades para impresión */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    padding: 6px 10px !important;
+    border: 1px solid #cbd5e1 !important;
+    font-size: 10pt !important;
+    color: #000000 !important;
+    background-color: transparent !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+  }
+
+  /* Asegurar colores de fondo e impresiones a color */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+

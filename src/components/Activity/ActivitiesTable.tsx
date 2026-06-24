@@ -32,7 +32,7 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Relación</th>
                         <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Oportunidad</th>
                         <th className="p-4 w-12">{/* Nueva columna vacía para campanita (sin header) */}</th>
-                        <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
+                        <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider print:hidden">Acciones</th>
                     </tr>
                 </thead>
                 <tbody className="block md:table-row-group">
@@ -75,14 +75,14 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                                                 ) : activity.client ? (
                                                     <p>Contacto: {activity.client.nombre} {activity.client.apellido}</p>
                                                 ) : (
-                                                    <p>-</p>
+                                                    <p></p>
                                                 )}
                                             </div>
                                         </td>
                                         <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
                                             <div className="flex flex-col md:block">
                                                 <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Oportunidad</span>
-                                                <p>{activity.opportunity?.nombre_proyecto || 'N/A'}</p>
+                                                <p>{activity.opportunity?.nombre_proyecto || ''}</p>
                                             </div>
                                         </td>
 
@@ -149,7 +149,7 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                                             )}
                                         </td>
 
-                                        <td className="p-4 block md:table-cell md:rounded-r-lg text-right">
+                                        <td className="p-4 block md:table-cell md:rounded-r-lg text-right print:hidden">
                                             <div className="flex justify-between md:justify-end items-center mt-2 md:mt-0">
                                                 <button
                                                     onClick={() => toggleRow(activity.id!)}
@@ -186,7 +186,7 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                 </tbody>
             </table>
             {totalPages > 1 && (
-                <div className="flex justify-center items-center mt-6 p-4">
+                <div className="flex justify-center items-center mt-6 p-4 print:hidden">
                     <div className="flex space-x-2">
                         {Array.from({ length: totalPages }, (_, i) => (
                             <button

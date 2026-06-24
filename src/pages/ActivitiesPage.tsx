@@ -1,14 +1,16 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { getActivities, createActivity, updateActivity, deleteActivity, getActivityTypes } from '../services/activitiesService';
 import Select, { type SingleValue } from 'react-select';
 import { getUsers } from '../services/usersService';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 import ActivityForm from '../components/Activity/ActivityForm';
 import Modal from '../components/Modal/Modal';
 import Loader from '../components/Loader/Loader';
 import ActivitiesTable from '../components/Activity/ActivitiesTable';
 import ActivitiesCalendar from '../components/Activity/ActivitiesCalendar';
-import { Plus, Filter, XCircle, Search, User, LayoutGrid, Table2 } from 'lucide-react';
+import { Plus, Filter, XCircle, Search, User, LayoutGrid, Table2, ChevronDown, FileSpreadsheet, FileText, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Notification from '../components/Modal/Notification';
 import type { Activity, TypeActivity } from '../core/models/Activity';
@@ -24,7 +26,7 @@ const PAGE_SIZE = 10;
 type ViewMode = 'table' | 'calendar';
 
 const ActivitiesPage: React.FC = () => {
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth();
     const [activities, setActivities] = useState<Activity[]>([]);
     const [activityTypes, setActivityTypes] = useState<TypeActivity[]>([]);
     const [users, setUsers] = useState<UserModel[]>([]);
@@ -40,6 +42,19 @@ const ActivitiesPage: React.FC = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(false);
+
+    const searchDropdownRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+                setShowFilters(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const [notification, setNotification] = useState({
         show: false,
@@ -82,6 +97,7 @@ const ActivitiesPage: React.FC = () => {
     }, [fetchActivities, fetchActivityTypes]);
 
     useEffect(() => {
+        if (!isAdmin) return;
         const fetchUsers = async () => {
             try {
                 const usersData = await getUsers();
@@ -91,7 +107,7 @@ const ActivitiesPage: React.FC = () => {
             }
         };
         fetchUsers();
-    }, []);
+    }, [isAdmin]);
 
     const handleCreate = async (activity: Partial<Activity>) => {
         setLoading(true);
@@ -190,11 +206,14 @@ const ActivitiesPage: React.FC = () => {
     };
 
 
-    const filteredActivities = activities.filter(activity =>
-        activity.activity.toLowerCase().includes(filterTitle.toLowerCase()) &&
-        (filterUser ? activity.userId === filterUser : true) &&
-        (filterDate ? activity.date.startsWith(filterDate) : true)
-    );
+    const filteredActivities = activities.filter(activity => {
+        const matchesTitle = activity.activity.toLowerCase().includes(filterTitle.toLowerCase()) ||
+            (activity.reminder?.title && activity.reminder.title.toLowerCase().includes(filterTitle.toLowerCase()));
+            
+        return matchesTitle &&
+            (filterUser ? activity.userId === filterUser : true) &&
+            (filterDate ? activity.date.startsWith(filterDate) : true);
+    });
 
     const totalPages = Math.ceil(filteredActivities.length / PAGE_SIZE);
     const paginatedActivities = filteredActivities.slice(
@@ -216,17 +235,145 @@ const ActivitiesPage: React.FC = () => {
         setFilterDate('');
     };
 
+    // Columnas idénticas a la tabla en pantalla:
+    // Actividad | Tipo | Fecha | Usuario | Relación | Oportunidad | Recordatorio (solo si hay alguno)
+    const hasReminders = filteredActivities.some(a => !!a.reminder);
+
+    const EXPORT_HEADERS = [
+        'Actividad', 'Tipo', 'Fecha', 'Usuario', 'Relación', 'Oportunidad',
+        ...(hasReminders ? ['Recordatorio'] : []),
+    ];
+
+    const buildExportRows = () =>
+        filteredActivities.map(activity => {
+            const relacion = activity.company
+                ? `Empresa: ${activity.company.nombre}`
+                : activity.client
+                    ? `Contacto: ${activity.client.nombre} ${activity.client.apellido || ''}`.trim()
+                    : '';
+            const row = [
+                activity.activity || '',
+                activity.typeActivity?.strname || '',
+                activity.date ? new Date(activity.date).toLocaleString('es-MX') : '',
+                activity.user?.username || '',
+                relacion,
+                activity.opportunity?.nombre_proyecto || '',
+            ];
+            if (hasReminders) {
+                row.push(activity.reminder ? activity.reminder.title : '');
+            }
+            return row;
+        });
+
+    const getActiveUserLabel = () =>
+        isAdmin
+            ? (filterUser ? users.find(u => u.id === filterUser)?.username || 'Todos los usuarios' : 'Todos los usuarios')
+            : (user?.username || '');
+
+    const handleExportPDF = () => {
+        const rows = buildExportRows();
+        const activeUsername = getActiveUserLabel();
+
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+
+        doc.setFontSize(16);
+        doc.setTextColor(40, 40, 40);
+        doc.text('Reporte de Actividades', 40, 40);
+
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Usuario: ${activeUsername}`, 40, 58);
+        if (filterDate) doc.text(`Fecha: ${filterDate}`, 240, 58);
+        if (filterTitle) doc.text(`Búsqueda: "${filterTitle}"`, filterDate ? 360 : 240, 58);
+        doc.text(`Generado el: ${new Date().toLocaleString('es-MX')}`, 40, 70);
+
+        autoTable(doc, {
+            head: [EXPORT_HEADERS],
+            body: rows,
+            startY: 82,
+            styles: { fontSize: 7.5, cellPadding: 4, overflow: 'linebreak' },
+            headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [245, 245, 255] },
+            columnStyles: {
+                0: { cellWidth: 160 }, // Actividad
+                1: { cellWidth: 70 },  // Tipo
+                2: { cellWidth: 85 },  // Fecha
+                3: { cellWidth: 60 },  // Usuario
+                4: { cellWidth: 100 }, // Relación
+                5: { cellWidth: 100 }, // Oportunidad
+                ...(hasReminders ? { 6: { cellWidth: 'auto' } } : {}), // Recordatorio
+            },
+        });
+
+        const userSuffix = activeUsername !== 'Todos los usuarios' ? `_${activeUsername}` : '';
+        const dateSuffix = filterDate ? `_${filterDate}` : '';
+        doc.save(`actividades${userSuffix}${dateSuffix}.pdf`);
+    };
+
+    const handleExportCSV = () => {
+        const rows = buildExportRows();
+        const activeUsername = getActiveUserLabel();
+
+        const csvContent = [
+            EXPORT_HEADERS.join(','),
+            ...rows.map(row =>
+                row.map(val => {
+                    const escaped = String(val).replace(/"/g, '""');
+                    return /[,\"\n\r]/.test(escaped) ? `"${escaped}"` : escaped;
+                }).join(',')
+            )
+        ].join('\n');
+
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        const userSuffix = activeUsername !== 'Todos los usuarios' ? `_${activeUsername}` : '';
+        const dateSuffix = filterDate ? `_${filterDate}` : '';
+        link.setAttribute('download', `actividades${userSuffix}${dateSuffix}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <>
             <Notification {...notification} />
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+
+            {/* Cabecera de impresión (oculta en pantalla, visible al imprimir/exportar a PDF) */}
+            <div className="hidden print-only-block mb-6 border-b border-gray-300 pb-4">
+                <h1 className="text-3xl font-bold text-gray-900">Reporte de Actividades</h1>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-gray-600">
+                    <div>
+                        <span className="font-semibold">Usuario:</span>{' '}
+                        {isAdmin 
+                            ? (filterUser ? userOptions.find(o => o.value === filterUser)?.label || 'Desconocido' : 'Todos los usuarios')
+                            : (user?.username || 'Ejecutivo')}
+                    </div>
+                    {filterDate && (
+                        <div>
+                            <span className="font-semibold">Fecha:</span> {filterDate}
+                        </div>
+                    )}
+                    {filterTitle && (
+                        <div>
+                            <span className="font-semibold">Búsqueda:</span> "{filterTitle}"
+                        </div>
+                    )}
+                    <div>
+                        <span className="font-semibold">Generado el:</span> {new Date().toLocaleString('es-MX')}
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 print:hidden">
                 <h1 className="text-2xl font-bold text-gray-800">Actividades</h1>
-                <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+                <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3 items-center">
                     {/* Toggle Tabla / Calendario */}
-                    <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+                    <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1 shrink-0">
                         <button
                             onClick={() => setViewMode('table')}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer ${
                                 viewMode === 'table'
                                     ? 'bg-white text-indigo-700 shadow-sm'
                                     : 'text-gray-500 hover:text-gray-700'
@@ -237,7 +384,7 @@ const ActivitiesPage: React.FC = () => {
                         </button>
                         <button
                             onClick={() => setViewMode('calendar')}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer ${
                                 viewMode === 'calendar'
                                     ? 'bg-white text-indigo-700 shadow-sm'
                                     : 'text-gray-500 hover:text-gray-700'
@@ -247,75 +394,114 @@ const ActivitiesPage: React.FC = () => {
                             Calendario
                         </button>
                     </div>
-                    {viewMode === 'table' && (
-                        <button
-                            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
-                            onClick={() => setShowFilters(!showFilters)}
+
+                    {/* Búsqueda y Filtros estilo Odoo */}
+                    <div className="relative w-full sm:w-[280px]" ref={searchDropdownRef}>
+                        <div
+                            className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 shadow-sm hover:border-gray-400 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 min-h-[38px] cursor-text transition-all"
+                            onClick={() => searchInputRef.current?.focus()}
                         >
-                            <Filter size={16} />
-                            <span>Filtros</span>
-                        </button>
+                            <Search size={16} className="text-gray-400 shrink-0" />
+                            <div className="flex flex-wrap gap-1 items-center flex-1 min-w-0">
+                                {filterUser && (
+                                    <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
+                                        <User size={10} />
+                                        {userOptions.find(o => o.value === filterUser)?.label || 'Usuario'}
+                                        <button onClick={e => { e.stopPropagation(); setFilterUser(''); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
+                                    </span>
+                                )}
+                                {filterDate && (
+                                    <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0">
+                                        <Filter size={10} />
+                                        {filterDate}
+                                        <button onClick={e => { e.stopPropagation(); setFilterDate(''); }} className="hover:text-indigo-950 font-black ml-0.5 cursor-pointer"><X size={10} /></button>
+                                    </span>
+                                )}
+                                <input
+                                    ref={searchInputRef}
+                                    type="text"
+                                    placeholder={!filterUser && !filterDate ? 'Buscar actividad...' : ''}
+                                    value={filterTitle}
+                                    onChange={e => setFilterTitle(e.target.value)}
+                                    className="border-none outline-none focus:ring-0 p-0 text-xs sm:text-sm bg-transparent placeholder-gray-400 min-w-[80px] flex-grow focus:outline-none"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={e => { e.stopPropagation(); setShowFilters(!showFilters); }}
+                                className="p-1 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition-colors ml-auto shrink-0 cursor-pointer"
+                            >
+                                <ChevronDown size={14} className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                            </button>
+                        </div>
+
+                        {showFilters && (
+                            <div className="absolute right-0 mt-1.5 w-[300px] max-w-[95vw] bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 flex flex-col gap-3 text-left animate-fade-in">
+                                {isAdmin && (
+                                    <div>
+                                        <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Usuario</h4>
+                                        <Select
+                                            inputId="user-filter"
+                                            options={userOptions}
+                                            value={filterUser ? userOptions.find(option => option.value === filterUser) : null}
+                                            onChange={handleUserFilterChange}
+                                            placeholder="Seleccionar usuario..."
+                                            isClearable
+                                            isSearchable
+                                            noOptionsMessage={() => 'No se encontraron usuarios'}
+                                        />
+                                    </div>
+                                )}
+                                <div>
+                                    <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none">Fecha</h4>
+                                    <input
+                                        type="date"
+                                        value={filterDate}
+                                        onChange={(e) => setFilterDate(e.target.value)}
+                                        className="w-full border rounded-lg px-2.5 py-1.5 border-gray-300 text-xs focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer"
+                                    />
+                                </div>
+                                <div className="border-t border-gray-100 my-1 pt-2" />
+                                <button
+                                    type="button"
+                                    onClick={handleClearFilters}
+                                    className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                                >
+                                    <XCircle size={12} />
+                                    Limpiar Filtros
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Botones de Exportación (solo visibles en vista Tabla) */}
+                    {viewMode === 'table' && (
+                        <>
+                            <button
+                                onClick={handleExportPDF}
+                                className="bg-white border border-blue-100 text-red-500 px-4 py-2 rounded-xl hover:bg-red-50/50 flex items-center justify-center gap-2 transition-all w-full sm:w-auto shadow-sm whitespace-nowrap cursor-pointer font-bold text-xs tracking-wider"
+                            >
+                                <FileText size={16} className="text-red-500" />
+                                <span>PDF</span>
+                            </button>
+                            <button
+                                onClick={handleExportCSV}
+                                className="bg-white border border-blue-100 text-emerald-600 px-4 py-2 rounded-xl hover:bg-emerald-50/50 flex items-center justify-center gap-2 transition-all w-full sm:w-auto shadow-sm whitespace-nowrap cursor-pointer font-bold text-xs tracking-wider"
+                            >
+                                <FileSpreadsheet size={16} className="text-emerald-600" />
+                                <span>EXCEL</span>
+                            </button>
+                        </>
                     )}
+
                     <button
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap"
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto shadow-sm whitespace-nowrap cursor-pointer"
                         onClick={openCreateModal}
                     >
                         <Plus size={18} /> Nueva Actividad
                     </button>
                 </div>
             </div>
-            {showFilters && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 animate-fade-in-down">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold text-gray-700">Filtros</h3>
-                        <button onClick={handleClearFilters} className="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                            <XCircle size={16} className="mr-1" />
-                            Limpiar filtros
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                <Search size={20} />
-                            </span>
-                            <input
-                                type="text"
-                                placeholder="Filtrar por actividad"
-                                value={filterTitle}
-                                onChange={e => setFilterTitle(e.target.value)}
-                                className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                        </div>
-                        <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                <User size={20} />
-                            </span>
-                            <Select
-                                inputId="user-filter"
-                                options={userOptions}
-                                value={filterUser ? userOptions.find(option => option.value === filterUser) : null}
-                                onChange={handleUserFilterChange}
-                                placeholder="Filtrar por usuario"
-                                isClearable
-                                isSearchable
-                                noOptionsMessage={() => 'No se encontraron usuarios'}
-                                styles={{ input: (base) => ({ ...base, paddingLeft: '28px' }) }}
-                            />
-                        </div>
-                        <div className="relative">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                                <input
-                                    type="date"
-                                    value={filterDate}
-                                    onChange={(e) => setFilterDate(e.target.value)}
-                                    className="w-full border rounded-lg px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
             {loading ? (
                 <Loader />
             ) : viewMode === 'calendar' ? (

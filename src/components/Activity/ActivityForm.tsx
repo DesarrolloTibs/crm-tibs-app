@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Select, { type SingleValue, type MultiValue } from 'react-select';
-import { Bell, BellOff } from 'lucide-react';
+import { Bell, BellOff, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { getOpportunities } from '../../services/opportunitiesService';
 import { getActiveClients } from '../../services/clientsService';
@@ -36,6 +37,7 @@ const formatDateTimeForInput = (isoString?: string) => {
 
 const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, onCancel }) => {
     const { user, isAdmin } = useAuth();
+    const navigate = useNavigate();
     const [linkType, setLinkType] = useState<'company' | 'contact'>(
         initialData?.companyId ? 'company' : 'contact'
     );
@@ -238,6 +240,12 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         onSubmit(finalActivity);
     };
 
+    const handleRedirectOpportunity = () => {
+        if (initialData?.opportunityId) {
+            navigate(`/pipeline?opportunityId=${initialData.opportunityId}`);
+        }
+    };
+
     const selectedOpportunityValue = form.opportunityId
         ? opportunityOptions.find(option => option.value === form.opportunityId) || null
         : null;
@@ -354,18 +362,32 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
 
                     <div className="md:col-span-2">
                         <label htmlFor="opportunityId" className="block text-sm font-medium text-gray-700 mb-1">Oportunidad (Opcional)</label>
-                        <Select
-                            inputId="opportunityId"
-                            name="opportunityId"
-                            options={opportunityOptions}
-                            value={selectedOpportunityValue}
-                            onChange={handleOpportunityChange}
-                            placeholder="-- Seleccione una oportunidad --"
-                            isClearable
-                            isDisabled={!!initialData?.opportunityId && !initialData?.id}
-                            isSearchable
-                            noOptionsMessage={() => 'No se encontraron oportunidades'}
-                        />
+                        <div className="flex items-center gap-2">
+                            <div className="flex-grow">
+                                <Select
+                                    inputId="opportunityId"
+                                    name="opportunityId"
+                                    options={opportunityOptions}
+                                    value={selectedOpportunityValue}
+                                    onChange={handleOpportunityChange}
+                                    placeholder="-- Seleccione una oportunidad --"
+                                    isClearable
+                                    isDisabled={!!initialData?.opportunityId && !initialData?.id}
+                                    isSearchable
+                                    noOptionsMessage={() => 'No se encontraron oportunidades'}
+                                />
+                            </div>
+                            {initialData?.opportunityId && form.opportunityId === initialData.opportunityId && (
+                                <button
+                                    type="button"
+                                    onClick={handleRedirectOpportunity}
+                                    className="text-indigo-600 hover:text-indigo-800 p-1.5 transition-colors cursor-pointer shrink-0 flex items-center justify-center"
+                                    title="Ir a la Oportunidad en el Pipeline"
+                                >
+                                    <ArrowRight size={22} className="stroke-[2.5]" />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </fieldset>

@@ -107,7 +107,7 @@ const formSelectStyles = {
   })
 };
 
-const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onDelete, onConvertToOpportunity, onArchive }) => {
+const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onConvertToOpportunity }) => {
   const { user: currentUser, isAdmin, isEjecutivo } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [users, setUsers] = useState<User[]>([]);
