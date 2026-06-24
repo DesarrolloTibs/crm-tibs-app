@@ -85,6 +85,20 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   );
 
   const [stages, setStages] = useState<Stage[]>([]);
+  const [showStageDropdown, setShowStageDropdown] = useState(false);
+
+  const getStageDuration = (enteredAtStr?: string | Date) => {
+    if (!enteredAtStr) return '';
+    const entered = new Date(enteredAtStr);
+    const diffMs = Date.now() - entered.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    if (diffMins < 60) return `${Math.max(1, diffMins)}m`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d`;
+  };
+
   const [opportunity, setOpportunity] = useState<OpportunityFormData>(
     initialData && initialData.id ? {
       ...initialData,
@@ -95,6 +109,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       linea_negocio_id: initialData.linea_negocio_id || initialData.linea_negocio?.id || '',
       tipo_entrega_id: initialData.tipo_entrega_id || initialData.tipo_entrega?.id || '',
       licenciamiento_id: initialData.licenciamiento_id || initialData.licenciamiento?.id || '',
+      priority: initialData.priority ?? 0,
     } : {
       nombre_proyecto: '',
       description: '',
@@ -114,6 +129,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       tipoCambio: 0,
       estimated_closure_date: new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString().split('T')[0], 
+      priority: 0,
     }
   );
 
@@ -265,6 +281,13 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     } else {
       setOpportunity({ ...opportunity, [name]: value });
     }
+  };
+
+  const handleStageClick = (stage: Stage) => {
+    setOpportunity(prev => ({
+      ...prev,
+      stage_id: stage.id
+    }));
   };
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -488,6 +511,95 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       <form onSubmit={handleSubmit} className="space-y-8 p-2">
         {/* <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Nueva'} Oportunidad</h2> */}
 
+        {/* Barra superior de fases de la Oportunidad (stepper idéntico a tickets) */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Etapa de la Oportunidad
+          </div>
+          <div className="relative flex items-center self-end md:self-auto overflow-visible pb-1 md:pb-0">
+            <div className="odoo-statusbar select-none">
+              {(() => {
+                const foldedNames = ['resuelto', 'cancelado', 'cancelada', 'ganada', 'perdida', 'lost', 'won', 'cancelled', 'solved', 'standby'];
+                const activeStages = stages.filter(s => s.blnstatus);
+                
+                const mainStages = activeStages.filter(s => {
+                  const isFolded = foldedNames.includes(s.strname.trim().toLowerCase());
+                  return !isFolded || s.id === opportunity.stage_id;
+                });
+
+                const foldedStages = activeStages.filter(s => {
+                  const isFolded = foldedNames.includes(s.strname.trim().toLowerCase());
+                  return isFolded && s.id !== opportunity.stage_id;
+                });
+
+                return (
+                  <>
+                    {mainStages.map((s) => {
+                      const isActive = s.id === opportunity.stage_id;
+                      const duration = isActive && initialData ? getStageDuration(initialData.stage_entered_at || initialData.createdAt) : '';
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => {
+                            handleStageClick(s);
+                            setShowStageDropdown(false);
+                          }}
+                          className={`odoo-step cursor-pointer ${isActive ? 'active' : ''}`}
+                        >
+                          <span>{s.strname}</span>
+                          {duration && (
+                            <span className="text-[10px] font-normal text-teal-650 opacity-90 ml-1">
+                              {duration}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                    
+                    {foldedStages.length > 0 && (
+                      <div className="relative flex">
+                        <button
+                          type="button"
+                          onClick={() => setShowStageDropdown(!showStageDropdown)}
+                          className="odoo-step cursor-pointer px-4 font-bold"
+                          title="Más etapas"
+                        >
+                          ...
+                        </button>
+                        
+                        {showStageDropdown && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-40 bg-transparent" 
+                              onClick={() => setShowStageDropdown(false)}
+                            />
+                            <div className="absolute right-0 top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-lg shadow-xl z-50 p-1 flex flex-col animate-in fade-in duration-100">
+                              {foldedStages.map((s) => (
+                                <button
+                                  key={s.id}
+                                  type="button"
+                                  onClick={() => {
+                                    handleStageClick(s);
+                                    setShowStageDropdown(false);
+                                  }}
+                                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md font-semibold transition-colors cursor-pointer"
+                                >
+                                  {s.strname}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+
         <fieldset className="space-y-6">
           <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Datos del Proyecto</legend>
           
@@ -509,6 +621,37 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           <div>
             <label htmlFor="createdAt" className="block text-sm font-medium text-gray-700 mb-1">Fecha de Creación</label>
             <input type="date" id="createdAt" name="createdAt" value={opportunity.createdAt || ''} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
+            <div className="flex gap-2 items-center">
+              {[1, 2, 3].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setOpportunity(prev => ({ ...prev, priority: prev.priority === star ? 0 : star }))}
+                  className="focus:outline-none transition-transform active:scale-95 cursor-pointer"
+                >
+                  <svg
+                    className={`w-6 h-6 ${
+                      star <= (opportunity.priority ?? 0) ? 'text-amber-400 fill-current' : 'text-gray-300'
+                    }`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                </button>
+              ))}
+              <span className="text-xs text-gray-500 ml-2 font-bold uppercase tracking-wider">
+                {opportunity.priority === 0 ? 'Sin prioridad' : opportunity.priority === 1 ? 'Baja' : opportunity.priority === 2 ? 'Media' : 'Alta'}
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -634,13 +777,6 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         <fieldset className="space-y-6">
           <legend className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 w-full">Clasificación</legend>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="stage_id" className="block text-sm font-medium text-gray-700 mb-1">Etapa</label>
-              <select id="stage_id" name="stage_id" value={opportunity.stage_id} onChange={handleChange} className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="" disabled>-- Seleccione una etapa --</option>
-                {stages.map(s => <option key={s.id} value={s.id}>{s.strname}</option>)}
-              </select>
-            </div>
             <div>
               <label htmlFor="linea_negocio_id" className="block text-sm font-medium text-gray-700 mb-1">
                 {getLabelNameByKey('linea_negocio', 'Línea de Negocio')}

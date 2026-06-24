@@ -249,7 +249,27 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       {/* This div is the main content and the draggable handle */}
       <div {...listeners} className={`${canDrag ? 'cursor-grab' : 'cursor-default'} flex-grow flex flex-col h-full`}>
         <h4 className={`font-bold text-[#000000] text-sm top-0 leading-snug truncate pr-8 ${opportunity.archived ? 'pl-7' : ''}`} title={opportunity.nombre_proyecto}>{opportunity.nombre_proyecto}</h4>
-        <p className="flex items-center gap-2 font-semibold italic text-[#579bd3] text-xs truncate pt-1" title={opportunity.company?.nombre || opportunity.empresa || ''}><Building2 size={14} /> {opportunity.company?.nombre || opportunity.empresa || 'Sin empresa'}</p>
+        <div className="flex items-center justify-between pt-1">
+          <p className="flex items-center gap-1.5 font-semibold italic text-[#579bd3] text-xs truncate max-w-[150px]" title={opportunity.company?.nombre || opportunity.empresa || ''}><Building2 size={13} /> {opportunity.company?.nombre || opportunity.empresa || 'Sin empresa'}</p>
+          <div className="flex gap-0.5 items-center shrink-0">
+            {[1, 2, 3].map((star) => (
+              <svg
+                key={star}
+                className={`w-3.5 h-3.5 ${
+                  star <= (opportunity.priority ?? 0) ? 'text-amber-400 fill-current' : 'text-gray-200'
+                }`}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            ))}
+          </div>
+        </div>
         <div className="text-right flex-shrink-0 mt-0">
           <span className="text-lg font-bold text-[#2f5367]">${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
           <span className="ml-1 text-xs text-[#2f5367] font-bold">{opportunity.moneda}</span>

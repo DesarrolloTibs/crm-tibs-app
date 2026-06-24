@@ -56,6 +56,14 @@ export const OPPORTUNITY_CATALOGS = {
     LICENSINGS: urlBase + 'licensings',
 };
 
+export const HELPDESKS = {
+    HELPDESKS: urlBase + 'helpdesks',
+};
+
+export const TICKETS = {
+    TICKETS: urlBase + 'tickets',
+};
+
 /*export const ENDPOINTS = {
     LOGIN: '/auth/login',
     CLIENTS: 'http://localhost:3090/clients',

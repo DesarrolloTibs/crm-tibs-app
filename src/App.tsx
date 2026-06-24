@@ -15,6 +15,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import CompaniesPage from './pages/CompaniesPage';
 import SettingsPage from './pages/SettingsPage';
 import ProductsPage from './pages/ProductsPage';
+import HelpdeskPage from './pages/HelpdeskPage';
 
 const App: React.FC = () => (
     <BrowserRouter>
@@ -59,6 +60,16 @@ const App: React.FC = () => (
                     <ProtectedRoute>
                         <Layout>
                             <PipelinePage />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/helpdesk"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <HelpdeskPage />
                         </Layout>
                     </ProtectedRoute>
                 }

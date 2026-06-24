@@ -52,6 +52,7 @@ export interface Opportunity  {
   estimated_closure_date?: Date;
   createdAt?: Date;
   stage_entered_at?: Date | string;
+  priority?: number;
 }
 
 export interface OpportunityFile {
