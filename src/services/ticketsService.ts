@@ -74,3 +74,15 @@ export const updateTicket = async (id: string, ticketData: Partial<Ticket>): Pro
 export const deleteTicket = async (id: string): Promise<void> => {
   await axiosInstance.delete(`${TICKETS.TICKETS}/${id}`);
 };
+
+/**
+ * Consulta pública de tickets por correo o número de ticket.
+ */
+export const queryTicketsPublic = async (params: { email?: string; ticketNumber?: string }): Promise<Ticket[]> => {
+  const queryParams = new URLSearchParams();
+  if (params.email) queryParams.append('email', params.email);
+  if (params.ticketNumber) queryParams.append('ticketNumber', params.ticketNumber);
+  
+  const response = await axiosInstance.get<Ticket[]>(`${TICKETS.TICKETS}/public/query?${queryParams.toString()}`);
+  return response.data;
+};
