@@ -57,8 +57,8 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
     fetchInteractions();
   }, [opportunityId]);
 
-  const handleAddInteraction = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddInteraction = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!newInteractionComment) {
       setNotification({
         show: true,
@@ -150,7 +150,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Añadir al Historial</h2>
-        <form onSubmit={handleAddInteraction} className="space-y-4">
+        <div className="space-y-4">
           <div>
             <TextArea
               id="newInteractionComment"
@@ -174,15 +174,16 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
 
 
             <Button
-              type="submit"
+              type="button"
               variant="primary"
               className="px-6 py-3"
+              onClick={() => handleAddInteraction()}
             >
               Guardar Registro
             </Button>
 
           </div>
-        </form>
+        </div>
       </Modal>
 
       <ul className="space-y-4 overflow-y-auto flex-grow pr-2">
