@@ -18,11 +18,10 @@ const Layout: React.FC<Props> = ({ children }) => {
         <div className="min-h-screen font-sans">
             <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-            {/* Overlay para pantallas pequeñas */}
             {isSidebarOpen && (
                 <div 
                     onClick={toggleSidebar} 
-                    className="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300"
+                    className="fixed inset-0 z-30 bg-slate-900/40 transition-opacity duration-300"
                 ></div>
             )}
 
