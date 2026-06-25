@@ -66,7 +66,7 @@ const Login: React.FC = () => {
                             Acceso
                         </h1>
                         <p className="text-blue-600 text-[11px] font-black uppercase tracking-[0.3em] mt-2">
-                            Friday • Tu aliado CRM
+                            Billy Sales & Services • Tu aliado CRM
                         </p>
                     </div>
 
@@ -192,7 +192,7 @@ const Login: React.FC = () => {
 
                     {/* Footer Info */}
                     <p className="mt-8 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                        © {new Date().getFullYear()} Friday • CRM para Gestión de Ventas
+                        © {new Date().getFullYear()} Billy Sales & Services • CRM para Gestión de Ventas
                     </p>
                 </div>
 
@@ -208,7 +208,7 @@ const Login: React.FC = () => {
 
                 <div className="relative z-10 text-center px-12 animate-in fade-in zoom-in-95 duration-1000">
                     <div className="mb-6 inline-block bg-white shadow-sm px-4 py-2 rounded-full border border-slate-200">
-                        <span className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em]">Friday</span>
+                        <span className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em]">Billy Sales & Services</span>
                     </div>
                     <h2 className="text-5xl font-black text-slate-900 leading-tight mb-4">
                         Acelera tus cierres de ventas.

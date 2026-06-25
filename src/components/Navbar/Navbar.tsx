@@ -26,7 +26,7 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
 
             {/* Logo para móvil (centrado) */}
             <div className="sm:hidden flex-grow flex justify-center items-center">
-                <span className="font-bold text-xl text-blue-800 tracking-tight">Friday</span>
+                <span className="font-bold text-lg text-blue-800 tracking-tight text-center">Billy Sales & Services</span>
             </div>
 
             {/* Sección central para decoraciones temáticas (Desktop) */}
@@ -38,12 +38,12 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
 
             {/* Información del usuario */}
             <div className="flex items-center justify-end gap-2 sm:gap-4 w-1/4">
-                <div className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 transition-colors py-1.5 px-3 rounded-full cursor-pointer border border-gray-200 shadow-sm">
-                    <span className="text-gray-600 flex items-center text-sm">
+                <div className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 transition-colors p-1 sm:py-1.5 sm:px-3 rounded-full cursor-pointer border border-gray-200 shadow-sm w-9 h-9 sm:w-auto sm:h-auto select-none">
+                    <span className="text-gray-600 hidden sm:flex items-center text-sm">
                         <span className="hidden sm:inline mr-1">Hola,</span>
                         <span className="font-semibold text-gray-800 truncate max-w-[80px] sm:max-w-[150px]">{user?.username || 'Usuario'}</span>
                     </span>
-                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-inner">
+                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-inner shrink-0">
                         {(user?.username || 'U').substring(0, 1).toUpperCase()}
                     </div>
                 </div>

@@ -64,6 +64,10 @@ export const TICKETS = {
     TICKETS: urlBase + 'tickets',
 };
 
+export const TICKET_INTERACTIONS = {
+    TICKET_INTERACTIONS: urlBase + 'ticket-interactions',
+};
+
 export const HELPDESK_CRON = {
     CRON_CONFIG: urlBase + 'helpdesks/cron-config',
 };

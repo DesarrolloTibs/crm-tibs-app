@@ -22,7 +22,7 @@ const Layout: React.FC<Props> = ({ children }) => {
             {isSidebarOpen && (
                 <div 
                     onClick={toggleSidebar} 
-                    className="fixed inset-0 z-30 bg-black opacity-50"
+                    className="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300"
                 ></div>
             )}
 

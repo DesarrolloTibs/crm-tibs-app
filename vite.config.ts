@@ -12,9 +12,9 @@ export default defineConfig({
         enabled: true
       },
       manifest: {
-        name: 'Friday CRM',
-        short_name: 'Friday',
-        description: 'CRM Friday',
+        name: 'Billy Sales & Services',
+        short_name: 'Billy S&S',
+        description: 'CRM Billy Sales & Services',
         theme_color: '#1e40af',
         background_color: '#ffffff',
         display: 'standalone',

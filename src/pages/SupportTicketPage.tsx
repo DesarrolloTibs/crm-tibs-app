@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createTicket, queryTicketsPublic } from '../services/ticketsService';
 import { Link } from 'react-router-dom';
-import { ShieldAlert, Search, Mail, Hash, ArrowLeft, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { ShieldAlert, Search, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import Input from '../components/shared/Input';
 import TextArea from '../components/shared/TextArea';
 import Select from '../components/shared/Select';
@@ -302,7 +302,7 @@ const SupportTicketPage: React.FC = () => {
 
                     {/* Footer Info */}
                     <p className="mt-8 text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center lg:text-left">
-                        © {new Date().getFullYear()} Friday • CRM para Gestión de Ventas
+                        © {new Date().getFullYear()} Billy Sales & Services • CRM para Gestión de Ventas
                     </p>
                 </div>
 

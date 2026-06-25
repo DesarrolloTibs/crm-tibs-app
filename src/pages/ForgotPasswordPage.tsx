@@ -66,7 +66,7 @@ const ForgotPasswordPage: React.FC = () => {
                                     ¿Olvidaste tu acceso?
                                 </h1>
                                 <p className="text-blue-600 text-[11px] font-black uppercase tracking-[0.3em] mt-2">
-                                    Friday • Seguridad
+                                    Billy Sales & Services • Seguridad
                                 </p>
                             </div>
 
@@ -115,7 +115,7 @@ const ForgotPasswordPage: React.FC = () => {
                     )}
 
                     <p className="mt-12 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                        © {new Date().getFullYear()} Friday • CRM para Gestión de Ventas
+                        © {new Date().getFullYear()} Billy Sales & Services • CRM para Gestión de Ventas
                     </p>
                 </div>
 

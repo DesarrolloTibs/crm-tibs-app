@@ -12,7 +12,7 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
     const { logout, isAdmin } = useAuth();
 
     const sidebarClasses = `
-        fixed inset-y-0 left-0 z-40 w-64 bg-blue-800 text-white 
+        fixed inset-y-0 left-0 z-40 w-66 bg-white text-slate-800 shadow-2xl border-r border-slate-200/80
         flex flex-col transform transition-transform duration-300 ease-in-out 
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
     `;
@@ -24,24 +24,41 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
         logout();
     };
 
+    const getLinkClass = (isActive: boolean) => {
+        const base = "flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-extrabold uppercase tracking-wider border-l-4 select-none cursor-pointer";
+        if (isActive) {
+            return `${base} bg-blue-50/70 text-blue-600 border-blue-600 shadow-sm shadow-blue-500/5`;
+        }
+        return `${base} text-slate-500 hover:text-slate-800 hover:bg-slate-50/80 border-transparent`;
+    };
+
     return (
         <aside className={sidebarClasses}>
-            <div className="p-6 font-bold text-2xl border-b border-blue-700 text-gradient">Friday</div>
-            <nav className="flex-grow p-4">
+            <div className="h-16 flex items-center px-6 border-b border-slate-100 bg-slate-50/20 select-none">
+                <span className="font-extrabold text-base text-slate-800 tracking-tight">
+                    Billy <span className="text-blue-600 font-black">Sales & Services</span>
+                </span>
+            </div>
+            <nav className="flex-grow p-4 overflow-y-auto">
                 <ul className="space-y-2">
-                    <li><NavLink to="/clients" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><Briefcase size={20} /> Clientes</NavLink></li>
-                    <li><NavLink to="/pipeline" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><BarChart3 size={20} /> Pipeline</NavLink></li>
-                    <li><NavLink to="/activities" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><ClipboardList size={20} /> Actividades</NavLink></li>
-                    <li><NavLink to="/products" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><Package size={20} /> Productos</NavLink></li>
-                    <li><NavLink to="/helpdesk" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><LifeBuoy size={20} /> Mesa de Ayuda</NavLink></li>
-                    <li><NavLink to="/expenses" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><DollarSign size={20} /> Gastos</NavLink></li>
-                    <li><NavLink to="/history" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><History size={20} /> Historial</NavLink></li>
-                    {isAdmin && <li><NavLink to="/users" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><Users size={20} /> Usuarios</NavLink></li>}
-                    {isAdmin && <li><NavLink to="/settings" onClick={toggleSidebar} className={({ isActive }) => `flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700/50'}`}><Settings size={20} /> Configuración</NavLink></li>}
+                    <li><NavLink to="/clients" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Briefcase size={18} /> Clientes</NavLink></li>
+                    <li><NavLink to="/pipeline" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><BarChart3 size={18} /> Pipeline</NavLink></li>
+                    <li><NavLink to="/activities" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><ClipboardList size={18} /> Actividades</NavLink></li>
+                    <li><NavLink to="/products" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Package size={18} /> Productos</NavLink></li>
+                    <li><NavLink to="/helpdesk" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><LifeBuoy size={18} /> Mesa de Ayuda</NavLink></li>
+                    <li><NavLink to="/expenses" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><DollarSign size={18} /> Gastos</NavLink></li>
+                    <li><NavLink to="/history" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><History size={18} /> Historial</NavLink></li>
+                    {isAdmin && <li><NavLink to="/users" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Users size={18} /> Usuarios</NavLink></li>}
+                    {isAdmin && <li><NavLink to="/settings" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Settings size={18} /> Configuración</NavLink></li>}
                 </ul>
             </nav>
-            <div className="p-4 border-t border-blue-700">
-                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 rounded-md text-red-400 hover:bg-red-500 hover:text-white transition-colors"><LogOut size={20} /> Cerrar Sesión</button>
+            <div className="p-4 border-t border-slate-100 bg-slate-50/30">
+                <button 
+                    onClick={handleLogout} 
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 transition-all duration-200 text-sm font-extrabold uppercase tracking-widest border border-transparent hover:border-red-100 cursor-pointer"
+                >
+                    <LogOut size={18} /> Cerrar Sesión
+                </button>
             </div>
         </aside>
     );

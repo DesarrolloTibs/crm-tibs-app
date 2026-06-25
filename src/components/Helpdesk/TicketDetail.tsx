@@ -12,6 +12,7 @@ import TextArea from '../shared/TextArea';
 import Button from '../shared/Button';
 import type { SingleValue } from 'react-select';
 import { User as UserIcon, LifeBuoy, AlertTriangle, ArrowRight, ShieldAlert } from 'lucide-react';
+import TicketInteractionsTab from './TicketInteractionsTab';
 
 interface Props {
   ticket?: Ticket;
@@ -29,7 +30,7 @@ interface SelectOption {
 }
 
 const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onConvertToOpportunity }) => {
-  const { user: currentUser, isAdmin, isEjecutivo } = useAuth();
+  const { user: currentUser, isAdmin } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +51,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
   const [contactPhone, setContactPhone] = useState(ticket?.contactPhone || '');
   const [companyName, setCompanyName] = useState(ticket?.cliente ? (ticket.cliente.company?.nombre || ticket.cliente.empresa || '') : '');
 
-  const [activeTab, setActiveTab] = useState<'desc' | 'resol'>('desc');
+  const [activeTab, setActiveTab] = useState<'desc' | 'resol' | 'history'>('desc');
   const [validationError, setValidationError] = useState('');
 
 
@@ -128,7 +129,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
   const selectedClientValue = clientOptions.find(option => option.value === clienteId) || null;
 
   const agentOptions = [
-    { value: '', label: '-- Sin responsable --' },
+    ...(!responsableId ? [{ value: '', label: '-- Sin responsable --' }] : []),
     ...users.map(u => ({
       value: u.id,
       label: u.username,
@@ -238,7 +239,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
             options={agentOptions}
             placeholder="-- Seleccione un Agente --"
             isSearchable
-            isDisabled={isEjecutivo && ticket && !!ticket.responsable_id}
+            isDisabled={false}
           />
 
           <Select
@@ -332,13 +333,15 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
               type="text"
               value={companyName}
               onChange={e => setCompanyName(e.target.value)}
-              placeholder="Empresa del cliente"
+              placeholder={ticket ? "Sin empresa" : "Empresa del cliente"}
+              readOnly={!!ticket}
+              className={ticket ? "bg-slate-50 text-slate-500 cursor-not-allowed" : ""}
             />
           </div>
         </div>
       </div>
 
-      {/* Tabs inferiores: Descripción y Notas de resolución */}
+      {/* Tabs inferiores: Descripción, Notas de resolución e Historial */}
       <div className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
         <div className="flex border-b border-slate-100 bg-slate-50/50">
           <button
@@ -366,6 +369,19 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
             )}
           </button>
+          {ticket && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('history')}
+              className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${
+                activeTab === 'history'
+                  ? 'border-indigo-600 text-indigo-600 bg-white'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Historial
+            </button>
+          )}
         </div>
 
         <div className="p-5">
@@ -379,7 +395,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
                 required
               />
             </div>
-          ) : (
+          ) : activeTab === 'resol' ? (
             <div className="space-y-3">
               {isResolvedStage && (
                 <div className="flex gap-2 text-rose-800 border border-rose-200 bg-rose-50/40 p-3 rounded-lg text-xs items-center font-medium animate-fade-in">
@@ -395,6 +411,8 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
                 error={isResolvedStage && !notasResolucion.trim() ? 'Las notas de resolución son obligatorias.' : undefined}
               />
             </div>
+          ) : (
+            ticket && <TicketInteractionsTab ticketId={ticket.id} />
           )}
         </div>
       </div>
