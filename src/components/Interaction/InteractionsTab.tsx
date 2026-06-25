@@ -5,7 +5,9 @@ import type { Interaction } from '../../core/models/Interaction';
 import { useAuth } from '../../hooks/useAuth';
 import Notification from '../Modal/Notification';
 import Modal from '../Modal/Modal';
-
+import Button from '../shared/Button';
+import Input from '../shared/Input';
+import TextArea from '../shared/TextArea';
 interface InteractionsTabProps {
   opportunityId: string;
 }
@@ -24,8 +26,8 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
     type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
     title: '',
     message: '',
-    onConfirm: () => {},
-    onCancel: () => {},
+    onConfirm: () => { },
+    onCancel: () => { },
   });
 
   const hideNotification = () => setNotification({ ...notification, show: false });
@@ -44,7 +46,8 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
         title: 'Error',
         message: 'No se pudo cargar el historial.',
         onConfirm: hideNotification,
-        onCancel: hideNotification,      });
+        onCancel: hideNotification,
+      });
     } finally {
       setLoading(false);
     }
@@ -63,7 +66,8 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
         title: 'Atención',
         message: 'El comentario es obligatorio.',
         onConfirm: hideNotification,
-        onCancel: hideNotification,      });
+        onCancel: hideNotification,
+      });
       return;
     }
 
@@ -121,55 +125,62 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   if (loading) return <p>Cargando historial...</p>;
 
   return (
-    <div className="p-4 flex flex-col h-full max-h-[80vh]">      
+    <div className="p-4 flex flex-col h-full max-h-[80vh]">
       <Notification {...notification} />
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-        <div className="relative flex-grow w-full sm:w-auto">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-            <Search size={20} />
-          </span>
-          <input
+        <div className="flex-grow w-full sm:w-auto">
+          <Input
             type="text"
             placeholder="Buscar en el historial..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+            inputPrefix={<Search size={20} />}
           />
         </div>
-        <button
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm whitespace-nowrap"
-            onClick={() => setModalOpen(true)}
+        <Button
+          type="submit"
+          variant="success"
+          className="px-6 py-3"
+          onClick={() => setModalOpen(true)}
         >
-            <Plus size={18} /> Nuevo Registro
-        </button>
+          <Plus size={18} /> Nuevo Registro
+        </Button>
       </div>
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Añadir al Historial</h2>
         <form onSubmit={handleAddInteraction} className="space-y-4">
           <div>
-            <label htmlFor="newInteractionComment" className="block text-sm font-medium text-gray-700 mb-1">Nuevo Comentario</label>
-            <textarea 
+            <TextArea
               id="newInteractionComment"
-              value={newInteractionComment} 
-              onChange={e => setNewInteractionComment(e.target.value)} 
-              placeholder="Añadir un comentario o registrar un evento..." 
-              className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
+              label="Nuevo Comentario"
+              value={newInteractionComment}
+              onChange={e => setNewInteractionComment(e.target.value)}
+              placeholder="Añadir un comentario o registrar un evento..."
               rows={4}
-            ></textarea>
+            />
           </div>
           <div className="flex justify-end gap-3 mt-6">
-            <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors"
+
+            <Button
+              type="button"
+              variant="secondary"
+              className="px-6 py-3"
+              onClick={() => setModalOpen(false)}
             >
-                Cancelar
-            </button>
-            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                Guardar Registro
-            </button>
+              Cancelar
+            </Button>
+
+
+            <Button
+              type="submit"
+              variant="primary"
+              className="px-6 py-3"
+            >
+              Guardar Registro
+            </Button>
+
           </div>
         </form>
       </Modal>
