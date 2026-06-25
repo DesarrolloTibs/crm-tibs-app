@@ -1037,50 +1037,6 @@ const HelpdeskPage: React.FC = () => {
         <div className="flex justify-center items-center py-20">
           <Loader />
         </div>
-      ) : selectedTicket ? (
-        /* Vista de Detalle de Ticket */
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm animate-in fade-in duration-300">
-          <div className="border-b border-slate-150 pb-4 mb-6 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-slate-800">
-              Detalle del Ticket #{selectedTicket.ticket_number.toString().padStart(5, '0')}
-            </h2>
-            <button
-              onClick={() => setSelectedTicket(null)}
-              className="p-1.5 text-slate-450 hover:text-slate-650 hover:bg-slate-50 rounded-lg cursor-pointer"
-            >
-              <X size={18} />
-            </button>
-          </div>
-          <TicketDetail
-            ticket={selectedTicket}
-            stages={stages}
-            onSave={handleUpdateTicketSubmit}
-            onCancel={() => setSelectedTicket(null)}
-            onDelete={handleDeleteTicket}
-            onConvertToOpportunity={handleConvertToOpportunityClick}
-            onArchive={handleArchive}
-          />
-        </div>
-      ) : isCreatingTicket ? (
-        /* Formulario Interno de Nuevo Ticket */
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm animate-in fade-in duration-300">
-          <div className="border-b border-slate-150 pb-4 mb-6 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-slate-800">
-              Registrar Nuevo Ticket
-            </h2>
-            <button
-              onClick={() => setIsCreatingTicket(false)}
-              className="p-1.5 text-slate-450 hover:text-slate-650 hover:bg-slate-50 rounded-lg cursor-pointer"
-            >
-              <X size={18} />
-            </button>
-          </div>
-          <TicketDetail
-            stages={stages}
-            onSave={handleCreateTicketSubmit}
-            onCancel={() => setIsCreatingTicket(false)}
-          />
-        </div>
       ) : ticketToConvert ? (
         /* Formulario de Conversión a Oportunidad */
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm animate-in fade-in duration-300">
@@ -1375,6 +1331,46 @@ const HelpdeskPage: React.FC = () => {
               </Button>
             </div>
           </form>
+        )}
+      </Modal>
+
+      {/* Modal: Detalle del Ticket */}
+      <Modal open={selectedTicket !== null} onClose={() => setSelectedTicket(null)} maxWidth="max-w-6xl">
+        {selectedTicket && (
+          <div className="animate-in fade-in duration-300">
+            <div className="border-b border-slate-150 pb-4 mb-6 flex justify-between items-center">
+              <h2 className="text-lg font-bold text-slate-800">
+                Detalle del Ticket #{selectedTicket.ticket_number.toString().padStart(5, '0')}
+              </h2>
+            </div>
+            <TicketDetail
+              ticket={selectedTicket}
+              stages={stages}
+              onSave={handleUpdateTicketSubmit}
+              onCancel={() => setSelectedTicket(null)}
+              onDelete={handleDeleteTicket}
+              onConvertToOpportunity={handleConvertToOpportunityClick}
+              onArchive={handleArchive}
+            />
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal: Registrar Nuevo Ticket */}
+      <Modal open={isCreatingTicket} onClose={() => setIsCreatingTicket(false)} maxWidth="max-w-6xl">
+        {isCreatingTicket && (
+          <div className="animate-in fade-in duration-300">
+            <div className="border-b border-slate-150 pb-4 mb-6 flex justify-between items-center">
+              <h2 className="text-lg font-bold text-slate-800">
+                Registrar Nuevo Ticket
+              </h2>
+            </div>
+            <TicketDetail
+              stages={stages}
+              onSave={handleCreateTicketSubmit}
+              onCancel={() => setIsCreatingTicket(false)}
+            />
+          </div>
         )}
       </Modal>
     </div>

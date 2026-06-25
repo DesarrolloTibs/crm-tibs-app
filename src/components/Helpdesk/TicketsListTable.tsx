@@ -56,7 +56,16 @@ const TicketsListTable: React.FC<Props> = ({ tickets, onTicketClick }) => {
                 return (
                   <tr
                     key={ticket.id}
-                    onClick={() => onTicketClick(ticket)}
+                    onDoubleClick={() => {
+                      if (window.innerWidth >= 1024) {
+                        onTicketClick(ticket);
+                      }
+                    }}
+                    onClick={() => {
+                      if (window.innerWidth < 1024) {
+                        onTicketClick(ticket);
+                      }
+                    }}
                     className="hover:bg-slate-50/70 transition-colors cursor-pointer text-xs group"
                   >
                     {/* Número */}

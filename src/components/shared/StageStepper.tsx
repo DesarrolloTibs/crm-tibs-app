@@ -52,8 +52,8 @@ export const StageStepper: React.FC<StageStepperProps> = ({
     });
 
     return (
-        <div className="relative flex items-center self-end md:self-auto overflow-visible pb-1 md:pb-0">
-            <div className="odoo-statusbar select-none">
+        <div className="w-full overflow-x-auto hide-scrollbar py-1 px-1 flex justify-start md:justify-end">
+            <div className="odoo-statusbar select-none flex-shrink-0">
                 {mainStages.map((s) => {
                     const isActive = s.id === currentStageId;
                     const duration = isActive && showDuration 

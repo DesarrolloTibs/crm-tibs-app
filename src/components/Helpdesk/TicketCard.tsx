@@ -180,9 +180,17 @@ const TicketCard: React.FC<Props> = ({ ticket, onClick, isOverlay = false, onEdi
       {/* Draggable and Clickable Content */}
       <div 
         {...listeners}
+        onDoubleClick={() => {
+          if (window.innerWidth >= 1024) {
+            if (isDragging) return;
+            onClick();
+          }
+        }}
         onClick={() => {
-          if (isDragging) return;
-          onClick();
+          if (window.innerWidth < 1024) {
+            if (isDragging) return;
+            onClick();
+          }
         }}
         className={`${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} flex-grow flex flex-col justify-between`}
       >
