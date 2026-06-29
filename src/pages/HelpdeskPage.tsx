@@ -37,8 +37,12 @@ import {
   ChevronDown,
   Filter,
   Tag,
-  Star
+  Star,
+  FileText,
+  FileSpreadsheet
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import Notification from '../components/Modal/Notification';
 import Loader from '../components/Loader/Loader';
 import StageVisibilitySelector from '../components/shared/StageVisibilitySelector';
@@ -309,6 +313,114 @@ const HelpdeskPage: React.FC = () => {
     const types = tickets.map(t => t.tipo_incidencia);
     return Array.from(new Set(types));
   }, [tickets]);
+
+  const buildExportRows = () => {
+    return filteredTickets.map(t => {
+      const numStr = `#${t.ticket_number.toString().padStart(5, '0')}`;
+      const customerName = t.cliente ? `${t.cliente.nombre} ${t.cliente.apellido}` : (t.contactName || 'Cliente Externo');
+      const companyName = t.cliente ? (t.cliente.company?.nombre || t.cliente.empresa || '-') : (t.contactEmail || '-');
+      const priorityLabel = t.priority === 1 ? 'Baja' : t.priority === 2 ? 'Media' : t.priority === 3 ? 'Alta' : 'Sin prioridad';
+      const fechaApertura = new Date(t.fecha_apertura).toLocaleDateString('es-MX', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const responsableLabel = t.responsable ? t.responsable.username : 'Sin asignar';
+      const stageName = t.stage ? t.stage.strname : 'N/A';
+      
+      const enteredDate = t.stage_entered_at ? new Date(t.stage_entered_at) : new Date(t.fecha_apertura);
+      const diffTime = Math.max(0, Date.now() - enteredDate.getTime());
+      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const limitDays = t.stage?.intmaxdays;
+      const stageDaysLabel = limitDays ? `${days}d / ${limitDays}d` : `${days}d`;
+
+      return [
+        numStr,
+        t.strtitle || '',
+        customerName,
+        companyName,
+        t.tipo_incidencia || '',
+        priorityLabel,
+        fechaApertura,
+        responsableLabel,
+        stageName,
+        stageDaysLabel
+      ];
+    });
+  };
+
+  const EXPORT_HEADERS = [
+    'Número',
+    'Asunto',
+    'Cliente / Contacto',
+    'Empresa / Correo',
+    'Incidencia',
+    'Prioridad',
+    'Apertura',
+    'Responsable',
+    'Etapa',
+    'Días en Etapa'
+  ];
+
+  const handleExportPDF = () => {
+    const rows = buildExportRows();
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Reporte de Tickets - Mesa de Ayuda', 40, 40);
+
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generado el: ${new Date().toLocaleString('es-MX')}`, 40, 60);
+
+    autoTable(doc, {
+      head: [EXPORT_HEADERS],
+      body: rows,
+      startY: 75,
+      styles: { fontSize: 7, cellPadding: 4, overflow: 'linebreak' },
+      headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 248, 255] },
+      columnStyles: {
+        0: { cellWidth: 45 },  // Número
+        1: { cellWidth: 100 }, // Asunto
+        2: { cellWidth: 100 }, // Cliente
+        3: { cellWidth: 100 }, // Empresa
+        4: { cellWidth: 70 },  // Incidencia
+        5: { cellWidth: 50 },  // Prioridad
+        6: { cellWidth: 80 },  // Apertura
+        7: { cellWidth: 70 },  // Responsable
+        8: { cellWidth: 60 },  // Etapa
+        9: { cellWidth: 60 },  // Días en Etapa
+      },
+    });
+
+    doc.save(`tickets_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const handleExportCSV = () => {
+    const rows = buildExportRows();
+    const csvContent = [
+      EXPORT_HEADERS.join(','),
+      ...rows.map(row =>
+        row.map(val => {
+          const escaped = String(val).replace(/"/g, '""');
+          return /[,\"\n\r]/.test(escaped) ? `"${escaped}"` : escaped;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `tickets_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Ticket CRUD Handlers
   const handleCreateTicketSubmit = async (ticketPayload: Partial<Ticket>) => {
@@ -1026,6 +1138,30 @@ const HelpdeskPage: React.FC = () => {
               />
             )}
           </div>
+
+          {/* Botones de Exportación (solo en vista Lista) */}
+          {viewMode === 'list' && (
+            <>
+              <Button
+                type="button"
+                onClick={handleExportPDF}
+                variant="secondary"
+                className="text-red-500 border border-blue-100 hover:bg-red-50/50 w-full sm:w-auto h-[38px] py-0 px-4 flex items-center justify-center font-bold text-xs tracking-wider"
+              >
+                <FileText size={16} className="text-red-500 mr-2" />
+                <span>PDF</span>
+              </Button>
+              <Button
+                type="button"
+                onClick={handleExportCSV}
+                variant="secondary"
+                className="text-emerald-600 border border-blue-100 hover:bg-emerald-50/50 w-full sm:w-auto h-[38px] py-0 px-4 flex items-center justify-center font-bold text-xs tracking-wider"
+              >
+                <FileSpreadsheet size={16} className="text-emerald-600 mr-2" />
+                <span>EXCEL</span>
+              </Button>
+            </>
+          )}
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button

@@ -47,7 +47,6 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
                     <li><NavLink to="/products" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Package size={18} /> Productos</NavLink></li>
                     <li><NavLink to="/helpdesk" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><LifeBuoy size={18} /> Mesa de Ayuda</NavLink></li>
                     <li><NavLink to="/expenses" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><DollarSign size={18} /> Gastos</NavLink></li>
-                    <li><NavLink to="/history" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><History size={18} /> Historial</NavLink></li>
                     {isAdmin && <li><NavLink to="/users" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Users size={18} /> Usuarios</NavLink></li>}
                     {isAdmin && <li><NavLink to="/settings" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Settings size={18} /> Configuración</NavLink></li>}
                 </ul>

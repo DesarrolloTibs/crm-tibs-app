@@ -14,8 +14,13 @@ import PipelineColumn from './PipelineColumn';
 import Modal from '../Modal/Modal';
 import ConfirmModal from '../Modal/ConfirmModal';
 
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { useAuth } from '../../hooks/useAuth';
+import OpportunityHistoryTable from './OpportunityHistoryTable';
+
 import OpportunityCard from './OpportunityCard';
-import { Plus, User, Tag, XCircle, Filter, ChevronUp, ChevronDown, Settings2, X, Trash2, Star } from 'lucide-react';
+import { Plus, User, Tag, XCircle, Filter, ChevronUp, ChevronDown, Settings2, X, Trash2, Star, Kanban as KanbanIcon, List as ListIcon, FileText, FileSpreadsheet } from 'lucide-react';
 import PipelineStagesSettings from './PipelineStagesSettings';
 import OpportunityForm from './OpportunityForm';
 import StageVisibilitySelector from '../shared/StageVisibilitySelector';
@@ -35,6 +40,7 @@ interface FilterRule {
 }
 
 const PipelinePage: React.FC = () => {
+  const { isAdmin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const sensors = useSensors(
@@ -89,6 +95,21 @@ const PipelinePage: React.FC = () => {
     localStorage.setItem('pipeline_folded_stages', JSON.stringify(foldedStageIds));
   }, [foldedStageIds]);
 
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>(() => {
+    try {
+      return (localStorage.getItem('pipeline_view_mode') as 'kanban' | 'list') || 'kanban';
+    } catch {
+      return 'kanban';
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('pipeline_view_mode', viewMode);
+  }, [viewMode]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
+
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [executiveFilter, setExecutiveFilter] = useState('');
@@ -127,6 +148,10 @@ const PipelinePage: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive]);
 
   const [notification, setNotification] = useState({
     show: false,
@@ -800,6 +825,109 @@ const PipelinePage: React.FC = () => {
     setCustomRules([]);
   };
 
+  const totalPages = Math.ceil(filteredOpportunities.length / PAGE_SIZE);
+  const paginatedOpportunities = useMemo(() =>
+    filteredOpportunities.slice(
+      (currentPage - 1) * PAGE_SIZE,
+      currentPage * PAGE_SIZE
+    ), [filteredOpportunities, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const EXPORT_HEADERS = [
+    'Proyecto',
+    'Cliente',
+    'Empresa',
+    'Ejecutivo',
+    'Etapa',
+    'Monto',
+    'Moneda',
+    'Estado'
+  ];
+
+  const buildExportRows = () => {
+    return filteredOpportunities.map(opp => {
+      const clienteName = opp.company
+        ? (opp.contacts?.map(c => `${c.nombre} ${c.apellido}`).join(', ') || 'Sin contactos')
+        : (opp.cliente ? `${opp.cliente.nombre} ${opp.cliente.apellido}` : '-');
+      const empresaName = opp.company ? opp.company.nombre : (opp.empresa || '-');
+      const ejecutivoName = opp.ejecutivo?.username || 'No asignado';
+      const stageName = opp.stage?.strname || 'Sin etapa';
+      const formattedMonto = opp.monto_total !== undefined && opp.monto_total !== null ? opp.monto_total : 0;
+      const monedaName = opp.moneda || 'MXN';
+      const statusName = opp.archived ? 'Archivado' : 'Activo';
+
+      return [
+        opp.nombre_proyecto || '',
+        clienteName,
+        empresaName,
+        ejecutivoName,
+        stageName,
+        `$${new Intl.NumberFormat('es-MX', { minimumFractionDigits: 0 }).format(formattedMonto)}`,
+        monedaName,
+        statusName
+      ];
+    });
+  };
+
+  const handleExportPDF = () => {
+    const rows = buildExportRows();
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Reporte de Oportunidades', 40, 40);
+
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generado el: ${new Date().toLocaleString('es-MX')}`, 40, 60);
+
+    autoTable(doc, {
+      head: [EXPORT_HEADERS],
+      body: rows,
+      startY: 75,
+      styles: { fontSize: 8, cellPadding: 5, overflow: 'linebreak' },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 248, 255] },
+      columnStyles: {
+        0: { cellWidth: 150 }, // Proyecto
+        1: { cellWidth: 110 }, // Cliente
+        2: { cellWidth: 100 }, // Empresa
+        3: { cellWidth: 80 },  // Ejecutivo
+        4: { cellWidth: 80 },  // Etapa
+        5: { cellWidth: 70 },  // Monto
+        6: { cellWidth: 50 },  // Moneda
+        7: { cellWidth: 50 },  // Estado
+      },
+    });
+
+    doc.save(`oportunidades_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const handleExportCSV = () => {
+    const rows = buildExportRows();
+    const csvContent = [
+      EXPORT_HEADERS.join(','),
+      ...rows.map(row =>
+        row.map(val => {
+          const escaped = String(val).replace(/"/g, '""');
+          return /[,\"\n\r]/.test(escaped) ? `"${escaped}"` : escaped;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `oportunidades_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getOperatorsForField = (field: string) => {
     if (field === 'nombre_proyecto' || field === 'empresa') {
       return [
@@ -1232,15 +1360,72 @@ const PipelinePage: React.FC = () => {
               </button>
             </div>
           </UnifiedSearchBar>
-          <StageVisibilitySelector
-            stages={stages}
-            visibleStageIds={visibleStageIds}
-            onVisibilityChange={handleStageVisibilityChange}
-            zIndex={20}
-            labelSize="sm"
-            themeColor="blue"
-            align="left"
-          />
+          {/* View toggle + Etapas: always side-by-side */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* View mode toggle with labels */}
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden p-0.5 bg-gray-50 shadow-sm shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('kanban')}
+                className={`px-3 py-1.5 flex items-center gap-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                  viewMode === 'kanban' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+                title="Vista Kanban"
+              >
+                <KanbanIcon size={14} />
+                <span>Kanban</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1.5 flex items-center gap-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                  viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+                title="Vista Lista"
+              >
+                <ListIcon size={14} />
+                <span>Lista</span>
+              </button>
+            </div>
+
+            {/* Etapas — next to the toggle, only in Kanban */}
+            {viewMode === 'kanban' && (
+              <StageVisibilitySelector
+                stages={stages}
+                visibleStageIds={visibleStageIds}
+                onVisibilityChange={handleStageVisibilityChange}
+                zIndex={20}
+                labelSize="sm"
+                themeColor="blue"
+                align="left"
+              />
+            )}
+          </div>
+
+          {/* Botones de Exportación (solo en vista Lista) */}
+          {viewMode === 'list' && (
+            <>
+              <Button
+                type="button"
+                onClick={handleExportPDF}
+                variant="secondary"
+                className="text-red-500 border border-blue-100 hover:bg-red-50/50 w-full sm:w-auto h-[38px] py-0 px-4 flex items-center justify-center font-bold text-xs tracking-wider"
+              >
+                <FileText size={16} className="text-red-500 mr-2" />
+                <span>PDF</span>
+              </Button>
+              <Button
+                type="button"
+                onClick={handleExportCSV}
+                variant="secondary"
+                className="text-emerald-600 border border-blue-100 hover:bg-emerald-50/50 w-full sm:w-auto h-[38px] py-0 px-4 flex items-center justify-center font-bold text-xs tracking-wider"
+              >
+                <FileSpreadsheet size={16} className="text-emerald-600 mr-2" />
+                <span>EXCEL</span>
+              </Button>
+            </>
+          )}
+
           <Button
             variant="success"
             className="w-full sm:w-auto h-[38px] py-0 px-4 whitespace-nowrap"
@@ -1259,123 +1444,136 @@ const PipelinePage: React.FC = () => {
           </Button>
         </div>
       </div>
-      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar ${!activeOpportunity && !activeStage ? 'snap-x snap-mandatory' : ''}`}>
-          <SortableContext
-            items={activeStages.filter(stage => visibleStageIds.includes(stage.id)).map(s => s.id)}
-            strategy={horizontalListSortingStrategy}
-          >
-            {activeStages.filter(stage => visibleStageIds.includes(stage.id)).map(stage => (
-              <PipelineColumn key={stage.id}
-                stage={stage}
-                opportunities={filteredOpportunities.filter(opp => opp.stage_id === stage.id)}
-                onEdit={openEditModal}
-                onDelete={openDeleteConfirm}
-                onArchive={handleArchive}
-                stages={stages}
-                onEditStage={setEditingStage}
-                onDisableStage={handleDisableStage}
-                onAddOpportunity={openCreateModal}
-                isFolded={foldedStageIds.includes(stage.id)}
-                onFoldStage={stageId => setFoldedStageIds(prev => [...prev, stageId])}
-                onUnfoldStage={stageId => setFoldedStageIds(prev => prev.filter(id => id !== stageId))}
-              />
-            ))}
-          </SortableContext>
-          {/* Odoo-style quick stage creator column */}
-          {!isAddingStage ? (
-            <div
-              onClick={() => setIsAddingStage(true)}
-              className="flex flex-col min-h-[850px] w-[45px] sm:w-[50px] flex-shrink-0 snap-center rounded-xl bg-slate-100/50 hover:bg-slate-200/50 border border-dashed border-gray-300 hover:border-slate-400 transition-all duration-200 ease-in-out cursor-pointer items-center justify-start pt-6 shadow-sm select-none"
+      {viewMode === 'kanban' ? (
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar ${!activeOpportunity && !activeStage ? 'snap-x snap-mandatory' : ''}`}>
+            <SortableContext
+              items={activeStages.filter(stage => visibleStageIds.includes(stage.id)).map(s => s.id)}
+              strategy={horizontalListSortingStrategy}
             >
+              {activeStages.filter(stage => visibleStageIds.includes(stage.id)).map(stage => (
+                <PipelineColumn key={stage.id}
+                  stage={stage}
+                  opportunities={filteredOpportunities.filter(opp => opp.stage_id === stage.id)}
+                  onEdit={openEditModal}
+                  onDelete={openDeleteConfirm}
+                  onArchive={handleArchive}
+                  stages={stages}
+                  onEditStage={setEditingStage}
+                  onDisableStage={handleDisableStage}
+                  onAddOpportunity={openCreateModal}
+                  isFolded={foldedStageIds.includes(stage.id)}
+                  onFoldStage={stageId => setFoldedStageIds(prev => [...prev, stageId])}
+                  onUnfoldStage={stageId => setFoldedStageIds(prev => prev.filter(id => id !== stageId))}
+                />
+              ))}
+            </SortableContext>
+            {/* Odoo-style quick stage creator column */}
+            {!isAddingStage ? (
               <div
-                className="flex items-center justify-center font-bold text-slate-500 hover:text-slate-700 tracking-wide text-[13px] sm:text-[14px] whitespace-nowrap"
-                style={{ writingMode: 'vertical-rl' }}
+                onClick={() => setIsAddingStage(true)}
+                className="flex flex-col min-h-[850px] w-[45px] sm:w-[50px] flex-shrink-0 snap-center rounded-xl bg-slate-100/50 hover:bg-slate-200/50 border border-dashed border-gray-300 hover:border-slate-400 transition-all duration-200 ease-in-out cursor-pointer items-center justify-start pt-6 shadow-sm select-none"
               >
-                » Agregar Etapa
+                <div
+                  className="flex items-center justify-center font-bold text-slate-500 hover:text-slate-700 tracking-wide text-[13px] sm:text-[14px] whitespace-nowrap"
+                  style={{ writingMode: 'vertical-rl' }}
+                >
+                  » Agregar Etapa
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col w-[85vw] md:w-[330px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[220px] h-fit snap-center transition-all duration-200">
-              <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
-              <form onSubmit={handleCreateStage} className="flex flex-col gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-semibold text-gray-500 uppercase">Nombre</label>
-                  <input
-                    ref={addStageInputRef}
-                    type="text"
-                    value={newStageName}
-                    onChange={e => setNewStageName(e.target.value)}
-                    placeholder="Nombre de la etapa..."
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
-                    required
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-semibold text-gray-500 uppercase">Límite de días (opcional)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={newStageMaxDays}
-                    onChange={e => setNewStageMaxDays(e.target.value)}
-                    placeholder="Ej. 15 (vacío = sin límite)"
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
-                  />
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex-1 shadow-sm transition-colors cursor-pointer"
-                  >
-                    Añadir
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAddingStage(false);
-                      setNewStageName('');
-                      setNewStageMaxDays('');
-                    }}
-                    className="bg-gray-100 hover:bg-gray-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex-1 border border-gray-200 transition-colors cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-        </div>
-        <DragOverlay>
-          {activeOpportunity ? (
-            <OpportunityCard
-              opportunity={activeOpportunity}
-              onEdit={() => { }}
-              onDelete={() => { }}
-              onArchive={() => { }}
-              stages={stages}
-              isOverlay
-            />
-          ) : activeStage ? (
-            <div className="opacity-95 shadow-2xl scale-[1.02] rotate-1 cursor-grabbing">
-              <PipelineColumn
-                stage={activeStage}
-                opportunities={filteredOpportunities.filter(opp => opp.stage_id === activeStage.id)}
+            ) : (
+              <div className="flex flex-col w-[85vw] md:w-[330px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[220px] h-fit snap-center transition-all duration-200">
+                <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
+                <form onSubmit={handleCreateStage} className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-semibold text-gray-500 uppercase">Nombre</label>
+                    <input
+                      ref={addStageInputRef}
+                      type="text"
+                      value={newStageName}
+                      onChange={e => setNewStageName(e.target.value)}
+                      placeholder="Nombre de la etapa..."
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-semibold text-gray-500 uppercase">Límite de días (opcional)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newStageMaxDays}
+                      onChange={e => setNewStageMaxDays(e.target.value)}
+                      placeholder="Ej. 15 (vacío = sin límite)"
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex-1 shadow-sm transition-colors cursor-pointer"
+                    >
+                      Añadir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingStage(false);
+                        setNewStageName('');
+                        setNewStageMaxDays('');
+                      }}
+                      className="bg-gray-100 hover:bg-gray-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex-1 border border-gray-200 transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+          <DragOverlay>
+            {activeOpportunity ? (
+              <OpportunityCard
+                opportunity={activeOpportunity}
                 onEdit={() => { }}
                 onDelete={() => { }}
                 onArchive={() => { }}
                 stages={stages}
-                onEditStage={() => { }}
-                onDisableStage={() => { }}
-                onAddOpportunity={() => { }}
                 isOverlay
-                isFolded={foldedStageIds.includes(activeStage.id)}
-                onFoldStage={() => { }}
-                onUnfoldStage={() => { }}
               />
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+            ) : activeStage ? (
+              <div className="opacity-95 shadow-2xl scale-[1.02] rotate-1 cursor-grabbing">
+                <PipelineColumn
+                  stage={activeStage}
+                  opportunities={filteredOpportunities.filter(opp => opp.stage_id === activeStage.id)}
+                  onEdit={() => { }}
+                  onDelete={() => { }}
+                  onArchive={() => { }}
+                  stages={stages}
+                  onEditStage={() => { }}
+                  onDisableStage={() => { }}
+                  onAddOpportunity={() => { }}
+                  isOverlay
+                  isFolded={foldedStageIds.includes(activeStage.id)}
+                  onFoldStage={() => { }}
+                  onUnfoldStage={() => { }}
+                />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      ) : (
+        <OpportunityHistoryTable
+          opportunities={paginatedOpportunities}
+          onEdit={openEditModal}
+          onDelete={openDeleteConfirm}
+          onArchive={handleArchive}
+          isAdmin={isAdmin}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      )}
       <ConfirmModal
         open={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
