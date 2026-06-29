@@ -72,6 +72,11 @@ export const HELPDESK_CRON = {
     CRON_CONFIG: urlBase + 'helpdesks/cron-config',
 };
 
+export const NOTIFICATIONS = {
+    NOTIFICATIONS: urlBase + 'notifications',
+};
+
+
 
 /*export const ENDPOINTS = {
     LOGIN: '/auth/login',
