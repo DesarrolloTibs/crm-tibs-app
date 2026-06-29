@@ -82,6 +82,8 @@ const HelpdeskPage: React.FC = () => {
 
   // Layout states
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState(1);
   
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -270,6 +272,10 @@ const HelpdeskPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, priorityFilter, incidenceTypeFilter, archivedFilter, pageSize]);
+
+  useEffect(() => {
     if (!loading && tickets.length > 0) {
       const params = new URLSearchParams(location.search);
       const ticketId = params.get('ticketId');
@@ -313,6 +319,13 @@ const HelpdeskPage: React.FC = () => {
     const types = tickets.map(t => t.tipo_incidencia);
     return Array.from(new Set(types));
   }, [tickets]);
+
+  const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredTickets.length / pageSize);
+  const paginatedTickets = useMemo(() =>
+    pageSize === 0 ? filteredTickets : filteredTickets.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    ), [filteredTickets, currentPage, pageSize]);
 
   const buildExportRows = () => {
     return filteredTickets.map(t => {
@@ -1319,8 +1332,15 @@ const HelpdeskPage: React.FC = () => {
           ) : (
             /* Vista Lista (Tabla) */
             <TicketsListTable
-              tickets={filteredTickets}
+              tickets={paginatedTickets}
               onTicketClick={setSelectedTicket}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              pageSize={pageSize}
+              onPageSizeChange={setPageSize}
+              totalCount={tickets.length}
+              filteredCount={filteredTickets.length}
             />
           )}
 

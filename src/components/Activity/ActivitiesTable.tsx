@@ -10,9 +10,25 @@ interface Props {
     currentPage: number;
     totalPages: number;
     onPageChange: (page: number) => void;
+    pageSize: number;
+    onPageSizeChange: (size: number) => void;
+    totalCount: number;
+    filteredCount: number;
 }
 
-const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, currentPage, totalPages, onPageChange }) => {
+const ActivitiesTable: React.FC<Props> = ({ 
+    activities, 
+    onEdit, 
+    onDelete, 
+    isAdmin, 
+    currentPage, 
+    totalPages, 
+    onPageChange,
+    pageSize,
+    onPageSizeChange,
+    totalCount,
+    filteredCount
+}) => {
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
@@ -185,21 +201,43 @@ const ActivitiesTable: React.FC<Props> = ({ activities, onEdit, onDelete, curren
                     )}
                 </tbody>
             </table>
-            {totalPages > 1 && (
-                <div className="flex justify-center items-center mt-6 p-4 print:hidden">
-                    <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 p-4 gap-4 bg-slate-50/50 rounded-xl border border-slate-100/60 print:hidden">
+                {/* Left Side: pageSize input and record details */}
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 select-none">
+                    <span>Mostrar</span>
+                    <input
+                        type="number"
+                        min="0"
+                        value={pageSize === 0 ? '' : pageSize}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            onPageSizeChange(val === '' ? 0 : Math.max(0, parseInt(val, 10)));
+                        }}
+                        placeholder="Todos"
+                        className="w-16 text-center border border-slate-300 rounded-lg py-1.5 px-2 text-slate-800 font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white outline-none"
+                    />
+                    <span>registros de {filteredCount} (total: {totalCount})</span>
+                </div>
+
+                {/* Right Side: Page navigation buttons */}
+                {totalPages > 1 && (
+                    <div className="flex space-x-1.5">
                         {Array.from({ length: totalPages }, (_, i) => (
                             <button
                                 key={i + 1}
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === i + 1 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'}`}
+                                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border select-none cursor-pointer ${
+                                    currentPage === i + 1 
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/10' 
+                                        : 'bg-white border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+                                }`}
                                 onClick={() => onPageChange(i + 1)}
                             >
                                 {i + 1}
                             </button>
                         ))}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

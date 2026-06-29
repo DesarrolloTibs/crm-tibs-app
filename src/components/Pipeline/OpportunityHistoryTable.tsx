@@ -12,9 +12,26 @@ interface Props {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  pageSize: number;
+  onPageSizeChange: (size: number) => void;
+  totalCount: number;
+  filteredCount: number;
 }
 
-const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDelete, onArchive, isAdmin, currentPage, totalPages, onPageChange }) => {
+const OpportunityHistoryTable: React.FC<Props> = ({ 
+  opportunities, 
+  onEdit, 
+  onDelete, 
+  onArchive, 
+  isAdmin, 
+  currentPage, 
+  totalPages, 
+  onPageChange,
+  pageSize,
+  onPageSizeChange,
+  totalCount,
+  filteredCount
+}) => {
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   const toggleRow = (id: string) => {
@@ -168,22 +185,40 @@ const OpportunityHistoryTable: React.FC<Props> = ({ opportunities, onEdit, onDel
           )}
         </tbody>
       </table>
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center mt-6 p-4">
-          <div className="flex space-x-2">
+      <div className="flex flex-col sm:flex-row justify-between items-center mt-6 p-4 gap-4 bg-slate-50/50 rounded-xl border border-slate-100/60 print:hidden">
+        {/* Left Side: pageSize input and record details */}
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 select-none">
+          <span>Mostrar</span>
+          <input
+            type="number"
+            min="0"
+            value={pageSize === 0 ? '' : pageSize}
+            onChange={(e) => {
+              const val = e.target.value;
+              onPageSizeChange(val === '' ? 0 : Math.max(0, parseInt(val, 10)));
+            }}
+            placeholder="Todos"
+            className="w-16 text-center border border-slate-300 rounded-lg py-1.5 px-2 text-slate-800 font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white outline-none"
+          />
+          <span>registros de {filteredCount} (total: {totalCount})</span>
+        </div>
+
+        {/* Right Side: Page navigation buttons */}
+        {totalPages > 1 && (
+          <div className="flex space-x-1.5">
             {Array.from({ length: totalPages }, (_, i) => (
               <Button
                 key={i + 1}
                 variant={currentPage === i + 1 ? 'primary' : 'secondary'}
-                className="!py-2 !px-4 !text-[11px] !rounded-lg"
+                className="!py-1.5 !px-3.5 !text-[11px] !rounded-lg"
                 onClick={() => onPageChange(i + 1)}
               >
                 {i + 1}
               </Button>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

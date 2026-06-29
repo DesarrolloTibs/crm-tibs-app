@@ -108,7 +108,7 @@ const PipelinePage: React.FC = () => {
   }, [viewMode]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 10;
+  const [pageSize, setPageSize] = useState<number>(10);
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -151,7 +151,7 @@ const PipelinePage: React.FC = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive]);
+  }, [searchTerm, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, pageSize]);
 
   const [notification, setNotification] = useState({
     show: false,
@@ -825,12 +825,12 @@ const PipelinePage: React.FC = () => {
     setCustomRules([]);
   };
 
-  const totalPages = Math.ceil(filteredOpportunities.length / PAGE_SIZE);
+  const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredOpportunities.length / pageSize);
   const paginatedOpportunities = useMemo(() =>
-    filteredOpportunities.slice(
-      (currentPage - 1) * PAGE_SIZE,
-      currentPage * PAGE_SIZE
-    ), [filteredOpportunities, currentPage]);
+    pageSize === 0 ? filteredOpportunities : filteredOpportunities.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    ), [filteredOpportunities, currentPage, pageSize]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -1572,6 +1572,10 @@ const PipelinePage: React.FC = () => {
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={handlePageChange}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
+          totalCount={opportunities.length}
+          filteredCount={filteredOpportunities.length}
         />
       )}
       <ConfirmModal

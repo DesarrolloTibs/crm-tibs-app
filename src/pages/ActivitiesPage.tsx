@@ -27,13 +27,12 @@ interface SelectOption {
     label: string;
 }
 
-const PAGE_SIZE = 10;
-
 type ViewMode = 'table' | 'calendar';
 
 const ActivitiesPage: React.FC = () => {
     const { isAdmin, user } = useAuth();
     const [activities, setActivities] = useState<Activity[]>([]);
+    const [pageSize, setPageSize] = useState<number>(10);
     const [activityTypes, setActivityTypes] = useState<TypeActivity[]>([]);
     const [users, setUsers] = useState<UserModel[]>([]);
     const [editing, setEditing] = useState<Activity | null>(null);
@@ -222,10 +221,10 @@ const ActivitiesPage: React.FC = () => {
             (filterType ? String(activity.typeActivityId) === filterType : true);
     });
 
-    const totalPages = Math.ceil(filteredActivities.length / PAGE_SIZE);
-    const paginatedActivities = filteredActivities.slice(
-        (currentPage - 1) * PAGE_SIZE,
-        currentPage * PAGE_SIZE
+    const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredActivities.length / pageSize);
+    const paginatedActivities = pageSize === 0 ? filteredActivities : filteredActivities.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
     );
 
     const handlePageChange = (page: number) => {
@@ -234,7 +233,7 @@ const ActivitiesPage: React.FC = () => {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterTitle, filterUser, filterDate, filterType]);
+    }, [filterTitle, filterUser, filterDate, filterType, pageSize]);
 
     const handleClearFilters = () => {
         setFilterTitle('');
@@ -575,6 +574,10 @@ const ActivitiesPage: React.FC = () => {
                         currentPage={currentPage}
                         totalPages={totalPages}
                         onPageChange={handlePageChange}
+                        pageSize={pageSize}
+                        onPageSizeChange={setPageSize}
+                        totalCount={activities.length}
+                        filteredCount={filteredActivities.length}
                     />
                 </>
             )}
