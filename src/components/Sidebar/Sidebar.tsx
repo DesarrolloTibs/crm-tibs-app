@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Users, Briefcase, BarChart3, LogOut, History, ClipboardList, DollarSign, Settings, Package, LifeBuoy } from 'lucide-react';
+import { Users, Briefcase, BarChart3, LogOut, ClipboardList, DollarSign, Settings, Package, LifeBuoy } from 'lucide-react';
 
 interface Props {
     isSidebarOpen: boolean;

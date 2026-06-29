@@ -6,7 +6,6 @@ interface Props {
     activities: Activity[];
     onEdit: (activity: Activity) => void;
     onDelete: (activity: Activity) => void;
-    isAdmin: boolean;
     currentPage: number;
     totalPages: number;
     onPageChange: (page: number) => void;
@@ -20,7 +19,6 @@ const ActivitiesTable: React.FC<Props> = ({
     activities, 
     onEdit, 
     onDelete, 
-    isAdmin, 
     currentPage, 
     totalPages, 
     onPageChange,

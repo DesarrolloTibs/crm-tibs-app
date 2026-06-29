@@ -5,7 +5,6 @@ import Modal from '../Modal/Modal';
 import Loader from '../Loader/Loader';
 
 import { Plus, Search } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
 import Notification from '../Modal/Notification';
 import type { Activity, TypeActivity } from '../../core/models/Activity';
 import ActivitiesTable from './ActivitiesTable';
@@ -17,15 +16,13 @@ interface Props {
     opportunityId: string;
 }
 
-const PAGE_SIZE = 5;
-
 const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
-    const { isAdmin } = useAuth();
     const [activities, setActivities] = useState<Activity[]>([]);
     const [activityTypes, setActivityTypes] = useState<TypeActivity[]>([]);
     const [editing, setEditing] = useState<Activity | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [pageSize, setPageSize] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -163,8 +160,8 @@ const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
         setCurrentPage(1);
     }, [searchTerm]);
 
-    const totalPages = Math.ceil(filteredActivities.length / PAGE_SIZE);
-    const paginatedActivities = filteredActivities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const totalPages = pageSize > 0 ? Math.ceil(filteredActivities.length / pageSize) : 1;
+    const paginatedActivities = pageSize > 0 ? filteredActivities.slice((currentPage - 1) * pageSize, currentPage * pageSize) : filteredActivities;
 
     return (
         <div className="p-4 flex flex-col h-full max-h-[80vh]">
@@ -194,10 +191,16 @@ const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
                     activities={paginatedActivities}
                     onEdit={openEditModal}
                     onDelete={handleDelete}
-                    isAdmin={isAdmin}
                     currentPage={currentPage}
                     totalPages={totalPages}
                     onPageChange={setCurrentPage}
+                    pageSize={pageSize}
+                    onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setCurrentPage(1);
+                    }}
+                    totalCount={activities.length}
+                    filteredCount={filteredActivities.length}
                 />
             )}
             <Modal open={modalOpen} onClose={() => setModalOpen(false)}>

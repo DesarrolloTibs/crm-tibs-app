@@ -570,7 +570,6 @@ const ActivitiesPage: React.FC = () => {
                         activities={paginatedActivities}
                         onEdit={openEditModal}
                         onDelete={handleDelete}
-                        isAdmin={isAdmin}
                         currentPage={currentPage}
                         totalPages={totalPages}
                         onPageChange={handlePageChange}
