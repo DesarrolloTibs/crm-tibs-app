@@ -52,13 +52,13 @@ const HelpdeskCronSettings: React.FC = () => {
       const period = hora >= 12 ? 'p.m.' : 'a.m.';
       const h12 = hora === 0 ? 12 : hora > 12 ? hora - 12 : hora;
       const minStr = min === 0 ? '' : ` y ${min} minutos`;
-      return `El cron se ejecuta todos los días a las ${h12}${minStr} ${period} (${fixedTime} hrs).`;
+      return `El correo se envía todos los días a las ${h12}${minStr} ${period} (${fixedTime} hrs).`;
     }
     const hText = intervalHours > 0 ? `${intervalHours} hora${intervalHours !== 1 ? 's' : ''}` : '';
     const mText = intervalMinutes > 0 ? `${intervalMinutes} minuto${intervalMinutes !== 1 ? 's' : ''}` : '';
     const parts = [hText, mText].filter(Boolean).join(' y ');
     if (!parts) return 'Define al menos 1 minuto de intervalo.';
-    return `El cron se ejecuta cada ${parts}.`;
+    return `El correo se envía cada ${parts}.`;
   };
 
   const isValidInterval = (): boolean => {
@@ -117,7 +117,7 @@ const HelpdeskCronSettings: React.FC = () => {
         <div>
           <h2 className="text-base font-bold text-gray-800">Notificaciones automáticas</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            Configura cuándo se envía el correo de alerta por tickets sin asignar en etapa inicial.
+            Configura cuándo se envía el correo automatico para el recordatorio de oportunidades y tickets sin atencion.
           </p>
         </div>
       </div>
