@@ -67,6 +67,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         title: initialData?.reminder?.title || '',
         date: formatDateTimeForInput(initialData?.reminder?.date) || '',
     });
+    const isReminderNotified = !!initialData?.reminder?.notified;
 
     useEffect(() => {
         const fetchData = async () => {
@@ -423,20 +424,29 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                         <span>Recordatorio</span>
                         <button
                             type="button"
-                            onClick={() => setReminderEnabled(!reminderEnabled)}
+                            onClick={() => !isReminderNotified && setReminderEnabled(!reminderEnabled)}
+                            disabled={isReminderNotified}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                reminderEnabled
-                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                isReminderNotified
+                                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60'
+                                    : reminderEnabled
+                                        ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                             }`}
-                            title={reminderEnabled ? 'Desactivar recordatorio' : 'Activar recordatorio'}
+                            title={
+                                isReminderNotified
+                                    ? 'El recordatorio ya ha sido enviado y no se puede modificar'
+                                    : reminderEnabled
+                                        ? 'Desactivar recordatorio'
+                                        : 'Activar recordatorio'
+                            }
                         >
                             {reminderEnabled ? (
-                                <Bell size={16} className="animate-pulse" />
+                                <Bell size={16} className={isReminderNotified ? "" : "animate-pulse"} />
                             ) : (
                                 <BellOff size={16} />
                             )}
-                            {reminderEnabled ? 'Activado' : 'Desactivado'}
+                            {reminderEnabled ? (isReminderNotified ? 'Enviado' : 'Activado') : 'Desactivado'}
                         </button>
                     </div>
                 </legend>
@@ -454,7 +464,12 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                 placeholder="Ej: Llamar al cliente para seguimiento"
                                 maxLength={100}
                                 required={reminderEnabled}
-                                className="border-amber-300 focus:border-amber-500"
+                                disabled={isReminderNotified}
+                                className={
+                                    isReminderNotified
+                                        ? 'border-gray-200 bg-gray-50/50 text-gray-500 cursor-not-allowed'
+                                        : 'border-amber-300 focus:border-amber-500'
+                                }
                             />
                         </div>
                         <div className="md:col-span-2">
@@ -466,7 +481,12 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                 value={reminderForm.date}
                                 onChange={handleReminderChange}
                                 required={reminderEnabled}
-                                className="border-amber-300 focus:border-amber-500"
+                                disabled={isReminderNotified}
+                                className={
+                                    isReminderNotified
+                                        ? 'border-gray-200 bg-gray-50/50 text-gray-500 cursor-not-allowed'
+                                        : 'border-amber-300 focus:border-amber-500'
+                                }
                             />
                         </div>
                     </div>

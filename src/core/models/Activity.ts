@@ -15,6 +15,7 @@ export interface ActivityReminder {
     id?: string;
     title: string;
     date: string;
+    notified?: boolean;
 }
 
 export interface Activity {
