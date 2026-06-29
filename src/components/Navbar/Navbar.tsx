@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Menu, X } from 'lucide-react';
 import SeasonalContainer from './Season/SeasonalContainer';
+import NotificationBell from './NotificationBell';
 
 interface Props {
     toggleSidebar: () => void;
@@ -36,8 +37,9 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
                 </div>
             </div>
 
-            {/* Información del usuario */}
+            {/* Información del usuario y Notificaciones */}
             <div className="flex items-center justify-end gap-2 sm:gap-4 w-1/4">
+                <NotificationBell />
                 <div className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 transition-colors p-1 sm:py-1.5 sm:px-3 rounded-full cursor-pointer border border-gray-200 shadow-sm w-9 h-9 sm:w-auto sm:h-auto select-none">
                     <span className="text-gray-600 hidden sm:flex items-center text-sm">
                         <span className="hidden sm:inline mr-1">Hola,</span>

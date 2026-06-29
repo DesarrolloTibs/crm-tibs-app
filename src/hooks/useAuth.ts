@@ -3,6 +3,7 @@ import { jwtDecode } from 'jwt-decode';
 
 // Define la estructura esperada del payload del token
 interface DecodedToken {
+  id: string;
   sub: string;
   username: string;
   role: 'admin' | 'executive';
@@ -21,7 +22,7 @@ export const useAuth = () => {
       try {
         const decodedToken = jwtDecode<DecodedToken>(token);
         if (decodedToken.exp * 1000 > Date.now()) {
-          setUser(decodedToken);
+          setUser({ ...decodedToken, id: decodedToken.sub });
         }
       } catch (error) {
         console.error('Error al decodificar el token:', error);
