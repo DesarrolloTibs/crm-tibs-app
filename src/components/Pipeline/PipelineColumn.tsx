@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { Opportunity, Stage } from '../../core/models/Opportunity';
 import OpportunityCard from './OpportunityCard';
 import KanbanColumn from '../shared/KanbanColumn';
+import { useAuth } from '../../hooks/useAuth';
 
 interface Props {
   stage: Stage;
@@ -34,6 +35,8 @@ const PipelineColumn: React.FC<Props> = ({
   onFoldStage,
   onUnfoldStage
 }) => {
+  const { isAdmin } = useAuth();
+
   const sortedOpportunities = useMemo(() => {
     return [...opportunities].sort((a, b) => {
       const aDate = a.stage_entered_at ? new Date(a.stage_entered_at) : new Date(a.createdAt || Date.now());
@@ -81,7 +84,7 @@ const PipelineColumn: React.FC<Props> = ({
       isFolded={isFolded}
       onFoldStage={onFoldStage}
       onUnfoldStage={onUnfoldStage}
-      canManageStages={true}
+      canManageStages={isAdmin}
       totalAmount={total}
       accentColorFallback="#3b82f6"
       plusButtonTitle="Nueva oportunidad"

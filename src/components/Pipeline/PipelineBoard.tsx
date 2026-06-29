@@ -387,6 +387,7 @@ const PipelinePage: React.FC = () => {
     // Verificar si estamos arrastrando una etapa/columna
     const isStageDrag = stages.some(s => s.id === activeId);
     if (isStageDrag) {
+      if (!isAdmin) return;
       if (activeId !== overId) {
         let targetStageId = overId;
         if (!visibleStageIds.includes(overId)) {
@@ -1433,15 +1434,17 @@ const PipelinePage: React.FC = () => {
           >
             <Plus size={18} className="mr-2" /> Nueva Oportunidad
           </Button>
-          <Button
-            title="Configurar Pipeline"
-            variant="secondary"
-            className="w-full sm:w-auto h-[38px] py-0 px-3 whitespace-nowrap flex items-center justify-center"
-            onClick={() => setShowStagesConfig(true)}
-          >
-            <Settings2 size={18} className="sm:mr-2" />
-            <span className="hidden sm:inline"></span>
-          </Button>
+          {isAdmin && (
+            <Button
+              title="Configurar Pipeline"
+              variant="secondary"
+              className="w-full sm:w-auto h-[38px] py-0 px-3 whitespace-nowrap flex items-center justify-center"
+              onClick={() => setShowStagesConfig(true)}
+            >
+              <Settings2 size={18} className="sm:mr-2" />
+              <span className="hidden sm:inline"></span>
+            </Button>
+          )}
         </div>
       </div>
       {viewMode === 'kanban' ? (
@@ -1469,66 +1472,68 @@ const PipelinePage: React.FC = () => {
               ))}
             </SortableContext>
             {/* Odoo-style quick stage creator column */}
-            {!isAddingStage ? (
-              <div
-                onClick={() => setIsAddingStage(true)}
-                className="flex flex-col min-h-[850px] w-[45px] sm:w-[50px] flex-shrink-0 snap-center rounded-xl bg-slate-100/50 hover:bg-slate-200/50 border border-dashed border-gray-300 hover:border-slate-400 transition-all duration-200 ease-in-out cursor-pointer items-center justify-start pt-6 shadow-sm select-none"
-              >
+            {isAdmin && (
+              !isAddingStage ? (
                 <div
-                  className="flex items-center justify-center font-bold text-slate-500 hover:text-slate-700 tracking-wide text-[13px] sm:text-[14px] whitespace-nowrap"
-                  style={{ writingMode: 'vertical-rl' }}
+                  onClick={() => setIsAddingStage(true)}
+                  className="flex flex-col min-h-[850px] w-[45px] sm:w-[50px] flex-shrink-0 snap-center rounded-xl bg-slate-100/50 hover:bg-slate-200/50 border border-dashed border-gray-300 hover:border-slate-400 transition-all duration-200 ease-in-out cursor-pointer items-center justify-start pt-6 shadow-sm select-none"
                 >
-                  » Agregar Etapa
+                  <div
+                    className="flex items-center justify-center font-bold text-slate-500 hover:text-slate-700 tracking-wide text-[13px] sm:text-[14px] whitespace-nowrap"
+                    style={{ writingMode: 'vertical-rl' }}
+                  >
+                    » Agregar Etapa
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col w-[85vw] md:w-[330px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[220px] h-fit snap-center transition-all duration-200">
-                <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
-                <form onSubmit={handleCreateStage} className="flex flex-col gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-semibold text-gray-500 uppercase">Nombre</label>
-                    <input
-                      ref={addStageInputRef}
-                      type="text"
-                      value={newStageName}
-                      onChange={e => setNewStageName(e.target.value)}
-                      placeholder="Nombre de la etapa..."
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
-                      required
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-semibold text-gray-500 uppercase">Límite de días (opcional)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={newStageMaxDays}
-                      onChange={e => setNewStageMaxDays(e.target.value)}
-                      placeholder="Ej. 15 (vacío = sin límite)"
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <button
-                      type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex-1 shadow-sm transition-colors cursor-pointer"
-                    >
-                      Añadir
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAddingStage(false);
-                        setNewStageName('');
-                        setNewStageMaxDays('');
-                      }}
-                      className="bg-gray-100 hover:bg-gray-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex-1 border border-gray-200 transition-colors cursor-pointer"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              </div>
+              ) : (
+                <div className="flex flex-col w-[85vw] md:w-[330px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[220px] h-fit snap-center transition-all duration-200">
+                  <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
+                  <form onSubmit={handleCreateStage} className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-semibold text-gray-500 uppercase">Nombre</label>
+                      <input
+                        ref={addStageInputRef}
+                        type="text"
+                        value={newStageName}
+                        onChange={e => setNewStageName(e.target.value)}
+                        placeholder="Nombre de la etapa..."
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-semibold text-gray-500 uppercase">Límite de días (opcional)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={newStageMaxDays}
+                        onChange={e => setNewStageMaxDays(e.target.value)}
+                        placeholder="Ej. 15 (vacío = sin límite)"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium w-full"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        type="submit"
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex-1 shadow-sm transition-colors cursor-pointer"
+                      >
+                        Añadir
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingStage(false);
+                          setNewStageName('');
+                          setNewStageMaxDays('');
+                        }}
+                        className="bg-gray-100 hover:bg-gray-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex-1 border border-gray-200 transition-colors cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )
             )}
           </div>
           <DragOverlay>
@@ -1669,12 +1674,18 @@ const PipelinePage: React.FC = () => {
             </div>
             {/* Drawer Body (scrollable) */}
             <div className="flex-1 overflow-y-auto p-6">
-              <PipelineStagesSettings
-                onlyPipelineDetails={false}
-                onSaveSuccess={() => {
-                  fetchPipelineAndOpportunities();
-                }}
-              />
+              {isAdmin ? (
+                <PipelineStagesSettings
+                  onlyPipelineDetails={false}
+                  onSaveSuccess={() => {
+                    fetchPipelineAndOpportunities();
+                  }}
+                />
+              ) : (
+                <div className="text-center py-10 text-red-500 font-semibold">
+                  No tienes permisos para configurar el pipeline.
+                </div>
+              )}
             </div>
           </div>
         </div>
