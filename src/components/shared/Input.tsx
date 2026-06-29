@@ -28,8 +28,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
                 )}
                 <input
                     ref={ref}
-                    className={`w-full py-4 rounded-2xl text-slate-900 text-sm font-medium transition-all duration-300 border border-slate-200 outline-none hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:shadow-xl focus:shadow-indigo-500/10 placeholder:text-slate-400 placeholder:font-medium ${
-                        inputPrefix ? 'pl-8' : 'px-4'
+                    className={`w-full py-4 rounded-2xl text-slate-900 text-sm font-medium transition-all duration-300 border border-slate-200 outline-none hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:shadow-xl focus:shadow-indigo-500/10 placeholder:text-slate-400 placeholder:font-medium pr-4 ${
+                        inputPrefix ? 'pl-8' : 'pl-4'
                     } ${
                         error ? 'border-rose-300 bg-rose-50/30 focus:border-rose-500' : ''
                     } ${className}`}
