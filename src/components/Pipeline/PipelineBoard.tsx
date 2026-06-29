@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
@@ -34,6 +35,8 @@ interface FilterRule {
 }
 
 const PipelinePage: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -967,7 +970,7 @@ const PipelinePage: React.FC = () => {
 
   useEffect(() => {
     if (!loading && opportunities.length > 0) {
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(location.search);
       const opportunityId = params.get('opportunityId');
       if (opportunityId) {
         const found = opportunities.find(o => o.id === opportunityId);
@@ -975,11 +978,11 @@ const PipelinePage: React.FC = () => {
           setEditingOpportunity(found);
           setIsFormModalOpen(true);
           // Limpiar el parámetro de la URL
-          window.history.replaceState({}, '', window.location.pathname);
+          navigate(location.pathname, { replace: true });
         }
       }
     }
-  }, [loading, opportunities]);
+  }, [loading, opportunities, location.search]);
 
   const getModalContent = () => {
     if (!editingOpportunity || !editingOpportunity.id) {

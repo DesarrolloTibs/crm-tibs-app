@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
@@ -50,6 +51,8 @@ import type { SearchBadge } from '../components/shared/UnifiedSearchBar';
 
 
 const HelpdeskPage: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -261,6 +264,21 @@ const HelpdeskPage: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!loading && tickets.length > 0) {
+      const params = new URLSearchParams(location.search);
+      const ticketId = params.get('ticketId');
+      if (ticketId) {
+        const found = tickets.find(t => t.id === ticketId);
+        if (found) {
+          setSelectedTicket(found);
+          // Limpiar el parámetro de la URL
+          navigate(location.pathname, { replace: true });
+        }
+      }
+    }
+  }, [loading, tickets, location.search]);
 
   // Filter tickets
   const filteredTickets = useMemo(() => {
@@ -1037,41 +1055,6 @@ const HelpdeskPage: React.FC = () => {
         <div className="flex justify-center items-center py-20">
           <Loader />
         </div>
-      ) : ticketToConvert ? (
-        /* Formulario de Conversión a Oportunidad */
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm animate-in fade-in duration-300">
-          <div className="border-b border-slate-150 pb-4 mb-4">
-            <h2 className="text-lg font-bold text-slate-800">
-              Convertir Ticket a Oportunidad Comercial
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Rellena los datos para el Pipeline Comercial. Al guardar, el ticket #{ticketToConvert.ticket_number.toString().padStart(5, '0')} pasará automáticamente al estado "Resuelto".
-            </p>
-          </div>
-          <OpportunityForm
-            initialData={{
-              id: '',
-              nombre_proyecto: `Oportunidad: ${ticketToConvert.strtitle}`,
-              description: ticketToConvert.description,
-              cliente_id: ticketToConvert.cliente_id,
-              cliente: ticketToConvert.cliente,
-              empresa: ticketToConvert.cliente ? (ticketToConvert.cliente.company?.nombre || ticketToConvert.cliente.empresa || '') : '',
-              companyId: ticketToConvert.cliente?.companyId || null,
-              priority: ticketToConvert.priority,
-              ejecutivo_id: ticketToConvert.responsable_id || '',
-              ejecutivo: ticketToConvert.responsable,
-              stage_id: commercialStages.find(s => s.blninitial)?.id || '',
-              monto_licenciamiento: 0,
-              monto_servicios: 0,
-              monto_total: 0,
-              moneda: 'USD',
-              interactions: [],
-              reminders: [],
-            }}
-            onSubmit={handleConvertToOpportunitySubmit}
-            onCancel={() => setTicketToConvert(null)}
-          />
-        </div>
       ) : (
         /* Tablero de Soporte (Kanban o Lista) */
         <div className="space-y-4">
@@ -1088,7 +1071,7 @@ const HelpdeskPage: React.FC = () => {
                   {stages
                     .filter(s => s.blnstatus && visibleStageIds.includes(s.id))
                     .map(stage => (
-                      <HelpdeskColumn
+                       <HelpdeskColumn
                         key={stage.id}
                         stage={stage}
                         tickets={filteredTickets.filter(t => t.stage_id === stage.id)}
@@ -1369,6 +1352,45 @@ const HelpdeskPage: React.FC = () => {
               stages={stages}
               onSave={handleCreateTicketSubmit}
               onCancel={() => setIsCreatingTicket(false)}
+            />
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal: Convertir Ticket a Oportunidad */}
+      <Modal open={ticketToConvert !== null} onClose={() => setTicketToConvert(null)} maxWidth="max-w-6xl">
+        {ticketToConvert && (
+          <div className="animate-in fade-in duration-300">
+            <div className="border-b border-slate-150 pb-4 mb-6">
+              <h2 className="text-lg font-bold text-slate-800">
+                Convertir Ticket a Oportunidad Comercial
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Completa los datos para el Pipeline Comercial. Al guardar, el ticket #{ticketToConvert.ticket_number.toString().padStart(5, '0')} pasará automáticamente a la etapa "Resuelto".
+              </p>
+            </div>
+            <OpportunityForm
+              initialData={{
+                id: '',
+                nombre_proyecto: `Oportunidad: ${ticketToConvert.strtitle}`,
+                description: ticketToConvert.description,
+                cliente_id: ticketToConvert.cliente_id,
+                cliente: ticketToConvert.cliente,
+                empresa: ticketToConvert.cliente ? (ticketToConvert.cliente.company?.nombre || ticketToConvert.cliente.empresa || '') : '',
+                companyId: ticketToConvert.cliente?.companyId || null,
+                priority: ticketToConvert.priority,
+                ejecutivo_id: ticketToConvert.responsable_id || '',
+                ejecutivo: ticketToConvert.responsable,
+                stage_id: commercialStages.find(s => s.blninitial)?.id || '',
+                monto_licenciamiento: 0,
+                monto_servicios: 0,
+                monto_total: 0,
+                moneda: 'USD',
+                interactions: [],
+                reminders: [],
+              }}
+              onSubmit={handleConvertToOpportunitySubmit}
+              onCancel={() => setTicketToConvert(null)}
             />
           </div>
         )}
