@@ -16,6 +16,7 @@ import SettingsPage from './pages/SettingsPage';
 import ProductsPage from './pages/ProductsPage';
 import HelpdeskPage from './pages/HelpdeskPage';
 import SupportTicketPage from './pages/SupportTicketPage';
+import DashboardPage from './pages/DashboardPage';
 
 const App: React.FC = () => (
     <BrowserRouter>
@@ -24,6 +25,16 @@ const App: React.FC = () => (
             <Route path="/support" element={<SupportTicketPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route
+                path="/dashboard"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <DashboardPage />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
             <Route
                 path="/companies"
                 element={
@@ -116,7 +127,7 @@ const App: React.FC = () => (
                     </ProtectedRoute>
                 }
             />
-            <Route path="*" element={<Navigate to="/clients" />} />
+            <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
     </BrowserRouter>
 );

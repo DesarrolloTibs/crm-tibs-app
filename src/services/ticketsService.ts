@@ -86,3 +86,8 @@ export const queryTicketsPublic = async (params: { email?: string; ticketNumber?
   const response = await axiosInstance.get<Ticket[]>(`${TICKETS.TICKETS}/public/query?${queryParams.toString()}`);
   return response.data;
 };
+
+export const getHelpdesks = async (): Promise<Helpdesk[]> => {
+  const response = await axiosInstance.get<Helpdesk[]>(`${HELPDESKS.HELPDESKS}`);
+  return response.data;
+};

@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Select from '../components/shared/Select';
 import { useAuth } from '../hooks/useAuth';
-import { XCircle, ClipboardList, Settings, Sliders, Database, Bell } from 'lucide-react';
+import { XCircle, ClipboardList, Settings, Sliders, Database, Bell, LayoutDashboard } from 'lucide-react';
 import ActivityTypesSettings from '../components/ActivityType/ActivityTypesSettings';
 import OpportunityLabelsSettings from '../components/OpportunityLabel/OpportunityLabelsSettings';
 import OpportunityCatalogSettings from '../components/OpportunityLabel/OpportunityCatalogSettings';
 import HelpdeskCronSettings from '../components/Helpdesk/HelpdeskCronSettings';
+import { DashboardSettings } from '../components/Dashboard/DashboardSettings';
 import { getOpportunityLabels } from '../services/opportunityLabelsService';
 import type { OpportunityLabel } from '../core/models/OpportunityLabel';
 
-type SettingTab = 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs' | 'helpdesk-cron';
+type SettingTab = 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs' | 'helpdesk-cron' | 'dashboard-settings';
 
 interface SettingOption {
     id: SettingTab;
@@ -33,6 +34,7 @@ const SettingsPage: React.FC = () => {
         { value: 'opportunity-labels', label: 'Etiquetas de Catálogos' },
         { value: 'opportunity-catalogs', label: 'Valores de Catálogos' },
         { value: 'helpdesk-cron', label: 'Notificaciones automáticas' },
+        { value: 'dashboard-settings', label: 'Indicadores de Dashboard' },
     ], []);
 
     const fetchLabels = async () => {
@@ -90,6 +92,16 @@ const SettingsPage: React.FC = () => {
                 },
             ],
         },
+        {
+            title: 'Dashboard',
+            options: [
+                {
+                    id: 'dashboard-settings',
+                    label: 'Indicadores de Dashboard',
+                    icon: <LayoutDashboard size={16} />,
+                },
+            ],
+        },
     ];
 
     if (!isAdmin) {
@@ -110,6 +122,8 @@ const SettingsPage: React.FC = () => {
                 return <OpportunityLabelsSettings onLabelsUpdated={fetchLabels} />;
             case 'helpdesk-cron':
                 return <HelpdeskCronSettings />;
+            case 'dashboard-settings':
+                return <DashboardSettings />;
             case 'opportunity-catalogs':
                 return (
                     <div className="flex flex-col gap-6 text-left">

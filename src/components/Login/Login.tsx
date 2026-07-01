@@ -38,7 +38,7 @@ const Login: React.FC = () => {
             } else {
                 localStorage.removeItem('savedEmail');
             }
-            navigate('/pipeline');
+            navigate('/dashboard');
         } catch (err: any) {
             if (err.response && err.response.data && err.response.data.message) {
                 const msg = err.response.data.message;

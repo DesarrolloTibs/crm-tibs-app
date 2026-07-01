@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Users, Briefcase, BarChart3, LogOut, ClipboardList, DollarSign, Settings, Package, LifeBuoy } from 'lucide-react';
+import { Users, Briefcase, BarChart3, LogOut, ClipboardList, DollarSign, Settings, Package, LifeBuoy, LayoutDashboard } from 'lucide-react';
 
 interface Props {
     isSidebarOpen: boolean;
@@ -41,6 +41,7 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
             </div>
             <nav className="flex-grow p-4 overflow-y-auto">
                 <ul className="space-y-2">
+                    <li><NavLink to="/dashboard" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><LayoutDashboard size={18} /> Dashboard</NavLink></li>
                     <li><NavLink to="/clients" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Briefcase size={18} /> Clientes</NavLink></li>
                     <li><NavLink to="/pipeline" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><BarChart3 size={18} /> Pipeline</NavLink></li>
                     <li><NavLink to="/activities" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><ClipboardList size={18} /> Actividades</NavLink></li>

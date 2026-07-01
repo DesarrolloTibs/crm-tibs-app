@@ -1,4 +1,4 @@
-import React, { useRef, useImperativeHandle } from 'react';
+import React, { useRef, useImperativeHandle, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { Search, ChevronDown, X } from 'lucide-react';
 
@@ -18,6 +18,7 @@ interface UnifiedSearchBarProps {
   setShowFilters: (show: boolean) => void;
   dropdownWidthClass?: string;
   dropdownAlign?: 'left' | 'right';
+  className?: string;
   children: ReactNode;
 }
 
@@ -32,6 +33,7 @@ export const UnifiedSearchBar = React.forwardRef<HTMLDivElement, UnifiedSearchBa
       setShowFilters,
       dropdownWidthClass = 'w-[340px]',
       dropdownAlign = 'right',
+      className,
       children,
     },
     ref
@@ -42,6 +44,20 @@ export const UnifiedSearchBar = React.forwardRef<HTMLDivElement, UnifiedSearchBa
     // Reenviar la referencia del contenedor
     useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
+    // Close dropdown when clicking outside the container
+    useEffect(() => {
+      if (!showFilters) return;
+
+      const handlePointerDown = (e: PointerEvent) => {
+        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+          setShowFilters(false);
+        }
+      };
+
+      document.addEventListener('pointerdown', handlePointerDown);
+      return () => document.removeEventListener('pointerdown', handlePointerDown);
+    }, [showFilters, setShowFilters]);
+
     const handleContainerClick = () => {
       inputRef.current?.focus();
     };
@@ -50,7 +66,7 @@ export const UnifiedSearchBar = React.forwardRef<HTMLDivElement, UnifiedSearchBa
     const alignClass = dropdownAlign === 'left' ? 'left-0' : 'right-0';
 
     return (
-      <div className="relative w-full sm:w-auto" ref={containerRef}>
+      <div className={className || "relative w-full sm:w-auto"} ref={containerRef}>
         <div
           className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 shadow-sm hover:border-gray-400 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 min-h-[38px] cursor-text transition-all w-full sm:min-w-[280px]"
           onClick={handleContainerClick}

@@ -18,6 +18,7 @@ export interface Stage {
 
 export interface Opportunity  {
   id: string;
+  pipeline_id?: string;
   nombre_proyecto: string;
   description?: string;
   cliente_id?: string | null;

@@ -76,6 +76,11 @@ export const NOTIFICATIONS = {
     NOTIFICATIONS: urlBase + 'notifications',
 };
 
+export const REPORTS = {
+    DASHBOARD: urlBase + 'reports/dashboard',
+    INDICATORS: urlBase + 'reports/indicators',
+};
+
 
 
 /*export const ENDPOINTS = {

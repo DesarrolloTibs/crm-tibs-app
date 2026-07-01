@@ -24,3 +24,8 @@ export const updateMainPipeline = async (data: Partial<Pipeline>): Promise<Pipel
   const response = await axiosInstance.patch<Pipeline>(`${PIPELINES.PIPELINES}/main`, data);
   return response.data;
 };
+
+export const getPipelines = async (): Promise<Pipeline[]> => {
+  const response = await axiosInstance.get<Pipeline[]>(`${PIPELINES.PIPELINES}`);
+  return response.data;
+};
