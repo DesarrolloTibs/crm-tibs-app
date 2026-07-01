@@ -1547,11 +1547,11 @@ export const DashboardPage: React.FC = () => {
                     💱 Visualización de moneda
                   </p>
                   <div className="flex gap-2">
-                    {[
+                    {([
                       { value: 'consolidado', label: 'Pesos (MXN)', sub: 'Consolidado' },
                       { value: 'USD',         label: 'Dólares',     sub: 'Solo USD'    },
                       { value: 'MXN',         label: 'Pesos',       sub: 'Solo MXN'    },
-                    ].map(opt => (
+                    ] as const).map(opt => (
                       <button
                         key={opt.value}
                         type="button"

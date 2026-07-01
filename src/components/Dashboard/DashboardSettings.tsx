@@ -308,8 +308,7 @@ export const DashboardSettings: React.FC = () => {
               }`}
             >
               <BarChart3 size={13} />
-              <span className="hidden xs:inline">Oportunidades</span>
-              <span className="xs:hidden">Comerc.</span>
+              <span className="xs:hidden">Pipeline</span>
             </button>
             <button
               onClick={() => setActiveModule('support')}
@@ -320,8 +319,7 @@ export const DashboardSettings: React.FC = () => {
               }`}
             >
               <LifeBuoy size={13} />
-              <span className="hidden xs:inline">Mesa de Ayuda</span>
-              <span className="xs:hidden">Soporte</span>
+              <span className="xs:hidden">Mesa de Ayuda</span>
             </button>
           </div>
         </div>
