@@ -47,6 +47,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         initialData?.companyId ? 'company' : 'contact'
     );
     const [companies, setCompanies] = useState<Company[]>([]);
+    const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState<Partial<Activity & { contactIds?: string[] }>>({
         activity: '',
         typeActivityId: initialData?.typeActivityId ?? (activityTypes[0]?.id || null),
@@ -232,18 +233,25 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         setReminderForm(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const finalActivity: Partial<Activity & { contactIds?: string[]; reminder?: ActivityReminder | null }> = { ...form };
-        if (linkType === 'company') {
-            finalActivity.clientId = null;
-        } else {
-            finalActivity.companyId = null;
-            finalActivity.contactIds = form.clientId ? [form.clientId] : [];
+        if (submitting) return;
+        setSubmitting(true);
+        try {
+            const finalActivity: Partial<Activity & { contactIds?: string[]; reminder?: ActivityReminder | null }> = { ...form };
+            if (linkType === 'company') {
+                finalActivity.clientId = null;
+            } else {
+                finalActivity.companyId = null;
+                finalActivity.contactIds = form.clientId ? [form.clientId] : [];
+            }
+            // Incluir reminder o null para eliminarlo
+            finalActivity.reminder = reminderEnabled ? reminderForm : null;
+            await onSubmit(finalActivity);
+        } catch (error) {
+            console.error('Submit error:', error);
+            setSubmitting(false);
         }
-        // Incluir reminder o null para eliminarlo
-        finalActivity.reminder = reminderEnabled ? reminderForm : null;
-        onSubmit(finalActivity);
     };
 
     const handleRedirectOpportunity = () => {
@@ -375,7 +383,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                 inputId="clientId"
                                 name="clientId"
                                 options={clientOptions}
-                                value={selectedClientValue}
+                                  value={selectedClientValue}
                                 onChange={handleClientChange}
                                 placeholder="-- Seleccione un contacto --"
                                 isClearable
@@ -425,7 +433,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                         <button
                             type="button"
                             onClick={() => !isReminderNotified && setReminderEnabled(!reminderEnabled)}
-                            disabled={isReminderNotified}
+                            disabled={isReminderNotified || submitting}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 isReminderNotified
                                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60'
@@ -464,7 +472,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                 placeholder="Ej: Llamar al cliente para seguimiento"
                                 maxLength={100}
                                 required={reminderEnabled}
-                                disabled={isReminderNotified}
+                                disabled={isReminderNotified || submitting}
                                 className={
                                     isReminderNotified
                                         ? 'border-gray-200 bg-gray-50/50 text-gray-500 cursor-not-allowed'
@@ -481,7 +489,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                 value={reminderForm.date}
                                 onChange={handleReminderChange}
                                 required={reminderEnabled}
-                                disabled={isReminderNotified}
+                                disabled={isReminderNotified || submitting}
                                 className={
                                     isReminderNotified
                                         ? 'border-gray-200 bg-gray-50/50 text-gray-500 cursor-not-allowed'
@@ -494,10 +502,10 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
             </fieldset>
 
             <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="secondary" onClick={onCancel}>
+                <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
                     Cancelar
                 </Button>
-                <Button type="submit" variant="success">
+                <Button type="submit" variant="success" loading={submitting}>
                     Guardar
                 </Button>
             </div>

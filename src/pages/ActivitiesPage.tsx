@@ -123,10 +123,11 @@ const ActivitiesPage: React.FC = () => {
                 show: true, type: 'success', title: '¡Éxito!', message: 'Actividad creada correctamente', onConfirm: hideNotification, onCancel: hideNotification
             });
             fetchActivities();
-        } catch {
+        } catch (error) {
             setNotification({
                 show: true, type: 'error', title: 'Error', message: 'No se pudo crear la actividad', onConfirm: hideNotification, onCancel: hideNotification
             });
+            throw error;
         } finally {
             setLoading(false);
         }
@@ -144,10 +145,11 @@ const ActivitiesPage: React.FC = () => {
                     show: true, type: 'success', title: '¡Éxito!', message: 'Actividad actualizada correctamente', onConfirm: hideNotification, onCancel: hideNotification
                 });
                 fetchActivities();
-            } catch {
+            } catch (error) {
                 setNotification({
                     show: true, type: 'error', title: 'Error', message: 'No se pudo actualizar la actividad', onConfirm: hideNotification, onCancel: hideNotification
                 });
+                throw error;
             } finally {
                 setLoading(false);
             }
