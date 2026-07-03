@@ -270,7 +270,7 @@ const ClientsPage: React.FC = () => {
         clients.filter(client =>
             (client.nombre + ' ' + client.apellido).toLowerCase().includes(filterNombre.toLowerCase()) &&
             (client.company?.nombre || client.empresa || '').toLowerCase().includes(filterEmpresa.toLowerCase()) &&
-            client.correo.toLowerCase().includes(filterCorreo.toLowerCase()) &&
+            (client.correo || '').toLowerCase().includes(filterCorreo.toLowerCase()) &&
             (!filterEjecutivoId || client.ejecutivo_id === filterEjecutivoId) &&
             (!filterCategory || client.category === filterCategory)
         ),

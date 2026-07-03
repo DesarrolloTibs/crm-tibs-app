@@ -56,18 +56,43 @@ export const ConversationsPage: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const socketRef = useRef<Socket | null>(null);
 
+    // Refs para evitar cierres obsoletos (stale closures) en WebSockets sin reconectar constantemente el socket
+    const selectedConvRef = useRef<any>(null);
+    const allUsersRef = useRef<any[]>([]);
+    const isAdminRef = useRef<boolean>(false);
+    const loadConversationsListRef = useRef<any>(null);
+
+    useEffect(() => {
+        selectedConvRef.current = selectedConv;
+    }, [selectedConv]);
+
+    useEffect(() => {
+        allUsersRef.current = allUsers;
+    }, [allUsers]);
+
+    useEffect(() => {
+        isAdminRef.current = isAdmin;
+    }, [isAdmin]);
+
+    useEffect(() => {
+        loadConversationsListRef.current = loadConversationsList;
+    });
+
     // ── Cargar datos iniciales ───────────────────────────────────────────────
     const loadConversationsList = async (selectId?: string) => {
         try {
             const list = await getConversations();
             setConversations(list);
             
+            const currentSelected = selectedConvRef.current;
+            const currentIsAdmin = isAdminRef.current;
+
             // Si hay una conversación previamente seleccionada, actualizar su estado
-            if (selectedConv) {
-                const updated = list.find(c => c.id === selectedConv.id);
+            if (currentSelected) {
+                const updated = list.find(c => c.id === currentSelected.id);
                 if (updated) {
                     setSelectedConv(updated);
-                } else if (!isAdmin) {
+                } else if (!currentIsAdmin) {
                     // Si el ejecutivo reasignó el chat y ya no es suyo, deseleccionarlo
                     setSelectedConv(null);
                 }
@@ -130,10 +155,13 @@ export const ConversationsPage: React.FC = () => {
         // Escuchar nuevos mensajes
         socket.on('message_received', (newMsg: any) => {
             // Actualizar lista de conversaciones para refrescar snippets de último mensaje
-            loadConversationsList();
+            if (loadConversationsListRef.current) {
+                loadConversationsListRef.current();
+            }
 
             // Si el mensaje es del chat activo, agregarlo a la pantalla
-            if (selectedConv && newMsg.conversationId === selectedConv.id) {
+            const currentSelected = selectedConvRef.current;
+            if (currentSelected && newMsg.conversationId === currentSelected.id) {
                 setMessages((prev: any[]) => {
                     if (prev.some(m => m.id === newMsg.id)) return prev;
                     return [...prev, newMsg];
@@ -144,21 +172,53 @@ export const ConversationsPage: React.FC = () => {
 
         // Escuchar estatus del bot
         socket.on('bot_status_changed', (data: { conversationId: string; botActive: boolean }) => {
-            if (selectedConv && selectedConv.id === data.conversationId) {
+            const currentSelected = selectedConvRef.current;
+            if (currentSelected && currentSelected.id === data.conversationId) {
                 setSelectedConv((prev: any) => prev ? { ...prev, botActive: data.botActive } : null);
             }
             setConversations((prev: any[]) => prev.map(c => c.id === data.conversationId ? { ...c, botActive: data.botActive } : c));
         });
 
         // Escuchar reasignación
-        socket.on('conversation_assigned', () => {
-            loadConversationsList();
+        socket.on('conversation_assigned', (data: { conversationId: string; assignedUserId: string | null }) => {
+            const newAssignedUser = allUsersRef.current.find(u => u.id === data.assignedUserId) || null;
+
+            // Actualizar la lista localmente
+            setConversations((prev: any[]) => prev.map(c => {
+                if (c.id === data.conversationId) {
+                    return { 
+                        ...c, 
+                        assignedUserId: data.assignedUserId,
+                        assignedUser: newAssignedUser
+                    };
+                }
+                return c;
+            }));
+
+            // Actualizar la seleccionada si aplica
+            const currentSelected = selectedConvRef.current;
+            if (currentSelected && currentSelected.id === data.conversationId) {
+                setSelectedConv((prev: any) => {
+                    if (prev && prev.id === data.conversationId) {
+                        return {
+                            ...prev,
+                            assignedUserId: data.assignedUserId,
+                            assignedUser: newAssignedUser
+                        };
+                    }
+                    return prev;
+                });
+            }
+
+            if (loadConversationsListRef.current) {
+                loadConversationsListRef.current();
+            }
         });
 
         return () => {
             socket.disconnect();
         };
-    }, [selectedConv, currentUserId]);
+    }, [currentUserId]);
 
     const scrollToBottom = () => {
         setTimeout(() => {
@@ -203,6 +263,33 @@ export const ConversationsPage: React.FC = () => {
         if (!selectedConv) return;
         try {
             await assignConversation(selectedConv.id, userId);
+
+            const newAssignedUser = allUsers.find(u => u.id === userId) || null;
+
+            // Actualizar la conversación seleccionada localmente de inmediato
+            setSelectedConv((prev: any) => {
+                if (prev && prev.id === selectedConv.id) {
+                    return {
+                        ...prev,
+                        assignedUserId: userId || null,
+                        assignedUser: newAssignedUser
+                    };
+                }
+                return prev;
+            });
+
+            // Actualizar la lista localmente de inmediato
+            setConversations((prev: any[]) => prev.map(c => {
+                if (c.id === selectedConv.id) {
+                    return {
+                        ...c,
+                        assignedUserId: userId || null,
+                        assignedUser: newAssignedUser
+                    };
+                }
+                return c;
+            }));
+
             Swal.fire({
                 icon: 'success',
                 title: 'Reasignado',
