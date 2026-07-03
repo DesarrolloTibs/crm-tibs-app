@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Users, Briefcase, BarChart3, LogOut, ClipboardList, DollarSign, Settings, Package, LifeBuoy, LayoutDashboard } from 'lucide-react';
+import { Users, Briefcase, BarChart3, LogOut, ClipboardList, DollarSign, Settings, Package, LifeBuoy, LayoutDashboard, MessageSquare } from 'lucide-react';
 
 interface Props {
     isSidebarOpen: boolean;
@@ -47,14 +47,15 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
                     <li><NavLink to="/activities" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><ClipboardList size={18} /> Actividades</NavLink></li>
                     <li><NavLink to="/products" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Package size={18} /> Productos</NavLink></li>
                     <li><NavLink to="/helpdesk" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><LifeBuoy size={18} /> Mesa de Ayuda</NavLink></li>
+                    <li><NavLink to="/conversations" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><MessageSquare size={18} /> Conversaciones</NavLink></li>
                     <li><NavLink to="/expenses" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><DollarSign size={18} /> Gastos</NavLink></li>
                     {isAdmin && <li><NavLink to="/users" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Users size={18} /> Usuarios</NavLink></li>}
                     {isAdmin && <li><NavLink to="/settings" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Settings size={18} /> Configuración</NavLink></li>}
                 </ul>
             </nav>
             <div className="p-4 border-t border-slate-100 bg-slate-50/30">
-                <button 
-                    onClick={handleLogout} 
+                <button
+                    onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 transition-all duration-200 text-sm font-extrabold uppercase tracking-widest border border-transparent hover:border-red-100 cursor-pointer"
                 >
                     <LogOut size={18} /> Cerrar Sesión

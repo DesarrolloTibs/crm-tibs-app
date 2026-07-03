@@ -121,14 +121,14 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
             value: c.id!,
             label: c.nombre,
         })),
-    [companies]);
+        [companies]);
 
     const clientOptions = useMemo(() =>
         clients.map(c => ({
             value: c.id!,
             label: `${c.nombre} ${c.apellido} (${c.company?.nombre || c.empresa || 'Sin empresa'})`,
         })),
-    [clients]);
+        [clients]);
 
     const companyContactOptions = useMemo(() => {
         if (!form.companyId) return [];
@@ -146,7 +146,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type, checked } = e.target as HTMLInputElement;
-        
+
         let parsedValue: any = value;
         if (name === 'typeActivityId') {
             if (value === 'null') {
@@ -317,18 +317,18 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                         />
                     </div>
                     <div className="md:col-span-2">
-                        <TextArea 
+                        <TextArea
                             label="Actividad"
-                            id="activity" 
-                            name="activity" 
-                            value={form.activity || ''} 
-                            onChange={handleChange} 
-                            placeholder="Descripción de la actividad" 
-                            required 
+                            id="activity"
+                            name="activity"
+                            value={form.activity || ''}
+                            onChange={handleChange}
+                            placeholder="Descripción de la actividad"
+                            required
                             rows={3}
                         />
                     </div>
-                    
+
                     <div className="md:col-span-2">
                         <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tipo de Vinculación</label>
                         <div className="flex gap-4 mt-1">
@@ -383,7 +383,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                 inputId="clientId"
                                 name="clientId"
                                 options={clientOptions}
-                                  value={selectedClientValue}
+                                value={selectedClientValue}
                                 onChange={handleClientChange}
                                 placeholder="-- Seleccione un contacto --"
                                 isClearable
@@ -434,13 +434,12 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                             type="button"
                             onClick={() => !isReminderNotified && setReminderEnabled(!reminderEnabled)}
                             disabled={isReminderNotified || submitting}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                isReminderNotified
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${isReminderNotified
                                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60'
                                     : reminderEnabled
                                         ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                            }`}
+                                }`}
                             title={
                                 isReminderNotified
                                     ? 'El recordatorio ya ha sido enviado y no se puede modificar'

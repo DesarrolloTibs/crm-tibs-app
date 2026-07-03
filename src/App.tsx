@@ -17,6 +17,7 @@ import ProductsPage from './pages/ProductsPage';
 import HelpdeskPage from './pages/HelpdeskPage';
 import SupportTicketPage from './pages/SupportTicketPage';
 import DashboardPage from './pages/DashboardPage';
+import ConversationsPage from './pages/ConversationsPage';
 
 const App: React.FC = () => (
     <BrowserRouter>
@@ -82,6 +83,16 @@ const App: React.FC = () => (
                     <ProtectedRoute>
                         <Layout>
                             <HelpdeskPage />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/conversations"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <ConversationsPage />
                         </Layout>
                     </ProtectedRoute>
                 }

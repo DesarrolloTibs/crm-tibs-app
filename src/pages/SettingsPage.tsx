@@ -1,16 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Select from '../components/shared/Select';
 import { useAuth } from '../hooks/useAuth';
-import { XCircle, ClipboardList, Settings, Sliders, Database, Bell, LayoutDashboard } from 'lucide-react';
+import { XCircle, ClipboardList, Settings, Sliders, Database, Bell, LayoutDashboard, Brain } from 'lucide-react';
 import ActivityTypesSettings from '../components/ActivityType/ActivityTypesSettings';
 import OpportunityLabelsSettings from '../components/OpportunityLabel/OpportunityLabelsSettings';
 import OpportunityCatalogSettings from '../components/OpportunityLabel/OpportunityCatalogSettings';
 import HelpdeskCronSettings from '../components/Helpdesk/HelpdeskCronSettings';
 import { DashboardSettings } from '../components/Dashboard/DashboardSettings';
+import AiAgentSettings from '../components/Settings/AiAgentSettings';
 import { getOpportunityLabels } from '../services/opportunityLabelsService';
 import type { OpportunityLabel } from '../core/models/OpportunityLabel';
 
-type SettingTab = 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs' | 'helpdesk-cron' | 'dashboard-settings';
+type SettingTab = 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs' | 'helpdesk-cron' | 'dashboard-settings' | 'ai-agent-settings';
 
 interface SettingOption {
     id: SettingTab;
@@ -35,6 +36,7 @@ const SettingsPage: React.FC = () => {
         { value: 'opportunity-catalogs', label: 'Valores de Catálogos' },
         { value: 'helpdesk-cron', label: 'Notificaciones automáticas' },
         { value: 'dashboard-settings', label: 'Indicadores de Dashboard' },
+        { value: 'ai-agent-settings', label: 'Agente IA & Canales' },
     ], []);
 
     const fetchLabels = async () => {
@@ -102,6 +104,16 @@ const SettingsPage: React.FC = () => {
                 },
             ],
         },
+        {
+            title: 'Inteligencia Artificial',
+            options: [
+                {
+                    id: 'ai-agent-settings',
+                    label: 'Agente IA & Canales',
+                    icon: <Brain size={16} />,
+                },
+            ],
+        },
     ];
 
     if (!isAdmin) {
@@ -124,6 +136,8 @@ const SettingsPage: React.FC = () => {
                 return <HelpdeskCronSettings />;
             case 'dashboard-settings':
                 return <DashboardSettings />;
+            case 'ai-agent-settings':
+                return <AiAgentSettings />;
             case 'opportunity-catalogs':
                 return (
                     <div className="flex flex-col gap-6 text-left">
@@ -142,11 +156,10 @@ const SettingsPage: React.FC = () => {
                                         <button
                                             key={tab.id}
                                             onClick={() => setActiveCatalogSubTab(tab.id)}
-                                            className={`pb-4 px-1 border-b-2 font-bold text-xs sm:text-sm transition-all whitespace-nowrap cursor-pointer ${
-                                                isActive
+                                            className={`pb-4 px-1 border-b-2 font-bold text-xs sm:text-sm transition-all whitespace-nowrap cursor-pointer ${isActive
                                                     ? 'border-indigo-600 text-indigo-600'
                                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                            }`}
+                                                }`}
                                         >
                                             {tab.label}
                                         </button>
@@ -154,7 +167,7 @@ const SettingsPage: React.FC = () => {
                                 })}
                             </nav>
                         </div>
-                        
+
                         {/* Contenido del Catálogo Seleccionado */}
                         <div className="animate-fade-in" key={activeCatalogSubTab}>
                             {activeCatalogSubTab === 'business-lines' && (
@@ -225,11 +238,10 @@ const SettingsPage: React.FC = () => {
                                         <li key={option.id} className="w-auto lg:w-full shrink-0">
                                             <button
                                                 onClick={() => setActiveTab(option.id)}
-                                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left whitespace-nowrap lg:whitespace-normal ${
-                                                    isActive
+                                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left whitespace-nowrap lg:whitespace-normal ${isActive
                                                         ? 'bg-blue-50 text-blue-700 shadow-sm border-l-2 border-blue-600 pl-2.5'
                                                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-l-2 border-transparent'
-                                                }`}
+                                                    }`}
                                             >
                                                 {option.icon}
                                                 <span>{option.label}</span>

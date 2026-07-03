@@ -26,7 +26,7 @@ type ViewSubModule = 'contacts' | 'companies';
 const ClientsPage: React.FC = () => {
     const { isAdmin } = useAuth();
     const [viewSubModule, setViewSubModule] = useState<ViewSubModule>('contacts');
-    
+
     // Estados Clientes (Contactos)
     const [clients, setClients] = useState<Client[]>([]);
     const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -55,8 +55,8 @@ const ClientsPage: React.FC = () => {
         type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
         title: '',
         message: '',
-        onConfirm: () => {},
-        onCancel: () => {},
+        onConfirm: () => { },
+        onCancel: () => { },
     });
 
     const searchDropdownRef = useRef<HTMLDivElement>(null);
@@ -266,7 +266,7 @@ const ClientsPage: React.FC = () => {
     };
 
     // Filtrado
-    const filteredClients = useMemo(() => 
+    const filteredClients = useMemo(() =>
         clients.filter(client =>
             (client.nombre + ' ' + client.apellido).toLowerCase().includes(filterNombre.toLowerCase()) &&
             (client.company?.nombre || client.empresa || '').toLowerCase().includes(filterEmpresa.toLowerCase()) &&
@@ -274,7 +274,7 @@ const ClientsPage: React.FC = () => {
             (!filterEjecutivoId || client.ejecutivo_id === filterEjecutivoId) &&
             (!filterCategory || client.category === filterCategory)
         ),
-    [clients, filterNombre, filterEmpresa, filterCorreo, filterEjecutivoId, filterCategory]);
+        [clients, filterNombre, filterEmpresa, filterCorreo, filterEjecutivoId, filterCategory]);
 
     const filteredCompanies = useMemo(() =>
         companies.filter(company =>
@@ -282,18 +282,18 @@ const ClientsPage: React.FC = () => {
             (company.correo || '').toLowerCase().includes(filterCorreo.toLowerCase()) &&
             (!filterEjecutivoId || company.ejecutivo_id === filterEjecutivoId)
         ),
-    [companies, filterNombre, filterCorreo, filterEjecutivoId]);
+        [companies, filterNombre, filterCorreo, filterEjecutivoId]);
 
     const activeListLength = viewSubModule === 'contacts' ? filteredClients.length : filteredCompanies.length;
     const totalPages = Math.ceil(activeListLength / PAGE_SIZE);
 
     const paginatedClients = useMemo(() =>
         filteredClients.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [filteredClients, currentPage]);
+        [filteredClients, currentPage]);
 
     const paginatedCompanies = useMemo(() =>
         filteredCompanies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [filteredCompanies, currentPage]);
+        [filteredCompanies, currentPage]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -355,34 +355,32 @@ const ClientsPage: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div className="flex items-center gap-4">
                     <h1 className="text-2xl font-bold text-gray-800">Clientes</h1>
-                    
+
                     {/* Selector de sub-vista */}
                     <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
                         <button
                             onClick={() => setViewSubModule('contacts')}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                                viewSubModule === 'contacts'
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewSubModule === 'contacts'
                                     ? 'bg-white text-indigo-700 shadow-sm'
                                     : 'text-gray-500 hover:text-gray-700'
-                            }`}
+                                }`}
                         >
                             <UserIcon size={15} />
                             Contactos
                         </button>
                         <button
                             onClick={() => setViewSubModule('companies')}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                                viewSubModule === 'companies'
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewSubModule === 'companies'
                                     ? 'bg-white text-indigo-700 shadow-sm'
                                     : 'text-gray-500 hover:text-gray-700'
-                            }`}
+                                }`}
                         >
                             <Building size={15} />
                             Empresas (Cuentas)
                         </button>
                     </div>
                 </div>
-                
+
                 <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3 items-center">
                     <UnifiedSearchBar
                         ref={searchDropdownRef}
@@ -520,4 +518,4 @@ const ClientsPage: React.FC = () => {
     );
 };
 
-export default ClientsPage;ClientsPage;
+export default ClientsPage; ClientsPage;
