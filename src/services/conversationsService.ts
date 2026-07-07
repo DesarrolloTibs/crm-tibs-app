@@ -46,3 +46,18 @@ export async function simulateIncomingMessage(channel: string, externalId: strin
     });
     return response.data;
 }
+
+export async function getChannelConfigs(): Promise<any[]> {
+    const response = await axiosInstance.get(`${urlBase}/channels`);
+    return response.data;
+}
+
+export async function saveChannelConfig(config: any): Promise<any> {
+    const response = await axiosInstance.post(`${urlBase}/channels`, config);
+    return response.data;
+}
+
+export async function deleteChannelConfig(id: string): Promise<any> {
+    const response = await axiosInstance.delete(`${urlBase}/channels/${id}`);
+    return response.data;
+}
