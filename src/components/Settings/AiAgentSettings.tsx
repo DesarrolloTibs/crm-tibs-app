@@ -982,7 +982,7 @@ const AiAgentSettings: React.FC = () => {
                                         if (selected) {
                                             setModelProvider(selected.value);
                                             if (selected.value === 'gemini') setModelName('gemini-1.5-flash');
-                                            else if (selected.value === 'openai') setModelName('gpt-4o-mini');
+                                            else if (selected.value === 'openai') setModelName('gpt-4o');
                                             else if (selected.value === 'watsonx') setModelName('meta-llama/llama-3-3-70b-instruct');
                                         }
                                     }}
