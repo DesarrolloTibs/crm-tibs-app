@@ -13,6 +13,7 @@ import { Pencil, Plus, Trash2, Sliders, Search } from 'lucide-react';
 import Notification from '../Modal/Notification';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
+import SettingsContainer from '../shared/SettingsContainer';
 
 interface Props {
   catalogType: 'business-lines' | 'delivery-types' | 'licensings';
@@ -219,18 +220,11 @@ const OpportunityCatalogSettings: React.FC<Props> = ({ catalogType, catalogTitle
   }, [filterName]);
 
   return (
-    <>
-      <Notification {...notification} />
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-gray-100 pb-4 text-left">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <Sliders size={20} className="text-indigo-600" />
-            Catálogo: {catalogTitle}
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Administra las opciones disponibles en el formulario de oportunidades para {catalogTitle}.
-          </p>
-        </div>
+    <SettingsContainer
+      title={`Catálogo: ${catalogTitle}`}
+      description={`Administra las opciones disponibles en el formulario de oportunidades para ${catalogTitle}.`}
+      icon={<Sliders size={18} />}
+      rightAction={
         <Button
           type="button"
           variant="success"
@@ -240,7 +234,9 @@ const OpportunityCatalogSettings: React.FC<Props> = ({ catalogType, catalogTitle
           <Plus size={14} className="mr-1.5" />
           Nueva Opción
         </Button>
-      </div>
+      }
+    >
+      <Notification {...notification} />
 
       <div className="mb-6 flex gap-4 text-left">
         <div className="flex-1 max-w-md">
@@ -257,7 +253,7 @@ const OpportunityCatalogSettings: React.FC<Props> = ({ catalogType, catalogTitle
       {loading && options.length === 0 ? (
         <Loader />
       ) : (
-        <div className="border border-slate-150 rounded-xl overflow-x-auto bg-white shadow-sm max-w-4xl text-left">
+        <div className="border border-slate-150 rounded-xl overflow-x-auto bg-white shadow-sm w-full text-left">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-150 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -466,7 +462,7 @@ const OpportunityCatalogSettings: React.FC<Props> = ({ catalogType, catalogTitle
           </div>
         </div>
       </Modal>
-    </>
+    </SettingsContainer>
   );
 };
 

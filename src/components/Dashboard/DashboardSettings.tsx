@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit2, Trash2, AlertCircle, BarChart3, LifeBuoy, CheckCircle2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, AlertCircle, BarChart3, LifeBuoy, CheckCircle2, LayoutDashboard } from 'lucide-react';
 import {
   getIndicators,
   createIndicator,
@@ -15,6 +15,7 @@ import Select from '../shared/Select';
 import Loader from '../Loader/Loader';
 import Modal from '../Modal/Modal';
 import Notification from '../Modal/Notification';
+import SettingsContainer from '../shared/SettingsContainer';
 
 const COLOR_OPTIONS = [
   { value: 'blue',   label: 'Azul',    bg: 'bg-blue-500',    ring: 'ring-blue-400'    },
@@ -285,45 +286,37 @@ export const DashboardSettings: React.FC = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm select-none">
-
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="p-5 sm:p-6 border-b border-slate-100">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-800">Métricas e Indicadores de Dashboard</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Configura las tarjetas KPI personalizadas mapeando etapas de Pipelines o Mesas de Ayuda.
-            </p>
-          </div>
-
-          {/* Module Switcher */}
-          <div className="flex bg-slate-100 p-1 rounded-2xl shrink-0">
-            <button
-              onClick={() => setActiveModule('commercial')}
-              className={`flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
-                activeModule === 'commercial'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <BarChart3 size={13} />
-              <span className="xs:hidden">Pipeline</span>
-            </button>
-            <button
-              onClick={() => setActiveModule('support')}
-              className={`flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
-                activeModule === 'support'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <LifeBuoy size={13} />
-              <span className="xs:hidden">Mesa de Ayuda</span>
-            </button>
-          </div>
+    <SettingsContainer
+      title="Métricas e Indicadores de Dashboard"
+      description="Configura las tarjetas KPI personalizadas mapeando etapas de Pipelines o Mesas de Ayuda."
+      icon={<LayoutDashboard size={18} />}
+      rightAction={
+        <div className="flex bg-slate-100 p-1 rounded-2xl shrink-0">
+          <button
+            onClick={() => setActiveModule('commercial')}
+            className={`flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+              activeModule === 'commercial'
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <BarChart3 size={13} />
+            <span className="xs:hidden">Pipeline</span>
+          </button>
+          <button
+            onClick={() => setActiveModule('support')}
+            className={`flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+              activeModule === 'support'
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <LifeBuoy size={13} />
+            <span className="xs:hidden">Mesa de Ayuda</span>
+          </button>
         </div>
-      </div>
+      }
+    >
 
       {/* ── Pipeline / Helpdesk selector + Add button ───────────────────── */}
       <div className="p-5 sm:p-6 border-b border-slate-100">
@@ -636,6 +629,6 @@ export const DashboardSettings: React.FC = () => {
 
       {/* Notification */}
       <Notification {...notification} />
-    </div>
+    </SettingsContainer>
   );
 };

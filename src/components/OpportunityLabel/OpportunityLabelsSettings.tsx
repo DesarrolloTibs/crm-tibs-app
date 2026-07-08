@@ -6,6 +6,7 @@ import { Sliders, Check, ArrowRight, ArrowLeft, Info, HelpCircle, MousePointer, 
 import Notification from '../Modal/Notification';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
+import SettingsContainer from '../shared/SettingsContainer';
 
 interface Props {
     onLabelsUpdated?: () => void;
@@ -411,21 +412,12 @@ const OpportunityLabelsSettings: React.FC<Props> = ({ onLabelsUpdated }) => {
     };
 
     return (
-        <>
+        <SettingsContainer
+            title="Etiquetas de Oportunidad"
+            description="Sigue los pasos del asistente para modificar de forma segura las etiquetas del formulario y su tracking histórico."
+            icon={<Sliders size={18} />}
+        >
             <Notification {...notification} />
-            
-            {/* Header del Módulo */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-gray-150 pb-5 animate-fade-in text-left">
-                <div>
-                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <Sliders size={20} className="text-indigo-600 animate-pulse" />
-                        Asistente de Etiquetas de Oportunidad
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Sigue los pasos del asistente para modificar de forma segura las etiquetas del formulario y su tracking histórico.
-                    </p>
-                </div>
-            </div>
 
             {/* Indicador Visual de Pasos */}
             <div className="max-w-xl mx-auto mb-10 px-4 animate-fade-in">
@@ -621,7 +613,7 @@ const OpportunityLabelsSettings: React.FC<Props> = ({ onLabelsUpdated }) => {
                     </div>
                 </div>
             )}
-        </>
+        </SettingsContainer>
     );
 };
 

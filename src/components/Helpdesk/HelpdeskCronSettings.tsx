@@ -4,6 +4,7 @@ import { getHelpdeskCronConfig, saveHelpdeskCronConfig } from '../../services/he
 import type { HelpdeskCronConfig } from '../../core/models/HelpdeskCronConfig';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
+import SettingsContainer from '../shared/SettingsContainer';
 
 type CronMode = 'fixed' | 'interval';
 
@@ -108,19 +109,11 @@ const HelpdeskCronSettings: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-xl">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
-          <Bell size={18} className="text-indigo-600" />
-        </div>
-        <div>
-          <h2 className="text-base font-bold text-gray-800">Notificaciones automáticas</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Configura cuándo se envía el correo automatico para el recordatorio de oportunidades y tickets sin atencion.
-          </p>
-        </div>
-      </div>
+    <SettingsContainer
+      title="Notificaciones Automáticas"
+      description="Configura cuándo se envía el correo automático para el recordatorio de oportunidades y tickets sin atención."
+      icon={<Bell size={18} />}
+    >
 
       {/* Selector de modo */}
       <div className="flex flex-col gap-2">
@@ -275,7 +268,7 @@ const HelpdeskCronSettings: React.FC = () => {
           Guardar configuración
         </Button>
       </div>
-    </div>
+    </SettingsContainer>
   );
 };
 

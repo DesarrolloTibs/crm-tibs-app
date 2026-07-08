@@ -5,12 +5,13 @@ import ActivityTypeForm from './ActivityTypeForm';
 import ActivityTypesTable from './ActivityTypesTable';
 import Modal from '../Modal/Modal';
 import Loader from '../Loader/Loader';
-import { Filter, XCircle, Plus } from 'lucide-react';
+import { Filter, XCircle, Plus, ClipboardList } from 'lucide-react';
 import Notification from '../Modal/Notification';
 import Button from '../shared/Button';
 import Select from '../shared/Select';
 import UnifiedSearchBar from '../shared/UnifiedSearchBar';
 import type { SearchBadge } from '../shared/UnifiedSearchBar';
+import SettingsContainer from '../shared/SettingsContainer';
 
 const PAGE_SIZE = 10;
 
@@ -231,13 +232,11 @@ const ActivityTypesSettings: React.FC = () => {
     };
 
     return (
-        <>
-            <Notification {...notification} />
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-gray-100 pb-4">
-                <div>
-                    <h2 className="text-xl font-bold text-gray-800">Tipos de Actividad</h2>
-                    <p className="text-sm text-gray-500 mt-1">Crea, edita o elimina los tipos de actividades disponibles en tu CRM.</p>
-                </div>
+        <SettingsContainer
+            title="Tipos de Actividad"
+            description="Crea, edita o elimina los tipos de actividades disponibles en tu CRM."
+            icon={<ClipboardList size={18} />}
+            rightAction={
                 <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 items-center">
                     <UnifiedSearchBar
                         ref={searchDropdownRef}
@@ -278,8 +277,10 @@ const ActivityTypesSettings: React.FC = () => {
                         <Plus size={16} className="mr-2" /> Nuevo Tipo
                     </Button>
                 </div>
-            </div>
-
+            }
+        >
+            <Notification {...notification} />
+            
             {loading ? (
                 <Loader />
             ) : (
@@ -300,7 +301,7 @@ const ActivityTypesSettings: React.FC = () => {
                     onCancel={() => setModalOpen(false)}
                 />
             </Modal>
-        </>
+        </SettingsContainer>
     );
 };
 
