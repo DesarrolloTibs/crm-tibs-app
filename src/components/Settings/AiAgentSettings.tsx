@@ -4,7 +4,10 @@ import {
     saveAiAgentConfig,
     getChannelConfigs,
     saveChannelConfig,
-    deleteChannelConfig
+    deleteChannelConfig,
+    getSubAgents,
+    saveSubAgent,
+    deleteSubAgent
 } from '../../services/conversationsService';
 import { getUsers } from '../../services/usersService';
 import Button from '../shared/Button';
@@ -24,7 +27,6 @@ import {
     Facebook, 
     Instagram, 
     Plus, 
-    Search, 
     Trash2, 
     Edit2, 
     X,
@@ -48,13 +50,23 @@ const REMINDER_OFFSET_OPTIONS = [
     { value: 1440, label: '24 horas antes' },
 ];
 
+const AVAILABLE_TOOLS = [
+    { key: 'createOpportunity', label: 'Crear Oportunidad', desc: 'Registra oportunidades de venta.' },
+    { key: 'modifyOpportunity', label: 'Modificar Oportunidad', desc: 'Edita oportunidades del CRM.' },
+    { key: 'registerContact', label: 'Registrar Contacto', desc: 'Crea clientes en el sistema.' },
+    { key: 'updateContact', label: 'Actualizar Contacto', desc: 'Edita la ficha del cliente.' },
+    { key: 'checkAvailability', label: 'Consultar Disponibilidad', desc: 'Verifica la agenda del asesor.' },
+    { key: 'createActivity', label: 'Crear Actividad', desc: 'Programa reuniones o recordatorios.' },
+    { key: 'createTicket', label: 'Crear Ticket de Soporte', desc: 'Levanta reportes en la mesa de ayuda.' }
+];
+
 const AiAgentSettings: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [users, setUsers] = useState<any[]>([]);
     
     // Tab State
-    const [activeTab, setActiveTab] = useState<'general' | 'channels'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'channels' | 'subagents'>('general');
 
     // Config states
     const [isActive, setIsActive] = useState(true);
@@ -79,7 +91,6 @@ const AiAgentSettings: React.FC = () => {
 
     // Channels states
     const [channelConfigs, setChannelConfigs] = useState<any[]>([]);
-    const [channelSearchQuery, setChannelSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChannel, setEditingChannel] = useState<any | null>(null);
 
@@ -91,6 +102,42 @@ const AiAgentSettings: React.FC = () => {
     const [phoneNumberId, setPhoneNumberId] = useState('');
     const [accessToken, setAccessToken] = useState('');
     const [verifyToken, setVerifyToken] = useState('');
+
+    // Sub-Agents states
+    const [subAgents, setSubAgents] = useState<any[]>([]);
+    const [isSubAgentModalOpen, setIsSubAgentModalOpen] = useState(false);
+    const [editingSubAgent, setEditingSubAgent] = useState<any | null>(null);
+
+    // Modal Form States for Sub-Agents
+    const [subAgentKey, setSubAgentKey] = useState('');
+    const [subAgentName, setSubAgentName] = useState('');
+    const [subAgentDescription, setSubAgentDescription] = useState('');
+    const [subAgentContext, setSubAgentContext] = useState('');
+    const [subAgentTools, setSubAgentTools] = useState<string[]>([]);
+
+    // ORCHESTRATOR GRAPH STATES
+    const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({});
+    const [draggingNode, setDraggingNode] = useState<string | null>(null);
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+    useEffect(() => {
+        // Initialize or update positions dynamically
+        const initialPositions: Record<string, { x: number; y: number }> = {
+            router: nodePositions.router || { x: 330, y: 15 }
+        };
+        
+        subAgents.forEach((agent, index) => {
+            if (!nodePositions[agent.key]) {
+                const spacing = 180;
+                const startX = Math.max(10, 340 - ((subAgents.length - 1) * spacing) / 2);
+                initialPositions[agent.key] = { x: startX + index * spacing, y: 160 };
+            } else {
+                initialPositions[agent.key] = nodePositions[agent.key];
+            }
+        });
+        
+        setNodePositions(initialPositions);
+    }, [subAgents]);
 
     // Notification state
     const [notification, setNotification] = useState({
@@ -115,14 +162,16 @@ const AiAgentSettings: React.FC = () => {
     const loadSettings = async () => {
         try {
             setLoading(true);
-            const [config, allUsers, configsList] = await Promise.all([
+            const [config, allUsers, configsList, subAgentsList] = await Promise.all([
                 getAiAgentConfig(),
                 getUsers(),
-                getChannelConfigs()
+                getChannelConfigs(),
+                getSubAgents()
             ]);
 
             setUsers(allUsers);
             setChannelConfigs(configsList);
+            setSubAgents(subAgentsList);
             setIsActive(config.isActive);
             setContext(config.context || '');
             setDefaultReplies(config.defaultReplies || '');
@@ -178,6 +227,175 @@ const AiAgentSettings: React.FC = () => {
         } finally {
             setSaving(false);
         }
+    };
+
+    // ── SUB-AGENTS HANDLERS ──────────────────────────────────────────────────
+    const handleOpenCreateSubAgentModal = () => {
+        setEditingSubAgent(null);
+        setSubAgentKey('');
+        setSubAgentName('');
+        setSubAgentDescription('');
+        setSubAgentContext('');
+        setSubAgentTools([]);
+        setIsSubAgentModalOpen(true);
+    };
+
+    const handleOpenEditSubAgentModal = (agent: any) => {
+        setEditingSubAgent(agent);
+        setSubAgentKey(agent.key);
+        setSubAgentName(agent.name);
+        setSubAgentDescription(agent.description || '');
+        setSubAgentContext(agent.context || '');
+        setSubAgentTools(agent.tools || []);
+        setIsSubAgentModalOpen(true);
+    };
+
+    const handleSaveSubAgent = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setSaving(true);
+            const payload = {
+                id: editingSubAgent?.id || undefined,
+                key: subAgentKey.trim().toLowerCase().replace(/[^a-z0-9_]/g, ''),
+                name: subAgentName,
+                description: subAgentDescription,
+                context: subAgentContext,
+                tools: subAgentTools,
+                isActive: editingSubAgent ? editingSubAgent.isActive : true
+            };
+
+            if (!payload.key) {
+                showNotification('error', 'Error', 'La clave del agente es requerida.');
+                return;
+            }
+
+            await saveSubAgent(payload);
+            showNotification(
+                'success',
+                editingSubAgent ? 'Actualizado' : 'Creado',
+                `Sub-Agente "${subAgentName}" guardado con éxito.`
+            );
+            setIsSubAgentModalOpen(false);
+
+            const list = await getSubAgents();
+            setSubAgents(list);
+        } catch (err) {
+            console.error('Error al guardar sub-agente:', err);
+            showNotification('error', 'Error', 'No se pudo guardar el sub-agente.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDeleteSubAgent = (id: string) => {
+        setNotification({
+            show: true,
+            type: 'confirmation',
+            title: '¿Estás seguro?',
+            message: 'Esta acción eliminará de forma permanente al sub-agente seleccionado del CRM.',
+            onConfirm: async () => {
+                hideNotification();
+                try {
+                    await deleteSubAgent(id);
+                    setNotification({
+                        show: true,
+                        type: 'success',
+                        title: 'Eliminado',
+                        message: 'El sub-agente ha sido eliminado correctamente.',
+                        onConfirm: hideNotification,
+                        onCancel: hideNotification
+                    });
+                    const list = await getSubAgents();
+                    setSubAgents(list);
+                } catch (err) {
+                    console.error('Error al eliminar sub-agente:', err);
+                    setNotification({
+                        show: true,
+                        type: 'error',
+                        title: 'Error',
+                        message: 'No se pudo eliminar el sub-agente.',
+                        onConfirm: hideNotification,
+                        onCancel: hideNotification
+                    });
+                }
+            },
+            onCancel: hideNotification
+        });
+    };
+
+    const handleToggleSubAgentStatus = async (agent: any) => {
+        try {
+            await saveSubAgent({
+                id: agent.id,
+                isActive: !agent.isActive
+            });
+            const list = await getSubAgents();
+            setSubAgents(list);
+        } catch (err) {
+            console.error('Error al cambiar estatus del sub-agente:', err);
+            showNotification('error', 'Error', 'No se pudo cambiar el estado del sub-agente.');
+        }
+    };
+
+    // Drag-and-drop handlers
+    const handleDragStart = (e: React.DragEvent, toolKey: string) => {
+        e.dataTransfer.setData('text/plain', toolKey);
+    };
+
+    const handleDropToAssigned = (e: React.DragEvent) => {
+        e.preventDefault();
+        const toolKey = e.dataTransfer.getData('text/plain');
+        if (toolKey && !subAgentTools.includes(toolKey)) {
+            setSubAgentTools(prev => [...prev, toolKey]);
+        }
+    };
+
+    const handleDropToAvailable = (e: React.DragEvent) => {
+        e.preventDefault();
+        const toolKey = e.dataTransfer.getData('text/plain');
+        if (toolKey && subAgentTools.includes(toolKey)) {
+            setSubAgentTools(prev => prev.filter(t => t !== toolKey));
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+    };
+
+    const addTool = (toolKey: string) => {
+        if (!subAgentTools.includes(toolKey)) {
+            setSubAgentTools(prev => [...prev, toolKey]);
+        }
+    };
+
+    const removeTool = (toolKey: string) => {
+        setSubAgentTools(prev => prev.filter(t => t !== toolKey));
+    };
+
+    const handleNodeMouseDown = (e: React.MouseEvent, nodeKey: string) => {
+        e.preventDefault();
+        setDraggingNode(nodeKey);
+        const pos = nodePositions[nodeKey] || { x: 0, y: 0 };
+        setDragOffset({
+            x: e.clientX - pos.x,
+            y: e.clientY - pos.y
+        });
+    };
+
+    const handleCanvasMouseMove = (e: React.MouseEvent) => {
+        if (!draggingNode) return;
+        
+        const newX = Math.max(10, Math.min(680, e.clientX - dragOffset.x));
+        const newY = Math.max(10, Math.min(220, e.clientY - dragOffset.y));
+        
+        setNodePositions(prev => ({
+            ...prev,
+            [draggingNode]: { x: newX, y: newY }
+        }));
+    };
+
+    const handleCanvasMouseUp = () => {
+        setDraggingNode(null);
     };
 
     // ── GESTIÓN DE CANALES (CRUD FRONTEND) ────────────────────────────────────
@@ -329,9 +547,17 @@ const AiAgentSettings: React.FC = () => {
                     <Link2 size={18} />
                     Canales de Comunicación
                 </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('subagents')}
+                    className={`pb-3 px-1 text-sm font-extrabold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${activeTab === 'subagents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <Sliders size={18} />
+                    Sub-Agentes
+                </button>
             </div>
 
-            {activeTab === 'general' ? (
+            {activeTab === 'general' && (
                 // ── CONTENIDO: CONFIGURACIÓN GENERAL (IA) ─────────────────────────
                 <form onSubmit={handleSave} className="space-y-6 text-left max-w-4xl">
                     {/* Header / Switch Principal */}
@@ -379,6 +605,137 @@ const AiAgentSettings: React.FC = () => {
                                 rows={10}
                                 required
                             />
+                        </div>
+                    </div>
+
+                    {/* Orquestador de Agentes Interactivo */}
+                    <div 
+                        className="bg-slate-900 rounded-2xl border border-slate-800 p-6 space-y-4 shadow-sm relative overflow-hidden select-none"
+                        onMouseMove={handleCanvasMouseMove}
+                        onMouseUp={handleCanvasMouseUp}
+                        onMouseLeave={handleCanvasMouseUp}
+                    >
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-2">
+                            <div className="flex items-center gap-2">
+                                <Sliders className="text-blue-500" size={20} />
+                                <h4 className="font-bold text-slate-200 text-base">Orquestador de Agentes (Lienzo Interactivo)</h4>
+                            </div>
+                            <span className="text-[10px] text-slate-500">Arrastra para mover • Doble clic para editar prompt</span>
+                        </div>
+
+                        {/* CANVAS AREA */}
+                        <div className="relative w-full h-[280px] bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:20px_20px] rounded-xl border border-slate-800/80 overflow-hidden">
+                            
+                            {/* SVG CONNECTIONS OVERLAY */}
+                            <svg className="absolute inset-0 pointer-events-none w-full h-full">
+                                {Object.keys(nodePositions).map(key => {
+                                    if (key === 'router') return null;
+                                    const routerPos = nodePositions.router || { x: 330, y: 15 };
+                                    const subPos = nodePositions[key];
+                                    if (!subPos) return null;
+
+                                    const fromX = routerPos.x + 90;
+                                    const fromY = routerPos.y + 40;
+                                    const toX = subPos.x + 80;
+                                    const toY = subPos.y;
+
+                                    const path = `M ${fromX} ${fromY} C ${fromX} ${(fromY + toY) / 2}, ${toX} ${(fromY + toY) / 2}, ${toX} ${toY}`;
+
+                                    return (
+                                        <g key={`line-${key}`}>
+                                            <path 
+                                                d={path} 
+                                                fill="none" 
+                                                stroke="#3b82f6" 
+                                                strokeWidth="2" 
+                                                strokeDasharray="4"
+                                                opacity="0.6"
+                                            />
+                                            <circle cx={toX} cy={toY} r="3.5" fill="#3b82f6" />
+                                        </g>
+                                    );
+                                })}
+                            </svg>
+
+                            {/* DRAGGABLE NODES */}
+                            
+                            {/* Router Node */}
+                            {nodePositions.router && (
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: `${nodePositions.router.x}px`,
+                                        top: `${nodePositions.router.y}px`,
+                                        cursor: draggingNode === 'router' ? 'grabbing' : 'grab',
+                                        zIndex: 10
+                                    }}
+                                    onMouseDown={(e) => handleNodeMouseDown(e, 'router')}
+                                    onDoubleClick={() => {
+                                        const textarea = document.getElementById('agentContext');
+                                        if (textarea) {
+                                            textarea.focus();
+                                            textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        }
+                                    }}
+                                    className="w-[180px] bg-slate-950 border border-blue-500/80 rounded-xl p-3 shadow-lg flex items-center gap-2 text-left select-none transition-shadow hover:shadow-[0_0_12px_rgba(59,130,246,0.3)]"
+                                >
+                                    <div className="p-1.5 bg-blue-500/20 text-blue-400 rounded-lg">
+                                        <Brain size={18} />
+                                    </div>
+                                    <div>
+                                        <h5 className="font-extrabold text-[11px] text-slate-200 uppercase tracking-wider leading-none">Agente Principal</h5>
+                                        <span className="text-[10px] text-slate-400">Enrutador (Router)</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Sub-Agents Nodes */}
+                            {subAgents.map(agent => {
+                                const pos = nodePositions[agent.key];
+                                if (!pos) return null;
+                                
+                                return (
+                                    <div
+                                        key={agent.id}
+                                        style={{
+                                            position: 'absolute',
+                                            left: `${pos.x}px`,
+                                            top: `${pos.y}px`,
+                                            cursor: draggingNode === agent.key ? 'grabbing' : 'grab',
+                                            zIndex: 5
+                                        }}
+                                        onMouseDown={(e) => handleNodeMouseDown(e, agent.key)}
+                                        onDoubleClick={() => handleOpenEditSubAgentModal(agent)}
+                                        className={`w-[160px] bg-slate-950 border rounded-xl p-2.5 shadow-md flex flex-col gap-1.5 text-left select-none hover:shadow-lg transition-all ${agent.isActive ? 'border-indigo-500/60' : 'border-slate-800 opacity-60'}`}
+                                    >
+                                        <div className="flex items-center gap-1.5">
+                                            <div className={`p-1 bg-slate-800 rounded text-slate-400`}>
+                                                <Sliders size={12} />
+                                            </div>
+                                            <div className="truncate">
+                                                <h5 className="font-bold text-[10px] text-slate-200 truncate leading-tight">{agent.name}</h5>
+                                                <span className="text-[8px] font-mono text-slate-500 block truncate">Key: {agent.key}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Tools badges nested in Node */}
+                                        <div className="flex flex-wrap gap-1 mt-1 border-t border-slate-900 pt-1.5">
+                                            {agent.tools && agent.tools.length > 0 ? (
+                                                agent.tools.slice(0, 2).map((t: string) => (
+                                                    <span key={t} className="text-[8px] font-bold bg-blue-500/10 text-blue-400 px-1 py-0.2 rounded border border-blue-500/20 truncate max-w-full">
+                                                        {t.replace('create', 'Crear').replace('modify', 'Mod').replace('register', 'Reg').replace('update', 'Act').replace('check', 'Cons')}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-[8px] text-slate-600 italic">Conversacional</span>
+                                            )}
+                                            {agent.tools && agent.tools.length > 2 && (
+                                                <span className="text-[8px] bg-slate-850 text-slate-400 px-1 py-0.2 rounded">+{agent.tools.length - 2}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -576,7 +933,9 @@ const AiAgentSettings: React.FC = () => {
                         </Button>
                     </div>
                 </form>
-            ) : (
+            )}
+
+            {activeTab === 'channels' && (
                 // ── CONTENIDO: PESTAÑA CANALES DE COMUNICACIÓN ────────────────────
                 <div className="space-y-6 text-left max-w-4xl animate-fade-in">
                     <div className="bg-white rounded-2xl border border-gray-150 p-6 shadow-sm space-y-4">
@@ -737,6 +1096,110 @@ const AiAgentSettings: React.FC = () => {
                 </div>
             )}
 
+            {activeTab === 'subagents' && (
+                // ── CONTENIDO: PESTAÑA SUB-AGENTES ──────────────────────────────
+                <div className="space-y-6 text-left max-w-4xl animate-fade-in">
+                    <div className="bg-white rounded-2xl border border-gray-150 p-6 shadow-sm space-y-4">
+                        <div className="pb-3 border-b border-gray-100 flex justify-between items-center">
+                            <div>
+                                <h3 className="font-extrabold text-gray-800 text-base flex items-center gap-2">
+                                    <Sliders className="text-blue-500" size={20} />
+                                    Catálogo de Sub-Agentes IA
+                                </h3>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Define agentes especializados para escenarios específicos y asígnales herramientas CRM específicas.
+                                </p>
+                            </div>
+                            <Button 
+                                type="button" 
+                                variant="primary" 
+                                className="text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                onClick={handleOpenCreateSubAgentModal}
+                            >
+                                <Plus size={14} /> Nuevo Sub-Agente
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                            {subAgents.map(agent => (
+                                <div key={agent.id} className="border border-gray-150 rounded-2xl p-5 flex flex-col justify-between hover:shadow-xs transition-shadow bg-slate-50/20">
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-extrabold text-gray-800 text-sm flex items-center gap-2">
+                                                    {agent.name}
+                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${agent.isActive ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-gray-400 bg-gray-50 border-gray-200'}`}>
+                                                        {agent.isActive ? 'Activo' : 'Inactivo'}
+                                                    </span>
+                                                </h4>
+                                                <span className="font-mono text-[9px] bg-slate-100 px-1 py-0.2 rounded text-slate-500 mt-0.5 inline-block">Key: {agent.key}</span>
+                                            </div>
+                                            
+                                            <label className="relative inline-flex items-center cursor-pointer select-none">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={agent.isActive}
+                                                    onChange={() => handleToggleSubAgentStatus(agent)}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
+                                            </label>
+                                        </div>
+                                        <p className="text-xs text-gray-500 leading-relaxed min-h-[32px]">
+                                            {agent.description || 'Sin descripción.'}
+                                        </p>
+
+                                        <div className="space-y-1">
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Herramientas Permitidas:</span>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {agent.tools && agent.tools.length > 0 ? (
+                                                    agent.tools.map((t: string) => {
+                                                        const tool = AVAILABLE_TOOLS.find(at => at.key === t);
+                                                        return (
+                                                            <span key={t} className="text-[9px] font-bold bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded">
+                                                                {tool ? tool.label : t}
+                                                            </span>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <span className="text-[9px] font-bold bg-gray-50 text-gray-400 border border-gray-200 px-1.5 py-0.5 rounded">
+                                                        Ninguna (Solo final_answer)
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-5 flex gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            className="w-full text-xs py-1.5 font-bold cursor-pointer"
+                                            onClick={() => handleOpenEditSubAgentModal(agent)}
+                                        >
+                                            <Edit2 size={12} className="inline mr-1" /> Configurar / Editar
+                                        </Button>
+                                        <button
+                                            onClick={() => handleDeleteSubAgent(agent.id)}
+                                            className="p-1.5 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                                            title="Eliminar sub-agente"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {subAgents.length === 0 && (
+                                <div className="col-span-2 text-center py-12 text-gray-400 text-xs">
+                                    No hay sub-agentes configurados. Cree uno nuevo para comenzar.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── MODAL DE CONFIGURACIÓN DE CREDENCIALES DE CANAL ───────────────────────── */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex justify-center items-center z-50 p-4">
@@ -879,6 +1342,173 @@ const AiAgentSettings: React.FC = () => {
                                     className="px-4 py-2 text-xs font-bold cursor-pointer"
                                 >
                                     Guardar Configuración
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── MODAL DE CONFIGURACIÓN DE SUB-AGENTE (CATÁLOGO / DRAG AND DROP) ───────── */}
+            {isSubAgentModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex justify-center items-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-2xl w-full overflow-hidden animate-scale-up text-left">
+                        {/* Header */}
+                        <div className="p-5 border-b border-gray-150 flex justify-between items-center bg-slate-50/50">
+                            <div>
+                                <h3 className="font-extrabold text-gray-800 text-base flex items-center gap-2">
+                                    <Sliders size={18} className="text-blue-500" />
+                                    {editingSubAgent ? `Editar Sub-Agente: ${subAgentName}` : 'Crear Nuevo Sub-Agente'}
+                                </h3>
+                                <p className="text-xs text-gray-400 mt-0.5">Define los parámetros de comportamiento y asigna herramientas del CRM.</p>
+                            </div>
+                            <button 
+                                onClick={() => setIsSubAgentModalOpen(false)}
+                                className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Form / Content */}
+                        <form onSubmit={handleSaveSubAgent} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    label="Clave Única (Key) - Minúsculas y guiones bajos"
+                                    id="subAgentKey"
+                                    type="text"
+                                    value={subAgentKey}
+                                    onChange={(e) => setSubAgentKey(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                                    placeholder="Ej: soporte_tecnico"
+                                    required
+                                    disabled={!!editingSubAgent}
+                                />
+                                <Input
+                                    label="Nombre del Sub-Agente"
+                                    id="subAgentName"
+                                    type="text"
+                                    value={subAgentName}
+                                    onChange={(e) => setSubAgentName(e.target.value)}
+                                    placeholder="Ej: Agente de Soporte Técnico"
+                                    required
+                                />
+                            </div>
+
+                            <Input
+                                label="Descripción para el Enrutamiento (Guía al Agente Router de cuándo invocarlo)"
+                                id="subAgentDescription"
+                                type="text"
+                                value={subAgentDescription}
+                                onChange={(e) => setSubAgentDescription(e.target.value)}
+                                placeholder="Ej: Úsalo cuando el cliente tenga problemas técnicos con su cuenta o reporte caídas del servicio."
+                                required
+                            />
+
+                            <div>
+                                <label htmlFor="subAgentContext" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                    Instrucciones de Comportamiento / Prompt del Agente
+                                </label>
+                                <TextArea
+                                    id="subAgentContext"
+                                    value={subAgentContext}
+                                    onChange={(e) => setSubAgentContext(e.target.value)}
+                                    placeholder="Defina las instrucciones específicas de este sub-agente. Su tono de voz, políticas del área, productos específicos a calificar, etc."
+                                    rows={6}
+                                    required
+                                />
+                            </div>
+
+                            {/* DRAG AND DROP PANEL */}
+                            <div className="space-y-2 pt-2">
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                                    Herramientas del CRM Habilitadas
+                                </label>
+                                <p className="text-[10px] text-gray-400 pb-1">Arrastra las tarjetas o haz clic en ellas para agregarlas o quitarlas del sub-agente.</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* DISPONIBLES */}
+                                    <div 
+                                        className="border border-dashed border-gray-200 rounded-xl p-4 bg-slate-50 min-h-[220px]"
+                                        onDragOver={handleDragOver}
+                                        onDrop={handleDropToAvailable}
+                                    >
+                                        <h5 className="text-[10px] font-extrabold text-gray-400 uppercase mb-2 tracking-wider">Disponibles en el CRM</h5>
+                                        <div className="space-y-2">
+                                            {AVAILABLE_TOOLS.filter(tool => !subAgentTools.includes(tool.key)).map(tool => (
+                                                <div
+                                                    key={tool.key}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, tool.key)}
+                                                    onClick={() => addTool(tool.key)}
+                                                    className="bg-white border border-gray-150 rounded-lg p-2.5 shadow-2xs hover:border-blue-400 hover:shadow-xs transition-all cursor-grab active:cursor-grabbing text-xs flex justify-between items-center group select-none"
+                                                    title="Arrastra o haz clic para agregar"
+                                                >
+                                                    <div>
+                                                        <span className="font-bold text-gray-700 block text-left">{tool.label}</span>
+                                                        <span className="text-[10px] text-gray-400 block text-left leading-normal">{tool.desc}</span>
+                                                    </div>
+                                                    <span className="text-gray-300 font-extrabold group-hover:text-blue-500 transition-colors text-sm pr-1">+</span>
+                                                </div>
+                                            ))}
+                                            {AVAILABLE_TOOLS.filter(tool => !subAgentTools.includes(tool.key)).length === 0 && (
+                                                <div className="text-[10px] text-gray-400 text-center py-12">Todas las herramientas asignadas</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* ASIGNADAS */}
+                                    <div 
+                                        className="border border-dashed border-blue-100 rounded-xl p-4 bg-blue-50/20 min-h-[220px]"
+                                        onDragOver={handleDragOver}
+                                        onDrop={handleDropToAssigned}
+                                    >
+                                        <h5 className="text-[10px] font-extrabold text-blue-500/75 uppercase mb-2 tracking-wider">Habilitadas para este Agente</h5>
+                                        <div className="space-y-2">
+                                            {subAgentTools.map(toolKey => {
+                                                const tool = AVAILABLE_TOOLS.find(t => t.key === toolKey);
+                                                if (!tool) return null;
+                                                return (
+                                                    <div
+                                                        key={toolKey}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, toolKey)}
+                                                        onClick={() => removeTool(toolKey)}
+                                                        className="bg-white border border-blue-150 rounded-lg p-2.5 shadow-2xs hover:border-red-400 hover:shadow-xs transition-all cursor-grab active:cursor-grabbing text-xs flex justify-between items-center group select-none"
+                                                        title="Arrastra o haz clic para quitar"
+                                                    >
+                                                        <div>
+                                                            <span className="font-bold text-blue-900 block text-left">{tool.label}</span>
+                                                            <span className="text-[10px] text-blue-500/75 block text-left leading-normal">{tool.desc}</span>
+                                                        </div>
+                                                        <span className="text-gray-300 font-extrabold group-hover:text-red-500 transition-colors text-sm pr-1">×</span>
+                                                    </div>
+                                                );
+                                            })}
+                                            {subAgentTools.length === 0 && (
+                                                <div className="text-[10px] text-gray-400 text-center py-12">Arrastra herramientas aquí para habilitarlas</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer del Modal */}
+                            <div className="flex justify-end gap-3 border-t border-gray-150 pt-4 mt-6">
+                                <Button 
+                                    type="button" 
+                                    variant="secondary" 
+                                    onClick={() => setIsSubAgentModalOpen(false)}
+                                    className="px-4 py-2 text-xs font-bold cursor-pointer"
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button 
+                                    type="submit" 
+                                    variant="success" 
+                                    loading={saving}
+                                    className="px-4 py-2 text-xs font-bold cursor-pointer"
+                                >
+                                    Guardar Sub-Agente
                                 </Button>
                             </div>
                         </form>

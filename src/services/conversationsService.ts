@@ -61,3 +61,18 @@ export async function deleteChannelConfig(id: string): Promise<any> {
     const response = await axiosInstance.delete(`${urlBase}/channels/${id}`);
     return response.data;
 }
+
+export async function getSubAgents(): Promise<any[]> {
+    const response = await axiosInstance.get(`${urlBase}/sub-agents`);
+    return response.data;
+}
+
+export async function saveSubAgent(subAgent: any): Promise<any> {
+    const response = await axiosInstance.post(`${urlBase}/sub-agents`, subAgent);
+    return response.data;
+}
+
+export async function deleteSubAgent(id: string): Promise<any> {
+    const response = await axiosInstance.delete(`${urlBase}/sub-agents/${id}`);
+    return response.data;
+}
