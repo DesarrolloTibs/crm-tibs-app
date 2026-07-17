@@ -59,7 +59,7 @@ const AVAILABLE_TOOLS = [
     { key: 'checkAvailability', label: 'Consultar Disponibilidad', desc: 'Verifica la agenda del asesor.' },
     { key: 'createActivity', label: 'Crear Actividad', desc: 'Programa reuniones o recordatorios.' },
     { key: 'createTicket', label: 'Crear Ticket de Soporte', desc: 'Levanta reportes en la mesa de ayuda.' },
-    { key: 'search_product_specs', label: 'Buscar en Fichas Técnicas (RAG)', desc: 'Consulta especificaciones técnicas de productos en el vector store.' }
+    { key: 'consult_product_catalog', label: 'Consultar Catálogo de Productos', desc: 'Consulta especificaciones técnicas, compatibilidad, disponibilidad y precios de productos en Cube.dev y RAG.' }
 ];
 
 const AiAgentSettings: React.FC = () => {
