@@ -58,7 +58,8 @@ const AVAILABLE_TOOLS = [
     { key: 'updateContact', label: 'Actualizar Contacto', desc: 'Edita la ficha del cliente.' },
     { key: 'checkAvailability', label: 'Consultar Disponibilidad', desc: 'Verifica la agenda del asesor.' },
     { key: 'createActivity', label: 'Crear Actividad', desc: 'Programa reuniones o recordatorios.' },
-    { key: 'createTicket', label: 'Crear Ticket de Soporte', desc: 'Levanta reportes en la mesa de ayuda.' }
+    { key: 'createTicket', label: 'Crear Ticket de Soporte', desc: 'Levanta reportes en la mesa de ayuda.' },
+    { key: 'search_product_specs', label: 'Buscar en Fichas Técnicas (RAG)', desc: 'Consulta especificaciones técnicas de productos en el vector store.' }
 ];
 
 const AiAgentSettings: React.FC = () => {
@@ -81,13 +82,16 @@ const AiAgentSettings: React.FC = () => {
     const [openaiApiKey, setOpenaiApiKey] = useState('');
     const [openaiEndpoint, setOpenaiEndpoint] = useState('');
     const [openaiApiVersion, setOpenaiApiVersion] = useState('');
+    const [openaiEmbeddingModel, setOpenaiEmbeddingModel] = useState('text-embedding-ada-002');
     const [geminiApiKey, setGeminiApiKey] = useState('');
     const [watsonxApiKey, setWatsonxApiKey] = useState('');
     const [watsonxProjectId, setWatsonxProjectId] = useState('');
     const [watsonxRegion, setWatsonxRegion] = useState('us-south');
+    const [watsonxEmbeddingModel, setWatsonxEmbeddingModel] = useState('ibm/slate-125m-english-rtrvr');
 
     // Reminder and assignment
     const [reminderOffsetMinutes, setReminderOffsetMinutes] = useState(60);
+    const [maxNewTokens, setMaxNewTokens] = useState(2048);
     const [defaultUserId, setDefaultUserId] = useState('');
 
     // Channels states
@@ -200,11 +204,14 @@ const AiAgentSettings: React.FC = () => {
             setOpenaiApiKey(config.openaiApiKey || '');
             setOpenaiEndpoint(config.openaiEndpoint || '');
             setOpenaiApiVersion(config.openaiApiVersion || '');
+            setOpenaiEmbeddingModel(config.openaiEmbeddingModel || 'text-embedding-ada-002');
             setGeminiApiKey(config.geminiApiKey || '');
             setWatsonxApiKey(config.watsonxApiKey || '');
             setWatsonxProjectId(config.watsonxProjectId || '');
             setWatsonxRegion(config.watsonxRegion || 'us-south');
+            setWatsonxEmbeddingModel(config.watsonxEmbeddingModel || 'ibm/slate-125m-english-rtrvr');
             setReminderOffsetMinutes(config.reminderOffsetMinutes);
+            setMaxNewTokens(config.maxNewTokens || 2048);
             setDefaultUserId(config.defaultUserId || '');
         } catch (error) {
             console.error('Error al cargar configuraciones del agente IA:', error);
@@ -232,11 +239,14 @@ const AiAgentSettings: React.FC = () => {
                 openaiApiKey: openaiApiKey || null,
                 openaiEndpoint: openaiEndpoint || null,
                 openaiApiVersion: openaiApiVersion || null,
+                openaiEmbeddingModel: openaiEmbeddingModel || 'text-embedding-ada-002',
                 geminiApiKey: geminiApiKey || null,
                 watsonxApiKey: watsonxApiKey || null,
                 watsonxProjectId: watsonxProjectId || null,
                 watsonxRegion: watsonxRegion || 'us-south',
+                watsonxEmbeddingModel: watsonxEmbeddingModel || 'ibm/slate-125m-english-rtrvr',
                 reminderOffsetMinutes,
+                maxNewTokens,
                 defaultUserId: defaultUserId || null,
             });
             showNotification('success', 'Guardado', 'Configuraciones del Agente IA actualizadas con éxito.');
@@ -262,11 +272,14 @@ const AiAgentSettings: React.FC = () => {
                 openaiApiKey: openaiApiKey || null,
                 openaiEndpoint: openaiEndpoint || null,
                 openaiApiVersion: openaiApiVersion || null,
+                openaiEmbeddingModel: openaiEmbeddingModel || 'text-embedding-ada-002',
                 geminiApiKey: geminiApiKey || null,
                 watsonxApiKey: watsonxApiKey || null,
                 watsonxProjectId: watsonxProjectId || null,
                 watsonxRegion: watsonxRegion || 'us-south',
+                watsonxEmbeddingModel: watsonxEmbeddingModel || 'ibm/slate-125m-english-rtrvr',
                 reminderOffsetMinutes,
+                maxNewTokens,
                 defaultUserId: defaultUserId || null,
             });
             showNotification('success', 'Guardado', 'Prompt del Enrutador Principal guardado con éxito.');
@@ -1024,6 +1037,21 @@ const AiAgentSettings: React.FC = () => {
                                 <span>Creativo (1.0)</span>
                             </div>
                         </div>
+                        {/* Max New Tokens */}
+                        <div className="space-y-2 pt-2">
+                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                Tokens Máximos de Respuesta (max_new_tokens)
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={maxNewTokens}
+                                onChange={(e) => setMaxNewTokens(parseInt(e.target.value) || 2048)}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Ej. 2048"
+                            />
+                            <p className="text-xs text-gray-400">Límite de tokens generados por respuesta. Auméntalo si el agente trunca respuestas (WatsonX / OpenAI / Gemini).</p>
+                        </div>
                     </div>
 
                     {/* Credenciales de API */}
@@ -1076,6 +1104,19 @@ const AiAgentSettings: React.FC = () => {
                                         placeholder="2024-12-01-preview"
                                     />
                                 </div>
+                                <div>
+                                    <Input
+                                        label="Nombre del Despliegue de Embeddings (Azure/OpenAI)"
+                                        id="openaiEmbeddingModel"
+                                        type="text"
+                                        value={openaiEmbeddingModel}
+                                        onChange={(e) => setOpenaiEmbeddingModel(e.target.value)}
+                                        placeholder="Ej: text-embedding-ada-002"
+                                    />
+                                    <span className="text-[10px] text-slate-400 mt-1 block">
+                                        Nombre del despliegue del modelo de vectores en Azure OpenAI (por defecto: text-embedding-ada-002).
+                                    </span>
+                                </div>
                             </div>
                         )}
 
@@ -1101,14 +1142,27 @@ const AiAgentSettings: React.FC = () => {
                                         required={modelProvider === 'watsonx'}
                                     />
                                     <Input
-                                        label="Región de WatsonX"
+                                        label="Endpoint / Región de WatsonX"
                                         id="watsonxRegion"
                                         type="text"
                                         value={watsonxRegion}
                                         onChange={(e) => setWatsonxRegion(e.target.value)}
-                                        placeholder="us-south, eu-de, etc."
+                                        placeholder="https://us-south.ml.cloud.ibm.com o us-south"
                                         required={modelProvider === 'watsonx'}
                                     />
+                                </div>
+                                <div>
+                                    <Input
+                                        label="Modelo de Embeddings (WatsonX)"
+                                        id="watsonxEmbeddingModel"
+                                        type="text"
+                                        value={watsonxEmbeddingModel}
+                                        onChange={(e) => setWatsonxEmbeddingModel(e.target.value)}
+                                        placeholder="Ej: ibm/slate-125m-english-rtrvr"
+                                    />
+                                    <span className="text-[10px] text-slate-400 mt-1 block">
+                                        Identificador del modelo de embeddings en watsonx.ai (por defecto: ibm/slate-125m-english-rtrvr).
+                                    </span>
                                 </div>
                             </div>
                         )}

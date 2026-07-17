@@ -356,7 +356,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const productOptions = useMemo(() => products.map(product => ({
     value: product.id!,
-    label: `${product.nombre} (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(product.precioBase)})`,
+    label: `${product.nombre} (${product.requiere_analisis || product.precioBase === null || product.precioBase === undefined ? 'A la medida' : new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(product.precioBase))})`,
   })), [products]);
 
   const selectedProductsValue = productOptions.filter(option =>
@@ -856,13 +856,13 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                             </div>
                             <div className="text-left min-w-0 flex-1">
                               <h4 className="text-sm font-bold text-slate-800 truncate">{p.nombre}</h4>
-                              {p.descripcion && (
+              {p.descripcion && (
                                 <p className="text-xs text-slate-500 line-clamp-2 mt-0.5" title={p.descripcion}>
                                   {p.descripcion}
                                 </p>
                               )}
                               <p className="text-xs font-semibold text-indigo-600 mt-1">
-                                Precio Base: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(p.precioBase)}
+                                Precio Base: {p.requiere_analisis || p.precioBase === null || p.precioBase === undefined ? 'A la medida' : new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(p.precioBase))}
                               </p>
                             </div>
                           </div>

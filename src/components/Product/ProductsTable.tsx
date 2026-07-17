@@ -103,7 +103,15 @@ const ProductsTable: React.FC<Props> = ({
                       <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">
                         Precio Base
                       </span>
-                      <p className="font-medium text-gray-900">{formatPrice(Number(product.precioBase) || 0)}</p>
+                      <p className="font-medium text-gray-900">
+                        {product.requiere_analisis || product.precioBase === null || product.precioBase === undefined ? (
+                          <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-semibold border border-indigo-100">
+                            A la medida
+                          </span>
+                        ) : (
+                          formatPrice(Number(product.precioBase))
+                        )}
+                      </p>
                     </div>
                   </td>
 

@@ -280,7 +280,16 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
           </p>
           <div className="flex items-center justify-between mt-0.5">
             <span className="text-sm font-bold text-slate-700">
-              ${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0 })} <span className="text-xs font-semibold text-slate-500">{opportunity.moneda}</span>
+              {opportunity.monto_total && Number(opportunity.monto_total) > 0 ? (
+                <>
+                  ${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0 })}{' '}
+                  <span className="text-xs font-semibold text-slate-500">{opportunity.moneda}</span>
+                </>
+              ) : (
+                <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-semibold border border-indigo-100">
+                  Por definir
+                </span>
+              )}
             </span>
             <span className="px-2 py-0.5 text-[9px] font-semibold rounded-full inline-block shrink-0" style={tagStyle}>
               {opportunity.linea_negocio?.strname || ''}

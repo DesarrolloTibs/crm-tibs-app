@@ -11,7 +11,8 @@ export interface Product {
   id?: string;
   nombre: string;
   descripcion?: string | null;
-  precioBase: number;
+  precioBase: number | null;
+  requiere_analisis?: boolean;
   status: boolean;
   imagenPortada?: string | null;
   createdById?: string | null;
