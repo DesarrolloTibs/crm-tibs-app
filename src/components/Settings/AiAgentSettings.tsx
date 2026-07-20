@@ -119,6 +119,7 @@ const AiAgentSettings: React.FC = () => {
     const [subAgentDescription, setSubAgentDescription] = useState('');
     const [subAgentContext, setSubAgentContext] = useState('');
     const [subAgentTools, setSubAgentTools] = useState<string[]>([]);
+    const [subAgentTemperature, setSubAgentTemperature] = useState(0.7);
 
     // ORCHESTRATOR GRAPH STATES
     const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({});
@@ -300,6 +301,7 @@ const AiAgentSettings: React.FC = () => {
         setSubAgentDescription('');
         setSubAgentContext('');
         setSubAgentTools([]);
+        setSubAgentTemperature(0.7);
         setIsSubAgentModalOpen(true);
     };
 
@@ -310,6 +312,7 @@ const AiAgentSettings: React.FC = () => {
         setSubAgentDescription(agent.description || '');
         setSubAgentContext(agent.context || '');
         setSubAgentTools(agent.tools || []);
+        setSubAgentTemperature(agent.temperature ?? 0.7);
         setIsSubAgentModalOpen(true);
     };
 
@@ -324,6 +327,7 @@ const AiAgentSettings: React.FC = () => {
                 description: subAgentDescription,
                 context: subAgentContext,
                 tools: subAgentTools,
+                temperature: subAgentTemperature,
                 isActive: editingSubAgent ? editingSubAgent.isActive : true
             };
 
@@ -916,7 +920,7 @@ const AiAgentSettings: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {/* Status pill + tools */}
+                                        {/* Temperature badge */}
                                         <div className="flex items-center justify-between gap-1 border-t border-gray-100 pt-2">
                                             <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${
                                                 agent.isActive
@@ -926,7 +930,13 @@ const AiAgentSettings: React.FC = () => {
                                                 <span className={`w-1.5 h-1.5 rounded-full ${agent.isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
                                                 {agent.isActive ? 'Activo' : 'Inactivo'}
                                             </span>
-                                            <div className="flex items-center gap-1">
+                                            <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full" title="Temperatura del sub-agente">
+                                                🌡 {agent.temperature ?? 0.7}
+                                            </span>
+                                        </div>
+
+                                        {/* Tools row */}
+                                        <div className="flex items-center justify-end gap-1">
                                                 {agent.tools && agent.tools.length > 0 ? (
                                                     <>
                                                         {agent.tools.slice(0, 2).map((t: string) => (
@@ -945,8 +955,7 @@ const AiAgentSettings: React.FC = () => {
                                                 )}
                                             </div>
                                         </div>
-                                    </div>
-                                );
+                                    );
                             })}
                         </div>
 
@@ -1573,6 +1582,32 @@ const AiAgentSettings: React.FC = () => {
                             rows={6}
                             required
                         />
+                    </div>
+
+                    {/* TEMPERATURE SLIDER */}
+                    <div className="space-y-2 pt-1">
+                        <div className="flex justify-between items-center">
+                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                Temperatura del Sub-Agente (Creatividad vs Precisión)
+                            </label>
+                            <span className="text-sm font-bold text-blue-600">{subAgentTemperature}</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0.0"
+                            max="1.0"
+                            step="0.1"
+                            value={subAgentTemperature}
+                            onChange={(e) => setSubAgentTemperature(parseFloat(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        />
+                        <div className="flex justify-between text-xs text-gray-400 font-medium">
+                            <span>Preciso (0.0)</span>
+                            <span>Creativo (1.0)</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 leading-relaxed">
+                            Para sub-agentes <strong>comerciales</strong> o de <strong>consulta de catálogo</strong>, se recomienda una temperatura <strong>baja (0.1 — 0.3)</strong> para evitar que la IA invente productos o precios. Para sub-agentes <strong>conversacionales</strong> o de <strong>atención general</strong>, una temperatura <strong>media-alta (0.5 — 0.7)</strong> genera respuestas más naturales.
+                        </p>
                     </div>
 
                     {/* DRAG AND DROP PANEL */}
