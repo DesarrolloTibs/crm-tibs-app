@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getDashboardData } from '../services/reportsService';
 import type { DashboardIndicator } from '../services/reportsService';
@@ -952,7 +952,53 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);  // Reset selected KPI card and page when active tab or pipeline/helpdesk changes
+  }, []);
+
+  // Soporte de query params para redirección desde el WebChat
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (!data) return; // Esperar a que los datos estén cargados
+    let changed = false;
+
+    const qTab = searchParams.get('tab');
+    if (qTab === 'commercial' || qTab === 'helpdesk') {
+      setActiveTab(qTab === 'helpdesk' ? 'support' : 'commercial');
+      changed = true;
+    }
+
+    const qExec = searchParams.get('executive');
+    if (qExec) {
+      setSelectedExecutiveId(qExec);
+      changed = true;
+    }
+
+    const qDateStart = searchParams.get('dateStart');
+    const qDateEnd = searchParams.get('dateEnd');
+    if (qDateStart || qDateEnd) {
+      if (qDateStart) setStartDate(qDateStart);
+      if (qDateEnd) setEndDate(qDateEnd);
+      setDatePeriod('custom');
+      changed = true;
+    }
+
+    const qPipeline = searchParams.get('pipeline');
+    if (qPipeline) {
+      setSelectedPipelineId(qPipeline);
+      changed = true;
+    }
+
+    const qHelpdesk = searchParams.get('helpdesk');
+    if (qHelpdesk) {
+      setSelectedHelpdeskId(qHelpdesk);
+      changed = true;
+    }
+
+    // Limpiar query params después de aplicarlos para evitar re-aplicación
+    if (changed) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [data]); // Se ejecuta una vez cuando los datos cargan
+
   useEffect(() => {
     setSelectedKpiId(null);
     setTableSearch('');

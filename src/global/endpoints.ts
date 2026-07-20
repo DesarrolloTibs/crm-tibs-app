@@ -81,6 +81,10 @@ export const REPORTS = {
     INDICATORS: urlBase + 'reports/indicators',
 };
 
+export const WEBCHAT = {
+    QUERY: urlBase + 'webchat/query',
+};
+
 
 
 /*export const ENDPOINTS = {

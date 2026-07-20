@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import Navbar from '../Navbar/Navbar';
+import WebChat from '../WebChat/WebChat';
 
 interface Props {
     children: React.ReactNode;
@@ -38,6 +39,9 @@ const Layout: React.FC<Props> = ({ children }) => {
                     </div>
                 </main>
             </div>
+
+            {/* WebChat Floating Widget — visible en todas las páginas */}
+            <WebChat />
         </div>
     );
 };
