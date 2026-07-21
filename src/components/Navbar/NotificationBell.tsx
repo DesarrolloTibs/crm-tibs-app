@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, CheckCheck, AlertTriangle, Briefcase, Calendar, Info } from 'lucide-react';
+import { Bell, CheckCheck, AlertTriangle, Briefcase, Calendar, Info, MessageSquare } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import type { NotificationItem } from '../../core/models/Notification';
 
 const NotificationBell: React.FC = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'messages' | 'general'>('all');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -34,8 +35,46 @@ const NotificationBell: React.FC = () => {
     return `Hace ${diffDays} d`;
   };
 
-  const getNotificationIcon = (type: string) => {
+  const isMessageNotification = (item: NotificationItem) => {
+    const typeLower = (item.type || '').toLowerCase();
+    const titleLower = (item.title || '').toLowerCase();
+    const messageLower = (item.message || '').toLowerCase();
+
+    return (
+      typeLower.includes('conversation') ||
+      typeLower.includes('message') ||
+      typeLower.includes('chat') ||
+      typeLower.includes('escalated') ||
+      titleLower.includes('chat') ||
+      titleLower.includes('derivación') ||
+      titleLower.includes('ejecutivo') ||
+      messageLower.includes('chat')
+    );
+  };
+
+  const messageNotifications = notifications.filter(isMessageNotification);
+  const generalNotifications = notifications.filter((n) => !isMessageNotification(n));
+
+  const unreadMessagesCount = messageNotifications.filter((n) => !n.read).length;
+
+  const displayedNotifications =
+    activeTab === 'messages'
+      ? messageNotifications
+      : activeTab === 'general'
+      ? generalNotifications
+      : notifications;
+
+  const getNotificationIcon = (type: string, title?: string) => {
     const typeLower = (type || '').toLowerCase();
+    const titleLower = (title || '').toLowerCase();
+
+    if (typeLower.includes('conversation') || typeLower.includes('escalated') || typeLower.includes('message') || titleLower.includes('chat') || titleLower.includes('derivación')) {
+      return (
+        <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center shrink-0 shadow-sm">
+          <MessageSquare className="w-5 h-5" />
+        </div>
+      );
+    }
 
     if (typeLower === 'opportunity_red') {
       return (
@@ -88,14 +127,16 @@ const NotificationBell: React.FC = () => {
 
       const isTicket = typeLower.includes('ticket') || titleLower.includes('ticket') || messageLower.includes('ticket');
       const isOpportunity = typeLower.includes('opportunity') || typeLower.includes('semaphore') || typeLower.includes('red');
+      const isConversation = isMessageNotification(item);
 
-      if (isTicket) {
+      if (isConversation) {
+        navigate(`/conversations?id=${item.relatedId}`);
+      } else if (isTicket) {
         navigate(`/helpdesk?ticketId=${item.relatedId}`);
       } else if (isOpportunity) {
         navigate(`/pipeline?opportunityId=${item.relatedId}`);
       } else {
-        // Fallback
-        navigate(`/pipeline?opportunityId=${item.relatedId}`);
+        navigate(`/conversations?id=${item.relatedId}`);
       }
     }
 
@@ -152,15 +193,59 @@ const NotificationBell: React.FC = () => {
               )}
             </div>
 
+            {/* Pestañas de Notificaciones (Secciones) */}
+            <div className="flex border-b border-slate-100 bg-slate-50/50 px-2 pt-1 gap-1 text-xs">
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`px-3 py-1.5 font-bold rounded-t-lg transition-colors border-b-2 cursor-pointer ${
+                  activeTab === 'all'
+                    ? 'bg-white border-blue-600 text-blue-600 shadow-sm'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Todas ({notifications.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('messages')}
+                className={`px-3 py-1.5 font-bold rounded-t-lg transition-colors border-b-2 cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'messages'
+                    ? 'bg-white border-purple-600 text-purple-600 shadow-sm'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <MessageSquare size={13} />
+                Mensajes
+                {unreadMessagesCount > 0 && (
+                  <span className="bg-purple-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-black">
+                    {unreadMessagesCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('general')}
+                className={`px-3 py-1.5 font-bold rounded-t-lg transition-colors border-b-2 cursor-pointer ${
+                  activeTab === 'general'
+                    ? 'bg-white border-slate-600 text-slate-800 shadow-sm'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                General ({generalNotifications.length})
+              </button>
+            </div>
+
             {/* Lista de notificaciones */}
             <div className="max-h-[360px] overflow-y-auto divide-y divide-slate-50">
-              {notifications.length === 0 ? (
+              {displayedNotifications.length === 0 ? (
                 <div className="p-8 text-center text-gray-400">
                   <Bell className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-1" />
-                  <p className="text-xs font-semibold text-slate-500">No tienes notificaciones por ahora.</p>
+                  <p className="text-xs font-semibold text-slate-500">
+                    {activeTab === 'messages'
+                      ? 'No tienes notificaciones de mensajes por ahora.'
+                      : 'No tienes notificaciones por ahora.'}
+                  </p>
                 </div>
               ) : (
-                notifications.map((item: NotificationItem) => (
+                displayedNotifications.map((item: NotificationItem) => (
                   <div
                     key={item.id}
                     onClick={() => handleNotificationClick(item)}
@@ -168,7 +253,7 @@ const NotificationBell: React.FC = () => {
                       !item.read ? 'bg-blue-50/20 hover:bg-blue-50/40 font-semibold' : 'bg-white hover:bg-slate-50/80 opacity-90'
                     }`}
                   >
-                    <div className="mt-0.5">{getNotificationIcon(item.type)}</div>
+                    <div className="mt-0.5">{getNotificationIcon(item.type, item.title)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-0.5">
                         <p className={`text-xs ${!item.read ? 'text-slate-800 font-bold' : 'text-slate-600 font-medium'} truncate`}>
@@ -182,7 +267,7 @@ const NotificationBell: React.FC = () => {
                         {item.message}
                       </p>
                     </div>
-                    
+
                     {/* Botón flotante para marcar como leída individualmente */}
                     {!item.read && (
                       <div className="flex items-center ml-1 shrink-0">

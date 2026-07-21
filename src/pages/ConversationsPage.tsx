@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import Swal from 'sweetalert2';
 import { 
@@ -34,6 +35,9 @@ import Button from '../components/shared/Button';
 export const ConversationsPage: React.FC = () => {
     const { user, isAdmin } = useAuth();
     const currentUserId = user?.id || user?.sub;
+
+    const [searchParams] = useSearchParams();
+    const urlConvId = searchParams.get('id') || searchParams.get('conversationId');
 
     const [loading, setLoading] = useState(true);
     const [conversations, setConversations] = useState<any[]>([]);
@@ -87,6 +91,14 @@ export const ConversationsPage: React.FC = () => {
             const currentSelected = selectedConvRef.current;
             const currentIsAdmin = isAdminRef.current;
 
+            if (selectId) {
+                const found = list.find(c => c.id === selectId);
+                if (found) {
+                    setSelectedConv(found);
+                    return;
+                }
+            }
+
             // Si hay una conversación previamente seleccionada, actualizar su estado
             if (currentSelected) {
                 const updated = list.find(c => c.id === currentSelected.id);
@@ -96,9 +108,6 @@ export const ConversationsPage: React.FC = () => {
                     // Si el ejecutivo reasignó el chat y ya no es suyo, deseleccionarlo
                     setSelectedConv(null);
                 }
-            } else if (selectId) {
-                const found = list.find(c => c.id === selectId);
-                if (found) setSelectedConv(found);
             }
         } catch (err) {
             console.error('Error al cargar lista de chats:', err);
@@ -110,7 +119,7 @@ export const ConversationsPage: React.FC = () => {
             try {
                 setLoading(true);
                 const [_, usersList] = await Promise.all([
-                    loadConversationsList(),
+                    loadConversationsList(urlConvId || undefined),
                     getUsers(),
                 ]);
                 setAllUsers(usersList);
@@ -121,7 +130,7 @@ export const ConversationsPage: React.FC = () => {
             }
         };
         initData();
-    }, []);
+    }, [urlConvId]);
 
     // ── Cargar mensajes del chat seleccionado ───────────────────────────────
     useEffect(() => {
