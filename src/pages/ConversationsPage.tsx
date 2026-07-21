@@ -12,6 +12,8 @@ import {
     Smartphone, 
     Facebook, 
     Instagram,
+    Globe,
+    ArrowLeft,
     Sparkles,
     ShieldAlert,
     RefreshCw,
@@ -48,6 +50,7 @@ export const ConversationsPage: React.FC = () => {
     // Form and UI States
     const [inputText, setInputText] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedChannelFilter, setSelectedChannelFilter] = useState<'all' | 'whatsapp' | 'messenger' | 'instagram' | 'webchat'>('all');
     const [isSimPanelOpen, setIsSimPanelOpen] = useState(false);
     const [sending, setSending] = useState(false);
     
@@ -372,12 +375,14 @@ export const ConversationsPage: React.FC = () => {
     // ── Filtrado de lista de conversaciones ──────────────────────────────────
     const filteredConversations = conversations.filter(c => {
         const query = searchQuery.toLowerCase();
-        return (
+        const matchesQuery = (
             c.clientName.toLowerCase().includes(query) ||
             c.externalId.toLowerCase().includes(query) ||
             (c.client?.nombre || '').toLowerCase().includes(query) ||
             (c.assignedUser?.username || '').toLowerCase().includes(query)
         );
+        const matchesChannel = selectedChannelFilter === 'all' || c.channel === selectedChannelFilter;
+        return matchesQuery && matchesChannel;
     });
 
     const getChannelIcon = (channel: string) => {
@@ -388,6 +393,8 @@ export const ConversationsPage: React.FC = () => {
                 return <span className="p-1.5 bg-blue-500 rounded-lg text-white" title="Messenger"><Facebook size={16} /></span>;
             case 'instagram':
                 return <span className="p-1.5 bg-gradient-to-tr from-amber-500 via-red-500 to-purple-600 rounded-lg text-white" title="Instagram"><Instagram size={16} /></span>;
+            case 'webchat':
+                return <span className="p-1.5 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-lg text-white" title="WebChat Público"><Globe size={16} /></span>;
             default:
                 return <span className="p-1.5 bg-gray-500 rounded-lg text-white"><MessageSquare size={16} /></span>;
         }
@@ -408,7 +415,7 @@ export const ConversationsPage: React.FC = () => {
     return (
         <div className="flex h-[calc(100vh-100px)] rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm relative">
             {/* ── COLUMNA IZQUIERDA: LISTADO DE CONVERSACIONES ────────────────────────── */}
-            <aside className="w-80 flex flex-col border-r border-gray-150 bg-slate-50/50 shrink-0">
+            <aside className={`w-full md:w-80 border-r border-gray-150 bg-slate-50/50 shrink-0 ${selectedConv ? 'hidden md:flex flex-col' : 'flex flex-col'}`}>
                 {/* Header de la columna */}
                 <div className="p-4 border-b border-gray-150 flex justify-between items-center gap-2">
                     <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
@@ -432,6 +439,40 @@ export const ConversationsPage: React.FC = () => {
                             Simulador
                         </button>
                     </div>
+                </div>
+
+                {/* Filtro por Canales */}
+                <div className="flex items-center gap-1 px-3 py-2 bg-white border-b border-gray-100 overflow-x-auto text-[11px] font-bold no-scrollbar">
+                    <button
+                        onClick={() => setSelectedChannelFilter('all')}
+                        className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer whitespace-nowrap ${selectedChannelFilter === 'all' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        Todos
+                    </button>
+                    <button
+                        onClick={() => setSelectedChannelFilter('webchat')}
+                        className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap ${selectedChannelFilter === 'webchat' ? 'bg-purple-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <Globe size={12} /> WebChat
+                    </button>
+                    <button
+                        onClick={() => setSelectedChannelFilter('whatsapp')}
+                        className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap ${selectedChannelFilter === 'whatsapp' ? 'bg-emerald-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <Smartphone size={12} /> WhatsApp
+                    </button>
+                    <button
+                        onClick={() => setSelectedChannelFilter('messenger')}
+                        className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap ${selectedChannelFilter === 'messenger' ? 'bg-blue-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <Facebook size={12} /> Messenger
+                    </button>
+                    <button
+                        onClick={() => setSelectedChannelFilter('instagram')}
+                        className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap ${selectedChannelFilter === 'instagram' ? 'bg-purple-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <Instagram size={12} /> Instagram
+                    </button>
                 </div>
 
                 {/* Buscador */}
@@ -508,12 +549,20 @@ export const ConversationsPage: React.FC = () => {
             </aside>
 
             {/* ── COLUMNA DERECHA: HISTORIAL Y ACCIONES DEL CHAT ACTIVO ───────────────── */}
-            <main className="flex-grow flex flex-col bg-slate-50/20">
+            <main className={`flex-grow bg-slate-50/20 ${selectedConv ? 'flex flex-col w-full' : 'hidden md:flex md:flex-col'}`}>
                 {selectedConv ? (
                     <>
                         {/* Header de conversación */}
                         <header className="p-4 border-b border-gray-150 bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xs">
                             <div className="flex items-center gap-3">
+                                {/* Botón para volver a la lista en móviles */}
+                                <button 
+                                    onClick={() => setSelectedConv(null)} 
+                                    className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer mr-1"
+                                    title="Volver al listado"
+                                >
+                                    <ArrowLeft size={20} />
+                                </button>
                                 <div className="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-base shrink-0">
                                     {getInitials(selectedConv.clientName)}
                                 </div>
@@ -690,8 +739,9 @@ export const ConversationsPage: React.FC = () => {
                         {/* Selector de Canal */}
                         <div className="space-y-1">
                             <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Canal</label>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-4 gap-2">
                                 {[
+                                    { id: 'webchat', label: 'WebChat', icon: <Globe size={14} /> },
                                     { id: 'whatsapp', label: 'WhatsApp', icon: <Smartphone size={14} /> },
                                     { id: 'messenger', label: 'Messenger', icon: <Facebook size={14} /> },
                                     { id: 'instagram', label: 'Instagram', icon: <Instagram size={14} /> },
@@ -701,7 +751,8 @@ export const ConversationsPage: React.FC = () => {
                                         type="button"
                                         onClick={() => {
                                             setSimChannel(c.id);
-                                            if (c.id === 'whatsapp') setSimExternalId('+525551234567');
+                                            if (c.id === 'webchat') setSimExternalId('webchat_user_99');
+                                            else if (c.id === 'whatsapp') setSimExternalId('+525551234567');
                                             else if (c.id === 'messenger') setSimExternalId('fb_user_123');
                                             else setSimExternalId('insta_user_99');
                                         }}
