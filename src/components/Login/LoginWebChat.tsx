@@ -17,6 +17,12 @@ export const LoginWebChat: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [visitorId, setVisitorId] = useState<string>('');
+  const [recognizedName, setRecognizedName] = useState<string | null>(() => {
+    return localStorage.getItem('webchat_recognized_name') || null;
+  });
+  const [recognizedPhone, setRecognizedPhone] = useState<string | null>(() => {
+    return localStorage.getItem('webchat_recognized_phone') || null;
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationIdRef = useRef<string | null>(null);
@@ -24,6 +30,29 @@ export const LoginWebChat: React.FC = () => {
   const rawBaseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3090';
   const apiUrl = `${rawBaseUrl.replace(/\/$/, '')}/api`;
   const socketUrl = rawBaseUrl.replace(/\/$/, '');
+
+  const checkAndSetRecognizedInfo = useCallback((name?: string | null, phone?: string | null) => {
+    if (phone && phone.trim()) {
+      const cleanPhone = phone.trim();
+      setRecognizedPhone(cleanPhone);
+      localStorage.setItem('webchat_recognized_phone', cleanPhone);
+    }
+    if (name && name.trim()) {
+      const cleaned = name.trim();
+      const lower = cleaned.toLowerCase();
+      const isGeneric =
+        lower === '' ||
+        lower === 'visitante webchat' ||
+        lower === 'visitante web' ||
+        lower === 'visitante' ||
+        lower === 'contacto' ||
+        lower.startsWith('webchat_');
+      if (!isGeneric) {
+        setRecognizedName(cleaned);
+        localStorage.setItem('webchat_recognized_name', cleaned);
+      }
+    }
+  }, []);
 
   // 1. Obtener o crear visitorId único en localStorage
   useEffect(() => {
@@ -41,15 +70,27 @@ export const LoginWebChat: React.FC = () => {
       const res = await fetch(`${apiUrl}/webchat/public/messages/${visitorId}`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setMessages(data);
-          conversationIdRef.current = data[0].conversationId || null;
+        let msgs: Message[] = [];
+        if (Array.isArray(data)) {
+          msgs = data;
+        } else if (data && typeof data === 'object') {
+          msgs = data.messages || [];
+          checkAndSetRecognizedInfo(data.clientName, data.clientPhone);
+          if (data.conversationId) {
+            conversationIdRef.current = data.conversationId;
+          }
+        }
+        if (msgs.length > 0) {
+          setMessages(msgs);
+          if (!conversationIdRef.current && (msgs[0] as any).conversationId) {
+            conversationIdRef.current = (msgs[0] as any).conversationId;
+          }
         }
       }
     } catch (err) {
       console.error('Error cargando historial de WebChat público:', err);
     }
-  }, [visitorId, apiUrl]);
+  }, [visitorId, apiUrl, checkAndSetRecognizedInfo]);
 
   // 2. Cargar historial y conectar WebSockets al abrir
   useEffect(() => {
@@ -67,6 +108,11 @@ export const LoginWebChat: React.FC = () => {
 
       if (isTargetChat) {
         if (newMsg.conversationId) conversationIdRef.current = newMsg.conversationId;
+        
+        const convClientName = newMsg.conversation?.clientName || newMsg.clientName;
+        const convClientPhone = newMsg.conversation?.client?.telefono || newMsg.clientPhone;
+        checkAndSetRecognizedInfo(convClientName, convClientPhone);
+
         setMessages((prev) => {
           if (prev.some((m) => m.id === newMsg.id)) return prev;
           return [...prev, newMsg];
@@ -79,7 +125,7 @@ export const LoginWebChat: React.FC = () => {
     return () => {
       socket.disconnect();
     };
-  }, [visitorId, socketUrl, fetchHistory]);
+  }, [visitorId, socketUrl, fetchHistory, checkAndSetRecognizedInfo]);
 
   // Auto-scroll al final del chat
   useEffect(() => {
@@ -155,7 +201,19 @@ export const LoginWebChat: React.FC = () => {
                 <div className="webchat-header-title" style={{ color: 'white', fontWeight: 'bold' }}>
                   Billy Sales & Services
                 </div>
-                <div className="webchat-header-subtitle">Chat de Asistencia</div>
+                {recognizedName ? (
+                  <div className="webchat-header-user-badge">
+                    <User size={12} className="inline mr-1" />
+                    <span>Hola, {recognizedName}</span>
+                  </div>
+                ) : recognizedPhone ? (
+                  <div className="webchat-header-user-badge">
+                    <User size={12} className="inline mr-1" />
+                    <span>Tel: {recognizedPhone}</span>
+                  </div>
+                ) : (
+                  <div className="webchat-header-subtitle">Chat de Asistencia</div>
+                )}
               </div>
             </div>
             <div className="webchat-header-actions">

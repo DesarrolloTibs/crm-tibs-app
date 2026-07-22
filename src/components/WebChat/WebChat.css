@@ -143,6 +143,20 @@
   opacity: 0.8;
 }
 
+.webchat-header-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.22);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  margin-top: 2px;
+  backdrop-filter: blur(4px);
+}
+
 .webchat-header-actions {
   display: flex;
   align-items: center;
