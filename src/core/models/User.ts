@@ -23,7 +23,8 @@ export interface User {
     username: string;
     email: string;
     password?: string;
-    role: 'admin' | 'executive';
+    role: 'superadmin' | 'admin' | 'executive';
+
     isActive?: boolean;
     profileImageUrl?: string;
 }

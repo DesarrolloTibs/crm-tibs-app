@@ -21,7 +21,6 @@ import Modal from '../Modal/Modal';
 import { 
     Brain, 
     Sliders, 
-    KeyRound, 
     UserCheck, 
     Link2, 
     Smartphone, 
@@ -34,13 +33,6 @@ import {
     Maximize2,
     Minimize2
 } from 'lucide-react';
-
-
-const PROVIDER_OPTIONS = [
-    { value: 'gemini', label: 'Google Gemini' },
-    { value: 'openai', label: 'OpenAI GPT' },
-    { value: 'watsonx', label: 'IBM WatsonX' },
-];
 
 const REMINDER_OFFSET_OPTIONS = [
     { value: 15, label: '15 minutos antes' },
@@ -66,6 +58,8 @@ const AiAgentSettings: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [users, setUsers] = useState<any[]>([]);
+
+
     
     // Tab State
     const [activeTab, setActiveTab] = useState<'general' | 'channels'>('general');
@@ -985,44 +979,11 @@ const AiAgentSettings: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Parámetros del LLM */}
+                    {/* Parámetros de la IA */}
                     <div className="bg-white rounded-xl border border-gray-150 p-6 space-y-4 shadow-sm">
                         <div className="flex items-center gap-2 border-b border-gray-100 pb-3 mb-2">
                             <Sliders className="text-amber-500" size={20} />
-                            <h4 className="font-bold text-gray-800 text-base">Parámetros del LLM</h4>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="modelProvider" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                                    Proveedor del Modelo
-                                </label>
-                                <Select
-                                    inputId="modelProvider"
-                                    value={PROVIDER_OPTIONS.find(opt => opt.value === modelProvider)}
-                                    onChange={(selected) => {
-                                        if (selected) {
-                                            setModelProvider(selected.value);
-                                            if (selected.value === 'gemini') setModelName('gemini-1.5-flash');
-                                            else if (selected.value === 'openai') setModelName('gpt-4o');
-                                            else if (selected.value === 'watsonx') setModelName('meta-llama/llama-3-3-70b-instruct');
-                                        }
-                                    }}
-                                    options={PROVIDER_OPTIONS}
-                                    isSearchable={false}
-                                />
-                            </div>
-                            <div>
-                                <Input
-                                    label={modelProvider === 'openai' && openaiEndpoint ? 'Nombre de Despliegue (Azure Deployment)' : 'Nombre del Modelo'}
-                                    id="modelName"
-                                    type="text"
-                                    value={modelName}
-                                    onChange={(e) => setModelName(e.target.value)}
-                                    placeholder={modelProvider === 'openai' && openaiEndpoint ? 'Ej: gpt-4o-mini-deployment' : 'Ej: gemini-1.5-flash o gpt-4o'}
-                                    required
-                                />
-                            </div>
+                            <h4 className="font-bold text-gray-800 text-base">Parámetros de la IA del Tenant</h4>
                         </div>
 
                         <div className="space-y-2 pt-2">
@@ -1046,136 +1007,9 @@ const AiAgentSettings: React.FC = () => {
                                 <span>Creativo (1.0)</span>
                             </div>
                         </div>
-                        {/* Max New Tokens */}
-                        <div className="space-y-2 pt-2">
-                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                Tokens Máximos de Respuesta (max_new_tokens)
-                            </label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={maxNewTokens}
-                                onChange={(e) => setMaxNewTokens(parseInt(e.target.value) || 2048)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Ej. 2048"
-                            />
-                            <p className="text-xs text-gray-400">Límite de tokens generados por respuesta. Auméntalo si el agente trunca respuestas (WatsonX / OpenAI / Gemini).</p>
-                        </div>
                     </div>
 
-                    {/* Credenciales de API */}
-                    <div className="bg-white rounded-xl border border-gray-150 p-6 space-y-4 shadow-sm">
-                        <div className="flex items-center gap-2 border-b border-gray-100 pb-3 mb-2">
-                            <KeyRound className="text-rose-500" size={20} />
-                            <h4 className="font-bold text-gray-800 text-base">Llaves de API (Credenciales)</h4>
-                        </div>
 
-                        {modelProvider === 'gemini' && (
-                            <Input
-                                label="Google Gemini API Key"
-                                id="geminiApiKey"
-                                type="password"
-                                value={geminiApiKey}
-                                onChange={(e) => setGeminiApiKey(e.target.value)}
-                                placeholder="Ingrese su API Key de Google AI Studio"
-                                required={modelProvider === 'gemini'}
-                            />
-                        )}
-
-                        {modelProvider === 'openai' && (
-                            <div className="space-y-4">
-                                <div>
-                                    <Input
-                                        label="Endpoint (Azure OpenAI - Opcional)"
-                                        id="openaiEndpoint"
-                                        type="text"
-                                        value={openaiEndpoint}
-                                        onChange={(e) => setOpenaiEndpoint(e.target.value)}
-                                        placeholder="https://tu-recurso.cognitiveservices.azure.com/"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <Input
-                                        label="API Key (OpenAI / Azure)"
-                                        id="openaiApiKey"
-                                        type="password"
-                                        value={openaiApiKey}
-                                        onChange={(e) => setOpenaiApiKey(e.target.value)}
-                                        placeholder="Ingrese su API Key"
-                                        required={modelProvider === 'openai'}
-                                    />
-                                    <Input
-                                        label="API Version (Azure OpenAI)"
-                                        id="openaiApiVersion"
-                                        type="text"
-                                        value={openaiApiVersion}
-                                        onChange={(e) => setOpenaiApiVersion(e.target.value)}
-                                        placeholder="2024-12-01-preview"
-                                    />
-                                </div>
-                                <div>
-                                    <Input
-                                        label="Nombre del Despliegue de Embeddings (Azure/OpenAI)"
-                                        id="openaiEmbeddingModel"
-                                        type="text"
-                                        value={openaiEmbeddingModel}
-                                        onChange={(e) => setOpenaiEmbeddingModel(e.target.value)}
-                                        placeholder="Ej: text-embedding-ada-002"
-                                    />
-                                    <span className="text-[10px] text-slate-400 mt-1 block">
-                                        Nombre del despliegue del modelo de vectores en Azure OpenAI (por defecto: text-embedding-ada-002).
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-
-                        {modelProvider === 'watsonx' && (
-                            <div className="space-y-4">
-                                <Input
-                                    label="IBM Cloud API Key (WatsonX)"
-                                    id="watsonxApiKey"
-                                    type="password"
-                                    value={watsonxApiKey}
-                                    onChange={(e) => setWatsonxApiKey(e.target.value)}
-                                    placeholder="Ingrese API Key de IBM Cloud"
-                                    required={modelProvider === 'watsonx'}
-                                />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <Input
-                                        label="ID del Proyecto de WatsonX"
-                                        id="watsonxProjectId"
-                                        type="text"
-                                        value={watsonxProjectId}
-                                        onChange={(e) => setWatsonxProjectId(e.target.value)}
-                                        placeholder="ID de su proyecto de WatsonX"
-                                        required={modelProvider === 'watsonx'}
-                                    />
-                                    <Input
-                                        label="Endpoint / Región de WatsonX"
-                                        id="watsonxRegion"
-                                        type="text"
-                                        value={watsonxRegion}
-                                        onChange={(e) => setWatsonxRegion(e.target.value)}
-                                        placeholder="https://us-south.ml.cloud.ibm.com o us-south"
-                                        required={modelProvider === 'watsonx'}
-                                    />
-                                </div>
-                                <div>
-                                    <Input
-                                        label="Modelo de Embeddings (WatsonX)"
-                                        id="watsonxEmbeddingModel"
-                                        type="text"
-                                        value={watsonxEmbeddingModel}
-                                        onChange={(e) => setWatsonxEmbeddingModel(e.target.value)}
-                                        placeholder="Ej: ibm/slate-125m-english-rtrvr"
-                                    />
-                                    <span className="text-[10px] text-slate-400 mt-1 block">
-                                        Identificador del modelo de embeddings en watsonx.ai (por defecto: ibm/slate-125m-english-rtrvr).
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
 
                     {/* Asignación y Recordatorios */}
                     <div className="bg-white rounded-xl border border-gray-150 p-6 space-y-4 shadow-sm">

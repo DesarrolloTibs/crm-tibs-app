@@ -1,17 +1,32 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Select from '../components/shared/Select';
 import { useAuth } from '../hooks/useAuth';
-import { XCircle, ClipboardList, Settings, Sliders, Database, Bell, LayoutDashboard, Brain } from 'lucide-react';
+import { XCircle, ClipboardList, Settings, Sliders, Database, Bell, LayoutDashboard, Brain, Building2, Layers, KeyRound } from 'lucide-react';
+
 import ActivityTypesSettings from '../components/ActivityType/ActivityTypesSettings';
 import OpportunityLabelsSettings from '../components/OpportunityLabel/OpportunityLabelsSettings';
 import OpportunityCatalogSettings from '../components/OpportunityLabel/OpportunityCatalogSettings';
 import HelpdeskCronSettings from '../components/Helpdesk/HelpdeskCronSettings';
 import { DashboardSettings } from '../components/Dashboard/DashboardSettings';
 import AiAgentSettings from '../components/Settings/AiAgentSettings';
+import TenantsSection from '../components/Settings/TenantsSection';
+import PlansSection from '../components/Settings/PlansSection';
+import GlobalAiCredentialsSettings from '../components/Settings/GlobalAiCredentialsSettings';
+
+import { useConfigStore } from '../store/useConfigStore';
 import { getOpportunityLabels } from '../services/opportunityLabelsService';
 import type { OpportunityLabel } from '../core/models/OpportunityLabel';
 
-type SettingTab = 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs' | 'helpdesk-cron' | 'dashboard-settings' | 'ai-agent-settings';
+type SettingTab = 
+  | 'activity-types' 
+  | 'opportunity-labels' 
+  | 'opportunity-catalogs' 
+  | 'helpdesk-cron' 
+  | 'dashboard-settings' 
+  | 'ai-agent-settings'
+  | 'superadmin-tenants'
+  | 'superadmin-plans'
+  | 'superadmin-ai-credentials';
 
 interface SettingOption {
     id: SettingTab;
@@ -25,19 +40,52 @@ interface SettingSection {
 }
 
 const SettingsPage: React.FC = () => {
-    const { isAdmin } = useAuth();
-    const [activeTab, setActiveTab] = useState<SettingTab>('activity-types');
-    const [activeCatalogSubTab, setActiveCatalogSubTab] = useState<'business-lines' | 'delivery-types' | 'licensings'>('business-lines');
+    const { isAdmin, isSuperAdmin, loading: authLoading } = useAuth();
+    const { selectedTenant } = useConfigStore();
+    const [activeTab, setActiveTabState] = useState<SettingTab>(() => {
+        return (sessionStorage.getItem('settingsActiveTab') as SettingTab) || 'activity-types';
+    });
+    const [activeCatalogSubTab, setActiveCatalogSubTabState] = useState<'business-lines' | 'delivery-types' | 'licensings'>(() => {
+        return (sessionStorage.getItem('settingsActiveCatalogSubTab') as any) || 'business-lines';
+    });
     const [labels, setLabels] = useState<OpportunityLabel[]>([]);
 
-    const mobileOptions = useMemo(() => [
-        { value: 'activity-types', label: 'Tipos de Actividad' },
-        { value: 'opportunity-labels', label: 'Etiquetas de Catálogos' },
-        { value: 'opportunity-catalogs', label: 'Valores de Catálogos' },
-        { value: 'helpdesk-cron', label: 'Notificaciones automáticas' },
-        { value: 'dashboard-settings', label: 'Indicadores de Dashboard' },
-        { value: 'ai-agent-settings', label: 'Agente IA & Canales' },
-    ], []);
+    const setActiveTab = (tab: SettingTab) => {
+        setActiveTabState(tab);
+        sessionStorage.setItem('settingsActiveTab', tab);
+        window.dispatchEvent(new CustomEvent('settingsTabChanged', { detail: tab }));
+    };
+
+    useEffect(() => {
+        window.dispatchEvent(new CustomEvent('settingsTabChanged', { detail: activeTab }));
+    }, [activeTab]);
+
+    const setActiveCatalogSubTab = (subTab: 'business-lines' | 'delivery-types' | 'licensings') => {
+        setActiveCatalogSubTabState(subTab);
+        sessionStorage.setItem('settingsActiveCatalogSubTab', subTab);
+    };
+
+
+
+
+    const mobileOptions = useMemo(() => {
+        const options = [
+            { value: 'activity-types', label: 'Tipos de Actividad' },
+            { value: 'opportunity-labels', label: 'Etiquetas de Catálogos' },
+            { value: 'opportunity-catalogs', label: 'Valores de Catálogos' },
+            { value: 'helpdesk-cron', label: 'Notificaciones automáticas' },
+            { value: 'dashboard-settings', label: 'Indicadores de Dashboard' },
+            { value: 'ai-agent-settings', label: 'Agente IA & Canales' },
+        ];
+        if (isSuperAdmin) {
+            options.push(
+                { value: 'superadmin-tenants', label: 'Gestión de Organizaciones' },
+                { value: 'superadmin-plans', label: 'Planes de Suscripción' },
+                { value: 'superadmin-ai-credentials', label: 'Credenciales & LLM Global' }
+            );
+        }
+        return options;
+    }, [isSuperAdmin]);
 
     const fetchLabels = async () => {
         try {
@@ -57,64 +105,98 @@ const SettingsPage: React.FC = () => {
         return label && label.strname ? label.strname : defaultName;
     };
 
-    // Estructura de secciones de configuración escalable para el futuro
-    const sections: SettingSection[] = [
-        {
-            title: 'Actividades',
-            options: [
-                {
-                    id: 'activity-types',
-                    label: 'Tipos de Actividad',
-                    icon: <ClipboardList size={16} />,
-                },
-            ],
-        },
-        {
-            title: 'Oportunidades',
-            options: [
-                {
-                    id: 'opportunity-labels',
-                    label: 'Etiquetas de Catálogos',
-                    icon: <Sliders size={16} />,
-                },
-                {
-                    id: 'opportunity-catalogs',
-                    label: 'Valores de Catálogos',
-                    icon: <Database size={16} />,
-                },
-            ],
-        },
-        {
-            title: 'Mesa de ayuda',
-            options: [
-                {
-                    id: 'helpdesk-cron',
-                    label: 'Notificaciones automáticas',
-                    icon: <Bell size={16} />,
-                },
-            ],
-        },
-        {
-            title: 'Dashboard',
-            options: [
-                {
-                    id: 'dashboard-settings',
-                    label: 'Indicadores de Dashboard',
-                    icon: <LayoutDashboard size={16} />,
-                },
-            ],
-        },
-        {
-            title: 'Inteligencia Artificial',
-            options: [
-                {
-                    id: 'ai-agent-settings',
-                    label: 'Agente IA & Canales',
-                    icon: <Brain size={16} />,
-                },
-            ],
-        },
-    ];
+    const sections: SettingSection[] = useMemo(() => {
+        const list: SettingSection[] = [
+            {
+                title: 'Actividades',
+                options: [
+                    {
+                        id: 'activity-types',
+                        label: 'Tipos de Actividad',
+                        icon: <ClipboardList size={16} />,
+                    },
+                ],
+            },
+            {
+                title: 'Oportunidades',
+                options: [
+                    {
+                        id: 'opportunity-labels',
+                        label: 'Etiquetas de Catálogos',
+                        icon: <Sliders size={16} />,
+                    },
+                    {
+                        id: 'opportunity-catalogs',
+                        label: 'Valores de Catálogos',
+                        icon: <Database size={16} />,
+                    },
+                ],
+            },
+            {
+                title: 'Mesa de ayuda',
+                options: [
+                    {
+                        id: 'helpdesk-cron',
+                        label: 'Notificaciones automáticas',
+                        icon: <Bell size={16} />,
+                    },
+                ],
+            },
+            {
+                title: 'Dashboard',
+                options: [
+                    {
+                        id: 'dashboard-settings',
+                        label: 'Indicadores de Dashboard',
+                        icon: <LayoutDashboard size={16} />,
+                    },
+                ],
+            },
+            {
+                title: 'Inteligencia Artificial',
+                options: [
+                    {
+                        id: 'ai-agent-settings',
+                        label: 'Agente IA & Canales',
+                        icon: <Brain size={16} />,
+                    },
+                ],
+            },
+        ];
+
+        if (isSuperAdmin) {
+            list.push({
+                title: 'SuperAdministrador & Multi-Tenancy',
+                options: [
+                    {
+                        id: 'superadmin-tenants',
+                        label: 'Gestión de Organizaciones',
+                        icon: <Building2 size={16} />,
+                    },
+                    {
+                        id: 'superadmin-plans',
+                        label: 'Planes de Suscripción',
+                        icon: <Layers size={16} />,
+                    },
+                    {
+                        id: 'superadmin-ai-credentials',
+                        label: 'Credenciales & LLM Global',
+                        icon: <KeyRound size={16} />,
+                    },
+                ],
+            });
+        }
+
+        return list;
+    }, [isSuperAdmin]);
+
+    if (authLoading) {
+        return (
+            <div className="flex items-center justify-center py-20 text-slate-400">
+                Cargando configuración...
+            </div>
+        );
+    }
 
     if (!isAdmin) {
         return (
@@ -125,6 +207,8 @@ const SettingsPage: React.FC = () => {
             </div>
         );
     }
+
+
 
     const renderActiveContent = () => {
         switch (activeTab) {
@@ -138,6 +222,13 @@ const SettingsPage: React.FC = () => {
                 return <DashboardSettings />;
             case 'ai-agent-settings':
                 return <AiAgentSettings />;
+            case 'superadmin-tenants':
+                return <TenantsSection />;
+            case 'superadmin-plans':
+                return <PlansSection />;
+            case 'superadmin-ai-credentials':
+                return <GlobalAiCredentialsSettings />;
+
             case 'opportunity-catalogs':
                 return (
                     <div className="flex flex-col gap-6 text-left">
@@ -207,6 +298,8 @@ const SettingsPage: React.FC = () => {
                 <h1 className="text-2xl font-bold text-gray-800">Configuración del Sistema</h1>
             </div>
 
+
+
             <div className="flex flex-col lg:flex-row bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[600px]">
                 {/* Selector para móvil (oculto en pantallas grandes) */}
                 <div className="lg:hidden p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col gap-2">
@@ -255,9 +348,10 @@ const SettingsPage: React.FC = () => {
                 </aside>
 
                 {/* Panel de contenido derecho */}
-                <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-white overflow-hidden">
+                <main key={selectedTenant?.schema_name || 'public'} className="flex-grow p-4 sm:p-6 lg:p-8 bg-white overflow-hidden">
                     {renderActiveContent()}
                 </main>
+
             </div>
         </div>
     );

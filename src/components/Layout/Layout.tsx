@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import Navbar from '../Navbar/Navbar';
 import WebChat from '../WebChat/WebChat';
+import { useConfigStore } from '../../store/useConfigStore';
 
 interface Props {
     children: React.ReactNode;
 }
 
 const Layout: React.FC<Props> = ({ children }) => {
+    const { selectedTenant } = useConfigStore();
     // El sidebar siempre inicia cerrado
     const [isSidebarOpen, setSidebarOpen] = useState(false);
 
@@ -33,12 +35,13 @@ const Layout: React.FC<Props> = ({ children }) => {
 
                 {/* Contenido de la página */}
                 <main className=" mx-4 flex-grow overflow-y-auto">
-                    {/* Ajustamos el padding del contenedor del children */}
-                    <div className="p-4 md:p-6">
+                    {/* Ajustamos el padding del contenedor del children y remontamos automáticamente al cambiar de tenant */}
+                    <div key={selectedTenant?.schema_name || 'public'} className="p-4 md:p-6">
                         {children}
                     </div>
                 </main>
             </div>
+
 
             {/* WebChat Floating Widget — visible en todas las páginas */}
             <WebChat />

@@ -1,0 +1,139 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Info, Box, Database } from 'lucide-react';
+import { io } from 'socket.io-client';
+import { useConfigStore } from '../../store/useConfigStore';
+import { getTenantConsumption } from '../../services/tenantsService';
+import type { TenantConsumptionData } from '../../services/tenantsService';
+
+const ConsumptionInfoPopover: React.FC = () => {
+  const { selectedTenant } = useConfigStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [consumption, setConsumption] = useState<TenantConsumptionData | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const fetchConsumption = async () => {
+    try {
+      const data = await getTenantConsumption(selectedTenant?.schema_name);
+      setConsumption(data);
+    } catch (err) {
+      console.error('Error al obtener información de consumo del tenant:', err);
+    }
+  };
+
+  // Carga inicial y escucha de WebSockets en tiempo real
+  useEffect(() => {
+    fetchConsumption();
+
+    if (!selectedTenant?.schema_name) return;
+
+    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
+    const socket = io(baseUrl);
+
+    socket.on('tenant_consumption_updated', (data: { schemaName?: string }) => {
+      if (!data?.schemaName || data.schemaName === selectedTenant?.schema_name) {
+        fetchConsumption();
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [selectedTenant]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const tokensUsed = consumption?.tokens_used ?? 0;
+  const tokensLimit = consumption?.tokens_limit ?? 300000;
+  const tokensPercent = Math.min(Math.round((tokensUsed / (tokensLimit || 1)) * 100), 100);
+
+  const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return '1/7/2026';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '1/7/2026';
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  };
+
+  // Si no hay un tenant seleccionado (ej. SuperUsuario en contexto Public / Global), ocultar el ícono de consumo
+  if (!selectedTenant) {
+    return null;
+  }
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        title="Información de Consumo del Tenant"
+        className="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-150/80 hover:bg-indigo-100/80 transition-all text-indigo-600 shadow-sm cursor-pointer flex items-center justify-center"
+      >
+        <Info size={18} className="text-indigo-600" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-150 rounded-3xl shadow-2xl z-50 p-6 animate-fade-in-down text-left">
+          {/* Encabezado */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Box size={16} className="text-indigo-500 shrink-0" />
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">
+                INFORMACIÓN DE CONSUMO
+              </h4>
+            </div>
+            {consumption?.plan_name && (
+              <span className="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-full">
+                {consumption.plan_name}
+              </span>
+            )}
+          </div>
+
+          {/* Sección Única de Consumo: TOKENS */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Database size={15} className="text-amber-500 shrink-0" />
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+                  TOKENS
+                </span>
+              </div>
+              <span className="text-xs font-bold text-slate-700 font-mono transition-all duration-300">
+                {tokensUsed.toLocaleString()} / {tokensLimit.toLocaleString()}
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                style={{ width: `${tokensPercent}%` }}
+              />
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium pt-1">
+              <span>{tokensPercent}% consumido</span>
+              <span>{(tokensLimit - tokensUsed > 0 ? tokensLimit - tokensUsed : 0).toLocaleString()} restantes</span>
+            </div>
+          </div>
+
+          {/* Footer de Renovación */}
+          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center">
+            <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block mr-2 shrink-0" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400">
+              RENOVACIÓN: {formatDate(consumption?.next_renewal_date)}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ConsumptionInfoPopover;

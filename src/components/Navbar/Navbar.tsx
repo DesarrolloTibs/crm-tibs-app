@@ -3,6 +3,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { Menu, X } from 'lucide-react';
 import SeasonalContainer from './Season/SeasonalContainer';
 import NotificationBell from './NotificationBell';
+import TenantSelector from '../Settings/TenantSelector';
+import ConsumptionInfoPopover from './ConsumptionInfoPopover';
 
 interface Props {
     toggleSidebar: () => void;
@@ -10,11 +12,11 @@ interface Props {
 }
 
 const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
-    const { user } = useAuth();
+    const { user, isSuperAdmin } = useAuth();
 
     return (
         <header className="bg-white shadow-sm p-3 sm:p-4 flex justify-between items-center sticky top-0 z-20 border-b border-gray-100">
-            <div className="flex items-center gap-4 w-1/4">
+            <div className="flex items-center gap-4">
                 {/* Botón para el menú */}
                 <button 
                     onClick={toggleSidebar} 
@@ -31,15 +33,18 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
             </div>
 
             {/* Sección central para decoraciones temáticas (Desktop) */}
-            <div className="flex-grow justify-center items-center hidden sm:flex h-16 relative overflow-visible mx-2 w-1/2">
+            <div className="flex-grow justify-center items-center hidden sm:flex h-16 relative overflow-visible mx-2">
                 <div className="w-full h-full relative">
                     <SeasonalContainer />
                 </div>
             </div>
 
-            {/* Información del usuario y Notificaciones */}
-            <div className="flex items-center justify-end gap-2 sm:gap-4 w-1/4">
+            {/* Selector de Tenant Global para SuperAdmin, Popover de Consumo y Notificaciones */}
+            <div className="flex items-center justify-end gap-2 sm:gap-4">
+                {isSuperAdmin && <TenantSelector />}
+                <ConsumptionInfoPopover />
                 <NotificationBell />
+
                 <div className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 transition-colors p-1 sm:py-1.5 sm:px-3 rounded-full cursor-pointer border border-gray-200 shadow-sm w-9 h-9 sm:w-auto sm:h-auto select-none">
                     <span className="text-gray-600 hidden sm:flex items-center text-sm">
                         <span className="hidden sm:inline mr-1">Hola,</span>
@@ -55,3 +60,4 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
 };
 
 export default Navbar;
+

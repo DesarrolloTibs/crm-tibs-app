@@ -85,6 +85,15 @@ export const WEBCHAT = {
     QUERY: urlBase + 'webchat/query',
 };
 
+export const PLANS = {
+    PLANS: urlBase + 'plans',
+};
+
+export const TENANTS = {
+    TENANTS: urlBase + 'tenants',
+};
+
+
 
 
 /*export const ENDPOINTS = {

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { User } from '../../core/models/User';
 import Input from '../shared/Input';
 import Select from '../shared/Select';
 import Button from '../shared/Button';
+import { useConfigStore } from '../../store/useConfigStore';
+import { useAuth } from '../../hooks/useAuth';
 
 interface Props {
     initialData?: User;
@@ -10,20 +12,33 @@ interface Props {
     onCancel: () => void;
 }
 
-const roleOptions = [
-    { value: 'admin', label: 'Administrador' },
-    { value: 'executive', label: 'Ejecutivo' }
-];
-
 const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
+    const { selectedTenant } = useConfigStore();
+    const { isSuperAdmin } = useAuth();
+
+    const roleOptions = useMemo(() => {
+        if (isSuperAdmin && !selectedTenant) {
+            return [
+                { value: 'superadmin', label: 'SuperAdministrador' },
+                { value: 'admin', label: 'Administrador' },
+                { value: 'executive', label: 'Ejecutivo' }
+            ];
+        }
+        return [
+            { value: 'admin', label: 'Administrador' },
+            { value: 'executive', label: 'Ejecutivo' }
+        ];
+    }, [isSuperAdmin, selectedTenant]);
+
     const [form, setForm] = useState<User>({
         username: '',
         email: '',
         password: '',
-        role: 'executive', // Por defecto, el rol es ejecutivo
+        role: (!selectedTenant && isSuperAdmin) ? 'superadmin' : 'executive',
         isActive: true,
         ...initialData,
     });
+
 
     useEffect(() => {
         if (initialData) {

@@ -6,8 +6,8 @@ interface DecodedToken {
   id: string;
   sub: string;
   username: string;
-  role: 'admin' | 'executive';
-  // ... cualquier otro dato que incluya tu token
+  role: 'superadmin' | 'admin' | 'executive';
+  tenant?: string;
   iat: number;
   exp: number;
 }
@@ -22,11 +22,10 @@ export const useAuth = () => {
       try {
         const decodedToken = jwtDecode<DecodedToken>(token);
         if (decodedToken.exp * 1000 > Date.now()) {
-          setUser({ ...decodedToken, id: decodedToken.sub });
+          setUser({ ...decodedToken, id: decodedToken.sub || decodedToken.id });
         }
       } catch (error) {
         console.error('Error al decodificar el token:', error);
-        // En caso de error, el token es inválido, así que dejamos el usuario como null
       }
     }
     setLoading(false);
@@ -35,9 +34,15 @@ export const useAuth = () => {
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
-    // Redirigimos al usuario a la página de login
     window.location.href = '/login';
   };
 
-  return { user, logout, isAdmin: user?.role === 'admin', isEjecutivo: user?.role === 'executive', loading };
-};
+  return {
+    user,
+    logout,
+    isSuperAdmin: user?.role === 'superadmin',
+    isAdmin: user?.role === 'admin' || user?.role === 'superadmin',
+    isEjecutivo: user?.role === 'executive',
+    loading,
+  };
+};

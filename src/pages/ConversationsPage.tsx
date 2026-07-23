@@ -154,11 +154,14 @@ export const ConversationsPage: React.FC = () => {
 
     // ── WebSocket Connect ──────────────────────────────────────────────────
     useEffect(() => {
+        if (!currentUserId) return;
+
         const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
         const socket = io(baseUrl, {
             query: { userId: currentUserId },
         });
         socketRef.current = socket;
+
 
         socket.on('connect', () => {
             console.log('Conectado a Websockets de Conversaciones');
