@@ -379,8 +379,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const lOptions = useMemo(() => licensings.map(l => ({ value: l.id, label: l.strname })), [licensings]);
   const currencyOptions = Object.values(Currency).map(c => ({ value: c, label: c }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     let finalEjecutivoId = opportunity.ejecutivo_id;
     if (!isAdmin && !finalEjecutivoId && user) {
@@ -400,60 +403,66 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         return;
     }
 
-    const { 
-      estimated_closure_date, 
-      createdAt, 
-      products, 
-      contacts, 
-      cliente, 
-      company, 
-      ejecutivo, 
-      stage, 
-      interactions, 
-      reminders, 
-      files, 
-      archived,
-      proposalDocumentPath,
-      linea_negocio,
-      tipo_entrega,
-      licenciamiento,
-      ...rest 
-    } = opportunity;
+    setIsSubmitting(true);
+    try {
+      const { 
+        estimated_closure_date, 
+        createdAt, 
+        products, 
+        contacts, 
+        cliente, 
+        company, 
+        ejecutivo, 
+        stage, 
+        interactions, 
+        reminders, 
+        files, 
+        archived,
+        proposalDocumentPath,
+        linea_negocio,
+        tipo_entrega,
+        licenciamiento,
+        ...rest 
+      } = opportunity;
 
-    let closureDate: Date | undefined = undefined;
-    if (estimated_closure_date) {
-        const dateString = estimated_closure_date as unknown as string;
+      let closureDate: Date | undefined = undefined;
+      if (estimated_closure_date) {
+          const dateString = estimated_closure_date as unknown as string;
+          const parts = dateString.split('-');
+          closureDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12);
+      }
+
+      let creationDate: Date | undefined = undefined;
+      if (createdAt) {
+        const dateString = createdAt as unknown as string;
         const parts = dateString.split('-');
-        closureDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12);
+        creationDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12);
+      }
+
+      const finalOpportunity: Partial<Opportunity> = {
+        ...rest,
+        ejecutivo_id: finalEjecutivoId,
+        monto_licenciamiento: Number(opportunity.monto_licenciamiento) || 0,
+        monto_servicios: Number(opportunity.monto_servicios) || 0,
+        tipoCambio: Number(opportunity.tipoCambio) || 0,
+        estimated_closure_date: closureDate,
+        createdAt: creationDate,
+        productIds: opportunity.productIds || [],
+      };
+
+      if (linkType === 'company') {
+        finalOpportunity.cliente_id = null;
+      } else {
+        finalOpportunity.companyId = null;
+        finalOpportunity.contactIds = opportunity.cliente_id ? [opportunity.cliente_id] : [];
+      }
+
+      await onSubmit(finalOpportunity);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    let creationDate: Date | undefined = undefined;
-    if (createdAt) {
-      const dateString = createdAt as unknown as string;
-      const parts = dateString.split('-');
-      creationDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12);
-    }
-
-    const finalOpportunity: Partial<Opportunity> = {
-      ...rest,
-      ejecutivo_id: finalEjecutivoId,
-      monto_licenciamiento: Number(opportunity.monto_licenciamiento) || 0,
-      monto_servicios: Number(opportunity.monto_servicios) || 0,
-      tipoCambio: Number(opportunity.tipoCambio) || 0,
-      estimated_closure_date: closureDate,
-      createdAt: creationDate,
-      productIds: opportunity.productIds || [],
-    };
-
-    if (linkType === 'company') {
-      finalOpportunity.cliente_id = null;
-    } else {
-      finalOpportunity.companyId = null;
-      finalOpportunity.contactIds = opportunity.cliente_id ? [opportunity.cliente_id] : [];
-    }
-
-    onSubmit(finalOpportunity);
   };
+
 
   const handleCreateClient = async (newClient: Client) => {
     try {
@@ -925,6 +934,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
             onClick={onCancel}
             variant="secondary"
             className="px-6 py-3"
+            disabled={isSubmitting}
           >
             Cancelar
           </Button>
@@ -932,9 +942,12 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
             type="submit"
             variant="success"
             className="px-6 py-3"
+            disabled={isSubmitting}
+            loading={isSubmitting}
           >
             Guardar
           </Button>
+
         </div>
       </form>
 

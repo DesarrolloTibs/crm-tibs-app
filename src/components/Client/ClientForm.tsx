@@ -93,11 +93,20 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        onSubmit(form as Client);
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+        try {
+            await onSubmit(form as Client);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
+
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6 p-2 font-sans">
@@ -208,6 +217,7 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                     onClick={onCancel}
                     variant="secondary"
                     className="px-6 py-3"
+                    disabled={isSubmitting}
                 >
                     Cancelar
                 </Button>
@@ -215,9 +225,12 @@ const ClientForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                     type="submit"
                     variant="success"
                     className="px-6 py-3"
+                    disabled={isSubmitting}
+                    loading={isSubmitting}
                 >
                     Guardar
                 </Button>
+
             </div>
         </form>
     );

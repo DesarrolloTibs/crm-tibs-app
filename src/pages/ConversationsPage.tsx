@@ -276,6 +276,16 @@ export const ConversationsPage: React.FC = () => {
     // ── Reasignar Ejecutivo ──────────────────────────────────────────────────
     const handleAssignUser = async (userId: string) => {
         if (!selectedConv) return;
+
+        if (selectedConv.assignedUserId && (!userId || userId.trim() === '')) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Acción No Permitida',
+                text: 'Una conversación asignada previamente no puede volver a quedar sin ejecutivo asignado.',
+            });
+            return;
+        }
+
         try {
             await assignConversation(selectedConv.id, userId);
 
@@ -287,7 +297,7 @@ export const ConversationsPage: React.FC = () => {
                     return {
                         ...prev,
                         assignedUserId: userId || null,
-                        assignedUser: newAssignedUser
+                        assignedUser: newAssignedUser || prev.assignedUser
                     };
                 }
                 return prev;
@@ -299,7 +309,7 @@ export const ConversationsPage: React.FC = () => {
                     return {
                         ...c,
                         assignedUserId: userId || null,
-                        assignedUser: newAssignedUser
+                        assignedUser: newAssignedUser || c.assignedUser
                     };
                 }
                 return c;
@@ -313,10 +323,16 @@ export const ConversationsPage: React.FC = () => {
                 showConfirmButton: false
             });
             loadConversationsList();
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error al asignar ejecutivo:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de Asignación',
+                text: err?.response?.data?.message || 'No se pudo reasignar la conversación.',
+            });
         }
     };
+
 
     // ── Simular Mensaje Entrante ─────────────────────────────────────────────
     const handleSimulate = async (e: React.FormEvent) => {
@@ -590,10 +606,13 @@ export const ConversationsPage: React.FC = () => {
                                         onChange={(e) => handleAssignUser(e.target.value)}
                                         className="py-1 px-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white outline-none focus:border-blue-500 transition-colors"
                                     >
-                                        <option value="">-- Sin asignar --</option>
+                                        {!selectedConv.assignedUserId && (
+                                            <option value="" disabled hidden>-- Seleccionar Ejecutivo --</option>
+                                        )}
                                         {allUsers.map(u => (
                                             <option key={u.id} value={u.id}>{u.username} ({u.role})</option>
                                         ))}
+
                                     </select>
                                 </div>
 

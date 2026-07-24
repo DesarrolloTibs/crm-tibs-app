@@ -103,8 +103,12 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         setAssociationType(type);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmitting) return;
+
         // Prepare payload - remove empty strings to avoid sending both as valid keys
         const payload: Partial<Expense> = {
             ...form,
@@ -127,8 +131,14 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
             payload.client_id = null;
         }
 
-        onSubmit(payload);
+        setIsSubmitting(true);
+        try {
+            await onSubmit(payload);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
+
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6 p-2">
@@ -223,13 +233,14 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="secondary" onClick={onCancel}>
+                <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
                     Cancelar
                 </Button>
-                <Button type="submit" variant="success">
+                <Button type="submit" variant="success" disabled={isSubmitting} loading={isSubmitting}>
                     Guardar Gasto
                 </Button>
             </div>
+
         </form>
     );
 };

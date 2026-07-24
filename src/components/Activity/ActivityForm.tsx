@@ -250,9 +250,11 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
             await onSubmit(finalActivity);
         } catch (error) {
             console.error('Submit error:', error);
+        } finally {
             setSubmitting(false);
         }
     };
+
 
     const handleRedirectOpportunity = () => {
         if (initialData?.opportunityId) {
@@ -504,9 +506,10 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                 <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
                     Cancelar
                 </Button>
-                <Button type="submit" variant="success" loading={submitting}>
-                    Guardar
+                <Button type="submit" variant="success" loading={submitting} disabled={submitting}>
+                    {submitting ? 'Guardando...' : (initialData?.id ? 'Actualizar' : 'Guardar')}
                 </Button>
+
             </div>
         </form>
     );

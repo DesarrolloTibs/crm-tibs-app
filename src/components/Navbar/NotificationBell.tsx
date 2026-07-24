@@ -127,16 +127,17 @@ const NotificationBell: React.FC = () => {
 
       const isTicket = typeLower.includes('ticket') || titleLower.includes('ticket') || messageLower.includes('ticket');
       const isOpportunity = typeLower.includes('opportunity') || typeLower.includes('semaphore') || typeLower.includes('red');
+      const isActivity = typeLower.includes('activity') || titleLower.includes('actividad');
       const isConversation = isMessageNotification(item);
 
       if (isConversation) {
         navigate(`/conversations?id=${item.relatedId}`);
       } else if (isTicket) {
         navigate(`/helpdesk?ticketId=${item.relatedId}`);
-      } else if (isOpportunity) {
+      } else if (isOpportunity || isActivity) {
         navigate(`/pipeline?opportunityId=${item.relatedId}`);
       } else {
-        navigate(`/conversations?id=${item.relatedId}`);
+        navigate(`/pipeline?opportunityId=${item.relatedId}`);
       }
     }
 

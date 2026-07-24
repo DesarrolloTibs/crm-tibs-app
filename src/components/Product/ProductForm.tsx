@@ -102,8 +102,12 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     setStagedSpecs(prev => prev.map(f => f.id === id ? { ...f, title: value } : f));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     if (!formData.nombre?.trim()) {
       alert('Por favor, ingresa el nombre del producto.');
       return;
@@ -118,8 +122,14 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
       requiere_analisis: formData.requiere_analisis,
     };
 
-    onSubmit(parsedData, stagedCoverFile, stagedSpecs);
+    setIsSubmitting(true);
+    try {
+      await onSubmit(parsedData, stagedCoverFile, stagedSpecs);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-2">
@@ -322,16 +332,20 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
           type="button"
           variant="secondary"
           onClick={onCancel}
+          disabled={isSubmitting}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
           variant="success"
+          disabled={isSubmitting}
+          loading={isSubmitting}
         >
           Guardar 
         </Button>
       </div>
+
     </form>
   );
 };

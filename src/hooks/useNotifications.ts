@@ -27,10 +27,10 @@ export const useNotifications = () => {
   }, [fetchNotifications]);
 
   useEffect(() => {
-    const userId = user?.id || user?.sub;
+    const userId = user?.id || user?.sub || (user as any)?.userId;
     if (!user || !userId) return;
 
-    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3090';
+    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
     const socket: Socket = io(baseUrl, {
       query: { userId },
     });
@@ -47,6 +47,7 @@ export const useNotifications = () => {
       socket.disconnect();
     };
   }, [user]);
+
 
   const handleMarkAsRead = async (id: string) => {
     try {

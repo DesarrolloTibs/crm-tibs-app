@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useConfigStore } from '../../store/useConfigStore';
 import { Menu, X } from 'lucide-react';
 import SeasonalContainer from './Season/SeasonalContainer';
 import NotificationBell from './NotificationBell';
@@ -13,6 +14,10 @@ interface Props {
 
 const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
     const { user, isSuperAdmin } = useAuth();
+    const { selectedTenant } = useConfigStore();
+
+    // Notificaciones visibles para usuarios de tenant, y para SuperAdmin sólo cuando está en el esquema public (selectedTenant === null)
+    const showNotificationBell = !isSuperAdmin || selectedTenant === null;
 
     return (
         <header className="bg-white shadow-sm p-3 sm:p-4 flex justify-between items-center sticky top-0 z-20 border-b border-gray-100">
@@ -43,7 +48,8 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
             <div className="flex items-center justify-end gap-2 sm:gap-4">
                 {isSuperAdmin && <TenantSelector />}
                 <ConsumptionInfoPopover />
-                <NotificationBell />
+                {showNotificationBell && <NotificationBell />}
+
 
                 <div className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 transition-colors p-1 sm:py-1.5 sm:px-3 rounded-full cursor-pointer border border-gray-200 shadow-sm w-9 h-9 sm:w-auto sm:h-auto select-none">
                     <span className="text-gray-600 hidden sm:flex items-center text-sm">

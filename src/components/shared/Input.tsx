@@ -34,7 +34,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
                         error ? 'border-rose-300 bg-rose-50/30 focus:border-rose-500' : ''
                     } ${className}`}
                     {...props}
+                    value={props.value === null ? '' : props.value}
                 />
+
             </div>
             {error && (
                 <p className="text-rose-600 text-[10px] font-medium mt-1 ml-1">

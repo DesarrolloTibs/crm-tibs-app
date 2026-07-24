@@ -89,37 +89,50 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
   const currentStage = stages.find(s => s.id === stageId);
   const isResolvedStage = currentStage?.strname === 'Resuelto';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setValidationError('');
 
-    if (!title.trim() || !description.trim()) {
+    const cleanTitle = (title || '').trim();
+    const cleanDesc = (description || '').trim();
+    const cleanNotas = (notasResolucion || '').trim();
+
+    if (!cleanTitle || !cleanDesc) {
       setValidationError('El Asunto y la Descripción del problema son obligatorios.');
       return;
     }
 
-    if (isResolvedStage && !notasResolucion.trim()) {
+    if (isResolvedStage && !cleanNotas) {
       setValidationError('Las notas de resolución son obligatorias para poder resolver el ticket.');
       setActiveTab('resol');
       return;
     }
 
     const payload: Partial<Ticket> = {
-      strtitle: title.trim(),
+      strtitle: cleanTitle,
       tipo_incidencia: incidenceType,
-      description: description.trim(),
+      description: cleanDesc,
       priority,
       cliente_id: clienteId,
       responsable_id: responsableId,
       stage_id: stageId,
-      notas_resolucion: isResolvedStage ? notasResolucion.trim() : (notasResolucion.trim() || null),
-      contactName: contactName.trim() || null,
-      contactEmail: contactEmail.trim() || null,
-      contactPhone: contactPhone.trim() || null,
+      notas_resolucion: isResolvedStage ? cleanNotas : (cleanNotas || null),
+      contactName: (contactName || '').trim() || null,
+      contactEmail: (contactEmail || '').trim() || null,
+      contactPhone: (contactPhone || '').trim() || null,
     };
 
-    onSave(payload);
+    setIsSubmitting(true);
+    try {
+      await onSave(payload);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   const clientOptions = clients.map(c => ({
     value: c.id!,
@@ -150,8 +163,8 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
     if (selectedId) {
       const client = clients.find(c => c.id === selectedId);
       if (client) {
-        setContactName(`${client.nombre} ${client.apellido}`);
-        setContactEmail(client.correo);
+        setContactName(`${client.nombre || ''} ${client.apellido || ''}`.trim());
+        setContactEmail(client.correo || '');
         setContactPhone(client.telefono || '');
         setCompanyName(client.company?.nombre || client.empresa || '');
       }
@@ -162,6 +175,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
       setCompanyName('');
     }
   };
+
 
   if (loading) {
     return (
@@ -432,16 +446,20 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
             type="button"
             onClick={onCancel}
             variant="secondary"
+            disabled={isSubmitting}
           >
             Cancelar
           </Button>
           <Button
             type="submit"
             variant="indigo"
+            disabled={isSubmitting}
+            loading={isSubmitting}
           >
             Guardar Cambios
           </Button>
         </div>
+
       </div>
     </form>
   );
