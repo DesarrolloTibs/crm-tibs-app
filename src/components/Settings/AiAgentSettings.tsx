@@ -85,6 +85,7 @@ const AiAgentSettings: React.FC = () => {
 
     // Reminder and assignment
     const [reminderOffsetMinutes, setReminderOffsetMinutes] = useState(60);
+    const [historyMessageLimit, setHistoryMessageLimit] = useState(10);
     const [maxNewTokens, setMaxNewTokens] = useState(2048);
     const [defaultUserId, setDefaultUserId] = useState('');
 
@@ -206,6 +207,7 @@ const AiAgentSettings: React.FC = () => {
             setWatsonxRegion(config.watsonxRegion || 'us-south');
             setWatsonxEmbeddingModel(config.watsonxEmbeddingModel || 'ibm/slate-125m-english-rtrvr');
             setReminderOffsetMinutes(config.reminderOffsetMinutes);
+            setHistoryMessageLimit(config.historyMessageLimit || 10);
             setMaxNewTokens(config.maxNewTokens || 2048);
             setDefaultUserId(config.defaultUserId || '');
         } catch (error) {
@@ -241,6 +243,7 @@ const AiAgentSettings: React.FC = () => {
                 watsonxRegion: watsonxRegion || 'us-south',
                 watsonxEmbeddingModel: watsonxEmbeddingModel || 'ibm/slate-125m-english-rtrvr',
                 reminderOffsetMinutes,
+                historyMessageLimit,
                 maxNewTokens,
                 defaultUserId: defaultUserId || null,
             });
@@ -1006,6 +1009,24 @@ const AiAgentSettings: React.FC = () => {
                                 <span>Preciso (0.0)</span>
                                 <span>Creativo (1.0)</span>
                             </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-100 space-y-1">
+                            <label htmlFor="historyMessageLimit" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                                Límite de Historial de Mensajes para la IA (Omnicanal)
+                            </label>
+                            <p className="text-xs text-gray-500 mb-2">
+                                Total global de mensajes más recientes del cliente recuperados entre todos sus canales (WhatsApp, Messenger, Instagram, WebChat) enviados como contexto al modelo de IA.
+                            </p>
+                            <Input
+                                id="historyMessageLimit"
+                                type="number"
+                                min={3}
+                                max={50}
+                                value={historyMessageLimit}
+                                onChange={(e) => setHistoryMessageLimit(parseInt(e.target.value) || 10)}
+                                placeholder="Ej: 10"
+                            />
                         </div>
                     </div>
 

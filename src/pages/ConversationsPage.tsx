@@ -598,6 +598,7 @@ export const ConversationsPage: React.FC = () => {
 
                             {/* Controles: Asignación y Bot status */}
                             <div className="flex flex-wrap items-center gap-4 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
+
                                 {/* Selector de Ejecutivo */}
                                 <div className="flex items-center gap-2">
                                     <Users size={16} className="text-gray-400" />
