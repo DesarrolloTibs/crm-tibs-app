@@ -4,6 +4,8 @@ export interface SelectedTenant {
   id: number;
   name: string;
   schema_name: string;
+  logo?: string | null;
+  allow_extra?: boolean;
 }
 
 export interface TenantPlanInfo {

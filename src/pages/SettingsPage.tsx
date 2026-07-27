@@ -13,11 +13,13 @@ import TenantsSection from '../components/Settings/TenantsSection';
 import PlansSection from '../components/Settings/PlansSection';
 import GlobalAiCredentialsSettings from '../components/Settings/GlobalAiCredentialsSettings';
 
+import MyCompanySection from '../components/Settings/MyCompanySection';
 import { useConfigStore } from '../store/useConfigStore';
 import { getOpportunityLabels } from '../services/opportunityLabelsService';
 import type { OpportunityLabel } from '../core/models/OpportunityLabel';
 
 type SettingTab = 
+  | 'my-company'
   | 'activity-types' 
   | 'opportunity-labels' 
   | 'opportunity-catalogs' 
@@ -43,7 +45,7 @@ const SettingsPage: React.FC = () => {
     const { isAdmin, isSuperAdmin, loading: authLoading } = useAuth();
     const { selectedTenant } = useConfigStore();
     const [activeTab, setActiveTabState] = useState<SettingTab>(() => {
-        return (sessionStorage.getItem('settingsActiveTab') as SettingTab) || 'activity-types';
+        return (sessionStorage.getItem('settingsActiveTab') as SettingTab) || 'my-company';
     });
     const [activeCatalogSubTab, setActiveCatalogSubTabState] = useState<'business-lines' | 'delivery-types' | 'licensings'>(() => {
         return (sessionStorage.getItem('settingsActiveCatalogSubTab') as any) || 'business-lines';
@@ -70,6 +72,7 @@ const SettingsPage: React.FC = () => {
 
     const mobileOptions = useMemo(() => {
         const options = [
+            { value: 'my-company', label: 'Mi empresa' },
             { value: 'activity-types', label: 'Tipos de Actividad' },
             { value: 'opportunity-labels', label: 'Etiquetas de Catálogos' },
             { value: 'opportunity-catalogs', label: 'Valores de Catálogos' },
@@ -107,6 +110,16 @@ const SettingsPage: React.FC = () => {
 
     const sections: SettingSection[] = useMemo(() => {
         const list: SettingSection[] = [
+            {
+                title: 'Organización',
+                options: [
+                    {
+                        id: 'my-company',
+                        label: 'Mi empresa',
+                        icon: <Building2 size={16} />,
+                    },
+                ],
+            },
             {
                 title: 'Actividades',
                 options: [
@@ -208,10 +221,10 @@ const SettingsPage: React.FC = () => {
         );
     }
 
-
-
     const renderActiveContent = () => {
         switch (activeTab) {
+            case 'my-company':
+                return <MyCompanySection />;
             case 'activity-types':
                 return <ActivityTypesSettings />;
             case 'opportunity-labels':

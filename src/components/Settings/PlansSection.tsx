@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, Plus, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
-import Swal from 'sweetalert2';
+import Notification from '../Modal/Notification';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../services/plansService';
 import type { Plan } from '../../services/plansService';
 
@@ -10,6 +10,25 @@ const PlansSection: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+
+  // Notification State estándar
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type: 'success' | 'error' | 'warning' | 'confirmation';
+    title: string;
+    message: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+  }>({
+    show: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const hideNotification = () => {
+    setNotification(prev => ({ ...prev, show: false }));
+  };
 
   // Form
   const [planName, setPlanName] = useState('');
@@ -65,7 +84,13 @@ const PlansSection: React.FC = () => {
           tokens_limit: tokensLimit,
           billing_period_months: billingMonths,
         });
-        Swal.fire('Plan Actualizado', 'El plan ha sido modificado exitosamente.', 'success');
+        setNotification({
+          show: true,
+          type: 'success',
+          title: 'Plan Actualizado',
+          message: 'El plan ha sido modificado exitosamente.',
+          onConfirm: hideNotification,
+        });
       } else {
         await createPlan({
           plan_name: planName,
@@ -73,37 +98,59 @@ const PlansSection: React.FC = () => {
           tokens_limit: tokensLimit,
           billing_period_months: billingMonths,
         });
-        Swal.fire('Plan Creado', 'El plan ha sido creado exitosamente.', 'success');
+        setNotification({
+          show: true,
+          type: 'success',
+          title: 'Plan Creado',
+          message: 'El plan ha sido creado exitosamente.',
+          onConfirm: hideNotification,
+        });
       }
       setShowModal(false);
       await loadPlans();
     } catch (err: any) {
-      Swal.fire('Error', err.response?.data?.message || err.message, 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: err.response?.data?.message || err.message,
+        onConfirm: hideNotification,
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (plan: Plan) => {
-    const res = await Swal.fire({
+  const handleDelete = (plan: Plan) => {
+    setNotification({
+      show: true,
+      type: 'confirmation',
       title: `¿Desactivar ${plan.plan_name}?`,
-      text: 'El plan pasará a estado inactivo.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, desactivar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#ef4444',
+      message: 'El plan pasará a estado inactivo.',
+      onConfirm: async () => {
+        hideNotification();
+        try {
+          await deletePlan(plan.plan_id);
+          await loadPlans();
+          setNotification({
+            show: true,
+            type: 'success',
+            title: 'Desactivado',
+            message: 'El plan ha sido desactivado.',
+            onConfirm: hideNotification,
+          });
+        } catch (err: any) {
+          setNotification({
+            show: true,
+            type: 'error',
+            title: 'Error',
+            message: err.response?.data?.message || err.message,
+            onConfirm: hideNotification,
+          });
+        }
+      },
+      onCancel: hideNotification,
     });
-
-    if (res.isConfirmed) {
-      try {
-        await deletePlan(plan.plan_id);
-        await loadPlans();
-        Swal.fire('Desactivado', 'El plan ha sido desactivado.', 'success');
-      } catch (err: any) {
-        Swal.fire('Error', err.response?.data?.message || err.message, 'error');
-      }
-    }
   };
 
   return (
@@ -271,6 +318,16 @@ const PlansSection: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Notificación Estándar */}
+      <Notification
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onConfirm={notification.onConfirm || hideNotification}
+        onCancel={notification.onCancel || hideNotification}
+      />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Calendar, ShieldAlert, CheckCircle, ToggleLeft, ToggleRight, Pencil, Trash2 } from 'lucide-react';
-import Swal from 'sweetalert2';
+import Notification from '../Modal/Notification';
 import { getTenants, provisionTenant, updateTenantPlan, enqueueTenantRenewal, updateAllowExtra, updateTenant, deleteTenant } from '../../services/tenantsService';
 import { getPlans } from '../../services/plansService';
 import type { Plan } from '../../services/plansService';
@@ -11,6 +11,25 @@ const TenantsSection: React.FC = () => {
   const { tenants, setTenants } = useConfigStore();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Notification State estándar
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type: 'success' | 'error' | 'warning' | 'confirmation';
+    title: string;
+    message: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+  }>({
+    show: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const hideNotification = () => {
+    setNotification(prev => ({ ...prev, show: false }));
+  };
 
   // Modales
   const [showProvisionModal, setShowProvisionModal] = useState(false);
@@ -30,8 +49,6 @@ const TenantsSection: React.FC = () => {
   const [editTenantName, setEditTenantName] = useState('');
   const [editIsActive, setEditIsActive] = useState(true);
   const [editAllowExtra, setEditAllowExtra] = useState(false);
-
-
 
   // Form asignación plan
   const [assignPlanId, setAssignPlanId] = useState<number>(1);
@@ -59,7 +76,6 @@ const TenantsSection: React.FC = () => {
     }
   };
 
-
   useEffect(() => {
     loadData();
   }, []);
@@ -83,29 +99,20 @@ const TenantsSection: React.FC = () => {
 
       await loadData();
 
-      Swal.fire({
-        icon: 'success',
-        title: '🎉 Organización Aprovisionada',
-        html: `
-          <div class="text-left text-sm space-y-2">
-            <p><strong>Organización:</strong> ${res.schemaName}</p>
-            <p><strong>Usuario Admin:</strong> ${res.adminUsername}</p>
-            <p><strong>Email:</strong> ${res.adminEmail}</p>
-            <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl font-mono text-amber-900 text-xs">
-              <p><strong>Contraseña Temporal Generada:</strong></p>
-              <p class="text-base font-bold text-slate-800 mt-1 select-all">${res.tempPassword}</p>
-            </div>
-            <p class="text-xs text-slate-500 mt-2">Por favor, comparta estas credenciales con el administrador del tenant.</p>
-          </div>
-        `,
-        confirmButtonText: 'Entendido',
-        confirmButtonColor: '#4f46e5',
+      setNotification({
+        show: true,
+        type: 'success',
+        title: 'Organización Aprovisionada',
+        message: `Organización ${res.schemaName} creada correctamente. Usuario Admin: ${res.adminUsername} (${res.adminEmail}). Contraseña Temporal: ${res.tempPassword}`,
+        onConfirm: hideNotification,
       });
     } catch (err: any) {
-      Swal.fire({
-        icon: 'error',
+      setNotification({
+        show: true,
+        type: 'error',
         title: 'Error de Provisión',
-        text: err.response?.data?.message || err.message,
+        message: err.response?.data?.message || err.message,
+        onConfirm: hideNotification,
       });
     } finally {
       setSubmitting(false);
@@ -120,9 +127,21 @@ const TenantsSection: React.FC = () => {
       await updateTenantPlan(showPlanModal.id, assignPlanId, assignMonths, assignAllowExtra);
       setShowPlanModal(null);
       await loadData();
-      Swal.fire('Plan Actualizado', 'La suscripción del tenant ha sido actualizada exitosamente.', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: 'Plan Actualizado',
+        message: 'La suscripción del tenant ha sido actualizada exitosamente.',
+        onConfirm: hideNotification,
+      });
     } catch (err: any) {
-      Swal.fire('Error', err.response?.data?.message || err.message, 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: err.response?.data?.message || err.message,
+        onConfirm: hideNotification,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -135,9 +154,21 @@ const TenantsSection: React.FC = () => {
     try {
       await enqueueTenantRenewal(showQueueModal.id, assignPlanId, assignMonths);
       setShowQueueModal(null);
-      Swal.fire('Renovación en Cola', 'El período de renovación ha sido agregado a la cola correctamente.', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: 'Renovación en Cola',
+        message: 'El período de renovación ha sido agregado a la cola correctamente.',
+        onConfirm: hideNotification,
+      });
     } catch (err: any) {
-      Swal.fire('Error', err.response?.data?.message || err.message, 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: err.response?.data?.message || err.message,
+        onConfirm: hideNotification,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -148,7 +179,13 @@ const TenantsSection: React.FC = () => {
       await updateAllowExtra(t.id, !t.allow_extra);
       await loadData();
     } catch (err: any) {
-      Swal.fire('Error', err.response?.data?.message || err.message, 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: err.response?.data?.message || err.message,
+        onConfirm: hideNotification,
+      });
     }
   };
 
@@ -164,35 +201,56 @@ const TenantsSection: React.FC = () => {
       });
       setShowEditModal(null);
       await loadData();
-      Swal.fire('Organización Actualizada', 'Los datos de la organización se actualizaron correctamente.', 'success');
+      setNotification({
+        show: true,
+        type: 'success',
+        title: 'Organización Actualizada',
+        message: 'Los datos de la organización se actualizaron correctamente.',
+        onConfirm: hideNotification,
+      });
     } catch (err: any) {
-      Swal.fire('Error', err.response?.data?.message || err.message, 'error');
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: err.response?.data?.message || err.message,
+        onConfirm: hideNotification,
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDeleteTenant = async (t: TenantPlanInfo) => {
-    const result = await Swal.fire({
+  const handleDeleteTenant = (t: TenantPlanInfo) => {
+    setNotification({
+      show: true,
+      type: 'confirmation',
       title: '¿Eliminar Organización?',
-      html: `¿Estás seguro de que deseas eliminar la organización <strong>${t.name}</strong> (${t.schema_name})?<br/><br/><span class="text-xs text-red-600 font-semibold">⚠️ ADVERTENCIA: Esta acción eliminará el esquema de base de datos y todos sus datos permanentemente.</span>`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Sí, eliminar permanentemente',
-      cancelButtonText: 'Cancelar',
+      message: `¿Estás seguro de que deseas eliminar la organización ${t.name} (${t.schema_name})? Esta acción eliminará la base de datos permanentemente.`,
+      onConfirm: async () => {
+        hideNotification();
+        try {
+          await deleteTenant(t.id);
+          await loadData();
+          setNotification({
+            show: true,
+            type: 'success',
+            title: 'Organización Eliminada',
+            message: `La organización '${t.name}' fue eliminada exitosamente.`,
+            onConfirm: hideNotification,
+          });
+        } catch (err: any) {
+          setNotification({
+            show: true,
+            type: 'error',
+            title: 'Error',
+            message: err.response?.data?.message || err.message,
+            onConfirm: hideNotification,
+          });
+        }
+      },
+      onCancel: hideNotification,
     });
-
-    if (result.isConfirmed) {
-      try {
-        await deleteTenant(t.id);
-        await loadData();
-        Swal.fire('Organización Eliminada', `La organización '${t.name}' fue eliminada exitosamente.`, 'success');
-      } catch (err: any) {
-        Swal.fire('Error', err.response?.data?.message || err.message, 'error');
-      }
-    }
   };
 
   return (
@@ -623,6 +681,16 @@ const TenantsSection: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Notificación Estándar */}
+      <Notification
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onConfirm={notification.onConfirm || hideNotification}
+        onCancel={notification.onCancel || hideNotification}
+      />
     </div>
   );
 };

@@ -20,12 +20,20 @@ export interface ProvisionTenantResponse {
 }
 
 export interface TenantConsumptionData {
+  tenant_id: number | null;
+  tenant_name: string;
+  schema_name: string;
+  is_active: boolean;
+  allow_extra: boolean;
+  logo: string | null;
   documents_used: number;
   documents_limit: number;
   tokens_used: number;
+  tokens_extra_used: number;
   tokens_limit: number;
   next_renewal_date: string | null;
   plan_name: string;
+  price: number;
 }
 
 export const getTenants = async (): Promise<TenantPlanInfo[]> => {
@@ -35,6 +43,24 @@ export const getTenants = async (): Promise<TenantPlanInfo[]> => {
 
 export const getTenantById = async (id: number): Promise<TenantPlanInfo> => {
   const response = await axiosInstance.get(`${TENANTS.TENANTS}/${id}`);
+  return response.data;
+};
+
+export const getMyTenantInfo = async (schemaName?: string): Promise<TenantPlanInfo | null> => {
+  const response = await axiosInstance.get(`${TENANTS.TENANTS}/my-tenant`, {
+    params: schemaName ? { schemaName } : {},
+  });
+  return response.data;
+};
+
+export const uploadTenantLogo = async (tenantId: number, file: File): Promise<TenantPlanInfo> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await axiosInstance.post(`${TENANTS.TENANTS}/${tenantId}/logo`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 
@@ -79,7 +105,7 @@ export const updateAllowExtra = async (
 
 export const updateTenant = async (
   tenantId: number,
-  payload: { name?: string; is_active?: boolean; allow_extra?: boolean }
+  payload: { name?: string; is_active?: boolean; allow_extra?: boolean; logo?: string | null }
 ): Promise<TenantPlanInfo> => {
   const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}`, payload);
   return response.data;

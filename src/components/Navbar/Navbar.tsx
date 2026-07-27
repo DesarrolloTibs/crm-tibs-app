@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfigStore } from '../../store/useConfigStore';
 import { Menu, X } from 'lucide-react';
@@ -6,6 +6,7 @@ import SeasonalContainer from './Season/SeasonalContainer';
 import NotificationBell from './NotificationBell';
 import TenantSelector from '../Settings/TenantSelector';
 import ConsumptionInfoPopover from './ConsumptionInfoPopover';
+import { getTenantConsumption } from '../../services/tenantsService';
 
 interface Props {
     toggleSidebar: () => void;
@@ -15,21 +16,50 @@ interface Props {
 const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
     const { user, isSuperAdmin } = useAuth();
     const { selectedTenant } = useConfigStore();
+    const [tenantLogo, setTenantLogo] = useState<string | null>(null);
 
     // Notificaciones visibles para usuarios de tenant, y para SuperAdmin sólo cuando está en el esquema public (selectedTenant === null)
     const showNotificationBell = !isSuperAdmin || selectedTenant === null;
 
+    useEffect(() => {
+        const fetchLogo = async () => {
+            try {
+                const data = await getTenantConsumption(selectedTenant?.schema_name);
+                if (data?.logo) {
+                    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
+                    setTenantLogo(data.logo.startsWith('http') ? data.logo : `${baseUrl}${data.logo}`);
+                } else {
+                    setTenantLogo(null);
+                }
+            } catch (err) {
+                setTenantLogo(null);
+            }
+        };
+        fetchLogo();
+    }, [selectedTenant]);
+
     return (
         <header className="bg-white shadow-sm p-3 sm:p-4 flex justify-between items-center sticky top-0 z-20 border-b border-gray-100">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
                 {/* Botón para el menú */}
                 <button 
                     onClick={toggleSidebar} 
-                    className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                     aria-label="Toggle menu"
                 >
                     {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
+
+                {/* Logo de la Empresa (Parte izquierda del Navbar) */}
+                {tenantLogo && (
+                    <div className="hidden sm:flex items-center h-10 px-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 overflow-hidden shadow-xs">
+                        <img 
+                            src={tenantLogo} 
+                            alt="Logo Empresa" 
+                            className="max-h-8 max-w-[140px] object-contain" 
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Logo para móvil (centrado) */}

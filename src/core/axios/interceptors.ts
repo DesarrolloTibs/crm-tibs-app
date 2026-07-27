@@ -37,7 +37,7 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
                 if (code === 'TOKENS_LIMIT_EXCEEDED') {
                     Swal.fire({
                         icon: 'warning',
-                        title: '⚠️ Límite de Tokens Alcanzado',
+                        title: 'Límite de Tokens Alcanzado',
                         html: `
                           <p class="text-slate-600 mb-3">${message}</p>
                           <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left text-xs font-mono">
@@ -52,7 +52,7 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
                 } else if (code === 'SUBSCRIPTION_EXPIRED') {
                     Swal.fire({
                         icon: 'error',
-                        title: '🚫 Suscripción Expirada',
+                        title: 'Suscripción Expirada',
                         text: message,
                         confirmButtonText: 'Aceptar',
                         confirmButtonColor: '#ef4444',
