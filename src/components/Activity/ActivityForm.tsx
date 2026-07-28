@@ -3,7 +3,7 @@ import { type SingleValue, type MultiValue } from 'react-select';
 import { Bell, BellOff, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { getOpportunities } from '../../services/opportunitiesService';
+import { getOpportunities, getOpportunity } from '../../services/opportunitiesService';
 import { getActiveClients } from '../../services/clientsService';
 import type { Activity, TypeActivity, ActivityReminder } from '../../core/models/Activity';
 import type { Opportunity } from '../../core/models/Opportunity';
@@ -43,21 +43,32 @@ const formatDateTimeForInput = (isoString?: string) => {
 const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, onCancel }) => {
     const { user, isAdmin } = useAuth();
     const navigate = useNavigate();
-    const [linkType, setLinkType] = useState<'company' | 'contact'>(
-        initialData?.companyId ? 'company' : 'contact'
-    );
+    const [linkType, setLinkType] = useState<'company' | 'contact'>(() => {
+        if (initialData?.companyId) return 'company';
+        if (initialData?.clientId) return 'contact';
+        if (initialData?.opportunity?.companyId) return 'company';
+        if (initialData?.opportunity?.cliente_id) return 'contact';
+        return 'company';
+    });
     const [companies, setCompanies] = useState<Company[]>([]);
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState<Partial<Activity & { contactIds?: string[] }>>({
-        activity: '',
-        typeActivityId: initialData?.typeActivityId ?? (activityTypes[0]?.id || null),
-        opportunityId: initialData?.opportunityId ?? null,
-        clientId: initialData?.clientId ?? null,
-        companyId: initialData?.companyId ?? null,
-        contactIds: initialData?.contacts?.map(c => c.id!) || [],
-        flaghistory: initialData?.flaghistory || false,
-        ...initialData,
-        date: formatDateTimeForInput(initialData?.date || new Date().toISOString()),
+    const [form, setForm] = useState<Partial<Activity & { contactIds?: string[] }>>(() => {
+        const opp = initialData?.opportunity;
+        const initialCompanyId = initialData?.companyId ?? (opp?.companyId || null);
+        const initialClientId = initialData?.clientId ?? (opp?.cliente_id || null);
+        const initialContactIds = initialData?.contacts?.map(c => c.id!) || (opp?.contacts?.map(c => c.id!) || []);
+
+        return {
+            activity: '',
+            typeActivityId: initialData?.typeActivityId ?? (activityTypes[0]?.id || null),
+            opportunityId: initialData?.opportunityId ?? null,
+            clientId: initialClientId,
+            companyId: initialCompanyId,
+            contactIds: initialContactIds,
+            flaghistory: initialData?.flaghistory || false,
+            ...initialData,
+            date: formatDateTimeForInput(initialData?.date || new Date().toISOString()),
+        };
     });
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
@@ -84,6 +95,23 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                     userOpportunities = allOpportunities.filter(op => op.ejecutivo_id === user.sub);
                 }
 
+                if (initialData?.opportunity) {
+                    if (!userOpportunities.some(op => op.id === initialData.opportunity!.id)) {
+                        userOpportunities = [initialData.opportunity, ...userOpportunities];
+                    }
+                } else if (initialData?.opportunityId) {
+                    if (!userOpportunities.some(op => op.id === initialData.opportunityId)) {
+                        try {
+                            const singleOpp = await getOpportunity(initialData.opportunityId);
+                            if (singleOpp) {
+                                userOpportunities = [singleOpp, ...userOpportunities];
+                            }
+                        } catch (e) {
+                            console.error('Failed to fetch opportunity by ID:', e);
+                        }
+                    }
+                }
+
                 setOpportunities(userOpportunities);
                 setClients(activeClients);
                 setCompanies(allCompanies.filter(c => c.estatus));
@@ -93,7 +121,29 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
             }
         };
         fetchData();
-    }, [isAdmin, user]);
+    }, [isAdmin, user, initialData?.opportunityId, initialData?.opportunity]);
+
+    useEffect(() => {
+        if (form.opportunityId && !form.companyId && !form.clientId && opportunities.length > 0) {
+            const opp = opportunities.find(o => o.id === form.opportunityId);
+            if (opp) {
+                if (opp.companyId) {
+                    setLinkType('company');
+                    setForm(prev => ({
+                        ...prev,
+                        companyId: opp.companyId,
+                        contactIds: prev.contactIds?.length ? prev.contactIds : (opp.contacts?.map(c => c.id!) || [])
+                    }));
+                } else if (opp.cliente_id) {
+                    setLinkType('contact');
+                    setForm(prev => ({
+                        ...prev,
+                        clientId: opp.cliente_id
+                    }));
+                }
+            }
+        }
+    }, [form.opportunityId, opportunities]);
 
     const extendedActivityTypes = useMemo(() => {
         const hasCurrentType = activityTypes.some(type => type.id === form.typeActivityId);
@@ -109,12 +159,20 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         return activityTypes;
     }, [activityTypes, form.typeActivityId, initialData?.typeActivity]);
 
+    const extendedOpportunities = useMemo(() => {
+        let list = [...opportunities];
+        if (initialData?.opportunity && !list.some(op => op.id === initialData.opportunity!.id)) {
+            list = [initialData.opportunity, ...list];
+        }
+        return list;
+    }, [opportunities, initialData?.opportunity]);
+
     const opportunityOptions = useMemo(() => {
-        return opportunities.map(op => ({
+        return extendedOpportunities.map(op => ({
             value: op.id,
             label: `${op.nombre_proyecto} (${op.company?.nombre || op.cliente?.nombre || op.empresa || 'Sin asociar'})`,
         }));
-    }, [opportunities]);
+    }, [extendedOpportunities]);
 
     const companyOptions = useMemo(() =>
         companies.map(c => ({
@@ -262,9 +320,25 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
         }
     };
 
-    const selectedOpportunityValue = form.opportunityId
-        ? opportunityOptions.find(option => option.value === form.opportunityId) || null
-        : null;
+    const selectedOpportunityValue = useMemo(() => {
+        if (!form.opportunityId) return null;
+
+        const found = opportunityOptions.find(option => option.value === form.opportunityId);
+        if (found) return found;
+
+        if (initialData?.opportunity && initialData.opportunity.id === form.opportunityId) {
+            const op = initialData.opportunity;
+            return {
+                value: op.id,
+                label: `${op.nombre_proyecto} (${op.company?.nombre || op.cliente?.nombre || op.empresa || 'Sin asociar'})`,
+            };
+        }
+
+        return {
+            value: form.opportunityId,
+            label: 'Cargando oportunidad...',
+        };
+    }, [form.opportunityId, opportunityOptions, initialData?.opportunity]);
 
     const selectedCompanyValue = form.companyId
         ? companyOptions.find(option => option.value === form.companyId) || null
@@ -407,7 +481,7 @@ const ActivityForm: React.FC<Props> = ({ initialData, activityTypes, onSubmit, o
                                     onChange={handleOpportunityChange}
                                     placeholder="-- Seleccione una oportunidad --"
                                     isClearable
-                                    isDisabled={!!initialData?.opportunityId && !initialData?.id}
+                                    isDisabled={!!initialData?.opportunityId}
                                     isSearchable
                                     noOptionsMessage={() => 'No se encontraron oportunidades'}
                                 />

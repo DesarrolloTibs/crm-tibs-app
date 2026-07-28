@@ -1126,7 +1126,7 @@ const PipelinePage: React.FC = () => {
 
     const tabs = [
       { label: 'Datos', content: <OpportunityForm initialData={editingOpportunity} onSubmit={handleUpdate} onCancel={() => setIsFormModalOpen(false)} /> },
-      { label: 'Actividades', content: <ActivitiesTab opportunityId={editingOpportunity.id} /> },
+      { label: 'Actividades', content: <ActivitiesTab opportunityId={editingOpportunity.id} opportunity={editingOpportunity} /> },
       { label: 'Historial', content: <InteractionsTab opportunityId={editingOpportunity.id} /> },
       {
         label: 'Archivos', content: <FilesTab opportunity={editingOpportunity} onUploadSuccess={(updatedOpp) => {

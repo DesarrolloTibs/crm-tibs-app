@@ -7,6 +7,7 @@ import Loader from '../Loader/Loader';
 import { Plus, Search } from 'lucide-react';
 import Notification from '../Modal/Notification';
 import type { Activity, TypeActivity } from '../../core/models/Activity';
+import type { Opportunity } from '../../core/models/Opportunity';
 import ActivitiesTable from './ActivitiesTable';
 import ActivityForm from './ActivityForm';
 import Input from '../shared/Input';
@@ -14,9 +15,10 @@ import Button from '../shared/Button';
 
 interface Props {
     opportunityId: string;
+    opportunity?: Opportunity;
 }
 
-const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
+const ActivitiesTab: React.FC<Props> = ({ opportunityId, opportunity }) => {
     const [activities, setActivities] = useState<Activity[]>([]);
     const [activityTypes, setActivityTypes] = useState<TypeActivity[]>([]);
     const [editing, setEditing] = useState<Activity | null>(null);
@@ -207,7 +209,7 @@ const ActivitiesTab: React.FC<Props> = ({ opportunityId }) => {
             )}
             <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
                 <ActivityForm
-                    initialData={editing || { opportunityId }}
+                    initialData={editing ? { ...editing, opportunity: editing.opportunity || opportunity } : { opportunityId, opportunity }}
                     activityTypes={activityTypes}
                     onSubmit={editing ? handleUpdate : handleCreate}
                     onCancel={() => setModalOpen(false)}
