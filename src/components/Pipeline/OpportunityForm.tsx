@@ -356,7 +356,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const productOptions = useMemo(() => products.map(product => ({
     value: product.id!,
-    label: `${product.nombre} (${product.requiere_analisis || product.precioBase === null || product.precioBase === undefined ? 'A la medida' : new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(product.precioBase))})`,
+    label: `${product.nombre} (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(product.precioBase || 0))} / ${product.unidadMedida || 'Pieza'})`,
   })), [products]);
 
   const selectedProductsValue = productOptions.filter(option =>
@@ -871,7 +871,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                                 </p>
                               )}
                               <p className="text-xs font-semibold text-indigo-600 mt-1">
-                                Precio Base: {p.requiere_analisis || p.precioBase === null || p.precioBase === undefined ? 'A la medida' : new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(p.precioBase))}
+                                Precio Base: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(p.precioBase || 0))} / {p.unidadMedida || 'Pieza'}
                               </p>
                             </div>
                           </div>

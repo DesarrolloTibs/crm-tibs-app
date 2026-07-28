@@ -22,9 +22,10 @@ interface ProductFormState {
   nombre: string;
   descripcion: string;
   precioBase: string;
+  unidadMedida: string;
+  observaciones: string;
   status: boolean;
   imagenPortada?: string | null;
-  requiere_analisis: boolean;
 }
 
 const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
@@ -34,8 +35,9 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     nombre: '',
     descripcion: '',
     precioBase: '',
+    unidadMedida: 'Pieza',
+    observaciones: '',
     status: true,
-    requiere_analisis: false,
   });
 
   const [stagedCoverFile, setStagedCoverFile] = useState<File | null>(null);
@@ -50,9 +52,10 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         nombre: initialData.nombre || '',
         descripcion: initialData.descripcion || '',
         precioBase: initialData.precioBase !== undefined && initialData.precioBase !== null ? String(initialData.precioBase) : '',
+        unidadMedida: initialData.unidadMedida || 'Pieza',
+        observaciones: initialData.observaciones || '',
         status: initialData.status !== undefined ? initialData.status : true,
         imagenPortada: initialData.imagenPortada,
-        requiere_analisis: initialData.requiere_analisis !== undefined ? initialData.requiere_analisis : false,
       });
 
       if (initialData.imagenPortada) {
@@ -65,9 +68,10 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         nombre: '',
         descripcion: '',
         precioBase: '',
+        unidadMedida: 'Pieza',
+        observaciones: '',
         status: true,
         imagenPortada: null,
-        requiere_analisis: false,
       });
       setCoverPreview(null);
     }
@@ -116,10 +120,11 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     const parsedData: Partial<Product> = {
       nombre: formData.nombre,
       descripcion: formData.descripcion,
-      precioBase: formData.precioBase !== '' ? Number(formData.precioBase) : null,
+      precioBase: formData.precioBase !== '' ? Number(formData.precioBase) : 0,
+      unidadMedida: formData.unidadMedida || 'Pieza',
+      observaciones: formData.observaciones || null,
       status: formData.status,
       imagenPortada: formData.imagenPortada,
-      requiere_analisis: formData.requiere_analisis,
     };
 
     setIsSubmitting(true);
@@ -165,51 +170,54 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
             />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Input
+                label="Precio Base (MXN) *"
+                id="precioBase"
+                type="number"
+                name="precioBase"
+                min="0"
+                step="0.01"
+                value={formData.precioBase}
+                onChange={handleChange}
+                placeholder="0.00"
+                inputPrefix={<DollarSign size={16} />}
+                className="text-right"
+                required
+              />
+            </div>
+
+            <div>
+              <Input
+                label="Unidad de Medida *"
+                id="unidadMedida"
+                type="text"
+                name="unidadMedida"
+                value={formData.unidadMedida}
+                onChange={handleChange}
+                placeholder="Ej: Pieza, Servicio, Licencia, Hora..."
+                required
+              />
+            </div>
+          </div>
+          <span className="text-xs text-slate-400 block -mt-2">
+            El precio base del catálogo se calcula y almacena estrictamente en Pesos Mexicanos (MXN).
+          </span>
+
           <div>
-            <Input
-              label="Precio Base (MXN) *"
-              id="precioBase"
-              type="number"
-              name="precioBase"
-              min="0"
-              step="0.01"
-              value={formData.precioBase}
+            <TextArea
+              label="Observaciones / Notas del Producto"
+              id="observaciones"
+              name="observaciones"
+              value={formData.observaciones || ''}
               onChange={handleChange}
-              placeholder="0.00"
-              inputPrefix={<DollarSign size={16} />}
-              className="text-right"
-              disabled={formData.requiere_analisis}
-              required={!formData.requiere_analisis}
+              placeholder="Ej: No incluye IVA, no incluye instalación, precio refleja configuración básica..."
+              rows={2}
             />
             <span className="text-xs text-slate-400 mt-1 block">
-              El precio base del catálogo se calcula y almacena estrictamente en Pesos Mexicanos (MXN).
+              Notas libres comunicadas automáticamente por el Agente de IA al cliente durante las cotizaciones.
             </span>
-
-            <div className="flex items-start gap-2 mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-              <input
-                id="requiere_analisis"
-                type="checkbox"
-                name="requiere_analisis"
-                checked={formData.requiere_analisis}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setFormData(prev => ({
-                    ...prev,
-                    requiere_analisis: checked,
-                    precioBase: checked ? '' : prev.precioBase
-                  }));
-                }}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer mt-0.5"
-              />
-              <div className="flex flex-col">
-                <label htmlFor="requiere_analisis" className="text-sm font-semibold text-slate-800 cursor-pointer select-none">
-                  A la medida / Requiere análisis técnico
-                </label>
-                <span className="text-xs text-slate-400">
-                  Marca esta casilla si el producto/servicio no tiene un precio fijo y requiere una sesión de análisis técnico o cotización personalizada.
-                </span>
-              </div>
-            </div>
           </div>
 
           <div className="flex items-center mt-2">

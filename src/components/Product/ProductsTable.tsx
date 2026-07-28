@@ -40,7 +40,8 @@ const ProductsTable: React.FC<Props> = ({
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider w-16">Portada</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Descripción</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Precio Base</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Precio Base / Unidad</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Observaciones</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
             <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Creado Por</th>
             <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
@@ -101,16 +102,25 @@ const ProductsTable: React.FC<Props> = ({
                   <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
                     <div className="flex flex-col md:block">
                       <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">
-                        Precio Base
+                        Precio Base / Unidad
                       </span>
                       <p className="font-medium text-gray-900">
-                        {product.requiere_analisis || product.precioBase === null || product.precioBase === undefined ? (
-                          <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-semibold border border-indigo-100">
-                            A la medida
-                          </span>
-                        ) : (
-                          formatPrice(Number(product.precioBase))
-                        )}
+                        {formatPrice(Number(product.precioBase || 0))}
+                        <span className="text-xs text-slate-500 ml-1 font-normal">
+                          / {product.unidadMedida || 'Pieza'}
+                        </span>
+                      </p>
+                    </div>
+                  </td>
+
+                  {/* Observaciones */}
+                  <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
+                    <div className="flex flex-col md:block">
+                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">
+                        Observaciones
+                      </span>
+                      <p className="text-gray-600 text-sm truncate max-w-xs" title={product.observaciones || ''}>
+                        {product.observaciones || <span className="italic text-gray-400">Sin notas</span>}
                       </p>
                     </div>
                   </td>

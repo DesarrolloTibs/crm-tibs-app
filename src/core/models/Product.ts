@@ -12,7 +12,8 @@ export interface Product {
   nombre: string;
   descripcion?: string | null;
   precioBase: number | null;
-  requiere_analisis?: boolean;
+  unidadMedida?: string;
+  observaciones?: string | null;
   status: boolean;
   imagenPortada?: string | null;
   createdById?: string | null;
