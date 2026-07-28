@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { MessageSquare, X, Send, Bot, User, Sparkles, Maximize2, Minimize2 } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User, Sparkles, Maximize2, Minimize2, FileText, Download } from 'lucide-react';
 import '../WebChat/WebChat.css';
 
 interface Message {
@@ -9,6 +9,60 @@ interface Message {
   content: string;
   createdAt: string;
 }
+
+const renderWebChatMessageContent = (content: string) => {
+  if (!content) return null;
+  const pdfMatch = content.match(/(https?:\/\/[^\s]+\.pdf|\/uploads\/[^\s]+\.pdf|uploads\/[^\s]+\.pdf)/i);
+
+  if (pdfMatch) {
+    let rawUrl = pdfMatch[0];
+    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
+    let fullUrl = rawUrl;
+    if (rawUrl.startsWith('/uploads/')) {
+      fullUrl = `${baseUrl}${rawUrl}`;
+    } else if (rawUrl.startsWith('uploads/')) {
+      fullUrl = `${baseUrl}/${rawUrl}`;
+    }
+
+    const textBefore = content.split(rawUrl)[0].replace(/📄\s*\[Cotización en PDF\]\s*\([^)]*\):\s*/i, '').trim();
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {textBefore && <span>{textBefore}</span>}
+        <a
+          href={fullUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '10px',
+            padding: '8px 12px',
+            color: 'inherit',
+            textDecoration: 'none',
+            fontSize: '12px',
+            fontWeight: 'bold',
+          }}
+        >
+          <div style={{ padding: '6px', backgroundColor: '#ef4444', borderRadius: '6px', color: 'white', display: 'flex' }}>
+            <FileText size={16} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+            <span>Cotización en PDF</span>
+            <span style={{ fontSize: '10px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'underline' }}>
+              Ver / Descargar <Download size={10} />
+            </span>
+          </div>
+        </a>
+      </div>
+    );
+  }
+
+  return <span>{content}</span>;
+};
 
 export const LoginWebChat: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -271,7 +325,7 @@ export const LoginWebChat: React.FC = () => {
                           Ejecutivo Especializado
                         </div>
                       )}
-                      {msg.content}
+                      {renderWebChatMessageContent(msg.content)}
                     </div>
                   </div>
                 );

@@ -90,13 +90,29 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
   const [stages, setStages] = useState<Stage[]>([]);
 
 
+  const [productQuantities, setProductQuantities] = useState<Record<string, number>>(() => {
+    const map: Record<string, number> = {};
+    if (initialData?.opportunityProducts && initialData.opportunityProducts.length > 0) {
+      initialData.opportunityProducts.forEach(op => {
+        if (op.productId) map[op.productId] = Number(op.cantidad) || 1;
+      });
+    } else if (initialData?.products) {
+      initialData.products.forEach(p => {
+        if (p.id) map[p.id] = 1;
+      });
+    }
+    return map;
+  });
+
   const [opportunity, setOpportunity] = useState<OpportunityFormData>(
     initialData && initialData.id ? {
       ...initialData,
       estimated_closure_date: initialData.estimated_closure_date ? new Date(initialData.estimated_closure_date).toISOString().split('T')[0] : '',
       createdAt: initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : '',
       contactIds: initialData.contacts?.map(c => c.id!) || [],
-      productIds: initialData.products?.map(p => p.id!) || [],
+      productIds: (initialData.opportunityProducts && initialData.opportunityProducts.length > 0)
+        ? initialData.opportunityProducts.map(op => op.productId)
+        : (initialData.products?.map(p => p.id!) || []),
       linea_negocio_id: initialData.linea_negocio_id || initialData.linea_negocio?.id || '',
       tipo_entrega_id: initialData.tipo_entrega_id || initialData.tipo_entrega?.id || '',
       licenciamiento_id: initialData.licenciamiento_id || initialData.licenciamiento?.id || '',
@@ -205,8 +221,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     if (!opportunity.productIds || opportunity.productIds.length === 0) return 0;
     return products
       .filter(p => opportunity.productIds?.includes(p.id!))
-      .reduce((sum, p) => sum + (Number(p.precioBase) || 0), 0);
-  }, [opportunity.productIds, products]);
+      .reduce((sum, p) => {
+        const qty = productQuantities[p.id!] || 1;
+        return sum + (qty * (Number(p.precioBase) || 0));
+      }, 0);
+  }, [opportunity.productIds, products, productQuantities]);
 
   const convertedProductsPrice = useMemo(() => {
     if (opportunity.moneda === 'USD') {
@@ -439,6 +458,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         creationDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12);
       }
 
+      const productItems = (opportunity.productIds || []).map(id => ({
+        productId: id,
+        cantidad: productQuantities[id] || 1,
+      }));
+
       const finalOpportunity: Partial<Opportunity> = {
         ...rest,
         ejecutivo_id: finalEjecutivoId,
@@ -448,6 +472,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         estimated_closure_date: closureDate,
         createdAt: creationDate,
         productIds: opportunity.productIds || [],
+        productItems: productItems,
       };
 
       if (linkType === 'company') {
@@ -844,37 +869,66 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                         : null;
                       const files = p.files || [];
 
-                      return (
-                        <div key={p.id} className="border border-slate-150 rounded-xl p-4 bg-slate-50/20 space-y-3">
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 bg-white flex items-center justify-center shrink-0 shadow-sm">
-                              {imageSrc ? (
-                                <img 
-                                  src={imageSrc} 
-                                  alt={p.nombre} 
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://placehold.co/150x150?text=Producto';
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-lg">
-                                  {p.nombre.charAt(0).toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-left min-w-0 flex-1">
-                              <h4 className="text-sm font-bold text-slate-800 truncate">{p.nombre}</h4>
-              {p.descripcion && (
-                                <p className="text-xs text-slate-500 line-clamp-2 mt-0.5" title={p.descripcion}>
-                                  {p.descripcion}
-                                </p>
-                              )}
-                              <p className="text-xs font-semibold text-indigo-600 mt-1">
-                                Precio Base: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(p.precioBase || 0))} / {p.unidadMedida || 'Pieza'}
-                              </p>
-                            </div>
-                          </div>
+                              const currentQty = productQuantities[p.id!] || 1;
+                              const unitPrice = Number(p.precioBase || 0);
+                              const subtotal = currentQty * unitPrice;
+
+                              return (
+                                <div key={p.id} className="border border-slate-150 rounded-xl p-4 bg-slate-50/20 space-y-3">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 bg-white flex items-center justify-center shrink-0 shadow-sm">
+                                      {imageSrc ? (
+                                        <img 
+                                          src={imageSrc} 
+                                          alt={p.nombre} 
+                                          className="w-full h-full object-cover"
+                                          onError={(e) => {
+                                            (e.target as HTMLImageElement).src = 'https://placehold.co/150x150?text=Producto';
+                                          }}
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-lg">
+                                          {p.nombre.charAt(0).toUpperCase()}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="text-left min-w-0 flex-1">
+                                      <h4 className="text-sm font-bold text-slate-800 truncate">{p.nombre}</h4>
+                                      {p.descripcion && (
+                                        <p className="text-xs text-slate-500 line-clamp-2 mt-0.5" title={p.descripcion}>
+                                          {p.descripcion}
+                                        </p>
+                                      )}
+                                      <p className="text-xs font-semibold text-indigo-600 mt-1">
+                                        Precio Base: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(unitPrice)} / {p.unidadMedida || 'Pieza'}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-bold text-slate-700">Cantidad:</span>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={currentQty}
+                                        onChange={(e) => {
+                                          const val = Math.max(1, parseInt(e.target.value) || 1);
+                                          setProductQuantities(prev => ({ ...prev, [p.id!]: val }));
+                                        }}
+                                        className="w-16 h-8 px-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 text-center focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                      />
+                                      <span className="text-xs text-slate-500 font-medium">
+                                        {p.unidadMedida || 'Pieza'}(s)
+                                      </span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Subtotal</span>
+                                      <span className="text-xs font-black text-indigo-700">
+                                        {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(subtotal)}
+                                      </span>
+                                    </div>
+                                  </div>
 
                           <div className="border-t border-slate-100 pt-3">
                             <h5 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">

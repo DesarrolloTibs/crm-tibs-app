@@ -16,6 +16,14 @@ export interface Stage {
   dtmlastmodified?: Date;
 }
 
+export interface OpportunityProduct {
+  id?: string;
+  opportunityId?: string;
+  productId: string;
+  cantidad: number;
+  product?: Product;
+}
+
 export interface Opportunity  {
   id: string;
   pipeline_id?: string;
@@ -49,6 +57,8 @@ export interface Opportunity  {
   files?: OpportunityFile[];
   productIds?: string[];
   products?: Product[];
+  opportunityProducts?: OpportunityProduct[];
+  productItems?: Array<{ productId: string; cantidad: number }>;
   tipoCambio?: number;
   estimated_closure_date?: Date;
   createdAt?: Date;

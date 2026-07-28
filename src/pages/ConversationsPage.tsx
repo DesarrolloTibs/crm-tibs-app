@@ -17,7 +17,9 @@ import {
     Sparkles,
     ShieldAlert,
     RefreshCw,
-    X
+    X,
+    FileText,
+    Download
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { getUsers } from '../services/usersService';
@@ -33,6 +35,49 @@ import Loader from '../components/Loader/Loader';
 import Input from '../components/shared/Input';
 import TextArea from '../components/shared/TextArea';
 import Button from '../components/shared/Button';
+
+const renderMessageContent = (content: string) => {
+    if (!content) return null;
+    const pdfMatch = content.match(/(https?:\/\/[^\s]+\.pdf|\/uploads\/[^\s]+\.pdf|uploads\/[^\s]+\.pdf)/i);
+    
+    if (pdfMatch) {
+        let rawUrl = pdfMatch[0];
+        const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
+        let fullUrl = rawUrl;
+        if (rawUrl.startsWith('/uploads/')) {
+            fullUrl = `${baseUrl}${rawUrl}`;
+        } else if (rawUrl.startsWith('uploads/')) {
+            fullUrl = `${baseUrl}/${rawUrl}`;
+        }
+
+        const textBefore = content.split(rawUrl)[0].replace(/📄\s*\[Cotización en PDF\]\s*\([^)]*\):\s*/i, '').trim();
+
+        return (
+            <div className="flex flex-col gap-2.5">
+                {textBefore && <span>{textBefore}</span>}
+                <a
+                    href={fullUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 bg-white/20 hover:bg-white/30 border border-white/40 rounded-xl p-3 text-white transition-all shadow-xs group"
+                    style={{ textDecoration: 'none' }}
+                >
+                    <div className="p-2.5 bg-red-500 rounded-lg text-white group-hover:scale-105 transition-transform shadow-xs">
+                        <FileText size={20} />
+                    </div>
+                    <div className="flex flex-col text-left overflow-hidden">
+                        <span className="text-xs font-bold leading-tight truncate">Cotización en PDF</span>
+                        <span className="text-[11px] opacity-90 flex items-center gap-1 mt-0.5 font-medium underline underline-offset-2">
+                            Ver o descargar <Download size={12} />
+                        </span>
+                    </div>
+                </a>
+            </div>
+        );
+    }
+
+    return <span>{content}</span>;
+};
 
 export const ConversationsPage: React.FC = () => {
     const { user, isAdmin } = useAuth();
@@ -685,7 +730,7 @@ export const ConversationsPage: React.FC = () => {
                                                         ? 'bg-blue-600 text-white rounded-br-xs' 
                                                         : 'bg-emerald-600 text-white rounded-br-xs'
                                             }`}>
-                                                {msg.content}
+                                                {renderMessageContent(msg.content)}
                                             </div>
                                             <span className="text-[10px] text-gray-400 font-bold px-1.5 mt-0.5">
                                                 {new Date(msg.createdAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
