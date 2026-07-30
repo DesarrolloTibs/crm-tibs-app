@@ -86,7 +86,7 @@ const AiAgentSettings: React.FC = () => {
     // Reminder and assignment
     const [reminderOffsetMinutes, setReminderOffsetMinutes] = useState(60);
     const [historyMessageLimit, setHistoryMessageLimit] = useState(10);
-    const [maxNewTokens, setMaxNewTokens] = useState(2048);
+    const [maxNewTokens, setMaxNewTokens] = useState(7000);
     const [defaultUserId, setDefaultUserId] = useState('');
 
     // Channels states
@@ -208,7 +208,7 @@ const AiAgentSettings: React.FC = () => {
             setWatsonxEmbeddingModel(config.watsonxEmbeddingModel || 'ibm/slate-125m-english-rtrvr');
             setReminderOffsetMinutes(config.reminderOffsetMinutes);
             setHistoryMessageLimit(config.historyMessageLimit || 10);
-            setMaxNewTokens(config.maxNewTokens || 2048);
+            setMaxNewTokens(config.maxNewTokens || 700);
             setDefaultUserId(config.defaultUserId || '');
         } catch (error) {
             console.error('Error al cargar configuraciones del agente IA:', error);

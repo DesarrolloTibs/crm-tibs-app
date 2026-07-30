@@ -20,7 +20,7 @@ const GlobalAiCredentialsSettings: React.FC = () => {
     // LLM Provider & Model Selection
     const [modelProvider, setModelProvider] = useState('gemini');
     const [modelName, setModelName] = useState('gemini-1.5-flash');
-    const [maxNewTokens, setMaxNewTokens] = useState(2048);
+    const [maxNewTokens, setMaxNewTokens] = useState(7000);
 
     // API Keys and secrets
     const [openaiApiKey, setOpenaiApiKey] = useState('');
@@ -199,7 +199,7 @@ const GlobalAiCredentialsSettings: React.FC = () => {
                         type="number"
                         min="1"
                         value={maxNewTokens}
-                        onChange={(e) => setMaxNewTokens(parseInt(e.target.value) || 2048)}
+                        onChange={(e) => setMaxNewTokens(parseInt(e.target.value) || 7000)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Ej. 2048"
                     />
