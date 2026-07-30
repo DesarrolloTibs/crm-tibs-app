@@ -9,6 +9,7 @@ import {
 import type { DashboardIndicator } from '../../services/reportsService';
 import { getPipelines } from '../../services/pipelinesService';
 import { getHelpdesks } from '../../services/ticketsService';
+import { useConfigStore } from '../../store/useConfigStore';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
 import Select from '../shared/Select';
@@ -47,6 +48,8 @@ const SUPPORT_TABS: ChartTab[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export const DashboardSettings: React.FC = () => {
+  const { selectedTenant } = useConfigStore();
+  const schemaName = selectedTenant?.schema_name;
   const [activeModule, setActiveModule] = useState<'commercial' | 'support'>('commercial');
   const [pipelines, setPipelines] = useState<any[]>([]);
   const [helpdesks, setHelpdesks] = useState<any[]>([]);
@@ -85,9 +88,15 @@ export const DashboardSettings: React.FC = () => {
     setNotification({ show: true, type: 'error', title, message, onConfirm: hideNotification, onCancel: hideNotification });
   };
 
+  const safeArray = <T,>(val: any): T[] => {
+    if (Array.isArray(val)) return val;
+    if (val && Array.isArray(val.data)) return val.data;
+    return [];
+  };
+
   // ── Selects ───────────────────────────────────────────────────────────────
-  const pipelineOptions = useMemo(() => pipelines.map(p => ({ value: p.id, label: p.strname })), [pipelines]);
-  const helpdeskOptions = useMemo(() => helpdesks.map(h => ({ value: h.id, label: h.strname })), [helpdesks]);
+  const pipelineOptions = useMemo(() => safeArray<any>(pipelines).map(p => ({ value: p.id, label: p.strname })), [pipelines]);
+  const helpdeskOptions = useMemo(() => safeArray<any>(helpdesks).map(h => ({ value: h.id, label: h.strname })), [helpdesks]);
   const typeOptions = useMemo(() => [
     { value: 'count', label: 'Contar (Cantidad)' },
     { value: 'sum',   label: 'Sumar Monto ($ Ventas)' },
@@ -97,18 +106,24 @@ export const DashboardSettings: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [allIndicators, allPipelines, allHelpdesks] = await Promise.all([
-        getIndicators(),
-        getPipelines(),
-        getHelpdesks(),
+      const [allIndicatorsRes, allPipelinesRes, allHelpdesksRes] = await Promise.all([
+        getIndicators().catch(() => []),
+        getPipelines().catch(() => []),
+        getHelpdesks().catch(() => []),
       ]);
+
+      const allIndicators = safeArray<DashboardIndicator>(allIndicatorsRes);
+      const allPipelines = safeArray<any>(allPipelinesRes);
+      const allHelpdesks = safeArray<any>(allHelpdesksRes);
 
       setIndicators(allIndicators);
       setPipelines(allPipelines);
       setHelpdesks(allHelpdesks);
 
-      if (allPipelines.length > 0 && !selectedPipelineId) setSelectedPipelineId(allPipelines[0].id);
-      if (allHelpdesks.length > 0 && !selectedHelpdeskId) setSelectedHelpdeskId(allHelpdesks[0].id);
+      if (allPipelines.length > 0) setSelectedPipelineId(allPipelines[0].id);
+      else setSelectedPipelineId('');
+      if (allHelpdesks.length > 0) setSelectedHelpdeskId(allHelpdesks[0].id);
+      else setSelectedHelpdeskId('');
     } catch (err) {
       console.error('Error al cargar configuraciones de dashboard:', err);
     } finally {
@@ -116,12 +131,12 @@ export const DashboardSettings: React.FC = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [schemaName]);
 
   // ── Filtered KPI indicators (excluding chart-only ones) ───────────────────
-  const filteredIndicators = indicators.filter(ind => {
-    if (activeModule === 'commercial') return ind.pipeline_id === selectedPipelineId && !ind.title.startsWith('Gráfico:');
-    return ind.helpdesk_id === selectedHelpdeskId && !ind.title.startsWith('Gráfico:');
+  const filteredIndicators = safeArray<DashboardIndicator>(indicators).filter(ind => {
+    if (activeModule === 'commercial') return ind.pipeline_id === selectedPipelineId && !ind.title?.startsWith('Gráfico:');
+    return ind.helpdesk_id === selectedHelpdeskId && !ind.title?.startsWith('Gráfico:');
   });
 
   // ── Chart stage configuration ─────────────────────────────────────────────
@@ -144,7 +159,7 @@ export const DashboardSettings: React.FC = () => {
     return map[activeChartSetting];
   }, [activeChartSetting]);
 
-  const activeChartIndicator = useMemo(() => indicators.find(ind =>
+  const activeChartIndicator = useMemo(() => safeArray<DashboardIndicator>(indicators).find(ind =>
     ind.title === activeChartIndicatorName &&
     (activeModule === 'commercial' ? ind.pipeline_id === selectedPipelineId : ind.helpdesk_id === selectedHelpdeskId)
   ), [indicators, activeChartIndicatorName, activeModule, selectedPipelineId, selectedHelpdeskId]);
@@ -175,7 +190,7 @@ export const DashboardSettings: React.FC = () => {
       }
 
       const allIndicators = await getIndicators();
-      setIndicators(allIndicators);
+      setIndicators(safeArray<DashboardIndicator>(allIndicators));
       showSuccess('¡Éxito!', 'La configuración del gráfico se ha guardado correctamente.');
     } catch (err) {
       console.error('Error al guardar configuración de gráfico:', err);
@@ -188,11 +203,11 @@ export const DashboardSettings: React.FC = () => {
   // ── Active stages ─────────────────────────────────────────────────────────
   const activeStages = useMemo(() => {
     if (activeModule === 'commercial') {
-      const pipe = pipelines.find(p => p.id === selectedPipelineId);
-      return pipe ? pipe.stages.filter((s: any) => s.blnstatus) : [];
+      const pipe = safeArray<any>(pipelines).find(p => p.id === selectedPipelineId);
+      return pipe && Array.isArray(pipe.stages) ? pipe.stages.filter((s: any) => s.blnstatus) : [];
     }
-    const hd = helpdesks.find(h => h.id === selectedHelpdeskId);
-    return hd ? hd.stages.filter((s: any) => s.blnstatus) : [];
+    const hd = safeArray<any>(helpdesks).find(h => h.id === selectedHelpdeskId);
+    return hd && Array.isArray(hd.stages) ? hd.stages.filter((s: any) => s.blnstatus) : [];
   }, [activeModule, pipelines, helpdesks, selectedPipelineId, selectedHelpdeskId]);
 
   // ── Modal handlers ────────────────────────────────────────────────────────

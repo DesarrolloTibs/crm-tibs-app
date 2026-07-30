@@ -11,9 +11,11 @@ const ConsumptionInfoPopover: React.FC = () => {
   const [consumption, setConsumption] = useState<TenantConsumptionData | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const fetchConsumption = async () => {
+  const schemaName = selectedTenant?.schema_name;
+
+  const fetchConsumption = async (forceRefresh = false) => {
     try {
-      const data = await getTenantConsumption(selectedTenant?.schema_name);
+      const data = await getTenantConsumption(schemaName, forceRefresh);
       setConsumption(data);
     } catch (err) {
       console.error('Error al obtener información de consumo del tenant:', err);
@@ -24,21 +26,25 @@ const ConsumptionInfoPopover: React.FC = () => {
   useEffect(() => {
     fetchConsumption();
 
-    if (!selectedTenant?.schema_name) return;
+    if (!schemaName) return;
 
-    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-    const socket = io(baseUrl);
+    // Conectar al socket relativo (pasa por el proxy de Vite en dev, misma origin en prod)
+    const socket = io({ path: '/socket.io', transports: ['websocket', 'polling'] });
 
     socket.on('tenant_consumption_updated', (data: { schemaName?: string }) => {
-      if (!data?.schemaName || data.schemaName === selectedTenant?.schema_name) {
-        fetchConsumption();
+      if (!data?.schemaName || data.schemaName === schemaName) {
+        fetchConsumption(true);
       }
     });
 
     return () => {
-      socket.disconnect();
+      if (socket.connected) {
+        socket.disconnect();
+      } else {
+        socket.once('connect', () => socket.disconnect());
+      }
     };
-  }, [selectedTenant]);
+  }, [schemaName]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

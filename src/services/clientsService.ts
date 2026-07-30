@@ -1,10 +1,41 @@
 import axiosInstance from '../core/axios/axiosInstance';
 import { CLIENTS } from '../global/endpoints';
 import type { Client } from '../core/models/Client';
+import { configStore } from '../store/useConfigStore';
 
-export async function getClients(): Promise<Client[]> {
-    const response = await axiosInstance.get(CLIENTS.CLIENTS);
-    return response.data;
+let clientsCache: Record<string, { data: Client[]; timestamp: number }> = {};
+let pendingClientsPromises: Record<string, Promise<Client[]>> = {};
+
+export const clearClientsCache = () => {
+  clientsCache = {};
+};
+
+export async function getClients(forceRefresh = false): Promise<Client[]> {
+  const selectedTenant = configStore.getSelectedTenant();
+  const currentSchema = selectedTenant?.schema_name || 'public';
+  const now = Date.now();
+
+  if (!forceRefresh && clientsCache[currentSchema] && now - clientsCache[currentSchema].timestamp < 3000) {
+    return clientsCache[currentSchema].data;
+  }
+
+  if (currentSchema in pendingClientsPromises) {
+    return pendingClientsPromises[currentSchema];
+  }
+
+  const promise = (async () => {
+    try {
+      const response = await axiosInstance.get(CLIENTS.CLIENTS);
+      const data = (Array.isArray(response.data) ? response.data : (response.data as any)?.data || []) as Client[];
+      clientsCache[currentSchema] = { data, timestamp: Date.now() };
+      return data;
+    } finally {
+      delete pendingClientsPromises[currentSchema];
+    }
+  })();
+
+  pendingClientsPromises[currentSchema] = promise;
+  return promise;
 }
 
 export async function createClient(client: Client): Promise<Client> {

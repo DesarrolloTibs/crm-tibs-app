@@ -21,13 +21,14 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
     // Notificaciones visibles para usuarios de tenant, y para SuperAdmin sólo cuando está en el esquema public (selectedTenant === null)
     const showNotificationBell = !isSuperAdmin || selectedTenant === null;
 
+    const schemaName = selectedTenant?.schema_name;
+
     useEffect(() => {
         const fetchLogo = async () => {
             try {
-                const data = await getTenantConsumption(selectedTenant?.schema_name);
+                const data = await getTenantConsumption(schemaName);
                 if (data?.logo) {
-                    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-                    setTenantLogo(data.logo.startsWith('http') ? data.logo : `${baseUrl}${data.logo}`);
+                    setTenantLogo(data.logo);
                 } else {
                     setTenantLogo(null);
                 }
@@ -36,7 +37,7 @@ const Navbar: React.FC<Props> = ({ toggleSidebar, isSidebarOpen }) => {
             }
         };
         fetchLogo();
-    }, [selectedTenant]);
+    }, [schemaName]);
 
     return (
         <header className="bg-white shadow-sm p-3 sm:p-4 flex justify-between items-center sticky top-0 z-20 border-b border-gray-100">

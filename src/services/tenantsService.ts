@@ -36,9 +36,43 @@ export interface TenantConsumptionData {
   price: number;
 }
 
-export const getTenants = async (): Promise<TenantPlanInfo[]> => {
-  const response = await axiosInstance.get(TENANTS.TENANTS);
-  return response.data;
+let tenantsCache: { data: TenantPlanInfo[]; timestamp: number } | null = null;
+let pendingTenantsPromise: Promise<TenantPlanInfo[]> | null = null;
+
+export const clearTenantsCache = () => {
+  tenantsCache = null;
+};
+
+export const getTenants = async (forceRefresh = false): Promise<TenantPlanInfo[]> => {
+  const now = Date.now();
+
+  if (!forceRefresh && tenantsCache && now - tenantsCache.timestamp < 5000) {
+    return tenantsCache.data;
+  }
+
+  if (pendingTenantsPromise) {
+    return pendingTenantsPromise;
+  }
+
+  const promise = (async () => {
+    try {
+      const response = await axiosInstance.get(TENANTS.TENANTS);
+      const raw = response.data;
+      const data: TenantPlanInfo[] = Array.isArray(raw) ? raw : (raw?.data || []);
+      tenantsCache = { data, timestamp: Date.now() };
+      return data;
+    } catch (error: any) {
+      if (error?.response?.status === 429 && tenantsCache) {
+        return tenantsCache.data;
+      }
+      throw error;
+    } finally {
+      pendingTenantsPromise = null;
+    }
+  })();
+
+  pendingTenantsPromise = promise;
+  return promise;
 };
 
 export const getTenantById = async (id: number): Promise<TenantPlanInfo> => {
@@ -64,15 +98,67 @@ export const uploadTenantLogo = async (tenantId: number, file: File): Promise<Te
   return response.data;
 };
 
-export const getTenantConsumption = async (schemaName?: string): Promise<TenantConsumptionData> => {
-  const response = await axiosInstance.get(`${TENANTS.TENANTS}/consumption`, {
-    params: schemaName ? { schemaName } : {},
-  });
-  return response.data;
+let consumptionCache: Record<string, { data: TenantConsumptionData; timestamp: number }> = {};
+let pendingConsumptionPromises: Record<string, Promise<TenantConsumptionData>> = {};
+
+export const clearTenantConsumptionCache = (schemaName?: string) => {
+  const key = schemaName || 'default';
+  delete consumptionCache[key];
+};
+
+export const getTenantConsumption = async (schemaName?: string, forceRefresh = false): Promise<TenantConsumptionData> => {
+  const key = schemaName || 'default';
+  const now = Date.now();
+
+  if (!forceRefresh && consumptionCache[key] && now - consumptionCache[key].timestamp < 5000) {
+    return consumptionCache[key].data;
+  }
+
+  if (key in pendingConsumptionPromises) {
+    return pendingConsumptionPromises[key];
+  }
+
+  const promise = (async () => {
+    try {
+      const response = await axiosInstance.get(`${TENANTS.TENANTS}/consumption`, {
+        params: schemaName ? { schemaName } : {},
+      });
+      const raw = (response.data as any)?.data ?? response.data;
+      const data = raw as TenantConsumptionData;
+      consumptionCache[key] = { data, timestamp: Date.now() };
+      return data;
+    } catch (error: any) {
+      if (consumptionCache[key]) {
+        return consumptionCache[key].data;
+      }
+      return {
+        tenant_id: null,
+        tenant_name: '',
+        schema_name: schemaName || 'public',
+        is_active: true,
+        allow_extra: false,
+        logo: null,
+        documents_used: 0,
+        documents_limit: 0,
+        tokens_used: 0,
+        tokens_extra_used: 0,
+        tokens_limit: 300000,
+        next_renewal_date: null,
+        plan_name: '',
+        price: 0,
+      };
+    } finally {
+      delete pendingConsumptionPromises[key];
+    }
+  })();
+
+  pendingConsumptionPromises[key] = promise;
+  return promise;
 };
 
 export const provisionTenant = async (payload: ProvisionTenantPayload): Promise<ProvisionTenantResponse> => {
   const response = await axiosInstance.post(`${TENANTS.TENANTS}/provision`, payload);
+  clearTenantsCache();
   return response.data;
 };
 
@@ -83,6 +169,7 @@ export const updateTenantPlan = async (
   allowExtra?: boolean
 ): Promise<TenantPlanInfo> => {
   const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}/plan`, { planId, months, allowExtra });
+  clearTenantsCache();
   return response.data;
 };
 
@@ -92,6 +179,7 @@ export const enqueueTenantRenewal = async (
   months: number = 1
 ): Promise<any> => {
   const response = await axiosInstance.post(`${TENANTS.TENANTS}/${tenantId}/enqueue-renewal`, { planId, months });
+  clearTenantsCache();
   return response.data;
 };
 
@@ -100,6 +188,7 @@ export const updateAllowExtra = async (
   allowExtra: boolean
 ): Promise<TenantPlanInfo> => {
   const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}/allow-extra`, { allowExtra });
+  clearTenantsCache();
   return response.data;
 };
 
@@ -108,11 +197,13 @@ export const updateTenant = async (
   payload: { name?: string; is_active?: boolean; allow_extra?: boolean; logo?: string | null }
 ): Promise<TenantPlanInfo> => {
   const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}`, payload);
+  clearTenantsCache();
   return response.data;
 };
 
 export const deleteTenant = async (tenantId: number): Promise<{ message: string }> => {
   const response = await axiosInstance.delete(`${TENANTS.TENANTS}/${tenantId}`);
+  clearTenantsCache();
   return response.data;
 };
 

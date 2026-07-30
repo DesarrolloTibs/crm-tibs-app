@@ -1,10 +1,41 @@
 import axiosInstance from "../core/axios/axiosInstance";
 import type { Product } from "../core/models/Product";
 import { PRODUCTS } from "../global/endpoints";
+import { configStore } from "../store/useConfigStore";
 
-export const getProducts = async (): Promise<Product[]> => {
-  const response = await axiosInstance.get<Product[]>(PRODUCTS.PRODUCTS);
-  return response.data;
+let productsCache: Record<string, { data: Product[]; timestamp: number }> = {};
+let pendingProductsPromises: Record<string, Promise<Product[]>> = {};
+
+export const clearProductsCache = () => {
+  productsCache = {};
+};
+
+export const getProducts = async (forceRefresh = false): Promise<Product[]> => {
+  const selectedTenant = configStore.getSelectedTenant();
+  const currentSchema = selectedTenant?.schema_name || 'public';
+  const now = Date.now();
+
+  if (!forceRefresh && productsCache[currentSchema] && now - productsCache[currentSchema].timestamp < 3000) {
+    return productsCache[currentSchema].data;
+  }
+
+  if (currentSchema in pendingProductsPromises) {
+    return pendingProductsPromises[currentSchema];
+  }
+
+  const promise = (async () => {
+    try {
+      const response = await axiosInstance.get<Product[]>(PRODUCTS.PRODUCTS);
+      const data = (Array.isArray(response.data) ? response.data : (response.data as any)?.data || []) as Product[];
+      productsCache[currentSchema] = { data, timestamp: Date.now() };
+      return data;
+    } finally {
+      delete pendingProductsPromises[currentSchema];
+    }
+  })();
+
+  pendingProductsPromises[currentSchema] = promise;
+  return promise;
 };
 
 export const getProduct = async (id: string): Promise<Product> => {

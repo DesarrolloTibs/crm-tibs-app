@@ -2,11 +2,42 @@
 import axiosInstance from '../core/axios/axiosInstance';
 import type { Activity, TypeActivity } from '../core/models/Activity';
 import { ACTIVITIES } from '../global/endpoints';
+import { configStore } from '../store/useConfigStore';
 
+let activitiesCache: Record<string, { data: Activity[]; timestamp: number }> = {};
+let pendingActivitiesPromises: Record<string, Promise<Activity[]>> = {};
 
-export async function getActivities(params?: { userId?: string; opportunityId?: string }): Promise<Activity[]> {
-    const response = await axiosInstance.get(ACTIVITIES.ACTIVITIES, { params });
-    return response.data;
+export const clearActivitiesCache = () => {
+  activitiesCache = {};
+};
+
+export async function getActivities(params?: { userId?: string; opportunityId?: string }, forceRefresh = false): Promise<Activity[]> {
+    const selectedTenant = configStore.getSelectedTenant();
+    const currentSchema = selectedTenant?.schema_name || 'public';
+    const cacheKey = `${currentSchema}:${params?.userId || ''}:${params?.opportunityId || ''}`;
+    const now = Date.now();
+
+    if (!forceRefresh && activitiesCache[cacheKey] && now - activitiesCache[cacheKey].timestamp < 3000) {
+      return activitiesCache[cacheKey].data;
+    }
+
+    if (cacheKey in pendingActivitiesPromises) {
+      return pendingActivitiesPromises[cacheKey];
+    }
+
+    const promise = (async () => {
+      try {
+        const response = await axiosInstance.get(ACTIVITIES.ACTIVITIES, { params });
+        const data = (Array.isArray(response.data) ? response.data : (response.data as any)?.data || []) as Activity[];
+        activitiesCache[cacheKey] = { data, timestamp: Date.now() };
+        return data;
+      } finally {
+        delete pendingActivitiesPromises[cacheKey];
+      }
+    })();
+
+    pendingActivitiesPromises[cacheKey] = promise;
+    return promise;
 }
 
 export async function createActivity(activity: Partial<Activity>): Promise<Activity> {

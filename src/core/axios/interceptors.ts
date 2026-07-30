@@ -14,6 +14,8 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
             const selectedTenant = configStore.getSelectedTenant();
             if (selectedTenant && selectedTenant.schema_name) {
                 config.headers['x-tenant-schema'] = selectedTenant.schema_name;
+            } else {
+                config.headers['x-tenant-schema'] = 'public';
             }
 
             return config;
@@ -22,7 +24,12 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
     );
 
     axiosInstance.interceptors.response.use(
-        response => response,
+        response => {
+            if (response.data && typeof response.data === 'object' && 'data' in response.data && 'statusCode' in response.data && 'timestamp' in response.data) {
+                response.data = response.data.data;
+            }
+            return response;
+        },
         error => {
             if (error.response?.status === 401) {
                 localStorage.removeItem('token');

@@ -46,7 +46,7 @@ export const useNotifications = () => {
     return () => {
       socket.disconnect();
     };
-  }, [user]);
+  }, [user?.id, user?.sub]);
 
 
   const handleMarkAsRead = async (id: string) => {

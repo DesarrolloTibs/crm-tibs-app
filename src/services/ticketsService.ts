@@ -1,13 +1,49 @@
 import axiosInstance from "../core/axios/axiosInstance";
 import { HELPDESKS, TICKETS } from "../global/endpoints";
 import type { Helpdesk, TicketStage, Ticket } from "../core/models/Ticket";
+import { configStore } from "../store/useConfigStore";
+
+let ticketsCache: Record<string, { data: Ticket[]; timestamp: number }> = {};
+let pendingTicketsPromises: Record<string, Promise<Ticket[]>> = {};
+
+let helpdeskCache: Record<string, { data: Helpdesk; timestamp: number }> = {};
+let pendingHelpdeskPromises: Record<string, Promise<Helpdesk>> = {};
+
+export const clearTicketsCache = () => {
+  ticketsCache = {};
+  helpdeskCache = {};
+};
 
 /**
  * Obtiene la mesa de ayuda principal con sus etapas.
  */
-export const getMainHelpdesk = async (): Promise<Helpdesk> => {
-  const response = await axiosInstance.get<Helpdesk>(`${HELPDESKS.HELPDESKS}/main`);
-  return response.data;
+export const getMainHelpdesk = async (forceRefresh = false): Promise<Helpdesk> => {
+  const selectedTenant = configStore.getSelectedTenant();
+  const currentSchema = selectedTenant?.schema_name || 'public';
+  const now = Date.now();
+
+  if (!forceRefresh && helpdeskCache[currentSchema] && now - helpdeskCache[currentSchema].timestamp < 3000) {
+    return helpdeskCache[currentSchema].data;
+  }
+
+  if (currentSchema in pendingHelpdeskPromises) {
+    return pendingHelpdeskPromises[currentSchema];
+  }
+
+  const promise = (async () => {
+    try {
+      const response = await axiosInstance.get<Helpdesk>(`${HELPDESKS.HELPDESKS}/main`);
+      const raw = (response.data as any)?.data ?? response.data;
+      const data = raw as Helpdesk;
+      helpdeskCache[currentSchema] = { data, timestamp: Date.now() };
+      return data;
+    } finally {
+      delete pendingHelpdeskPromises[currentSchema];
+    }
+  })();
+
+  pendingHelpdeskPromises[currentSchema] = promise;
+  return promise;
 };
 
 /**
@@ -15,6 +51,7 @@ export const getMainHelpdesk = async (): Promise<Helpdesk> => {
  */
 export const updateMainHelpdesk = async (data: Partial<Helpdesk>): Promise<Helpdesk> => {
   const response = await axiosInstance.patch<Helpdesk>(`${HELPDESKS.HELPDESKS}/main`, data);
+  clearTicketsCache();
   return response.data;
 };
 
@@ -23,18 +60,43 @@ export const updateMainHelpdesk = async (data: Partial<Helpdesk>): Promise<Helpd
  */
 export const getActiveTicketStages = async (): Promise<TicketStage[]> => {
   const response = await axiosInstance.get<TicketStage[]>(`${HELPDESKS.HELPDESKS}/main/stages/active`);
-  return response.data;
+  return Array.isArray(response.data) ? response.data : (response.data as any)?.data || [];
 };
 
 /**
  * Obtiene la lista de todos los tickets (con filtro opcional de etapa y archivado).
  */
-export const getTickets = async (stage_id?: string, showArchived = false): Promise<Ticket[]> => {
+export const getTickets = async (stage_id?: string, showArchived = false, forceRefresh = false): Promise<Ticket[]> => {
+  const selectedTenant = configStore.getSelectedTenant();
+  const currentSchema = selectedTenant?.schema_name || 'public';
   const params = new URLSearchParams();
   if (stage_id) params.append('stage_id', stage_id);
   params.append('showArchived', String(showArchived));
-  const response = await axiosInstance.get<Ticket[]>(`${TICKETS.TICKETS}?${params.toString()}`);
-  return response.data;
+  const queryStr = params.toString();
+  const cacheKey = `${currentSchema}:${queryStr}`;
+  const now = Date.now();
+
+  if (!forceRefresh && ticketsCache[cacheKey] && now - ticketsCache[cacheKey].timestamp < 3000) {
+    return ticketsCache[cacheKey].data;
+  }
+
+  if (cacheKey in pendingTicketsPromises) {
+    return pendingTicketsPromises[cacheKey];
+  }
+
+  const promise = (async () => {
+    try {
+      const response = await axiosInstance.get<Ticket[]>(`${TICKETS.TICKETS}?${queryStr}`);
+      const data = (Array.isArray(response.data) ? response.data : (response.data as any)?.data || []) as Ticket[];
+      ticketsCache[cacheKey] = { data, timestamp: Date.now() };
+      return data;
+    } finally {
+      delete pendingTicketsPromises[cacheKey];
+    }
+  })();
+
+  pendingTicketsPromises[cacheKey] = promise;
+  return promise;
 };
 
 /**
@@ -89,5 +151,5 @@ export const queryTicketsPublic = async (params: { email?: string; ticketNumber?
 
 export const getHelpdesks = async (): Promise<Helpdesk[]> => {
   const response = await axiosInstance.get<Helpdesk[]>(`${HELPDESKS.HELPDESKS}`);
-  return response.data;
+  return Array.isArray(response.data) ? response.data : (response.data as any)?.data || [];
 };

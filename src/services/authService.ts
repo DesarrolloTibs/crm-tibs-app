@@ -4,9 +4,10 @@ import type { User } from '../core/models/User';
 
 export async function login(email: string, password: string): Promise<User> {
     const response = await axiosInstance.post(auth.LOGIN, { email, password });
-    // Guarda el token si lo recibes
-    if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
+    // La API envuelve la respuesta en { data: { access_token, user, role }, statusCode, timestamp }
+    const payload = response.data?.data ?? response.data;
+    if (payload.access_token) {
+        localStorage.setItem('token', payload.access_token);
     }
-    return response.data.user;
+    return payload.user;
 }

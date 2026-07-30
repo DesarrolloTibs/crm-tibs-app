@@ -1,5 +1,6 @@
 import axiosInstance from "../core/axios/axiosInstance";
 import { REPORTS } from "../global/endpoints";
+import { configStore } from "../store/useConfigStore";
 import type { Opportunity, Stage } from "../core/models/Opportunity";
 import type { Ticket, Helpdesk } from "../core/models/Ticket";
 import type { Activity } from "../core/models/Activity";
@@ -25,12 +26,43 @@ export interface DashboardData {
   executives: { id: string; username: string; correo: string; role: string }[];
 }
 
+let dashboardDataCache: { data: DashboardData; timestamp: number; schema: string } | null = null;
+let pendingDashboardPromise: Promise<DashboardData> | null = null;
+
+export const clearDashboardCache = () => {
+  dashboardDataCache = null;
+};
+
 /**
  * Obtiene todos los datos requeridos para compilar el Dashboard de Reportes.
  */
-export const getDashboardData = async (): Promise<DashboardData> => {
-  const response = await axiosInstance.get<DashboardData>(REPORTS.DASHBOARD);
-  return response.data;
+export const getDashboardData = async (forceRefresh = false): Promise<DashboardData> => {
+  const selectedTenant = configStore.getSelectedTenant();
+  const currentSchema = selectedTenant?.schema_name || 'public';
+  const now = Date.now();
+
+  if (!forceRefresh && dashboardDataCache && dashboardDataCache.schema === currentSchema && now - dashboardDataCache.timestamp < 3000) {
+    return dashboardDataCache.data;
+  }
+
+  if (pendingDashboardPromise) {
+    return pendingDashboardPromise;
+  }
+
+  const promise = (async () => {
+    try {
+      const response = await axiosInstance.get(REPORTS.DASHBOARD);
+      const raw = response.data?.data ?? response.data;
+      const data = raw as DashboardData;
+      dashboardDataCache = { data, timestamp: Date.now(), schema: currentSchema };
+      return data;
+    } finally {
+      pendingDashboardPromise = null;
+    }
+  })();
+
+  pendingDashboardPromise = promise;
+  return promise;
 };
 
 /**
@@ -38,7 +70,7 @@ export const getDashboardData = async (): Promise<DashboardData> => {
  */
 export const getIndicators = async (): Promise<DashboardIndicator[]> => {
   const response = await axiosInstance.get<DashboardIndicator[]>(REPORTS.INDICATORS);
-  return response.data;
+  return Array.isArray(response.data) ? response.data : (response.data as any)?.data || [];
 };
 
 /**

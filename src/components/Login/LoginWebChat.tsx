@@ -146,9 +146,9 @@ export const LoginWebChat: React.FC = () => {
     }
   }, [visitorId, apiUrl, checkAndSetRecognizedInfo]);
 
-  // 2. Cargar historial y conectar WebSockets al abrir
+  // 2. Cargar historial y conectar WebSockets — SÓLO cuando el chat está abierto
   useEffect(() => {
-    if (!visitorId) return;
+    if (!visitorId || !isOpen) return;
 
     fetchHistory();
 
@@ -179,7 +179,7 @@ export const LoginWebChat: React.FC = () => {
     return () => {
       socket.disconnect();
     };
-  }, [visitorId, socketUrl, fetchHistory, checkAndSetRecognizedInfo]);
+  }, [visitorId, isOpen, socketUrl, fetchHistory, checkAndSetRecognizedInfo]);
 
   // Auto-scroll al final del chat
   useEffect(() => {
