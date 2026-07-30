@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Building2, ChevronDown, Check, Lock } from 'lucide-react';
-import { useConfigStore } from '../../store/useConfigStore';
+import { useConfigStore, configStore } from '../../store/useConfigStore';
 import { getTenants } from '../../services/tenantsService';
 
 interface Props {
@@ -13,7 +13,6 @@ const SUPERADMIN_ONLY_TABS = ['superadmin-tenants', 'superadmin-plans', 'superad
 const TenantSelector: React.FC<Props> = ({ activeTab: propActiveTab }) => {
   const location = useLocation();
   const { selectedTenant, setSelectedTenant, tenants, setTenants } = useConfigStore();
-  const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -67,20 +66,40 @@ const TenantSelector: React.FC<Props> = ({ activeTab: propActiveTab }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    const loadData = async () => {
-      if (tenants.length > 0) return;
-      setLoading(true);
+    const fetchFreshTenants = async () => {
       try {
         const data = await getTenants();
         setTenants(data);
+
+        const currentSelected = configStore.getSelectedTenant();
+        if (currentSelected && Array.isArray(data)) {
+          const exists = data.some((t: any) => t.id === currentSelected.id || t.schema_name === currentSelected.schema_name);
+          if (!exists) {
+            setSelectedTenant(null);
+          }
+        }
       } catch (err) {
-        console.error('Error al cargar la lista de organizaciones:', err);
-      } finally {
-        setLoading(false);
+        console.error('Error al actualizar la lista de organizaciones:', err);
       }
     };
-    loadData();
-  }, [tenants.length, setTenants]);
+
+    fetchFreshTenants();
+  }, [setTenants, setSelectedTenant]);
+
+  useEffect(() => {
+    if (isOpen) {
+      getTenants().then(data => {
+        setTenants(data);
+        const currentSelected = configStore.getSelectedTenant();
+        if (currentSelected && Array.isArray(data)) {
+          const exists = data.some((t: any) => t.id === currentSelected.id || t.schema_name === currentSelected.schema_name);
+          if (!exists) {
+            setSelectedTenant(null);
+          }
+        }
+      }).catch(() => {});
+    }
+  }, [isOpen, setTenants, setSelectedTenant]);
 
   const handleSelect = (t: any) => {
     if (isSuperAdminSection) return;
@@ -98,9 +117,7 @@ const TenantSelector: React.FC<Props> = ({ activeTab: propActiveTab }) => {
     setIsOpen(false);
   };
 
-  if (loading) {
-    return <div className="h-10 w-48 bg-slate-100 rounded-xl animate-pulse" />;
-  }
+
 
   return (
     <div className="relative" ref={containerRef}>
