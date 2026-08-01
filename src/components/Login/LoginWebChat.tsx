@@ -36,10 +36,27 @@ const renderWebChatMessageContent = (content: string) => {
       .replace(/📄\s*\[[^\]]*\]\([^)]*\)\s*/gi, '')
       .trim();
 
-    const handleClick = (e: React.MouseEvent) => {
+    const handleClick = async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      window.open(fullUrl, '_blank', 'noopener,noreferrer');
+      try {
+        const response = await fetch(fullUrl);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const fileNameMatch = fullUrl.match(/\/([^\/?#]+)$/);
+        const fileName = fileNameMatch ? fileNameMatch[1] : 'cotizacion.pdf';
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Error downloading file, falling back to new tab:", error);
+        window.open(fullUrl, '_blank', 'noopener,noreferrer');
+      }
     };
 
     return (
