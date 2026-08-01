@@ -153,7 +153,7 @@ export function useHelpdesk() {
 
   // ── Socket.io ──
   useEffect(() => {
-    const socketUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+    const socketUrl = (import.meta.env.VITE_BASE_URL || 'http://localhost:3000') + '/tickets';
     const socket = io(socketUrl, { transports: ['polling'] });
     socket.on('connect', () => console.log('Connected to WebSocket server'));
     socket.on('ticketCreated', (newTicket: Ticket) => {

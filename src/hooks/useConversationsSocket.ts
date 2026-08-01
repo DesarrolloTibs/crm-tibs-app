@@ -144,7 +144,7 @@ export function useConversationsSocket() {
   useEffect(() => {
     if (!currentUserId) return;
 
-    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
+    const baseUrl = (import.meta.env.VITE_BASE_URL || 'http://localhost:3091') + '/conversations';
     const socket = io(baseUrl, { query: { userId: currentUserId }, transports: ['polling'] });
     socketRef.current = socket;
 

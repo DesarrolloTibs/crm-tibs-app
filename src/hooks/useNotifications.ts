@@ -30,7 +30,7 @@ export const useNotifications = () => {
     const userId = user?.id || user?.sub || (user as any)?.userId;
     if (!user || !userId) return;
 
-    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
+    const baseUrl = (import.meta.env.VITE_BASE_URL || 'http://localhost:3091') + '/notifications';
     const socket: Socket = io(baseUrl, {
       query: { userId },
       transports: ['polling'],
