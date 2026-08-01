@@ -29,7 +29,7 @@ const ConsumptionInfoPopover: React.FC = () => {
     if (!schemaName) return;
 
     // Conectar al socket relativo (pasa por el proxy de Vite en dev, misma origin en prod)
-    const socket = io({ path: '/socket.io', transports: ['websocket', 'polling'] });
+    const socket = io({ path: '/socket.io', transports: ['polling'] });
 
     socket.on('tenant_consumption_updated', (data: { schemaName?: string }) => {
       if (!data?.schemaName || data.schemaName === schemaName) {
