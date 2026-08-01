@@ -30,10 +30,10 @@ export const useNotifications = () => {
     const userId = user?.id || user?.sub || (user as any)?.userId;
     if (!user || !userId) return;
 
-    const baseUrl = (import.meta.env.VITE_BASE_URL || 'http://localhost:3091') + '/notifications';
+    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
+    const baseUrl = (rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl) + '/notifications';
     const socket: Socket = io(baseUrl, {
       query: { userId },
-      transports: ['polling'],
     });
 
     socket.on('connect', () => {

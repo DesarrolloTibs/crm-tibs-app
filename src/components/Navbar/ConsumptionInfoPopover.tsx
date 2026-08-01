@@ -28,8 +28,10 @@ const ConsumptionInfoPopover: React.FC = () => {
 
     if (!schemaName) return;
 
-    // Conectar al socket relativo (pasa por el proxy de Vite en dev, misma origin en prod)
-    const socket = io({ path: '/socket.io', transports: ['polling'] });
+    // Conectar al socket usando la ruta del backend igual que Nodo
+    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
+    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
+    const socket = io({ path: socketPath });
 
     socket.on('tenant_consumption_updated', (data: { schemaName?: string }) => {
       if (!data?.schemaName || data.schemaName === schemaName) {

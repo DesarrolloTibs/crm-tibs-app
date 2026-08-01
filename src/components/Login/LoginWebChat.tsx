@@ -153,7 +153,7 @@ export const LoginWebChat: React.FC = () => {
     fetchHistory();
 
     // Conexión Socket.io para escuchar respuestas de ejecutivos e IA en tiempo real
-    const socket: Socket = io(socketUrl, { transports: ['polling'] });
+    const socket: Socket = io(socketUrl);
 
     socket.on('message_received', (newMsg: any) => {
       const isTargetChat =
