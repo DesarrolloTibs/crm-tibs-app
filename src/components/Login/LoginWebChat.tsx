@@ -153,7 +153,9 @@ export const LoginWebChat: React.FC = () => {
     fetchHistory();
 
     // Conexión Socket.io para escuchar respuestas de ejecutivos e IA en tiempo real
-    const socket: Socket = io(socketUrl);
+    const socketPath = socketUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
+    const originUrl = socketUrl.replace(/\/backend\/?$/, '');
+    const socket: Socket = io(originUrl, { path: socketPath });
 
     socket.on('message_received', (newMsg: any) => {
       const isTargetChat =

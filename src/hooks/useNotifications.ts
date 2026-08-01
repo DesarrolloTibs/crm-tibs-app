@@ -31,8 +31,10 @@ export const useNotifications = () => {
     if (!user || !userId) return;
 
     const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-    const baseUrl = (rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl) + '/notifications';
-    const socket: Socket = io(baseUrl, {
+    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
+    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
+    const socket: Socket = io(`${originUrl}/notifications`, {
+      path: socketPath,
       query: { userId },
     });
 

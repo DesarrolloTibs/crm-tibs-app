@@ -145,8 +145,9 @@ export function useConversationsSocket() {
     if (!currentUserId) return;
 
     const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-    const baseUrl = (rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl) + '/conversations';
-    const socket = io(baseUrl, { query: { userId: currentUserId } });
+    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
+    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
+    const socket = io(`${originUrl}/conversations`, { path: socketPath, query: { userId: currentUserId } });
     socketRef.current = socket;
 
     socket.on('connect', () => {

@@ -154,8 +154,9 @@ export function useHelpdesk() {
   // ── Socket.io ──
   useEffect(() => {
     const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-    const socketUrl = (rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl) + '/tickets';
-    const socket = io(socketUrl);
+    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
+    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
+    const socket = io(`${originUrl}/tickets`, { path: socketPath });
     socket.on('connect', () => console.log('Connected to WebSocket server'));
     socket.on('ticketCreated', (newTicket: Ticket) => {
       setTickets(prev => prev.some(t => t.id === newTicket.id) ? prev : [newTicket, ...prev]);
