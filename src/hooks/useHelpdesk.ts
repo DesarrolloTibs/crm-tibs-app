@@ -154,7 +154,7 @@ export function useHelpdesk() {
   // ── Socket.io ──
   useEffect(() => {
     const socketUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-    const socket = io(socketUrl);
+    const socket = io(socketUrl, { transports: ['polling', 'websocket'] });
     socket.on('connect', () => console.log('Connected to WebSocket server'));
     socket.on('ticketCreated', (newTicket: Ticket) => {
       setTickets(prev => prev.some(t => t.id === newTicket.id) ? prev : [newTicket, ...prev]);

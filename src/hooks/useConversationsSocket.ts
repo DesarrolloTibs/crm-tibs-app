@@ -145,7 +145,7 @@ export function useConversationsSocket() {
     if (!currentUserId) return;
 
     const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-    const socket = io(baseUrl, { query: { userId: currentUserId } });
+    const socket = io(baseUrl, { query: { userId: currentUserId }, transports: ['polling', 'websocket'] });
     socketRef.current = socket;
 
     socket.on('connect', () => {

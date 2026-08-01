@@ -33,6 +33,7 @@ export const useNotifications = () => {
     const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
     const socket: Socket = io(baseUrl, {
       query: { userId },
+      transports: ['polling', 'websocket'],
     });
 
     socket.on('connect', () => {
