@@ -12,25 +12,42 @@ interface Message {
 
 const renderWebChatMessageContent = (content: string) => {
   if (!content) return null;
-  const pdfMatch = content.match(/(https?:\/\/[^\s]+\.pdf|\/uploads\/[^\s]+\.pdf|uploads\/[^\s]+\.pdf)/i);
+
+  const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
+
+  // Detectar URLs de cotizaciones PDF: archivos .pdf directos O endpoints de la API pública
+  const pdfMatch = content.match(
+    /(https?:\/\/[^\s\)\]"]+\.pdf|https?:\/\/[^\s\)\]"]*\/api\/public\/quotations\/[a-f0-9\-]{36}|\/api\/public\/quotations\/[a-f0-9\-]{36}|\/uploads\/[^\s\)\]"]+\.pdf|uploads\/[^\s\)\]"]+\.pdf)/i
+  );
 
   if (pdfMatch) {
     let rawUrl = pdfMatch[0];
-    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
     let fullUrl = rawUrl;
-    if (rawUrl.startsWith('/uploads/')) {
+    
+    if (rawUrl.startsWith('/api/') || rawUrl.startsWith('/uploads/')) {
       fullUrl = `${baseUrl}${rawUrl}`;
     } else if (rawUrl.startsWith('uploads/')) {
       fullUrl = `${baseUrl}/${rawUrl}`;
     }
 
-    const textBefore = content.split(rawUrl)[0].replace(/📄\s*\[Cotización en PDF\]\s*\([^)]*\):\s*/i, '').trim();
+    const textBefore = content
+      .split(rawUrl)[0]
+      .replace(/📄\s*\[[^\]]*\]\s*\([^)]*\)\s*:?\s*/gi, '')
+      .replace(/📄\s*\[[^\]]*\]\([^)]*\)\s*/gi, '')
+      .trim();
+
+    const handleClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.open(fullUrl, '_blank', 'noopener,noreferrer');
+    };
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {textBefore && <span>{textBefore}</span>}
         <a
           href={fullUrl}
+          onClick={handleClick}
           target="_blank"
           rel="noopener noreferrer"
           style={{
@@ -58,6 +75,32 @@ const renderWebChatMessageContent = (content: string) => {
           </div>
         </a>
       </div>
+    );
+  }
+
+  const urlMatch = content.match(/(https?:\/\/[^\s\)\]"]+)/i);
+  if (urlMatch) {
+    const url = urlMatch[0];
+    const parts = content.split(url);
+    const handleLinkClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.open(url, '_blank', 'noopener,noreferrer');
+    };
+    return (
+      <span>
+        {parts[0]}
+        <a
+          href={url}
+          onClick={handleLinkClick}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'inherit', textDecoration: 'underline' }}
+        >
+          {url}
+        </a>
+        {parts[1] || ''}
+      </span>
     );
   }
 
