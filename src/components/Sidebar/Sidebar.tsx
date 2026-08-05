@@ -50,7 +50,7 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
                     <li><NavLink to="/conversations" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><MessageSquare size={18} /> Conversaciones</NavLink></li>
                     <li><NavLink to="/expenses" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><DollarSign size={18} /> Gastos</NavLink></li>
                     {isAdmin && <li><NavLink to="/users" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Users size={18} /> Usuarios</NavLink></li>}
-                    {isAdmin && <li><NavLink to="/settings" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Settings size={18} /> Configuración</NavLink></li>}
+                    <li><NavLink to="/settings" onClick={toggleSidebar} className={({ isActive }) => getLinkClass(isActive)}><Settings size={18} /> Configuración</NavLink></li>
                 </ul>
             </nav>
             <div className="p-4 border-t border-slate-100 bg-slate-50/30">

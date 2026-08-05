@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Select from '../components/shared/Select';
 import { useAuth } from '../hooks/useAuth';
-import { XCircle, ClipboardList, Settings, Sliders, Database, Bell, LayoutDashboard, Brain, Building2, Layers, KeyRound } from 'lucide-react';
+import { ClipboardList, Settings, Sliders, Database, Bell, LayoutDashboard, Brain, Building2, Layers, KeyRound, Calendar } from 'lucide-react';
 
 import ActivityTypesSettings from '../components/ActivityType/ActivityTypesSettings';
 import OpportunityLabelsSettings from '../components/OpportunityLabel/OpportunityLabelsSettings';
@@ -14,13 +14,14 @@ import GlobalAiCredentialsSettings from '../components/Settings/GlobalAiCredenti
 import MyCompanySection from '../components/Settings/MyCompanySection';
 import SettingsSidebar from '../components/Settings/SettingsSidebar';
 import CatalogSubTabsPanel from '../components/Settings/CatalogSubTabsPanel';
+import CalendarIntegrationSettings from '../components/Settings/CalendarIntegrationSettings';
 
 import { useConfigStore } from '../store/useConfigStore';
 import { getOpportunityLabels } from '../services/opportunityLabelsService';
 import type { OpportunityLabel } from '../core/models/OpportunityLabel';
 
 type SettingTab =
-  | 'my-company' | 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs'
+  | 'my-calendar' | 'my-company' | 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs'
   | 'helpdesk-cron' | 'dashboard-settings' | 'ai-agent-settings'
   | 'superadmin-tenants' | 'superadmin-plans' | 'superadmin-ai-credentials';
 
@@ -28,9 +29,17 @@ const SettingsPage: React.FC = () => {
   const { isAdmin, isSuperAdmin, loading: authLoading } = useAuth();
   const { selectedTenant } = useConfigStore();
 
-  const [activeTab, setActiveTabState] = useState<SettingTab>(
-    () => (sessionStorage.getItem('settingsActiveTab') as SettingTab) || 'my-company'
-  );
+  const [activeTab, setActiveTabState] = useState<SettingTab>(() => {
+    const saved = sessionStorage.getItem('settingsActiveTab') as SettingTab;
+    if (saved) {
+      if (!isAdmin && saved !== 'my-calendar') {
+        return 'my-calendar';
+      }
+      return saved;
+    }
+    return isAdmin ? 'my-company' : 'my-calendar';
+  });
+
   const [activeCatalogSubTab, setActiveCatalogSubTabState] = useState<'business-lines' | 'delivery-types' | 'licensings'>(
     () => (sessionStorage.getItem('settingsActiveCatalogSubTab') as any) || 'business-lines'
   );
@@ -64,15 +73,18 @@ const SettingsPage: React.FC = () => {
   };
 
   const mobileOptions = useMemo(() => {
-    const opts = [
-      { value: 'my-company', label: 'Mi empresa' },
-      { value: 'activity-types', label: 'Tipos de Actividad' },
-      { value: 'opportunity-labels', label: 'Etiquetas de Catálogos' },
-      { value: 'opportunity-catalogs', label: 'Valores de Catálogos' },
-      { value: 'helpdesk-cron', label: 'Notificaciones automáticas' },
-      { value: 'dashboard-settings', label: 'Indicadores de Dashboard' },
-      { value: 'ai-agent-settings', label: 'Agente IA & Canales' },
-    ];
+    const opts = [{ value: 'my-calendar', label: 'Mi Calendario' }];
+    if (isAdmin) {
+      opts.push(
+        { value: 'my-company', label: 'Mi empresa' },
+        { value: 'activity-types', label: 'Tipos de Actividad' },
+        { value: 'opportunity-labels', label: 'Etiquetas de Catálogos' },
+        { value: 'opportunity-catalogs', label: 'Valores de Catálogos' },
+        { value: 'helpdesk-cron', label: 'Notificaciones automáticas' },
+        { value: 'dashboard-settings', label: 'Indicadores de Dashboard' },
+        { value: 'ai-agent-settings', label: 'Agente IA & Canales' }
+      );
+    }
     if (isSuperAdmin) {
       opts.push(
         { value: 'superadmin-tenants', label: 'Gestión de Organizaciones' },
@@ -81,22 +93,27 @@ const SettingsPage: React.FC = () => {
       );
     }
     return opts;
-  }, [isSuperAdmin]);
+  }, [isAdmin, isSuperAdmin]);
 
   const sections = useMemo(() => {
     const list = [
-      { title: 'Organización', options: [{ id: 'my-company', label: 'Mi empresa', icon: <Building2 size={16} /> }] },
-      { title: 'Actividades', options: [{ id: 'activity-types', label: 'Tipos de Actividad', icon: <ClipboardList size={16} /> }] },
-      {
-        title: 'Oportunidades', options: [
-          { id: 'opportunity-labels', label: 'Etiquetas de Catálogos', icon: <Sliders size={16} /> },
-          { id: 'opportunity-catalogs', label: 'Valores de Catálogos', icon: <Database size={16} /> },
-        ],
-      },
-      { title: 'Mesa de ayuda', options: [{ id: 'helpdesk-cron', label: 'Notificaciones automáticas', icon: <Bell size={16} /> }] },
-      { title: 'Dashboard', options: [{ id: 'dashboard-settings', label: 'Indicadores de Dashboard', icon: <LayoutDashboard size={16} /> }] },
-      { title: 'Inteligencia Artificial', options: [{ id: 'ai-agent-settings', label: 'Agente IA & Canales', icon: <Brain size={16} /> }] },
+      { title: 'Personal', options: [{ id: 'my-calendar', label: 'Mi Calendario', icon: <Calendar size={16} /> }] }
     ];
+    if (isAdmin) {
+      list.push(
+        { title: 'Organización', options: [{ id: 'my-company', label: 'Mi empresa', icon: <Building2 size={16} /> }] },
+        { title: 'Actividades', options: [{ id: 'activity-types', label: 'Tipos de Actividad', icon: <ClipboardList size={16} /> }] },
+        {
+          title: 'Oportunidades', options: [
+            { id: 'opportunity-labels', label: 'Etiquetas de Catálogos', icon: <Sliders size={16} /> },
+            { id: 'opportunity-catalogs', label: 'Valores de Catálogos', icon: <Database size={16} /> },
+          ],
+        },
+        { title: 'Mesa de ayuda', options: [{ id: 'helpdesk-cron', label: 'Notificaciones automáticas', icon: <Bell size={16} /> }] },
+        { title: 'Dashboard', options: [{ id: 'dashboard-settings', label: 'Indicadores de Dashboard', icon: <LayoutDashboard size={16} /> }] },
+        { title: 'Inteligencia Artificial', options: [{ id: 'ai-agent-settings', label: 'Agente IA & Canales', icon: <Brain size={16} /> }] }
+      );
+    }
     if (isSuperAdmin) {
       list.push({
         title: 'SuperAdministrador & Multi-Tenancy', options: [
@@ -107,10 +124,11 @@ const SettingsPage: React.FC = () => {
       });
     }
     return list;
-  }, [isSuperAdmin]);
+  }, [isAdmin, isSuperAdmin]);
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'my-calendar': return <CalendarIntegrationSettings />;
       case 'my-company': return <MyCompanySection />;
       case 'activity-types': return <ActivityTypesSettings />;
       case 'opportunity-labels': return <OpportunityLabelsSettings onLabelsUpdated={fetchLabels} />;
@@ -133,16 +151,6 @@ const SettingsPage: React.FC = () => {
 
   if (authLoading) {
     return <div className="flex items-center justify-center py-20 text-slate-400">Cargando configuración...</div>;
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500">
-        <XCircle size={64} className="mb-4 text-red-500" />
-        <h2 className="text-2xl font-bold text-gray-800">Acceso Denegado</h2>
-        <p className="mt-2 text-sm text-gray-600">No tienes permisos de administrador para ver la configuración del sistema.</p>
-      </div>
-    );
   }
 
   return (

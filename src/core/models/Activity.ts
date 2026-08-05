@@ -38,4 +38,7 @@ export interface Activity {
     contacts?: Client[];
     contactIds?: string[];
     reminder?: ActivityReminder | null;
+    externalEventId?: string | null;
+    externalProvider?: 'google' | 'outlook' | 'icloud' | null;
+    externalLastSyncedAt?: string | null;
 }
