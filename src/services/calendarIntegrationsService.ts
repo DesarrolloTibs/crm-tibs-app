@@ -21,7 +21,7 @@ export async function getCalendarIntegrationStatus(): Promise<CalendarIntegratio
  */
 export async function getCalendarAuthUrl(provider: 'google' | 'outlook'): Promise<string> {
   const response = await axiosInstance.get('/api/calendar-integrations/auth-url', {
-    params: { provider },
+    params: { provider, t: Date.now() },
   });
   return response.data.authUrl;
 }
