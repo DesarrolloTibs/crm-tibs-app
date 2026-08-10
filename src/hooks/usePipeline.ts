@@ -63,6 +63,9 @@ export function usePipeline() {
   const [showStagesConfig, setShowStagesConfig] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState<number | null>(null);
+  const currentYear = new Date().getFullYear();
+  const [startDate, setStartDate] = useState<string>(`${currentYear}-01-01`);
+  const [endDate, setEndDate] = useState<string>(`${currentYear}-12-31`);
   const searchDropdownRef = useRef<HTMLDivElement>(null);
   const [customRules, setCustomRules] = useState<FilterRule[]>([]);
   const [matchType, setMatchType] = useState<'any' | 'all'>('any');
@@ -92,7 +95,7 @@ export function usePipeline() {
   useEffect(() => { localStorage.setItem('pipeline_folded_stages', JSON.stringify(foldedStageIds)); }, [foldedStageIds]);
   useEffect(() => { localStorage.setItem('pipeline_view_mode', viewMode); }, [viewMode]);
   useEffect(() => { if (isAddingStage && addStageInputRef.current) addStageInputRef.current.focus(); }, [isAddingStage]);
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, pageSize]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, pageSize, startDate, endDate]);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchDropdownRef.current && !searchDropdownRef.current.contains(e.target as Node)) setShowFilters(false);
@@ -122,10 +125,13 @@ export function usePipeline() {
       });
       let data: Opportunity[];
       if (archivedFilter === 'all') {
-        const [active, archived] = await Promise.all([getOpportunities(undefined, undefined, false), getOpportunities(undefined, undefined, true)]);
+        const [active, archived] = await Promise.all([
+          getOpportunities(startDate || undefined, endDate || undefined, false),
+          getOpportunities(startDate || undefined, endDate || undefined, true)
+        ]);
         data = [...active, ...archived];
       } else {
-        data = await getOpportunities(undefined, undefined, archivedFilter === 'archived');
+        data = await getOpportunities(startDate || undefined, endDate || undefined, archivedFilter === 'archived');
       }
       if (Array.isArray(data)) setOpportunities(data);
       else throw new Error('Data format is incorrect');
@@ -133,7 +139,7 @@ export function usePipeline() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchPipelineAndOpportunities(); }, [archivedFilter, schemaName]);
+  useEffect(() => { fetchPipelineAndOpportunities(); }, [archivedFilter, schemaName, startDate, endDate]);
 
   useEffect(() => {
     if (!loading && opportunities.length > 0) {
@@ -293,7 +299,18 @@ export function usePipeline() {
     });
   };
 
-  const handleClearFilters = () => { setSearchTerm(''); setExecutiveFilter(''); setStatusFilter(''); setPriorityFilter(null); setArchivedFilter('active'); setIsCustomFilterActive(false); setCustomRules([]); };
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setExecutiveFilter('');
+    setStatusFilter('');
+    setPriorityFilter(null);
+    setArchivedFilter('active');
+    setIsCustomFilterActive(false);
+    setCustomRules([]);
+    const cYear = new Date().getFullYear();
+    setStartDate(`${cYear}-01-01`);
+    setEndDate(`${cYear}-12-31`);
+  };
 
   const handleApplyCustomFilter = () => {
     setIsCustomFilterActive(true); setIsCustomFilterModalOpen(false);
@@ -317,7 +334,17 @@ export function usePipeline() {
       const matchesStatus = statusFilter ? opp.stage_id === statusFilter : true;
       const matchesPriority = priorityFilter !== null ? (opp.priority ?? 0) >= priorityFilter : true;
       const matchesArchived = archivedFilter === 'all' ? true : archivedFilter === 'archived' ? opp.archived === true : (opp.archived === false || opp.archived === undefined);
-      return matchesSearch && matchesExecutive && matchesStatus && matchesPriority && matchesArchived;
+      
+      let matchesDate = true;
+      if (startDate || endDate) {
+        const oppDateStr = opp.createdAt ? (typeof opp.createdAt === 'string' ? opp.createdAt : (opp.createdAt as any).toISOString?.() || String(opp.createdAt)) : '';
+        if (oppDateStr) {
+          const oppDayStr = oppDateStr.substring(0, 10);
+          if (startDate && oppDayStr < startDate) matchesDate = false;
+          if (endDate && oppDayStr > endDate) matchesDate = false;
+        }
+      }
+      return matchesSearch && matchesExecutive && matchesStatus && matchesPriority && matchesArchived && matchesDate;
     }
     if (!includeArchived && opp.archived) return false;
     if (customRules.length === 0) return true;
@@ -336,7 +363,7 @@ export function usePipeline() {
       if (op==='eq') return sfv===val; if (op==='neq') return sfv!==val; if (op==='contains') return sfv.includes(val); if (op==='not_contains') return !sfv.includes(val); return true;
     };
     return matchType === 'any' ? customRules.some(matchesRule) : customRules.every(matchesRule);
-  }), [opportunities, searchTerm, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, customRules, matchType, includeArchived]);
+  }), [opportunities, searchTerm, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, customRules, matchType, includeArchived, startDate, endDate]);
 
   const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredOpportunities.length / pageSize);
   const paginatedOpportunities = useMemo(() => pageSize === 0 ? filteredOpportunities : filteredOpportunities.slice((currentPage-1)*pageSize, currentPage*pageSize), [filteredOpportunities, currentPage, pageSize]);
@@ -393,6 +420,7 @@ export function usePipeline() {
     executiveFilter, setExecutiveFilter, statusFilter, setStatusFilter, archivedFilter, setArchivedFilter,
     showFilters, setShowFilters, showToolbar, setShowToolbar, showStagesConfig, setShowStagesConfig,
     isExploding, priorityFilter, setPriorityFilter, searchDropdownRef,
+    startDate, setStartDate, endDate, setEndDate,
     customRules, setCustomRules, matchType, setMatchType, includeArchived, setIncludeArchived,
     isCustomFilterModalOpen, setIsCustomFilterModalOpen, isCustomFilterActive, setIsCustomFilterActive,
     isAddingStage, setIsAddingStage, newStageName, setNewStageName, newStageMaxDays, setNewStageMaxDays,

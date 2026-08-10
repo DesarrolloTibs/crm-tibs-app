@@ -1,9 +1,10 @@
 import React from 'react';
-import { Plus, User, XCircle, Filter, ChevronUp, ChevronDown, Settings2, Star, Kanban as KanbanIcon, List as ListIcon, FileText, FileSpreadsheet } from 'lucide-react';
+import { Plus, User, XCircle, Filter, ChevronUp, ChevronDown, Settings2, Star, Kanban as KanbanIcon, List as ListIcon, FileText, FileSpreadsheet, Calendar } from 'lucide-react';
 import UnifiedSearchBar from '../shared/UnifiedSearchBar';
 import type { SearchBadge } from '../shared/UnifiedSearchBar';
 import StageVisibilitySelector from '../shared/StageVisibilitySelector';
 import Button from '../shared/Button';
+import Input from '../shared/Input';
 import type { Stage } from '../../core/models/Opportunity';
 
 interface Executive { id: string; username: string; }
@@ -42,6 +43,10 @@ interface Props {
   onExportPDF: () => void;
   onExportCSV: () => void;
   badges: SearchBadge[];
+  startDate: string;
+  setStartDate: (v: string) => void;
+  endDate: string;
+  setEndDate: (v: string) => void;
 }
 
 const PipelineToolbar: React.FC<Props> = ({
@@ -53,6 +58,7 @@ const PipelineToolbar: React.FC<Props> = ({
   onVisibilityChange, executives, isAdmin, searchDropdownRef,
   onNewOpportunity, onOpenSettings, onOpenCustomFilter, onClearFilters,
   onExportPDF, onExportCSV, badges,
+  startDate, setStartDate, endDate, setEndDate,
 }) => (
   <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
     <div className="flex justify-between items-start w-full md:w-auto">
@@ -70,11 +76,11 @@ const PipelineToolbar: React.FC<Props> = ({
         ref={searchDropdownRef}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        placeholder={!executiveFilter && !statusFilter && priorityFilter === null && archivedFilter === 'active' ? 'Buscar...' : ''}
+        placeholder={!executiveFilter && !statusFilter && priorityFilter === null && archivedFilter === 'active' && !startDate && !endDate ? 'Buscar...' : ''}
         badges={badges}
         showFilters={showFilters}
         setShowFilters={setShowFilters}
-        dropdownWidthClass="w-[380px]"
+        dropdownWidthClass="w-[560px]"
       >
         <div className="flex-1 flex flex-col gap-1.5 max-h-[320px] overflow-y-auto pr-1">
           <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none"><Filter size={12} /> Filtros</h4>
@@ -114,6 +120,13 @@ const PipelineToolbar: React.FC<Props> = ({
           ))}
           <div className="border-t border-gray-100 my-1 mt-auto shrink-0" />
           <button type="button" onClick={onClearFilters} className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"><XCircle size={12} /> Limpiar Filtros</button>
+        </div>
+        <div className="flex-1 flex flex-col gap-1.5 border-l border-gray-100 pl-4 max-h-[320px] overflow-y-auto">
+          <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none"><Calendar size={12} /> Rango de Fecha</h4>
+          <div className="flex flex-col gap-3 mt-1 pr-1">
+            <Input type="date" label="Desde" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="!py-2 !rounded-xl !text-xs" />
+            <Input type="date" label="Hasta" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="!py-2 !rounded-xl !text-xs" />
+          </div>
         </div>
       </UnifiedSearchBar>
 

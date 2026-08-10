@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import Confetti from 'react-confetti-boom';
-import { Filter, User, Tag, Star } from 'lucide-react';
+import { Filter, User, Tag, Star, Calendar } from 'lucide-react';
 import { usePipeline } from '../../hooks/usePipeline';
 import Loader from '../Loader/Loader';
 import Notification from '../Modal/Notification';
@@ -22,8 +22,24 @@ const PipelineBoard: React.FC = () => {
     if (p.executiveFilter) list.push({ id:'executive', label:p.executives.find(e=>e.id===p.executiveFilter)?.username||'Ejecutivo', icon:<User size={10} className="shrink-0" />, onRemove:()=>p.setExecutiveFilter('') });
     if (p.statusFilter) list.push({ id:'status', label:p.activeStages.find(s=>s.id===p.statusFilter)?.strname||'Estatus', icon:<Tag size={10} className="shrink-0" />, onRemove:()=>p.setStatusFilter('') });
     if (p.priorityFilter!==null) list.push({ id:'priority', label:p.priorityFilter===1?'★ Baja+':p.priorityFilter===2?'★★ Media+':'★★★ Alta', icon:<Star size={10} className="shrink-0" />, onRemove:()=>p.setPriorityFilter(null) });
+    
+    if (p.startDate || p.endDate) {
+      const currentYear = new Date().getFullYear();
+      const defaultStartDate = `${currentYear}-01-01`;
+      const defaultEndDate = `${currentYear}-12-31`;
+      const isDefault = p.startDate === defaultStartDate && p.endDate === defaultEndDate;
+      list.push({
+        id: 'dateRange',
+        label: isDefault ? 'Año en curso' : `${p.startDate || 'Inicio'} a ${p.endDate || 'Fin'}`,
+        icon: <Calendar size={10} className="shrink-0" />,
+        onRemove: () => {
+          p.setStartDate('');
+          p.setEndDate('');
+        }
+      });
+    }
     return list;
-  }, [p.isCustomFilterActive, p.archivedFilter, p.executiveFilter, p.statusFilter, p.priorityFilter, p.executives, p.activeStages]);
+  }, [p.isCustomFilterActive, p.archivedFilter, p.executiveFilter, p.statusFilter, p.priorityFilter, p.executives, p.activeStages, p.startDate, p.endDate]);
 
   if (p.loading) return <Loader />;
 
@@ -70,6 +86,10 @@ const PipelineBoard: React.FC = () => {
         onExportPDF={p.handleExportPDF}
         onExportCSV={p.handleExportCSV}
         badges={badges}
+        startDate={p.startDate}
+        setStartDate={p.setStartDate}
+        endDate={p.endDate}
+        setEndDate={p.setEndDate}
       />
 
       {p.viewMode === 'kanban' ? (
