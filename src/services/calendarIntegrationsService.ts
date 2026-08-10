@@ -8,11 +8,13 @@ export interface CalendarIntegrationStatus {
   disabled?: boolean;
 }
 
+const baseUrl = import.meta.env.VITE_BASE_URL || '';
+
 /**
    Obtiene el estado de conexión del calendario del usuario firmado.
  */
 export async function getCalendarIntegrationStatus(): Promise<CalendarIntegrationStatus> {
-  const response = await axiosInstance.get('/api/calendar-integrations/status');
+  const response = await axiosInstance.get(`${baseUrl}/api/calendar-integrations/status`);
   return response.data;
 }
 
@@ -20,7 +22,7 @@ export async function getCalendarIntegrationStatus(): Promise<CalendarIntegratio
    Obtiene la URL de autorización para el flujo OAuth2 de Google o Outlook.
  */
 export async function getCalendarAuthUrl(provider: 'google' | 'outlook'): Promise<string> {
-  const response = await axiosInstance.get('/api/calendar-integrations/auth-url', {
+  const response = await axiosInstance.get(`${baseUrl}/api/calendar-integrations/auth-url`, {
     params: { provider, t: Date.now() },
   });
   return response.data.authUrl;
@@ -30,7 +32,7 @@ export async function getCalendarAuthUrl(provider: 'google' | 'outlook'): Promis
    Conecta una cuenta de iCloud CalDAV.
  */
 export async function connectICloudCalendar(email: string, appPassword: string): Promise<{ success: boolean; email: string }> {
-  const response = await axiosInstance.post('/api/calendar-integrations/connect-icloud', {
+  const response = await axiosInstance.post(`${baseUrl}/api/calendar-integrations/connect-icloud`, {
     email,
     appPassword,
   });
@@ -41,6 +43,6 @@ export async function connectICloudCalendar(email: string, appPassword: string):
    Remueve la integración de calendario activa.
  */
 export async function disconnectCalendar(): Promise<{ success: boolean }> {
-  const response = await axiosInstance.delete('/api/calendar-integrations/disconnect');
+  const response = await axiosInstance.delete(`${baseUrl}/api/calendar-integrations/disconnect`);
   return response.data;
 }
