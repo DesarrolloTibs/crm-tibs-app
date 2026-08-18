@@ -251,7 +251,19 @@ export function usePipeline() {
     e.preventDefault(); if (!editingStage) return;
     const nameTrimmed = editingStage.strname.trim();
     if (!nameTrimmed) { showError('El nombre de la etapa no puede estar vacío.'); return; }
-    const updatedStages = stages.map(s => s.id === editingStage.id ? { ...s, strname: nameTrimmed, blnstatus: editingStage.blnstatus, intmaxdays: editingStage.intmaxdays } : s);
+    const newStageType = Number(editingStage.stage_type ?? 0);
+    const updatedStages = stages.map(s => {
+      if (s.id === editingStage.id) {
+        return { ...s, strname: nameTrimmed, blnstatus: editingStage.blnstatus, intmaxdays: editingStage.intmaxdays, stage_type: newStageType };
+      }
+      if (newStageType === 1 && (s.stage_type === 1 || Number(s.stage_type) === 1)) {
+        return { ...s, stage_type: 0 };
+      }
+      if (newStageType === 2 && (s.stage_type === 2 || Number(s.stage_type) === 2)) {
+        return { ...s, stage_type: 0 };
+      }
+      return s;
+    });
     const activeS = updatedStages.filter(s => s.blnstatus);
     if (!activeS.length) { showError('Debe existir al menos una etapa activa en el pipeline.'); return; }
     if (activeS.filter(s => s.blninitial).length !== 1) { showError('Debe existir exactamente una etapa inicial activa.'); return; }
@@ -259,7 +271,7 @@ export function usePipeline() {
     if (names.length !== new Set(names).size) { showError('No se permiten nombres duplicados de etapas.'); return; }
     try {
       setLoading(true);
-      await updateMainPipeline({ stages: updatedStages.map(s => ({ id: s.id, strname: s.strname.trim(), blnstatus: s.blnstatus, display_order: s.display_order, strcolor: s.strcolor||'#3b82f6', blninitial: s.blninitial, pipeline_id: s.pipeline_id, intmaxdays: s.intmaxdays })) });
+      await updateMainPipeline({ stages: updatedStages.map(s => ({ id: s.id, strname: s.strname.trim(), blnstatus: s.blnstatus, display_order: s.display_order, strcolor: s.strcolor||'#3b82f6', blninitial: s.blninitial, stage_type: Number(s.stage_type ?? 0), pipeline_id: s.pipeline_id, intmaxdays: s.intmaxdays })) });
       setEditingStage(null); showSuccess('Etapa actualizada correctamente'); fetchPipelineAndOpportunities();
     } catch (err: any) { showError(Array.isArray(err.response?.data?.message) ? err.response.data.message.join(', ') : err.response?.data?.message || 'Error al actualizar la etapa.'); }
     finally { setLoading(false); }
@@ -269,7 +281,7 @@ export function usePipeline() {
     const updatedStages = enforceFirstActiveIsInitial(stages.map(s => s.id === stageToDisable.id ? { ...s, blnstatus: false } : s));
     try {
       setLoading(true);
-      await updateMainPipeline({ stages: updatedStages.map(s => ({ id: s.id, strname: s.strname.trim(), blnstatus: s.blnstatus, display_order: s.display_order, strcolor: s.strcolor||'#3b82f6', blninitial: s.blninitial, pipeline_id: s.pipeline_id, intmaxdays: s.intmaxdays })) });
+      await updateMainPipeline({ stages: updatedStages.map(s => ({ id: s.id, strname: s.strname.trim(), blnstatus: s.blnstatus, display_order: s.display_order, strcolor: s.strcolor||'#3b82f6', blninitial: s.blninitial, stage_type: Number(s.stage_type ?? 0), pipeline_id: s.pipeline_id, intmaxdays: s.intmaxdays })) });
       showSuccess(`Etapa "${stageToDisable.strname}" desactivada correctamente`); fetchPipelineAndOpportunities();
     } catch (err: any) { showError(Array.isArray(err.response?.data?.message) ? err.response.data.message.join(', ') : err.response?.data?.message || 'Error al desactivar la etapa.'); fetchPipelineAndOpportunities(); }
     finally { setLoading(false); }
@@ -280,11 +292,11 @@ export function usePipeline() {
     const nameTrimmed = newStageName.trim(); if (!nameTrimmed) return;
     if (stages.some(s => s.strname.trim().toLowerCase() === nameTrimmed.toLowerCase())) { showError('Ya existe una etapa con este nombre.'); return; }
     const daysLimit = newStageMaxDays.trim() === '' ? null : parseInt(newStageMaxDays, 10);
-    const newStage: Stage = { id: `temp-${Date.now()}`, strname: nameTrimmed, blnstatus: true, pipeline_id: '', display_order: stages.length, strcolor: '#3b82f6', blninitial: false, intmaxdays: daysLimit };
+    const newStage: Stage = { id: `temp-${Date.now()}`, strname: nameTrimmed, blnstatus: true, pipeline_id: '', display_order: stages.length, strcolor: '#3b82f6', blninitial: false, stage_type: 0, intmaxdays: daysLimit };
     const updatedStages = enforceFirstActiveIsInitial([...stages, newStage]);
     try {
       setLoading(true);
-      await updateMainPipeline({ stages: updatedStages.map(s => { const p: any = { strname: s.strname.trim(), blnstatus: s.blnstatus, display_order: s.display_order, strcolor: s.strcolor||'#3b82f6', blninitial: s.blninitial, intmaxdays: s.intmaxdays }; if (s.id && !s.id.startsWith('temp-')) p.id = s.id; return p; }) });
+      await updateMainPipeline({ stages: updatedStages.map(s => { const p: any = { strname: s.strname.trim(), blnstatus: s.blnstatus, display_order: s.display_order, strcolor: s.strcolor||'#3b82f6', blninitial: s.blninitial, stage_type: Number(s.stage_type ?? 0), intmaxdays: s.intmaxdays }; if (s.id && !s.id.startsWith('temp-')) p.id = s.id; return p; }) });
       showSuccess(`Etapa "${nameTrimmed}" creada correctamente`);
       setNewStageName(''); setNewStageMaxDays(''); setIsAddingStage(false);
       await fetchPipelineAndOpportunities();

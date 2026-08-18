@@ -2,13 +2,14 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { SortableContext } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Settings, Plus, Minimize2, Edit2, ChevronsRight, EyeOff } from 'lucide-react';
+import { Settings, Plus, Minimize2, Edit2, ChevronsRight, EyeOff, Check, X } from 'lucide-react';
 
 export interface KanbanStage {
   id: string;
   strname: string;
   blnstatus: boolean;
   strcolor?: string | null;
+  stage_type?: number;
   intmaxdays?: number | null;
   display_order: number;
 }
@@ -189,6 +190,18 @@ export function KanbanColumn<T extends KanbanStage = KanbanStage>({
             >
               {count}
             </span>
+
+            {/* Stage Type Closure Badges */}
+            {Number(stage.stage_type) === 1 && (
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 shrink-0 shadow-xs" title="Etapa de Cierre Ganado / Resuelto">
+                <Check size={9} className="stroke-[3]" /> Éxito
+              </span>
+            )}
+            {Number(stage.stage_type) === 2 && (
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-300 shrink-0 shadow-xs" title="Etapa de Cierre Perdido">
+                <X size={9} className="stroke-[3]" /> Perdida
+              </span>
+            )}
           </h3>
           <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
             {(typeof onFoldStage === 'function' || (canManageStages && (typeof onEditStage === 'function' || typeof onDisableStage === 'function'))) && (

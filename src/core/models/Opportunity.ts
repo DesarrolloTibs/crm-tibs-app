@@ -11,6 +11,7 @@ export interface Stage {
   display_order: number;
   strcolor: string | null;
   blninitial: boolean;
+  stage_type?: number;
   intmaxdays?: number | null;
   dtmcreated?: Date;
   dtmlastmodified?: Date;

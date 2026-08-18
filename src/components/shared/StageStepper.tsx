@@ -5,6 +5,7 @@ export interface StepperStage {
     strname: string;
     blnstatus: boolean;
     blninitial: boolean;
+    stage_type?: number;
 }
 
 interface StageStepperProps {
@@ -41,13 +42,20 @@ export const StageStepper: React.FC<StageStepperProps> = ({
     const foldedNames = ['resuelto', 'cancelado', 'cancelada', 'ganada', 'perdida', 'lost', 'won', 'cancelled', 'solved', 'standby'];
     const activeStages = stages.filter(s => s.blnstatus);
 
+    const isStageFolded = (s: StepperStage) => {
+        if (s.stage_type !== undefined && s.stage_type !== null) {
+            return Number(s.stage_type) === 1 || Number(s.stage_type) === 2;
+        }
+        return foldedNames.includes(s.strname.trim().toLowerCase());
+    };
+
     const mainStages = activeStages.filter(s => {
-        const isFolded = foldedNames.includes(s.strname.trim().toLowerCase());
+        const isFolded = isStageFolded(s);
         return !isFolded || s.id === currentStageId;
     });
 
     const foldedStages = activeStages.filter(s => {
-        const isFolded = foldedNames.includes(s.strname.trim().toLowerCase());
+        const isFolded = isStageFolded(s);
         return isFolded && s.id !== currentStageId;
     });
 

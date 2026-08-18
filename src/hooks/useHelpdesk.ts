@@ -332,7 +332,16 @@ export function useHelpdesk() {
     if (!editingStage) return;
     const nameTrimmed = editingStage.strname.trim();
     if (!nameTrimmed) { showError('El nombre de la etapa no puede estar vacío.'); return; }
-    const updatedStages = stages.map(s => s.id === editingStage.id ? {...s,strname:nameTrimmed,blnstatus:editingStage.blnstatus,intmaxdays:editingStage.intmaxdays} : s);
+    const newStageType = Number(editingStage.stage_type ?? 0);
+    const updatedStages = stages.map(s => {
+      if (s.id === editingStage.id) {
+        return { ...s, strname: nameTrimmed, blnstatus: editingStage.blnstatus, intmaxdays: editingStage.intmaxdays, stage_type: newStageType };
+      }
+      if (newStageType === 1 && (s.stage_type === 1 || Number(s.stage_type) === 1)) {
+        return { ...s, stage_type: 0 };
+      }
+      return s;
+    });
     const activeStages = updatedStages.filter(s => s.blnstatus);
     if (activeStages.length === 0) { showError('Debe existir al menos una etapa activa.'); return; }
     if (activeStages.filter(s => s.blninitial).length !== 1) { showError('Debe existir exactamente una etapa inicial activa.'); return; }
@@ -340,7 +349,7 @@ export function useHelpdesk() {
     if (names.length !== new Set(names).size) { showError('No se permiten nombres duplicados de etapas.'); return; }
     try {
       setLoading(true);
-      await updateMainHelpdesk({ stages: updatedStages.map(s => ({id:s.id,strname:s.strname.trim(),blnstatus:s.blnstatus,display_order:s.display_order,strcolor:s.strcolor||'#6366f1',blninitial:s.blninitial,intmaxdays:s.intmaxdays,helpdesk_id:s.helpdesk_id,dtmcreated:s.dtmcreated,dtmlastmodified:s.dtmlastmodified})) });
+      await updateMainHelpdesk({ stages: updatedStages.map(s => ({id:s.id,strname:s.strname.trim(),blnstatus:s.blnstatus,display_order:s.display_order,strcolor:s.strcolor||'#6366f1',blninitial:s.blninitial,stage_type:Number(s.stage_type ?? 0),intmaxdays:s.intmaxdays,helpdesk_id:s.helpdesk_id,dtmcreated:s.dtmcreated,dtmlastmodified:s.dtmlastmodified})) });
       setEditingStage(null); showSuccess('Etapa actualizada correctamente'); loadData();
     } catch (err: any) { showError(Array.isArray(err.response?.data?.message) ? err.response.data.message.join(', ') : err.response?.data?.message || 'Error al actualizar la etapa.'); }
     finally { setLoading(false); }
@@ -350,7 +359,7 @@ export function useHelpdesk() {
     const updatedStages = enforceFirstActiveIsInitial(stages.map(s => s.id === stageToDisable.id ? {...s,blnstatus:false} : s));
     try {
       setLoading(true);
-      await updateMainHelpdesk({ stages: updatedStages.map(s => ({id:s.id,strname:s.strname.trim(),blnstatus:s.blnstatus,display_order:s.display_order,strcolor:s.strcolor||'#6366f1',blninitial:s.blninitial,intmaxdays:s.intmaxdays,helpdesk_id:s.helpdesk_id,dtmcreated:s.dtmcreated,dtmlastmodified:s.dtmlastmodified})) });
+      await updateMainHelpdesk({ stages: updatedStages.map(s => ({id:s.id,strname:s.strname.trim(),blnstatus:s.blnstatus,display_order:s.display_order,strcolor:s.strcolor||'#6366f1',blninitial:s.blninitial,stage_type:Number(s.stage_type ?? 0),intmaxdays:s.intmaxdays,helpdesk_id:s.helpdesk_id,dtmcreated:s.dtmcreated,dtmlastmodified:s.dtmlastmodified})) });
       showSuccess(`Etapa "${stageToDisable.strname}" desactivada correctamente`); loadData();
     } catch (err: any) { showError(Array.isArray(err.response?.data?.message) ? err.response.data.message.join(', ') : err.response?.data?.message || 'Error al desactivar la etapa.'); loadData(); }
     finally { setLoading(false); }
@@ -362,11 +371,11 @@ export function useHelpdesk() {
     if (!nameTrimmed) return;
     if (stages.some(s => s.strname.trim().toLowerCase() === nameTrimmed.toLowerCase())) { showError('Ya existe una etapa con este nombre.'); return; }
     const daysLimit = newStageMaxDays.trim() === '' ? null : parseInt(newStageMaxDays, 10);
-    const newStage: TicketStage = { id:`temp-${Date.now()}`, strname:nameTrimmed, blnstatus:true, helpdesk_id:helpdesk?.id||'', display_order:stages.length, strcolor:'#6366f1', blninitial:false, intmaxdays:daysLimit, dtmcreated:new Date().toISOString(), dtmlastmodified:new Date().toISOString() };
+    const newStage: TicketStage = { id:`temp-${Date.now()}`, strname:nameTrimmed, blnstatus:true, helpdesk_id:helpdesk?.id||'', display_order:stages.length, strcolor:'#6366f1', blninitial:false, stage_type:0, intmaxdays:daysLimit, dtmcreated:new Date().toISOString(), dtmlastmodified:new Date().toISOString() };
     const updatedStages = enforceFirstActiveIsInitial([...stages, newStage]);
     try {
       setLoading(true);
-      await updateMainHelpdesk({ stages: updatedStages.map(s => { const p: any = {strname:s.strname.trim(),blnstatus:s.blnstatus,display_order:s.display_order,strcolor:s.strcolor||'#6366f1',blninitial:s.blninitial,intmaxdays:s.intmaxdays}; if (s.id && !s.id.startsWith('temp-')) p.id=s.id; return p; }) });
+      await updateMainHelpdesk({ stages: updatedStages.map(s => { const p: any = {strname:s.strname.trim(),blnstatus:s.blnstatus,display_order:s.display_order,strcolor:s.strcolor||'#6366f1',blninitial:s.blninitial,stage_type:Number(s.stage_type ?? 0),intmaxdays:s.intmaxdays}; if (s.id && !s.id.startsWith('temp-')) p.id=s.id; return p; }) });
       showSuccess(`Etapa "${nameTrimmed}" creada correctamente`);
       setNewStageName(''); setNewStageMaxDays(''); setIsAddingStage(false);
       await loadData();

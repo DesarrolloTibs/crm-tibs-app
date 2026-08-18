@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Ticket } from '../../core/models/Ticket';
-import { Clock, Building2, User, AlertTriangle } from 'lucide-react';
+import { Clock, Building2, User, AlertTriangle, Check } from 'lucide-react';
 
 interface Props {
   tickets: Ticket[];
@@ -173,12 +173,13 @@ const TicketsListTable: React.FC<Props> = ({
                     <td className="py-3.5 px-4 text-center">
                       {ticket.stage ? (
                         <span
-                          className="px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-block border border-black/5"
+                          className="px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 border border-black/5"
                           style={{
                             backgroundColor: (ticket.stage.strcolor || '#e2e8f0') + '20',
                             color: ticket.stage.strcolor || '#475569',
                           }}
                         >
+                          {Number(ticket.stage.stage_type) === 1 && <Check size={10} className="stroke-[3] text-emerald-600" />}
                           {ticket.stage.strname}
                         </span>
                       ) : (

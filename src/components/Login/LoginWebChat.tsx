@@ -131,6 +131,7 @@ export const LoginWebChat: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [visitorId, setVisitorId] = useState<string>('');
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [recognizedName, setRecognizedName] = useState<string | null>(() => {
     return localStorage.getItem('webchat_recognized_name') || null;
   });
@@ -140,6 +141,11 @@ export const LoginWebChat: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationIdRef = useRef<string | null>(null);
+
+  // Mantener conversationIdRef sincronizada con el estado
+  useEffect(() => {
+    conversationIdRef.current = conversationId;
+  }, [conversationId]);
 
   const rawBaseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3090';
   const apiUrl = `${rawBaseUrl.replace(/\/$/, '')}/api`;
@@ -191,13 +197,16 @@ export const LoginWebChat: React.FC = () => {
           msgs = data.messages || [];
           checkAndSetRecognizedInfo(data.clientName, data.clientPhone);
           if (data.conversationId) {
+            setConversationId(data.conversationId);
             conversationIdRef.current = data.conversationId;
           }
         }
         if (msgs.length > 0) {
           setMessages(msgs);
           if (!conversationIdRef.current && (msgs[0] as any).conversationId) {
-            conversationIdRef.current = (msgs[0] as any).conversationId;
+            const foundId = (msgs[0] as any).conversationId;
+            setConversationId(foundId);
+            conversationIdRef.current = foundId;
           }
         }
       }
@@ -212,33 +221,43 @@ export const LoginWebChat: React.FC = () => {
 
     fetchHistory();
 
-    // Conexión Socket.io para escuchar respuestas de ejecutivos e IA en tiempo real
+    // Conexión Socket.io al namespace /conversations para escuchar respuestas de ejecutivos e IA en tiempo real
     const socketPath = socketUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
     const originUrl = socketUrl.replace(/\/backend\/?$/, '');
-    const socket: Socket = io(originUrl, { path: socketPath });
+    const socket: Socket = io(`${originUrl}/conversations`, {
+      path: socketPath,
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+    });
 
-    socket.on('message_received', (newMsg: any) => {
+    socket.on('message_received', (incomingMessage: any) => {
+      const currentConvId = conversationIdRef.current;
       const isTargetChat =
-        (newMsg.conversationId && newMsg.conversationId === conversationIdRef.current) ||
-        (newMsg.conversation && newMsg.conversation.externalId === visitorId);
+        (incomingMessage.conversationId && incomingMessage.conversationId === currentConvId) ||
+        (incomingMessage.conversation && incomingMessage.conversation.externalId === visitorId);
 
       if (isTargetChat) {
-        if (newMsg.conversationId) conversationIdRef.current = newMsg.conversationId;
+        if (incomingMessage.conversationId) {
+          setConversationId(incomingMessage.conversationId);
+          conversationIdRef.current = incomingMessage.conversationId;
+        }
         
-        const convClientName = newMsg.conversation?.clientName || newMsg.clientName;
-        const convClientPhone = newMsg.conversation?.client?.telefono || newMsg.clientPhone;
+        const convClientName = incomingMessage.conversation?.clientName || incomingMessage.clientName;
+        const convClientPhone = incomingMessage.conversation?.client?.telefono || incomingMessage.clientPhone;
         checkAndSetRecognizedInfo(convClientName, convClientPhone);
 
         setMessages((prev) => {
-          if (prev.some((m) => m.id === newMsg.id)) return prev;
-          return [...prev, newMsg];
+          // Evitar duplicados por ID
+          if (prev.some((m) => m.id === incomingMessage.id)) return prev;
+          return [...prev, incomingMessage];
         });
-      } else if (!conversationIdRef.current) {
+      } else if (!currentConvId) {
         fetchHistory();
       }
     });
 
     return () => {
+      socket.off('message_received');
       socket.disconnect();
     };
   }, [visitorId, isOpen, socketUrl, fetchHistory, checkAndSetRecognizedInfo]);
@@ -281,6 +300,7 @@ export const LoginWebChat: React.FC = () => {
       if (res.ok) {
         const savedMsg = await res.json();
         if (savedMsg && savedMsg.conversationId) {
+          setConversationId(savedMsg.conversationId);
           conversationIdRef.current = savedMsg.conversationId;
         }
         await fetchHistory();

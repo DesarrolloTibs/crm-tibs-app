@@ -97,11 +97,26 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
       display_order: stages.length,
       strcolor: '#6366f1',
       blninitial: false,
+      stage_type: 0,
       intmaxdays: null,
       dtmcreated: '',
       dtmlastmodified: '',
     };
     setStages(prev => enforceFirstActiveIsInitial([...prev, newStage]));
+  };
+
+  const handleStageTypeChange = (index: number, newType: number) => {
+    setStages(prev => {
+      return prev.map((s, idx) => {
+        if (idx === index) {
+          return { ...s, stage_type: newType };
+        }
+        if (newType === 1 && (s.stage_type === 1 || Number(s.stage_type) === 1)) {
+          return { ...s, stage_type: 0 };
+        }
+        return s;
+      });
+    });
   };
 
   const handleRemoveStage = (index: number) => {
@@ -183,6 +198,14 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
         return;
       }
 
+      // 5. Validar regla de unicidad de etapa Cerrado / Resuelto (1)
+      const closedStages = stages.filter(s => Number(s.stage_type) === 1);
+      if (closedStages.length > 1) {
+        showError('Solo puede haber máximo 1 etapa marcada como Cerrado / Resuelto.');
+        setSaving(false);
+        return;
+      }
+
       const stagesPayload = stages.map(s => {
         const payloadItem: any = {
           strname: s.strname.trim(),
@@ -190,6 +213,7 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
           display_order: s.display_order,
           strcolor: s.strcolor || '#6366f1',
           blninitial: s.blninitial,
+          stage_type: Number(s.stage_type ?? 0),
           intmaxdays: s.intmaxdays !== undefined && s.intmaxdays !== null ? Number(s.intmaxdays) : null,
         };
         if (s.id && !s.id.startsWith('temp-')) {
@@ -305,20 +329,21 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
             <div className="flex flex-col gap-2">
               {/* Column headers */}
               {stages.length > 0 && !onlyHelpdeskDetails && (
-                <div className="flex items-center gap-3 px-3 pb-1 border-b border-gray-100">
+                <div className="flex items-center gap-2.5 px-3 pb-1 border-b border-gray-100">
                   <div className="w-[14px] shrink-0"></div>
                   <div className="w-8 shrink-0 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Color</div>
                   <div className="flex-grow text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Nombre</div>
                   <div className="w-16 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Días</div>
-                  <div className="w-16 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Estado</div>
-                  <div className="w-[42px] text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Tipo</div>
+                  <div className="w-36 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Tipo de Etapa</div>
+                  <div className="w-9 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Estado</div>
+                  <div className="w-[42px] text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Flujo</div>
                   <div className="w-7 shrink-0"></div>
                 </div>
               )}
               {stages.map((stage, idx) => {
                 const isNew = stage.id && stage.id.startsWith('temp-');
                 return (
-                  <div key={stage.id} className={`flex items-center gap-3 bg-white border rounded-xl px-3 py-2 shadow-sm transition-all ${
+                  <div key={stage.id} className={`flex items-center gap-2.5 bg-white border rounded-xl px-3 py-2 shadow-sm transition-all ${
                     !stage.blnstatus 
                       ? 'opacity-60 border-gray-200 bg-gray-50' 
                       : 'border-gray-200 hover:border-indigo-300 hover:shadow-md'
@@ -373,6 +398,23 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
                       className="w-16 shrink-0 !py-1.5 !px-2 !rounded-lg text-center shadow-none focus:shadow-none hover:border-slate-350"
                       title="Días límite en etapa (vacío = sin límite)"
                     />
+
+                    {/* Stage Type Selector */}
+                    <div className="w-36 shrink-0">
+                      <select
+                        value={Number(stage.stage_type ?? 0)}
+                        onChange={e => handleStageTypeChange(idx, Number(e.target.value))}
+                        className={`w-full text-xs font-semibold rounded-lg px-2 py-1.5 border transition-all cursor-pointer outline-none focus:ring-2 focus:ring-indigo-400 ${
+                          Number(stage.stage_type) === 1
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold'
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
+                        }`}
+                        title="Tipo de etapa / Estado de cierre"
+                      >
+                        <option value={0}>Abierto / Proceso</option>
+                        <option value={1}>✓ Resuelto (Cierre)</option>
+                      </select>
+                    </div>
 
                     {/* Active toggle */}
                     <label className="relative inline-flex items-center cursor-pointer shrink-0" title="Activo/Inactivo">

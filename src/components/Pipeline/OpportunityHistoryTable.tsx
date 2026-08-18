@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Opportunity } from '../../core/models/Opportunity';
-import { Edit, Trash2, Archive, ArchiveRestore, Inbox, ChevronDown, ChevronUp } from 'lucide-react';
+import { Edit, Trash2, Archive, ArchiveRestore, Inbox, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
 import Button from '../shared/Button';
 
 interface Props {
@@ -99,13 +99,15 @@ const OpportunityHistoryTable: React.FC<Props> = ({
                     <div className="flex flex-col md:block">
                       <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Etapa</span>
                       <span 
-                        className="px-2.5 py-1 text-xs font-semibold rounded-full w-fit border"
+                        className="px-2.5 py-1 text-xs font-semibold rounded-full w-fit border inline-flex items-center gap-1"
                         style={{
                           backgroundColor: `${stageColor}1A`, // ~10% opacity
                           color: stageColor,
                           borderColor: `${stageColor}33`, // ~20% opacity
                         }}
                       >
+                        {Number(opp.stage?.stage_type) === 1 && <Check size={11} className="stroke-[3] text-emerald-600" />}
+                        {Number(opp.stage?.stage_type) === 2 && <X size={11} className="stroke-[3] text-rose-600" />}
                         {stageName}
                       </span>
                     </div>

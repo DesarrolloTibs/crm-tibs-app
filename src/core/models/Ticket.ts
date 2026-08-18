@@ -19,6 +19,7 @@ export interface TicketStage {
   display_order: number;
   strcolor: string | null;
   blninitial: boolean;
+  stage_type?: number;
   intmaxdays: number | null;
   dtmcreated: string;
   dtmlastmodified: string;

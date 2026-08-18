@@ -171,6 +171,38 @@ const WebChat: React.FC = () => {
     // Limitar a 10 filas en la tabla visual
     const displayData = data.slice(0, 10);
 
+    // Formateador de celda con soporte para badges de stage_type y números
+    const renderCellValue = (header: string, val: any) => {
+      const lower = header.toLowerCase();
+      if (lower.includes('stage_type') || lower.includes('stagetype') || lower.includes('tipoetapa')) {
+        const num = Number(val);
+        if (num === 1) {
+          return (
+            <span style={{ backgroundColor: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '2px 6px', borderRadius: '9999px', fontSize: '10px', fontWeight: 'bold', display: 'inline-block' }}>
+              ✓ Ganada / Resuelto
+            </span>
+          );
+        }
+        if (num === 2) {
+          return (
+            <span style={{ backgroundColor: '#fff1f2', color: '#be123c', border: '1px solid #fecdd3', padding: '2px 6px', borderRadius: '9999px', fontSize: '10px', fontWeight: 'bold', display: 'inline-block' }}>
+              ✕ Perdida
+            </span>
+          );
+        }
+        return (
+          <span style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', padding: '2px 6px', borderRadius: '9999px', fontSize: '10px', fontWeight: '500', display: 'inline-block' }}>
+            Abierta / Proceso
+          </span>
+        );
+      }
+
+      if (typeof val === 'number') {
+        return val.toLocaleString('es-MX');
+      }
+      return String(val ?? '—');
+    };
+
     return (
       <div className="webchat-data-table">
         <table>
@@ -186,9 +218,7 @@ const WebChat: React.FC = () => {
               <tr key={idx}>
                 {headers.map(h => (
                   <td key={h}>
-                    {typeof row[h] === 'number'
-                      ? row[h].toLocaleString('es-MX')
-                      : String(row[h] ?? '—')}
+                    {renderCellValue(h, row[h])}
                   </td>
                 ))}
               </tr>

@@ -109,6 +109,18 @@ const PipelineModals: React.FC<Props> = ({
                 onChange={e => { const v = e.target.value; setEditingStage({ ...editingStage, intmaxdays: v === '' ? null : parseInt(v, 10) }); }}
                 placeholder="Ej. 15 (dejar vacío para sin límite)"
               />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-600 uppercase">Tipo de Cierre / Etapa</label>
+                <select
+                  value={Number(editingStage.stage_type ?? 0)}
+                  onChange={e => setEditingStage({ ...editingStage, stage_type: Number(e.target.value) })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value={0}>Abierta / En Proceso (Default)</option>
+                  <option value={1}>✓ Ganada / Cierre Exitoso</option>
+                  <option value={2}>✕ Perdida / Cierre Perdido</option>
+                </select>
+              </div>
             </div>
             <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
               <Button type="button" onClick={() => setEditingStage(null)} variant="secondary">Cancelar</Button>
