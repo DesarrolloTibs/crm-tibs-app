@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, User, Users, XCircle, Filter, ChevronUp, ChevronDown, Settings2, Star, Kanban as KanbanIcon, List as ListIcon, FileText, FileSpreadsheet, Calendar, UserCheck } from 'lucide-react';
+import { Plus, Users, XCircle, Filter, ChevronUp, ChevronDown, Settings2, Star, Kanban as KanbanIcon, List as ListIcon, FileText, FileSpreadsheet, Calendar, UserCheck } from 'lucide-react';
 import UnifiedSearchBar from '../shared/UnifiedSearchBar';
 import type { SearchBadge } from '../shared/UnifiedSearchBar';
 import StageVisibilitySelector from '../shared/StageVisibilitySelector';
