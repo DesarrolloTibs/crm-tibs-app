@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, User, XCircle, Filter, ChevronUp, ChevronDown, Settings2, Star, Kanban as KanbanIcon, List as ListIcon, FileText, FileSpreadsheet, Calendar } from 'lucide-react';
+import { Plus, User, Users, XCircle, Filter, ChevronUp, ChevronDown, Settings2, Star, Kanban as KanbanIcon, List as ListIcon, FileText, FileSpreadsheet, Calendar, UserCheck } from 'lucide-react';
 import UnifiedSearchBar from '../shared/UnifiedSearchBar';
 import type { SearchBadge } from '../shared/UnifiedSearchBar';
 import StageVisibilitySelector from '../shared/StageVisibilitySelector';
@@ -8,6 +8,7 @@ import Input from '../shared/Input';
 import type { Stage } from '../../core/models/Opportunity';
 
 interface Executive { id: string; username: string; }
+interface ContactItem { id: string; name: string; }
 
 interface Props {
   pipelineName: string;
@@ -16,6 +17,9 @@ interface Props {
   setViewMode: (v: 'kanban' | 'list') => void;
   searchTerm: string;
   setSearchTerm: (v: string) => void;
+  contactFilter: string;
+  setContactFilter: (v: string) => void;
+  contactsList: ContactItem[];
   executiveFilter: string;
   setExecutiveFilter: (v: string) => void;
   statusFilter: string;
@@ -51,7 +55,8 @@ interface Props {
 
 const PipelineToolbar: React.FC<Props> = ({
   pipelineName, pipelineDescription, viewMode, setViewMode,
-  searchTerm, setSearchTerm, executiveFilter, setExecutiveFilter,
+  searchTerm, setSearchTerm, contactFilter, setContactFilter, contactsList,
+  executiveFilter, setExecutiveFilter,
   statusFilter, setStatusFilter, archivedFilter, setArchivedFilter,
   priorityFilter, setPriorityFilter, showFilters, setShowFilters,
   showToolbar, setShowToolbar, stages, activeStages, visibleStageIds,
@@ -76,11 +81,11 @@ const PipelineToolbar: React.FC<Props> = ({
         ref={searchDropdownRef}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        placeholder={!executiveFilter && !statusFilter && priorityFilter === null && archivedFilter === 'active' && !startDate && !endDate ? 'Buscar...' : ''}
+        placeholder={!executiveFilter && !statusFilter && priorityFilter === null && archivedFilter === 'active' && !startDate && !endDate && !contactFilter ? 'Buscar...' : ''}
         badges={badges}
         showFilters={showFilters}
         setShowFilters={setShowFilters}
-        dropdownWidthClass="w-[560px]"
+        dropdownWidthClass="w-[720px]"
       >
         <div className="flex-1 flex flex-col gap-1.5 max-h-[320px] overflow-y-auto pr-1">
           <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none"><Filter size={12} /> Filtros</h4>
@@ -111,8 +116,22 @@ const PipelineToolbar: React.FC<Props> = ({
           <div className="border-t border-gray-100 my-1 shrink-0" />
           <button type="button" onClick={() => { setShowFilters(false); onOpenCustomFilter(); }} className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1.5 rounded w-full text-left hover:bg-indigo-50 transition-colors cursor-pointer shrink-0 font-bold">+ Filtro personalizado...</button>
         </div>
+
         <div className="flex-1 flex flex-col gap-1.5 border-l border-gray-100 pl-4 max-h-[320px] overflow-y-auto">
-          <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none"><User size={12} /> Ejecutivos</h4>
+          <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none"><UserCheck size={12} /> Contactos</h4>
+          {contactsList.length > 0 ? (
+            contactsList.map(c => (
+              <button key={c.id} type="button" onClick={() => setContactFilter(contactFilter===c.id?'':c.id)} className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer">
+                <span className="truncate" title={c.name}>{c.name}</span>{contactFilter===c.id && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
+              </button>
+            ))
+          ) : (
+            <p className="text-xs text-gray-400 italic px-1 py-2">Sin contactos</p>
+          )}
+        </div>
+
+        <div className="flex-1 flex flex-col gap-1.5 border-l border-gray-100 pl-4 max-h-[320px] overflow-y-auto">
+          <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none"><Users size={12} /> Ejecutivos</h4>
           {executives.map(exec => (
             <button key={exec.id} type="button" onClick={() => setExecutiveFilter(executiveFilter===exec.id?'':exec.id)} className="flex items-center justify-between text-xs sm:text-sm text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer">
               <span className="truncate">{exec.username}</span>{executiveFilter===exec.id && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
@@ -121,6 +140,7 @@ const PipelineToolbar: React.FC<Props> = ({
           <div className="border-t border-gray-100 my-1 mt-auto shrink-0" />
           <button type="button" onClick={onClearFilters} className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0"><XCircle size={12} /> Limpiar Filtros</button>
         </div>
+
         <div className="flex-1 flex flex-col gap-1.5 border-l border-gray-100 pl-4 max-h-[320px] overflow-y-auto">
           <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none"><Calendar size={12} /> Rango de Fecha</h4>
           <div className="flex flex-col gap-3 mt-1 pr-1">

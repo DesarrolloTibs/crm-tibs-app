@@ -62,7 +62,8 @@ const PipelineColumn: React.FC<Props> = ({
     return opportunities.reduce((acc, opp) => {
       const amount = Number(opp.monto_total) || 0;
       if (opp.moneda === 'USD') {
-        const exchangeRate = opp.tipoCambio && opp.tipoCambio > 0 ? opp.tipoCambio : 1;
+        const rawTc = opp.tipoCambio ?? (opp as any).tipo_cambio;
+        const exchangeRate = rawTc && Number(rawTc) > 0 ? Number(rawTc) : 1;
         return acc + (amount * exchangeRate);
       }
       return acc + amount;

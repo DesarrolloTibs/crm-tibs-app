@@ -45,6 +45,7 @@ const PipelineCustomFilterModal: React.FC<Props> = ({
         <span className="text-xs text-slate-500 ml-2">{Number(rule.value)===0?'Sin prioridad':Number(rule.value)===1?'Baja':Number(rule.value)===2?'Media':'Alta'}</span>
       </div>
     );
+    if (rule.field === 'contacto') return <input type="text" value={rule.value} onChange={e => handleRuleChange(idx,'value',e.target.value)} placeholder="Nombre o correo del contacto (ej: Pedro Pérez)..." className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full" required />;
     if (rule.field === 'monto_total') return <input type="number" value={rule.value} onChange={e => handleRuleChange(idx,'value',e.target.value)} placeholder="Monto..." className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full" min="0" required />;
     return <input type="text" value={rule.value} onChange={e => handleRuleChange(idx,'value',e.target.value)} placeholder="Valor..." className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full" required />;
   };
@@ -84,6 +85,7 @@ const PipelineCustomFilterModal: React.FC<Props> = ({
                   <select value={rule.field} onChange={e => handleRuleFieldChange(idx,e.target.value)} className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full sm:w-48 cursor-pointer">
                     <option value="nombre_proyecto">Nombre del Proyecto</option>
                     <option value="empresa">Empresa</option>
+                    <option value="contacto">Contacto Relacionado</option>
                     <option value="linea_negocio">Línea de Negocio</option>
                     <option value="monto_total">Monto Total</option>
                     <option value="priority">Prioridad</option>

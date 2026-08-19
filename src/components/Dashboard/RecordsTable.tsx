@@ -97,7 +97,14 @@ const RecordsTable: React.FC<RecordsTableProps> = ({
                     </span>
                   </td>
                   <td className="p-3.5 text-right font-bold text-slate-900">
-                    {(() => { const a=Number(opp.monto_total||0); return currencyFilter==='consolidado'&&opp.moneda==='USD'?formatCurrency(a*(opp.tipoCambio&&opp.tipoCambio>0?opp.tipoCambio:1),'MXN'):formatCurrency(a,opp.moneda); })()}
+                    {(() => {
+                      const a = Number(opp.monto_total || 0);
+                      const rawTc = opp.tipoCambio ?? (opp as any).tipo_cambio;
+                      const tc = rawTc && Number(rawTc) > 0 ? Number(rawTc) : 1;
+                      return currencyFilter === 'consolidado' && opp.moneda === 'USD'
+                        ? formatCurrency(a * tc, 'MXN')
+                        : formatCurrency(a, opp.moneda);
+                    })()}
                   </td>
                   <td className="p-3.5 text-center">
                     <button type="button" onClick={() => navigate(`/pipeline?opportunityId=${opp.id}`)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer" title="Ir a oportunidad">

@@ -171,8 +171,75 @@ const WebChat: React.FC = () => {
     // Limitar a 10 filas en la tabla visual
     const displayData = data.slice(0, 10);
 
-    // Formateador de celda con soporte para badges de stage_type y números
-    const renderCellValue = (header: string, val: any) => {
+    // Identificador de campos monetarios
+    const isCurrencyField = (header: string): boolean => {
+      const lower = header.toLowerCase();
+      const colName = lower.split('.').pop() || lower;
+
+      if (
+        colName === 'id' ||
+        colName.endsWith('id') ||
+        colName.includes('count') ||
+        colName.includes('conteo') ||
+        colName.includes('numero') ||
+        colName.includes('cantidad') ||
+        colName.includes('folio') ||
+        colName.includes('date') ||
+        colName.includes('fecha') ||
+        colName.includes('status') ||
+        colName.includes('estatus') ||
+        colName.includes('type') ||
+        colName.includes('priority') ||
+        colName.includes('ticketnumber') ||
+        colName.includes('tipocambio') ||
+        colName.includes('tipo_cambio')
+      ) {
+        return false;
+      }
+
+      return (
+        colName.includes('monto') ||
+        colName.includes('precio') ||
+        colName.includes('preciobase') ||
+        colName.includes('licenciamiento') ||
+        colName.includes('servicios') ||
+        colName.includes('costo') ||
+        colName.includes('ingreso') ||
+        colName.includes('gasto') ||
+        colName.includes('total') ||
+        colName.includes('venta') ||
+        lower.includes('monto') ||
+        lower.includes('precio') ||
+        lower.includes('licenciamiento') ||
+        lower.includes('servicios') ||
+        lower.includes('costo') ||
+        lower.includes('ingreso') ||
+        lower.includes('gasto') ||
+        lower.includes('total') ||
+        lower.includes('venta')
+      );
+    };
+
+    // Formateador de moneda
+    const formatCurrency = (val: any, currency: string = 'MXN'): string => {
+      const curr = currency?.toUpperCase() === 'USD' ? 'USD' : 'MXN';
+      if (val === null || val === undefined || val === '') return `$0.00 ${curr}`;
+      if (typeof val === 'string' && (val.startsWith('$') || val.includes('MXN') || val.includes('USD'))) {
+        return val;
+      }
+      const num = typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.-]/g, ''));
+      if (isNaN(num)) return `$0.00 ${curr}`;
+
+      const formattedNumber = new Intl.NumberFormat('es-MX', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(num);
+
+      return `$${formattedNumber} ${curr}`;
+    };
+
+    // Formateador de celda con soporte para badges de stage_type, moneda y números
+    const renderCellValue = (header: string, val: any, row: Record<string, any>) => {
       const lower = header.toLowerCase();
       if (lower.includes('stage_type') || lower.includes('stagetype') || lower.includes('tipoetapa')) {
         const num = Number(val);
@@ -197,6 +264,11 @@ const WebChat: React.FC = () => {
         );
       }
 
+      if (isCurrencyField(header)) {
+        const rowCurrency = row['Oportunidades.moneda'] || row['moneda'] || row['Moneda'] || (lower.includes('usd') ? 'USD' : 'MXN');
+        return formatCurrency(val, rowCurrency);
+      }
+
       if (typeof val === 'number') {
         return val.toLocaleString('es-MX');
       }
@@ -208,19 +280,36 @@ const WebChat: React.FC = () => {
         <table>
           <thead>
             <tr>
-              {headers.map(h => (
-                <th key={h}>{cleanHeader(h)}</th>
-              ))}
+              {headers.map(h => {
+                const isCurr = isCurrencyField(h);
+                return (
+                  <th key={h} style={isCurr ? { textAlign: 'right' } : undefined}>
+                    {cleanHeader(h)}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
             {displayData.map((row, idx) => (
               <tr key={idx}>
-                {headers.map(h => (
-                  <td key={h}>
-                    {renderCellValue(h, row[h])}
-                  </td>
-                ))}
+                {headers.map(h => {
+                  const isCurr = isCurrencyField(h);
+                  return (
+                    <td
+                      key={h}
+                      style={
+                        isCurr
+                          ? { textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }
+                          : typeof row[h] === 'number'
+                          ? { textAlign: 'right', fontVariantNumeric: 'tabular-nums' }
+                          : undefined
+                      }
+                    >
+                      {renderCellValue(h, row[h], row)}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>

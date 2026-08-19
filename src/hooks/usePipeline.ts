@@ -14,6 +14,46 @@ import autoTable from 'jspdf-autotable';
 
 export interface FilterRule { field: string; operator: string; value: string; }
 
+export const normalizeSearchText = (text?: string | null): string => {
+  if (!text) return '';
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+};
+
+export const getAllOpportunityContacts = (opp: Opportunity): { id?: string; name: string; email?: string }[] => {
+  const list: { id?: string; name: string; email?: string }[] = [];
+
+  if (opp.cliente) {
+    const fullName = `${opp.cliente.nombre || ''} ${opp.cliente.apellido || ''}`.trim();
+    if (fullName) {
+      list.push({ id: opp.cliente.id, name: fullName, email: opp.cliente.correo });
+    }
+  }
+
+  if (opp.contacts && Array.isArray(opp.contacts)) {
+    opp.contacts.forEach(c => {
+      const fullName = `${c.nombre || ''} ${c.apellido || ''}`.trim();
+      if (fullName && !list.some(existing => existing.id && existing.id === c.id)) {
+        list.push({ id: c.id, name: fullName, email: c.correo });
+      }
+    });
+  }
+
+  if (opp.company?.contacts && Array.isArray(opp.company.contacts)) {
+    opp.company.contacts.forEach(c => {
+      const fullName = `${c.nombre || ''} ${c.apellido || ''}`.trim();
+      if (fullName && !list.some(existing => existing.id && existing.id === c.id)) {
+        list.push({ id: c.id, name: fullName, email: c.correo });
+      }
+    });
+  }
+
+  return list;
+};
+
 type NotifType = 'success' | 'error' | 'warning' | 'confirmation';
 interface Notif { show: boolean; type: NotifType; title: string; message: string; onConfirm: () => void; onCancel: () => void; }
 const NOTIF_OFF: Notif = { show: false, type: 'success', title: '', message: '', onConfirm: () => {}, onCancel: () => {} };
@@ -55,6 +95,7 @@ export function usePipeline() {
   const [pageSize, setPageSize] = useState<number>(10);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [contactFilter, setContactFilter] = useState('');
   const [executiveFilter, setExecutiveFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [archivedFilter, setArchivedFilter] = useState<'active' | 'archived' | 'all'>('active');
@@ -95,7 +136,7 @@ export function usePipeline() {
   useEffect(() => { localStorage.setItem('pipeline_folded_stages', JSON.stringify(foldedStageIds)); }, [foldedStageIds]);
   useEffect(() => { localStorage.setItem('pipeline_view_mode', viewMode); }, [viewMode]);
   useEffect(() => { if (isAddingStage && addStageInputRef.current) addStageInputRef.current.focus(); }, [isAddingStage]);
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, pageSize, startDate, endDate]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, contactFilter, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, pageSize, startDate, endDate]);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchDropdownRef.current && !searchDropdownRef.current.contains(e.target as Node)) setShowFilters(false);
@@ -313,6 +354,7 @@ export function usePipeline() {
 
   const handleClearFilters = () => {
     setSearchTerm('');
+    setContactFilter('');
     setExecutiveFilter('');
     setStatusFilter('');
     setPriorityFilter(null);
@@ -336,12 +378,43 @@ export function usePipeline() {
     return Array.from(execs.values());
   }, [opportunities]);
 
+  const contactsList = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    opportunities.forEach(opp => {
+      const contacts = getAllOpportunityContacts(opp);
+      contacts.forEach(c => {
+        if (c.id && !map.has(c.id)) {
+          map.set(c.id, { id: c.id, name: c.name });
+        }
+      });
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [opportunities]);
+
   const activeStages = useMemo(() => stages.filter(s => s.blnstatus).sort((a, b) => a.display_order - b.display_order), [stages]);
 
   const filteredOpportunities = useMemo(() => opportunities.filter(opp => {
     if (!isCustomFilterActive) {
-      const term = searchTerm.toLowerCase();
-      const matchesSearch = opp.nombre_proyecto.toLowerCase().includes(term) || (opp.cliente?.nombre || '').toLowerCase().includes(term) || (opp.company?.nombre || opp.empresa || '').toLowerCase().includes(term);
+      const term = normalizeSearchText(searchTerm);
+      const oppContacts = getAllOpportunityContacts(opp);
+
+      let matchesSearch = true;
+      if (term) {
+        const matchesProject = normalizeSearchText(opp.nombre_proyecto).includes(term);
+        const matchesCompany = normalizeSearchText(opp.company?.nombre || opp.empresa || '').includes(term);
+        const matchesContacts = oppContacts.some(c => 
+          normalizeSearchText(c.name).includes(term) ||
+          (c.email && normalizeSearchText(c.email).includes(term))
+        );
+        const matchesExecutive = normalizeSearchText(opp.ejecutivo?.username || '').includes(term);
+        const matchesBusinessLine = normalizeSearchText(opp.linea_negocio?.strname || '').includes(term);
+
+        matchesSearch = matchesProject || matchesCompany || matchesContacts || matchesExecutive || matchesBusinessLine;
+      }
+
+      const matchesContact = contactFilter 
+        ? (opp.cliente_id === contactFilter || opp.cliente?.id === contactFilter || oppContacts.some(c => c.id === contactFilter))
+        : true;
       const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
       const matchesStatus = statusFilter ? opp.stage_id === statusFilter : true;
       const matchesPriority = priorityFilter !== null ? (opp.priority ?? 0) >= priorityFilter : true;
@@ -356,10 +429,11 @@ export function usePipeline() {
           if (endDate && oppDayStr > endDate) matchesDate = false;
         }
       }
-      return matchesSearch && matchesExecutive && matchesStatus && matchesPriority && matchesArchived && matchesDate;
+      return matchesSearch && matchesContact && matchesExecutive && matchesStatus && matchesPriority && matchesArchived && matchesDate;
     }
     if (!includeArchived && opp.archived) return false;
     if (customRules.length === 0) return true;
+
     const matchesRule = (rule: FilterRule): boolean => {
       let fv: any = '';
       if (rule.field === 'nombre_proyecto') fv = opp.nombre_proyecto;
@@ -369,13 +443,36 @@ export function usePipeline() {
       else if (rule.field === 'stage_id') fv = opp.stage_id;
       else if (rule.field === 'ejecutivo_id') fv = opp.ejecutivo_id;
       else if (rule.field === 'priority') fv = opp.priority ?? 0;
-      const val = rule.value.toLowerCase(), op = rule.operator;
+      else if (rule.field === 'contacto') {
+        const contacts = getAllOpportunityContacts(opp);
+        const val = normalizeSearchText(rule.value);
+        if (rule.operator === 'eq') {
+          return contacts.some(c => normalizeSearchText(c.name) === val || (c.email && normalizeSearchText(c.email) === val));
+        }
+        if (rule.operator === 'not_contains') {
+          return !contacts.some(c => normalizeSearchText(c.name).includes(val) || (c.email && normalizeSearchText(c.email).includes(val)));
+        }
+        return contacts.some(c => normalizeSearchText(c.name).includes(val) || (c.email && normalizeSearchText(c.email).includes(val)));
+      }
+
+      const val = normalizeSearchText(rule.value), op = rule.operator;
       if (rule.field === 'monto_total') { const n = Number(rule.value)||0; return op==='eq'?fv===n:op==='gt'?fv>n:op==='lt'?fv<n:true; }
-      const sfv = String(fv||'').toLowerCase();
-      if (op==='eq') return sfv===val; if (op==='neq') return sfv!==val; if (op==='contains') return sfv.includes(val); if (op==='not_contains') return !sfv.includes(val); return true;
+      if (rule.field === 'stage_id' || rule.field === 'ejecutivo_id' || rule.field === 'priority') {
+        const sfv = String(fv || '');
+        if (op === 'eq') return sfv === rule.value;
+        if (op === 'neq') return sfv !== rule.value;
+        return true;
+      }
+      const sfv = normalizeSearchText(String(fv || ''));
+      if (op === 'eq') return sfv === val;
+      if (op === 'neq') return sfv !== val;
+      if (op === 'contains') return sfv.includes(val);
+      if (op === 'not_contains') return !sfv.includes(val);
+      return true;
     };
+
     return matchType === 'any' ? customRules.some(matchesRule) : customRules.every(matchesRule);
-  }), [opportunities, searchTerm, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, customRules, matchType, includeArchived, startDate, endDate]);
+  }), [opportunities, searchTerm, contactFilter, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, customRules, matchType, includeArchived, startDate, endDate]);
 
   const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredOpportunities.length / pageSize);
   const paginatedOpportunities = useMemo(() => pageSize === 0 ? filteredOpportunities : filteredOpportunities.slice((currentPage-1)*pageSize, currentPage*pageSize), [filteredOpportunities, currentPage, pageSize]);
@@ -403,14 +500,14 @@ export function usePipeline() {
   };
 
   const getOperatorsForField = (field: string) => {
-    if (field==='nombre_proyecto'||field==='empresa') return [{ value:'contains', label:'contiene' },{ value:'eq', label:'es igual a' },{ value:'not_contains', label:'no contiene' }];
+    if (field==='nombre_proyecto'||field==='empresa'||field==='contacto') return [{ value:'contains', label:'contiene' },{ value:'eq', label:'es igual a' },{ value:'not_contains', label:'no contiene' }];
     if (field==='monto_total'||field==='priority') return [{ value:'eq', label:'es igual a' },{ value:'gt', label:'es mayor que' },{ value:'lt', label:'es menor que' }];
     return [{ value:'eq', label:'es igual a' },{ value:'neq', label:'es diferente a' }];
   };
 
   const handleRuleFieldChange = (idx: number, field: string) => {
     let defaultOperator = 'eq';
-    if (field==='nombre_proyecto'||field==='empresa') defaultOperator = 'contains';
+    if (field==='nombre_proyecto'||field==='empresa'||field==='contacto') defaultOperator = 'contains';
     let defaultValue = '';
     if (field==='linea_negocio') defaultValue = businessLines[0]?.strname||'';
     else if (field==='stage_id') defaultValue = stages[0]?.id||'';
@@ -429,6 +526,7 @@ export function usePipeline() {
     isFormModalOpen, setIsFormModalOpen, activeOpportunity, activeStage, editingStage, setEditingStage,
     foldedStageIds, setFoldedStageIds, viewMode, setViewMode, currentPage, setCurrentPage,
     pageSize, setPageSize, isConfirmModalOpen, setIsConfirmModalOpen, searchTerm, setSearchTerm,
+    contactFilter, setContactFilter, contactsList,
     executiveFilter, setExecutiveFilter, statusFilter, setStatusFilter, archivedFilter, setArchivedFilter,
     showFilters, setShowFilters, showToolbar, setShowToolbar, showStagesConfig, setShowStagesConfig,
     isExploding, priorityFilter, setPriorityFilter, searchDropdownRef,

@@ -288,7 +288,12 @@ export function useDashboard() {
       if (activeTab === 'commercial') {
         const opps = visibleOpps.filter(o => stageSet.has(o.stage_id));
         values[ind.id!] = ind.type === 'sum'
-          ? opps.reduce((sum, o) => { const a=Number(o.monto_total||0); return sum+(currencyFilter==='consolidado'&&o.moneda==='USD'?a*(o.tipoCambio&&o.tipoCambio>0?o.tipoCambio:1):a); }, 0)
+          ? opps.reduce((sum, o) => {
+              const a = Number(o.monto_total || 0);
+              const rawTc = o.tipoCambio ?? (o as any).tipo_cambio;
+              const tc = rawTc && Number(rawTc) > 0 ? Number(rawTc) : 1;
+              return sum + (currencyFilter === 'consolidado' && o.moneda === 'USD' ? a * tc : a);
+            }, 0)
           : opps.length;
       } else {
         values[ind.id!] = visibleTickets.filter(t => stageSet.has(t.stage_id)).length;
@@ -419,7 +424,13 @@ export function useDashboard() {
         pdf.setFontSize(8); pdf.setTextColor(100,100,100);
         pdf.text(`Filtros - Rango: ${startDate||'Mín'} a ${endDate||'Máx'} | Moneda: ${currencyFilter}`,30,55);
         if (activeTab === 'commercial') {
-          autoTable(pdf, { head:[['Oportunidad','Cliente','Empresa','Ejecutivo','Etapa','Monto']], body:(tableDataList as Opportunity[]).map(o=>{const a=Number(o.monto_total||0);const d=currencyFilter==='consolidado'&&o.moneda==='USD'?formatCurrency(a*(o.tipoCambio&&o.tipoCambio>0?o.tipoCambio:1),'MXN'):formatCurrency(a,o.moneda);return[o.nombre_proyecto||'N/A',o.cliente?`${o.cliente.nombre} ${o.cliente.apellido}`:o.empresa||'N/A',o.company?.nombre||o.empresa||'N/A',o.ejecutivo?.username||'Sin asignar',o.stage?.strname||'N/A',d];}), startY:70, styles:{fontSize:7.5,cellPadding:5}, headStyles:{fillColor:[79,70,229],textColor:255}, alternateRowStyles:{fillColor:[248,250,252]} });
+          autoTable(pdf, { head:[['Oportunidad','Cliente','Empresa','Ejecutivo','Etapa','Monto']], body:(tableDataList as Opportunity[]).map(o=>{
+            const a = Number(o.monto_total || 0);
+            const rawTc = o.tipoCambio ?? (o as any).tipo_cambio;
+            const tc = rawTc && Number(rawTc) > 0 ? Number(rawTc) : 1;
+            const d = currencyFilter === 'consolidado' && o.moneda === 'USD' ? formatCurrency(a * tc, 'MXN') : formatCurrency(a, o.moneda);
+            return [o.nombre_proyecto || 'N/A', o.cliente ? `${o.cliente.nombre} ${o.cliente.apellido}` : o.empresa || 'N/A', o.company?.nombre || o.empresa || 'N/A', o.ejecutivo?.username || 'Sin asignar', o.stage?.strname || 'N/A', d];
+          }), startY:70, styles:{fontSize:7.5,cellPadding:5}, headStyles:{fillColor:[79,70,229],textColor:255}, alternateRowStyles:{fillColor:[248,250,252]} });
         } else {
           autoTable(pdf, { head:[['Nro Ticket','Asunto','Prioridad','Tipo','Cliente','Asignado a','Etapa']], body:(tableDataList as Ticket[]).map(t=>[`#${t.ticket_number.toString().padStart(5,'0')}`,t.strtitle||'N/A',t.priority===3?'Alta':t.priority===2?'Media':'Baja',t.tipo_incidencia||'Normal',t.cliente?`${t.cliente.nombre} ${t.cliente.apellido}`:t.contactName||'N/A',t.responsable?.username||'Sin asignar',t.stage?.strname||'N/A']), startY:70, styles:{fontSize:7.5,cellPadding:5}, headStyles:{fillColor:[79,70,229],textColor:255}, alternateRowStyles:{fillColor:[248,250,252]} });
         }
@@ -430,7 +441,13 @@ export function useDashboard() {
 
   // ── Export Excel ──
   const handleExportExcel = () => {
-    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"/><style>body{font-family:Arial}.title{font-size:16px;font-weight:bold}.kpi-table,.data-table{border-collapse:collapse;width:100%}.kpi-table td,.kpi-table th,.data-table td,.data-table th{border:1px solid #e2e8f0;padding:8px;font-size:11px}.kpi-table th,.data-table th{background:#4f46e5;color:white;font-weight:bold}</style></head><body><div class="title">Reporte Dashboard - CRM Tibs</div><p>Generado: ${new Date().toLocaleString('es-MX')}</p><h3>KPIs</h3><table class="kpi-table"><thead><tr><th>Indicador</th><th>Operación</th><th>Valor</th></tr></thead><tbody>${currentIndicators.map(i=>{const v=kpiValues[i.id!]||0;return`<tr><td>${i.title}</td><td>${i.type==='sum'?`Suma (${activeCurrency})`:'Conteo'}</td><td>${i.type==='sum'?formatCurrency(v,activeCurrency):v}</td></tr>`;}).join('')}</tbody></table><h3>Registros</h3><table class="data-table"><thead>${activeTab==='commercial'?'<tr><th>Oportunidad</th><th>Cliente</th><th>Empresa</th><th>Ejecutivo</th><th>Etapa</th><th>Monto</th></tr>':'<tr><th>Nro Ticket</th><th>Asunto</th><th>Prioridad</th><th>Tipo</th><th>Cliente</th><th>Asignado a</th><th>Etapa</th></tr>'}</thead><tbody>${activeTab==='commercial'?(tableDataList as Opportunity[]).map(o=>{const a=Number(o.monto_total||0);const v=currencyFilter==='consolidado'&&o.moneda==='USD'?a*(o.tipoCambio||1):a;return`<tr><td>${o.nombre_proyecto||''}</td><td>${o.cliente?`${o.cliente.nombre} ${o.cliente.apellido||''}`.trim():o.empresa||''}</td><td>${o.company?.nombre||o.empresa||''}</td><td>${o.ejecutivo?.username||'Sin asignar'}</td><td>${o.stage?.strname||''}</td><td>${v.toFixed(2)}</td></tr>`;}).join(''):(tableDataList as Ticket[]).map(t=>`<tr><td>#${t.ticket_number.toString().padStart(5,'0')}</td><td>${t.strtitle||''}</td><td>${t.priority===3?'Alta':t.priority===2?'Media':'Baja'}</td><td>${t.tipo_incidencia||'Normal'}</td><td>${t.cliente?`${t.cliente.nombre} ${t.cliente.apellido||''}`.trim():t.contactName||''}</td><td>${t.responsable?.username||'Sin asignar'}</td><td>${t.stage?.strname||''}</td></tr>`).join('')}</tbody></table></body></html>`;
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"/><style>body{font-family:Arial}.title{font-size:16px;font-weight:bold}.kpi-table,.data-table{border-collapse:collapse;width:100%}.kpi-table td,.kpi-table th,.data-table td,.data-table th{border:1px solid #e2e8f0;padding:8px;font-size:11px}.kpi-table th,.data-table th{background:#4f46e5;color:white;font-weight:bold}</style></head><body><div class="title">Reporte Dashboard - CRM Tibs</div><p>Generado: ${new Date().toLocaleString('es-MX')}</p><h3>KPIs</h3><table class="kpi-table"><thead><tr><th>Indicador</th><th>Operación</th><th>Valor</th></tr></thead><tbody>${currentIndicators.map(i=>{const v=kpiValues[i.id!]||0;return`<tr><td>${i.title}</td><td>${i.type==='sum'?`Suma (${activeCurrency})`:'Conteo'}</td><td>${i.type==='sum'?formatCurrency(v,activeCurrency):v}</td></tr>`;}).join('')}</tbody></table><h3>Registros</h3><table class="data-table"><thead>${activeTab==='commercial'?'<tr><th>Oportunidad</th><th>Cliente</th><th>Empresa</th><th>Ejecutivo</th><th>Etapa</th><th>Monto</th></tr>':'<tr><th>Nro Ticket</th><th>Asunto</th><th>Prioridad</th><th>Tipo</th><th>Cliente</th><th>Asignado a</th><th>Etapa</th></tr>'}</thead><tbody>${activeTab==='commercial'?(tableDataList as Opportunity[]).map(o=>{
+      const a = Number(o.monto_total || 0);
+      const rawTc = o.tipoCambio ?? (o as any).tipo_cambio;
+      const tc = rawTc && Number(rawTc) > 0 ? Number(rawTc) : 1;
+      const v = currencyFilter === 'consolidado' && o.moneda === 'USD' ? a * tc : a;
+      return `<tr><td>${o.nombre_proyecto||''}</td><td>${o.cliente?`${o.cliente.nombre} ${o.cliente.apellido||''}`.trim():o.empresa||''}</td><td>${o.company?.nombre||o.empresa||''}</td><td>${o.ejecutivo?.username||'Sin asignar'}</td><td>${o.stage?.strname||''}</td><td>${v.toFixed(2)}</td></tr>`;
+    }).join(''):(tableDataList as Ticket[]).map(t=>`<tr><td>#${t.ticket_number.toString().padStart(5,'0')}</td><td>${t.strtitle||''}</td><td>${t.priority===3?'Alta':t.priority===2?'Media':'Baja'}</td><td>${t.tipo_incidencia||'Normal'}</td><td>${t.cliente?`${t.cliente.nombre} ${t.cliente.apellido||''}`.trim():t.contactName||''}</td><td>${t.responsable?.username||'Sin asignar'}</td><td>${t.stage?.strname||''}</td></tr>`).join('')}</tbody></table></body></html>`;
     const blob = new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

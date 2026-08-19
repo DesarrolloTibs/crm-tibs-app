@@ -19,6 +19,15 @@ const PipelineBoard: React.FC = () => {
     if (p.isCustomFilterActive) { list.push({ id:'custom', label:'Filtro Personalizado', icon:<Filter size={10} />, onRemove:()=>{p.setIsCustomFilterActive(false);p.setCustomRules([]);} }); return list; }
     if (p.archivedFilter==='archived') list.push({ id:'archived', label:'Archivadas', icon:<Filter size={10} />, onRemove:()=>p.setArchivedFilter('active') });
     if (p.archivedFilter==='all') list.push({ id:'all', label:'Todas', icon:<Filter size={10} />, onRemove:()=>p.setArchivedFilter('active') });
+    if (p.contactFilter) {
+      const contactItem = p.contactsList.find(c => c.id === p.contactFilter);
+      list.push({
+        id: 'contact',
+        label: `Contacto: ${contactItem?.name || 'Seleccionado'}`,
+        icon: <User size={10} className="shrink-0" />,
+        onRemove: () => p.setContactFilter('')
+      });
+    }
     if (p.executiveFilter) list.push({ id:'executive', label:p.executives.find(e=>e.id===p.executiveFilter)?.username||'Ejecutivo', icon:<User size={10} className="shrink-0" />, onRemove:()=>p.setExecutiveFilter('') });
     if (p.statusFilter) list.push({ id:'status', label:p.activeStages.find(s=>s.id===p.statusFilter)?.strname||'Estatus', icon:<Tag size={10} className="shrink-0" />, onRemove:()=>p.setStatusFilter('') });
     if (p.priorityFilter!==null) list.push({ id:'priority', label:p.priorityFilter===1?'★ Baja+':p.priorityFilter===2?'★★ Media+':'★★★ Alta', icon:<Star size={10} className="shrink-0" />, onRemove:()=>p.setPriorityFilter(null) });
@@ -39,7 +48,7 @@ const PipelineBoard: React.FC = () => {
       });
     }
     return list;
-  }, [p.isCustomFilterActive, p.archivedFilter, p.executiveFilter, p.statusFilter, p.priorityFilter, p.executives, p.activeStages, p.startDate, p.endDate]);
+  }, [p.isCustomFilterActive, p.archivedFilter, p.contactFilter, p.contactsList, p.executiveFilter, p.statusFilter, p.priorityFilter, p.executives, p.activeStages, p.startDate, p.endDate]);
 
   if (p.loading) return <Loader />;
 
@@ -59,6 +68,9 @@ const PipelineBoard: React.FC = () => {
         setViewMode={p.setViewMode}
         searchTerm={p.searchTerm}
         setSearchTerm={p.setSearchTerm}
+        contactFilter={p.contactFilter}
+        setContactFilter={p.setContactFilter}
+        contactsList={p.contactsList}
         executiveFilter={p.executiveFilter}
         setExecutiveFilter={p.setExecutiveFilter}
         statusFilter={p.statusFilter}

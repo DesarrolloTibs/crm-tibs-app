@@ -116,6 +116,9 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       linea_negocio_id: initialData.linea_negocio_id || initialData.linea_negocio?.id || '',
       tipo_entrega_id: initialData.tipo_entrega_id || initialData.tipo_entrega?.id || '',
       licenciamiento_id: initialData.licenciamiento_id || initialData.licenciamiento?.id || '',
+      tipoCambio: (initialData.tipoCambio !== undefined && initialData.tipoCambio !== null)
+        ? Number(initialData.tipoCambio)
+        : Number((initialData as any).tipo_cambio || 0),
       priority: initialData.priority ?? 0,
     } : {
       nombre_proyecto: '',
