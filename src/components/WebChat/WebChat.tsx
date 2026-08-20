@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { queryWebChat } from '../../services/webchatService';
 import type { WebChatMessage, WebChatResponse, DashboardRedirect } from '../../services/webchatService';
@@ -10,8 +9,6 @@ import {
   Minus,
   Maximize2,
   Minimize2,
-  ArrowRight,
-  BarChart3,
 } from 'lucide-react';
 import './WebChat.css';
 
@@ -33,7 +30,6 @@ const SUGGESTION_CHIPS = [
 
 const WebChat: React.FC = () => {
   const { user, isAdmin } = useAuth();
-  const navigate = useNavigate();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -127,19 +123,6 @@ const WebChat: React.FC = () => {
       handleSend();
     }
   }, [handleSend]);
-
-  const handleDashboardRedirect = useCallback((redirect: DashboardRedirect) => {
-    const params = new URLSearchParams();
-    if (redirect.tab) params.set('tab', redirect.tab);
-    if (redirect.executiveId) params.set('executive', redirect.executiveId);
-    if (redirect.dateStart) params.set('dateStart', redirect.dateStart);
-    if (redirect.dateEnd) params.set('dateEnd', redirect.dateEnd);
-    if (redirect.pipelineId) params.set('pipeline', redirect.pipelineId);
-    if (redirect.helpdeskId) params.set('helpdesk', redirect.helpdeskId);
-
-    navigate(`/dashboard?${params.toString()}`);
-    handleClose();
-  }, [navigate, handleClose]);
 
   const handleSuggestionClick = useCallback((text: string) => {
     handleSend(text);
