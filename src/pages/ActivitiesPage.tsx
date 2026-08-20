@@ -18,11 +18,14 @@ const ActivitiesPage: React.FC = () => {
 
   const badges = useMemo<SearchBadge[]>(() => {
     const list: SearchBadge[] = [];
-    if (a.filterUser) list.push({ id:'user', label:a.userOptions.find(o=>o.value===a.filterUser)?.label||'Usuario', icon:<User size={10} />, onRemove:()=>a.setFilterUser('') });
+    if (a.filterUser) {
+      const userLabel = a.userOptions.find(o => o.value === a.filterUser)?.label || (a.filterUser === a.user?.id ? a.user?.username : 'Usuario') || 'Usuario';
+      list.push({ id: 'user', label: userLabel, icon: <User size={10} />, onRemove: () => a.setFilterUser('') });
+    }
     if (a.filterType) list.push({ id:'type', label:a.typeOptions.find(o=>o.value===a.filterType)?.label||'Tipo', icon:<Tag size={10} />, onRemove:()=>a.setFilterType('') });
     if (a.filterDate) list.push({ id:'date', label:a.formatDateBadge(a.filterDate), icon:<CalendarDays size={10} />, onRemove:()=>a.setFilterDate('') });
     return list;
-  }, [a.filterUser, a.filterType, a.filterDate, a.userOptions, a.typeOptions]);
+  }, [a.filterUser, a.filterType, a.filterDate, a.userOptions, a.typeOptions, a.user]);
 
   return (
     <>
@@ -32,7 +35,7 @@ const ActivitiesPage: React.FC = () => {
       <div className="hidden print-only-block mb-6 border-b border-gray-300 pb-4">
         <h1 className="text-3xl font-bold text-gray-900">Reporte de Actividades</h1>
         <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-gray-600">
-          <div><span className="font-semibold">Usuario:</span> {a.isAdmin ? (a.filterUser ? a.userOptions.find(o=>o.value===a.filterUser)?.label||'Desconocido' : 'Todos los usuarios') : (a.user?.username||'Ejecutivo')}</div>
+          <div><span className="font-semibold">Usuario:</span> {a.isAdmin ? (a.filterUser ? (a.userOptions.find(o=>o.value===a.filterUser)?.label || (a.filterUser === a.user?.id ? a.user?.username : 'Desconocido')) : 'Todos los usuarios') : (a.user?.username||'Ejecutivo')}</div>
           {a.filterDate && <div><span className="font-semibold">Fecha:</span> {a.filterDate}</div>}
           {a.filterTitle && <div><span className="font-semibold">Búsqueda:</span> "{a.filterTitle}"</div>}
           <div><span className="font-semibold">Generado el:</span> {new Date().toLocaleString('es-MX')}</div>
@@ -68,7 +71,7 @@ const ActivitiesPage: React.FC = () => {
                 {a.isAdmin && (
                   <div>
                     <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none flex items-center gap-1"><User size={9} /> Usuario</h4>
-                    <Select inputId="user-filter" options={a.userOptions} value={a.filterUser ? a.userOptions.find(o=>o.value===a.filterUser)||null : null} onChange={a.handleUserFilterChange} placeholder="Todos los usuarios" isClearable isSearchable noOptionsMessage={() => 'No se encontraron usuarios'} />
+                    <Select inputId="user-filter" options={a.userOptions} value={a.filterUser ? (a.userOptions.find(o=>o.value===a.filterUser) || (a.filterUser === a.user?.id && a.user?.username ? { value: a.user.id, label: a.user.username } : null)) : null} onChange={a.handleUserFilterChange} placeholder="Todos los usuarios" isClearable isSearchable noOptionsMessage={() => 'No se encontraron usuarios'} />
                   </div>
                 )}
                 <div>

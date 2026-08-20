@@ -151,7 +151,18 @@ const WebChat: React.FC = () => {
   const renderDataTable = (data: Record<string, any>[]) => {
     if (!data || data.length === 0) return null;
 
-    const headers = Object.keys(data[0]);
+    const hasDescriptive = Object.keys(data[0]).some(k => {
+      const kl = k.toLowerCase();
+      return kl.includes('nombre') || kl.includes('cuenta') || kl.includes('cliente') || kl.includes('titulo') || kl.includes('proyecto') || kl.includes('actividad') || kl.includes('concepto');
+    });
+
+    const headers = Object.keys(data[0]).filter(h => {
+      const l = h.toLowerCase();
+      if (l === 'count' || l.endsWith('.count') || l === 'conteo' || l.endsWith('.conteo')) {
+        return !hasDescriptive && !data.every(r => Number(r[h]) === 1 || Number(r[h]) === 0);
+      }
+      return true;
+    });
 
     // Evitar renderizar tablas redundantes de 1 sola fila con poca información (<= 3 columnas)
     // o cuando es una sola celda (1 fila, 1 columna), ya que el texto en lenguaje natural lo cubre de forma fluida.
@@ -162,14 +173,34 @@ const WebChat: React.FC = () => {
     // Limpiar nombres de columnas (quitar prefijo "Entidad.")
     const cleanHeader = (h: string) => {
       const parts = h.split('.');
-      return parts[parts.length - 1]
+      const col = parts[parts.length - 1];
+      const lower = col.toLowerCase();
+
+      if (lower === 'username') return 'Usuario Asignado';
+      if (lower === 'description' || lower === 'descripcion') return 'Descripción';
+      if (lower === 'cuentacliente' || lower === 'cuentaocliente') return 'Cuenta / Cliente';
+      if (lower === 'nombreproyecto') return 'Oportunidad';
+      if (lower === 'ticketnumber') return 'Folio';
+      if (lower === 'tipoincidencia') return 'Tipo Incidencia';
+      if (lower === 'contactname') return 'Contacto';
+      if (lower === 'contactemail') return 'Correo Contacto';
+      if (lower === 'montototal') return 'Monto';
+      if (lower === 'montototalmxnsum' || lower === 'montototalmxn') return 'Monto MXN';
+      if (parts[0] === 'TiposActividad' && lower === 'nombre') return 'Tipo de Actividad';
+      if (parts[0] === 'Empresas' && lower === 'nombre') return 'Empresa';
+      if (parts[0] === 'Clientes' && lower === 'nombre') return 'Cliente';
+      if (lower === 'actividad') return 'Actividad';
+      if (lower === 'fecha') return 'Fecha y Hora';
+      if (lower === 'nombre') return 'Etapa / Nombre';
+
+      return col
         .replace(/([A-Z])/g, ' $1')
         .replace(/^./, s => s.toUpperCase())
         .trim();
     };
 
     // Limitar a 10 filas en la tabla visual
-    const displayData = data.slice(0, 10);
+    const displayData = data;
 
     // Identificador de campos monetarios
     const isCurrencyField = (header: string): boolean => {
@@ -265,8 +296,53 @@ const WebChat: React.FC = () => {
       }
 
       if (isCurrencyField(header)) {
-        const rowCurrency = row['Oportunidades.moneda'] || row['moneda'] || row['Moneda'] || (lower.includes('usd') ? 'USD' : 'MXN');
+        const isMxn = lower.includes('mxn');
+        const isUsd = lower.includes('usd');
+        const rowCurrency = isMxn ? 'MXN' : isUsd ? 'USD' : (row['Oportunidades.moneda'] || row['moneda'] || row['Moneda'] || 'MXN');
         return formatCurrency(val, rowCurrency);
+      }
+
+      if (lower === 'description' || lower === 'descripcion') {
+        const text = String(val ?? '');
+        if (!text || text.trim() === '') return <span style={{ color: '#94a3b8' }}>Sin descripción</span>;
+        return (
+          <span
+            title={text}
+            style={{
+              display: 'inline-block',
+              maxWidth: '220px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              verticalAlign: 'middle',
+            }}
+          >
+            {text}
+          </span>
+        );
+      }
+
+      if (lower === 'fecha' || lower.includes('.fecha') || lower === 'date' || lower.includes('.date')) {
+        if (typeof val === 'string' && (val.includes('T') || val.includes('-'))) {
+          try {
+            const d = new Date(val);
+            if (!isNaN(d.getTime())) {
+              return d.toLocaleString('es-MX', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+            }
+          } catch {}
+        }
+      }
+
+      if (lower === 'username') {
+        const name = String(val ?? '');
+        if (!name || name.trim() === '') return <span style={{ color: '#94a3b8' }}>Sin asignar</span>;
+        return <span style={{ fontWeight: 600, color: '#1e293b' }}>{name}</span>;
       }
 
       if (typeof val === 'number') {
@@ -314,11 +390,7 @@ const WebChat: React.FC = () => {
             ))}
           </tbody>
         </table>
-        {data.length > 10 && (
-          <div style={{ padding: '6px 10px', fontSize: '10px', color: '#94a3b8', textAlign: 'center' }}>
-            Mostrando 10 de {data.length} resultados
-          </div>
-        )}
+        {data.length > 0 && (<div style={{ padding: '6px 10px', fontSize: '10px', color: '#64748b', textAlign: 'center', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>Total: {data.length} {data.length === 1 ? 'registro' : 'registros'}</div>)}
       </div>
     );
   };
@@ -413,17 +485,7 @@ const WebChat: React.FC = () => {
                   {/* Data Table */}
                   {msg.data && msg.data.length > 0 && renderDataTable(msg.data)}
 
-                  {/* Dashboard Redirect Button */}
-                  {msg.dashboardRedirect && (
-                    <button
-                      className="webchat-dashboard-btn"
-                      onClick={() => handleDashboardRedirect(msg.dashboardRedirect!)}
-                    >
-                      <BarChart3 />
-                      Ver en Dashboard
-                      <ArrowRight size={12} />
-                    </button>
-                  )}
+                  
                 </div>
               </div>
             ))}
@@ -474,3 +536,7 @@ const WebChat: React.FC = () => {
 };
 
 export default WebChat;
+
+
+
+

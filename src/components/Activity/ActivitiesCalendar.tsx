@@ -182,12 +182,7 @@ const ActivitiesCalendar: React.FC<Props> = ({
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
                     initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
                     locale={esLocale}
-                    views={{
-                        timeGridWeek: {
-                            type: 'timeGrid',
-                            duration: { days: isMobile ? 3 : 7 }
-                        }
-                    }}
+                    firstDay={1}
                     headerToolbar={{
                         left: 'prev,next today',
                         center: 'title',

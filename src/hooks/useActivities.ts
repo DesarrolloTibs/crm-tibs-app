@@ -31,7 +31,7 @@ export function useActivities() {
   const [initialDate, setInitialDate] = useState<string | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
   const [filterTitle, setFilterTitle] = useState('');
-  const [filterUser, setFilterUser] = useState('');
+  const [filterUser, setFilterUser] = useState(isAdmin && user?.id ? user.id : '');
   const [filterDate, setFilterDate] = useState('');
   const [filterType, setFilterType] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,6 +39,18 @@ export function useActivities() {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<Notif>(NOTIF_OFF);
   const searchDropdownRef = useRef<HTMLDivElement>(null);
+  const initializedUserFilterRef = useRef(false);
+
+  useEffect(() => {
+    if (user?.id && isAdmin && !initializedUserFilterRef.current) {
+      setFilterUser(user.id);
+      initializedUserFilterRef.current = true;
+    }
+  }, [user?.id, isAdmin]);
+
+  useEffect(() => {
+    initializedUserFilterRef.current = false;
+  }, [schemaName]);
 
   const hideNotification = () => setNotification(prev => ({ ...prev, show: false }));
   const showSuccess = (msg: string) => setNotification({ show: true, type: 'success', title: '¡Éxito!', message: msg, onConfirm: hideNotification, onCancel: hideNotification });
@@ -125,7 +137,10 @@ export function useActivities() {
 
   const filteredActivities = useMemo(() => activities.filter(a => {
     const matchesTitle = a.activity.toLowerCase().includes(filterTitle.toLowerCase()) || (a.reminder?.title || '').toLowerCase().includes(filterTitle.toLowerCase());
-    return matchesTitle && (filterUser ? a.userId === filterUser : true) && (filterDate ? a.date.startsWith(filterDate) : true) && (filterType ? String(a.typeActivityId) === filterType : true);
+    const matchesUser = filterUser ? (a.userId === filterUser || a.user?.id === filterUser) : true;
+    const matchesDate = filterDate ? a.date.startsWith(filterDate) : true;
+    const matchesType = filterType ? String(a.typeActivityId) === filterType : true;
+    return matchesTitle && matchesUser && matchesDate && matchesType;
   }), [activities, filterTitle, filterUser, filterDate, filterType]);
 
   const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredActivities.length / pageSize);
@@ -151,7 +166,7 @@ export function useActivities() {
     return row;
   });
 
-  const getActiveUserLabel = () => isAdmin ? (filterUser ? users.find(u => u.id === filterUser)?.username || 'Todos los usuarios' : 'Todos los usuarios') : (user?.username || '');
+  const getActiveUserLabel = () => isAdmin ? (filterUser ? (users.find(u => u.id === filterUser)?.username || (filterUser === user?.id ? user?.username : 'Usuario')) : 'Todos los usuarios') : (user?.username || '');
 
   const handleExportPDF = () => {
     const rows = buildExportRows();

@@ -23,8 +23,9 @@ const businessLineColors: Record<string, string> = {
   'IA': '#c8e7df #1b6b65',
 };
 
-const getInitials = (name = 'N A') => {
-  const names = name.split(' ');
+const getInitials = (name = '') => {
+  if (!name) return '';
+  const names = name.trim().split(' ');
   if (names.length > 1) {
     return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
   }
@@ -36,50 +37,58 @@ const Avatar: React.FC<{ opportunity: Opportunity }> = ({ opportunity }) => {
   const avatarRef = useRef<HTMLDivElement | HTMLImageElement | null>(null);
   const baseUrl = import.meta.env.VITE_BASE_URL;
   const { ejecutivo } = opportunity;
-  const imageUrl = ejecutivo?.profileImageUrl ? `${baseUrl}${ejecutivo.profileImageUrl}` : null;
   const [imgError, setImgError] = useState(false);
 
+  // 1. Oportunidad sin ejecutivo asignado
+  if (!ejecutivo || !ejecutivo.username) {
+    return (
+      <div
+        className="w-6 h-6 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-dashed border-slate-300 shrink-0 select-none"
+        title="Sin asignar"
+      >
+        <User size={10} />
+      </div>
+    );
+  }
+
+  const imageUrl = ejecutivo.profileImageUrl ? `${baseUrl}${ejecutivo.profileImageUrl}` : null;
+
+  // 2. Ejecutivo con foto de perfil válida
   if (imageUrl && !imgError) {
     return (
       <>
         <img
           ref={avatarRef as React.RefObject<HTMLImageElement>}
           src={imageUrl}
-          alt={ejecutivo?.username || 'Avatar'}
+          alt={ejecutivo.username}
           className="w-6 h-6 rounded-full object-cover border border-slate-200 shrink-0 cursor-pointer"
-          title={ejecutivo?.username || 'No asignado'}
+          title={`Asignado a: ${ejecutivo.username}`}
           onMouseEnter={() => setShowPopover(true)}
           onMouseLeave={() => setShowPopover(false)}
           onError={() => setImgError(true)}
         />
         <Popover targetRef={avatarRef} show={showPopover} onClose={() => setShowPopover(false)} className="w-max max-w-xs">
-          {ejecutivo && (
-            <>
-              <p className="font-bold text-sm text-gray-800 flex items-center gap-2"><User size={14} /> {ejecutivo.username}</p>
-              <p className="text-xs text-gray-600 flex items-center gap-2 mt-1"><Mail size={14} /> {ejecutivo.email}</p>
-            </>
-          )}
+          <p className="font-bold text-sm text-gray-800 flex items-center gap-2"><User size={14} /> {ejecutivo.username}</p>
+          {ejecutivo.email && <p className="text-xs text-gray-600 flex items-center gap-2 mt-1"><Mail size={14} /> {ejecutivo.email}</p>}
         </Popover>
       </>
     );
   }
 
+  // 3. Ejecutivo asignado sin foto (iniciales)
   return (
     <>
       <div 
         ref={avatarRef as React.RefObject<HTMLDivElement>} 
-        className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[9px] font-bold border border-slate-200 shrink-0 cursor-pointer" 
-        title={ejecutivo?.username || 'No asignado'} 
-        onMouseEnter={() => setShowPopover(true)} onMouseLeave={() => setShowPopover(false)}>
-        {getInitials(ejecutivo?.username)}
+        className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[9px] font-bold border border-slate-200 shrink-0 cursor-pointer select-none" 
+        title={`Asignado a: ${ejecutivo.username}`} 
+        onMouseEnter={() => setShowPopover(true)} 
+        onMouseLeave={() => setShowPopover(false)}>
+        {getInitials(ejecutivo.username)}
       </div>
       <Popover targetRef={avatarRef} show={showPopover} onClose={() => setShowPopover(false)} className="w-max max-w-xs">
-        {ejecutivo && (
-          <>
-            <p className="font-bold text-sm text-gray-800 flex items-center gap-2"><User size={14} /> {ejecutivo.username}</p>
-            <p className="text-xs text-gray-600 flex items-center gap-2 mt-1"><Mail size={14} /> {ejecutivo.email}</p>
-          </>
-        )}
+        <p className="font-bold text-sm text-gray-800 flex items-center gap-2"><User size={14} /> {ejecutivo.username}</p>
+        {ejecutivo.email && <p className="text-xs text-gray-600 flex items-center gap-2 mt-1"><Mail size={14} /> {ejecutivo.email}</p>}
       </Popover>
     </>
   );

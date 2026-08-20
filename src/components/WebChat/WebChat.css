@@ -276,7 +276,8 @@
 .webchat-data-table {
   margin-top: 8px;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: auto;
+  max-height: 280px;
   border: 1px solid #e2e8f0;
   font-size: 11px;
 }
@@ -546,3 +547,4 @@
     height: 50px;
   }
 }
+
