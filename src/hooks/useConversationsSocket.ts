@@ -203,15 +203,22 @@ export function useConversationsSocket() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || !selectedConv || sending) return;
+    const textToSend = inputText.trim();
+    setInputText('');
     try {
       setSending(true);
-      const msg = await sendMessage(selectedConv.id, inputText.trim());
-      setMessages((prev: any[]) => [...prev, msg]);
-      setInputText('');
+      const msg = await sendMessage(selectedConv.id, textToSend);
+      setMessages((prev: any[]) => {
+        if (!msg || (msg.id && prev.some((m) => m.id === msg.id))) {
+          return prev;
+        }
+        return [...prev, msg];
+      });
       scrollToBottom();
       loadConversationsList();
     } catch (err) {
       console.error('Error al enviar mensaje:', err);
+      setInputText(textToSend);
       showNotif('error', 'Error', 'No se pudo enviar el mensaje.');
     } finally {
       setSending(false);
