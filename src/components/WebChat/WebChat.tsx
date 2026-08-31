@@ -140,12 +140,33 @@ const WebChat: React.FC = () => {
     });
 
     const headers = Object.keys(data[0]).filter(h => {
-      const l = h.toLowerCase();
-      if (l === 'count' || l.endsWith('.count') || l === 'conteo' || l.endsWith('.conteo')) {
+      const parts = h.split('.');
+      const col = parts[parts.length - 1];
+      const l = col.toLowerCase();
+
+      // Excluir columnas de identificadores internos (ID)
+      if (
+        l === 'id' ||
+        l === '_id' ||
+        l.endsWith('_id') ||
+        l.startsWith('id_') ||
+        col.endsWith('Id') ||
+        col.endsWith('ID') ||
+        /^[iI][dD][A-Z]/.test(col)
+      ) {
+        return false;
+      }
+
+      const fullLower = h.toLowerCase();
+      if (fullLower === 'count' || fullLower.endsWith('.count') || fullLower === 'conteo' || fullLower.endsWith('.conteo')) {
         return !hasDescriptive && !data.every(r => Number(r[h]) === 1 || Number(r[h]) === 0);
       }
       return true;
     });
+
+    if (headers.length === 0) {
+      return null;
+    }
 
     // Evitar renderizar tablas redundantes de 1 sola fila con poca información (<= 3 columnas)
     // o cuando es una sola celda (1 fila, 1 columna), ya que el texto en lenguaje natural lo cubre de forma fluida.

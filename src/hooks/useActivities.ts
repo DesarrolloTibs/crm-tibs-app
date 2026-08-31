@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { type SingleValue } from 'react-select';
+import { io } from 'socket.io-client';
 import { getActivities, createActivity, updateActivity, deleteActivity, getActivityTypes } from '../services/activitiesService';
 import { getUsers } from '../services/usersService';
 import { useAuth } from './useAuth';
@@ -79,6 +80,54 @@ export function useActivities() {
   }, []);
 
   useEffect(() => { fetchActivities(); fetchActivityTypes(); }, [fetchActivities, fetchActivityTypes, schemaName]);
+
+  // ── Socket.io ──
+  useEffect(() => {
+    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
+    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
+    const socket = io(`${originUrl}/activities`, { path: socketPath });
+
+    socket.on('connect', () => console.log('Connected to Activities WebSocket server'));
+
+    socket.on('activityCreated', (newActivity: Activity) => {
+      setActivities((prev) =>
+        prev.some((a) => a.id === newActivity.id) ? prev : [newActivity, ...prev]
+      );
+    });
+
+    socket.on('activityUpdated', (updatedActivity: Activity) => {
+      setActivities((prev) =>
+        prev.map((a) => (a.id === updatedActivity.id ? updatedActivity : a))
+      );
+    });
+
+    socket.on('activityDeleted', (deletedId: string) => {
+      setActivities((prev) => prev.filter((a) => a.id !== deletedId));
+    });
+
+    socket.on('activityTypeCreated', (newType: TypeActivity) => {
+      setActivityTypes((prev) =>
+        prev.some((t) => t.id === newType.id)
+          ? prev
+          : [...prev, newType].sort((a, b) => a.strname.localeCompare(b.strname))
+      );
+    });
+
+    socket.on('activityTypeUpdated', (updatedType: TypeActivity) => {
+      setActivityTypes((prev) =>
+        prev.map((t) => (t.id === updatedType.id ? updatedType : t))
+      );
+    });
+
+    socket.on('activityTypeDeleted', (deletedTypeId: number) => {
+      setActivityTypes((prev) => prev.filter((t) => t.id !== deletedTypeId));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) return;

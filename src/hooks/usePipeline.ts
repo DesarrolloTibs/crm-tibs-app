@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
+import { io } from 'socket.io-client';
 import type { Opportunity, Stage } from '../core/models/Opportunity';
 import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity, archiveOpportunity } from '../services/opportunitiesService';
 import { getActiveCatalogOptions } from '../services/opportunityCatalogsService';
@@ -181,6 +182,45 @@ export function usePipeline() {
   };
 
   useEffect(() => { fetchPipelineAndOpportunities(); }, [archivedFilter, schemaName, startDate, endDate]);
+
+  // ── Socket.io ──
+  useEffect(() => {
+    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
+    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
+    const socket = io(`${originUrl}/pipelines`, { path: socketPath });
+
+    socket.on('connect', () => console.log('Connected to Pipelines WebSocket server'));
+
+    socket.on('opportunityCreated', (newOpp: Opportunity) => {
+      setOpportunities((prev) =>
+        prev.some((o) => o.id === newOpp.id) ? prev : [newOpp, ...prev]
+      );
+    });
+
+    socket.on('opportunityUpdated', (updatedOpp: Opportunity) => {
+      setOpportunities((prev) =>
+        prev.map((o) => (o.id === updatedOpp.id ? updatedOpp : o))
+      );
+    });
+
+    socket.on('opportunityDeleted', (deletedId: string) => {
+      setOpportunities((prev) => prev.filter((o) => o.id !== deletedId));
+    });
+
+    socket.on('pipelineUpdated', (pipelineData: any) => {
+      if (pipelineData?.stages) {
+        const loadedStages = enforceFirstActiveIsInitial(pipelineData.stages);
+        setStages(loadedStages);
+        if (pipelineData.strname) setPipelineName(pipelineData.strname);
+        if (pipelineData.strdescription !== undefined) setPipelineDescription(pipelineData.strdescription);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (!loading && opportunities.length > 0) {
