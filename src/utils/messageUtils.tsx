@@ -108,3 +108,131 @@ export const renderMessageContent = (content: string): React.ReactNode => {
   return <span>{content}</span>;
 };
 
+/**
+ * Normaliza y compara si dos fechas corresponden al mismo día de calendario.
+ */
+export const isSameDay = (d1: Date, d2: Date): boolean => {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+};
+
+/**
+ * Formatea la hora de un mensaje (ej: "02:30 p. m.").
+ */
+export const formatMessageTime = (dateInput?: string | Date): string => {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+/**
+ * Obtiene la etiqueta para el divisor de fecha estilo WhatsApp:
+ * - "Hoy"
+ * - "Ayer"
+ * - "3 de septiembre" (año actual) o "3 de septiembre de 2025" (otros años)
+ */
+export const getMessageDateDividerLabel = (dateInput?: string | Date): string => {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+
+  const now = new Date();
+  if (isSameDay(date, now)) {
+    return 'Hoy';
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (isSameDay(date, yesterday)) {
+    return 'Ayer';
+  }
+
+  const isCurrentYear = date.getFullYear() === now.getFullYear();
+  if (isCurrentYear) {
+    return date.toLocaleDateString('es-MX', {
+      day: 'numeric',
+      month: 'long',
+    });
+  }
+
+  return date.toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+export interface MessageDateGroup {
+  dateKey: string;
+  dateLabel: string;
+  messages: any[];
+}
+
+/**
+ * Agrupa una lista de mensajes cronológicamente por día.
+ */
+export const groupMessagesByDate = (messages: any[]): MessageDateGroup[] => {
+  if (!messages || !Array.isArray(messages)) return [];
+
+  const groups: MessageDateGroup[] = [];
+  let currentGroup: MessageDateGroup | null = null;
+
+  messages.forEach((msg) => {
+    const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date();
+    const dateKey = !isNaN(msgDate.getTime())
+      ? `${msgDate.getFullYear()}-${String(msgDate.getMonth() + 1).padStart(2, '0')}-${String(msgDate.getDate()).padStart(2, '0')}`
+      : 'unknown';
+
+    if (!currentGroup || currentGroup.dateKey !== dateKey) {
+      const dateLabel = getMessageDateDividerLabel(msg.createdAt);
+      currentGroup = {
+        dateKey,
+        dateLabel: dateLabel || 'Fecha',
+        messages: [msg],
+      };
+      groups.push(currentGroup);
+    } else {
+      currentGroup.messages.push(msg);
+    }
+  });
+
+  return groups;
+};
+
+/**
+ * Formatea la fecha para la lista lateral de conversaciones:
+ * - Si es hoy: muestra la hora ("02:30 p. m.")
+ * - Si fue ayer: muestra "Ayer"
+ * - Si fue anterior: muestra "DD/MM/AA"
+ */
+export const formatSidebarDate = (dateInput?: string | Date): string => {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+
+  const now = new Date();
+  if (isSameDay(date, now)) {
+    return formatMessageTime(date);
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (isSameDay(date, yesterday)) {
+    return 'Ayer';
+  }
+
+  return date.toLocaleDateString('es-MX', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  });
+};
+

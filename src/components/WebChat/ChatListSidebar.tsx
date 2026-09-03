@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { ChannelFilter } from '../../hooks/useConversationsSocket';
 import EmptyState from '../shared/EmptyState';
+import { formatSidebarDate } from '../../utils/messageUtils';
 
 interface ChatListSidebarProps {
   conversations: any[];
@@ -114,7 +115,7 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
                   <div className="flex justify-between items-center gap-1">
                     <span className="font-bold text-gray-800 text-sm truncate">{conv.clientName}</span>
                     <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
-                      {conv.lastMessage ? new Date(conv.lastMessage.createdAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : ''}
+                      {conv.lastMessage ? formatSidebarDate(conv.lastMessage.createdAt) : ''}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 truncate font-medium mt-1">
