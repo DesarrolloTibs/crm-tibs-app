@@ -30,3 +30,7 @@ pnpm-debug.log*
 
 # Test results
 /coverage
+
+# Obsidian & Local Agents Governance
+.obsidian/
+AGENTS.md
