@@ -15,7 +15,6 @@ import {
   sendMessage,
   toggleBotStatus,
   assignConversation,
-  simulateIncomingMessage,
   getConversationBaseTemplate,
   sendWhatsAppTemplate,
 } from '../services/conversationsService';
@@ -52,16 +51,9 @@ export function useConversationsSocket() {
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChannelFilter, setSelectedChannelFilter] = useState<ChannelFilter>('all');
-  const [isSimPanelOpen, setIsSimPanelOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [notification, setNotification] = useState<ConvNotification>(NOTIF_HIDDEN);
-
-  // ── Simulator form state ──
-  const [simChannel, setSimChannel] = useState('whatsapp');
-  const [simExternalId, setSimExternalId] = useState('+525551234567');
-  const [simNickname, setSimNickname] = useState('Pedro Pérez');
-  const [simText, setSimText] = useState('Hola, quiero cotizar unas licencias de software');
 
   // ── Countdown re-render tick (actualiza badges de tiempo cada 60s) ──
   const [, setTick] = useState(0);
@@ -471,22 +463,6 @@ export function useConversationsSocket() {
     }
   };
 
-  const handleSimulate = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!simExternalId.trim()) { showNotif('warning', 'Campo Requerido', simChannel === 'whatsapp' ? 'Ingrese el Teléfono del Remitente.' : 'Ingrese el ID del Perfil Social.'); return; }
-    if (!simNickname.trim()) { showNotif('warning', 'Campo Requerido', 'Ingrese el Apodo del Perfil Social.'); return; }
-    if (!simText.trim()) { showNotif('warning', 'Campo Requerido', 'Ingrese el Mensaje del Cliente.'); return; }
-    try {
-      await simulateIncomingMessage(simChannel, simExternalId.trim(), simNickname.trim(), simText.trim());
-      showNotif('success', 'Mensaje Recibido', 'El mensaje simulado ha entrado en el sistema.');
-      setIsSimPanelOpen(false);
-      loadConversationsList();
-    } catch (err) {
-      console.error('Error al simular mensaje:', err);
-      showNotif('error', 'Error', 'Error al simular mensaje entrante.');
-    }
-  };
-
   // ── Derived: filtered conversations ──
   const filteredConversations = conversations.filter((c) => {
     const q = searchQuery.toLowerCase();
@@ -503,18 +479,16 @@ export function useConversationsSocket() {
     // state
     loading, conversations, selectedConv, messages, allUsers,
     inputText, searchQuery, selectedChannelFilter,
-    isSimPanelOpen, isTemplateModalOpen, sending, notification,
-    simChannel, simExternalId, simNickname, simText,
+    isTemplateModalOpen, sending, notification,
     filteredConversations,
     // refs
     messagesEndRef,
     // setters
     setSelectedConv, setInputText, setSearchQuery,
-    setSelectedChannelFilter, setIsSimPanelOpen, setIsTemplateModalOpen,
-    setSimChannel, setSimExternalId, setSimNickname, setSimText,
+    setSelectedChannelFilter, setIsTemplateModalOpen,
     hideNotif, showNotif,
     // actions
-    handleSendMessage, handleSendBaseTemplate, handleTemplateSent, handleToggleBot, handleAssignUser, handleSimulate,
+    handleSendMessage, handleSendBaseTemplate, handleTemplateSent, handleToggleBot, handleAssignUser,
     loadConversationsList,
     // auth
     isAdmin, currentUserId,

@@ -55,11 +55,11 @@ const ChatWindowHeader: React.FC<ChatWindowHeaderProps> = ({
                   className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border shadow-2xs transition-all hover:opacity-90 ${windowStatus.badgeClass}`}
                 >
                   {windowStatus.isExpired ? (
-                    <AlertTriangle size={12} className="text-rose-600 shrink-0" />
+                    <AlertTriangle size={12} className="text-rose-700 shrink-0" />
                   ) : windowStatus.isWarning ? (
-                    <Clock size={12} className="text-amber-600 shrink-0" />
+                    <Clock size={12} className="text-amber-900 shrink-0" />
                   ) : (
-                    <ShieldCheck size={12} className="text-emerald-600 shrink-0" />
+                    <ShieldCheck size={12} className="text-emerald-800 shrink-0" />
                   )}
                   <span>{windowStatus.badgeText}</span>
                 </span>
@@ -68,11 +68,6 @@ const ChatWindowHeader: React.FC<ChatWindowHeaderProps> = ({
                 <div className="absolute left-0 top-full mt-1.5 hidden group-hover:block w-72 bg-gray-900/95 text-white text-[11px] leading-relaxed font-medium p-2.5 rounded-xl shadow-xl z-50 pointer-events-none backdrop-blur-xs border border-gray-700">
                   <p className="font-bold mb-1 text-gray-200">Ventana de Atención de WhatsApp:</p>
                   <p>{windowStatus.detailedExplanation}</p>
-                  {windowStatus.isExpired && (
-                    <p className="mt-1 text-emerald-400 font-semibold underline">
-                      Haz clic para abrir el catálogo de plantillas.
-                    </p>
-                  )}
                 </div>
               </div>
             )}

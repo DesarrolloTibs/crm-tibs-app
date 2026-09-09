@@ -304,7 +304,7 @@ export const getWhatsAppWindowStatus = (conv?: Conversation | null): WhatsAppWin
       isExpired: true,
       remainingMs: 0,
       badgeText: 'Ventana cerrada (23h) • Usar plantilla',
-      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 font-bold shadow-2xs',
       detailedExplanation: `Ventana de atención segura de WhatsApp expirada${safetyDate ? ' el ' + formatFullDateTime(safetyDate) : ''}. Para contactar a este cliente debes enviar una plantilla pre-aprobada por Meta.`,
       safetyExpiresAt: safetyDate,
     };
@@ -323,7 +323,7 @@ export const getWhatsAppWindowStatus = (conv?: Conversation | null): WhatsAppWin
       isExpired: false,
       remainingMs,
       badgeText: `Expira en ${timeStr}`,
-      badgeClass: 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse',
+      badgeClass: 'bg-amber-100 text-amber-900 border-amber-300 font-bold shadow-2xs',
       detailedExplanation: `Ventana de atención segura de WhatsApp: vence el ${formatFullDateTime(safetyDate)} (límite de seguridad de 23h). Fuera de este tiempo, Meta requiere plantillas oficiales.`,
       safetyExpiresAt: safetyDate,
     };
@@ -337,7 +337,7 @@ export const getWhatsAppWindowStatus = (conv?: Conversation | null): WhatsAppWin
     isExpired: false,
     remainingMs,
     badgeText: `${hoursRemaining}h restantes`,
-    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    badgeClass: 'bg-emerald-100 text-emerald-900 border-emerald-300 font-bold shadow-2xs',
     detailedExplanation: `Ventana de atención segura de WhatsApp: vence el ${formatFullDateTime(safetyDate)} (límite de seguridad de 23h). Fuera de este tiempo, Meta requiere plantillas oficiales.`,
     safetyExpiresAt: safetyDate,
   };

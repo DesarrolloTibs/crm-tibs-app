@@ -9,7 +9,9 @@ import {
   Bot,
   User,
   RefreshCw,
-  Sparkles,
+  AlertTriangle,
+  Clock,
+  ShieldCheck,
 } from 'lucide-react';
 import type { ChannelFilter } from '../../hooks/useConversationsSocket';
 import type { Conversation } from '../../core/models/Conversation';
@@ -30,7 +32,6 @@ interface ChatListSidebarProps {
   onChannelChange: (v: ChannelFilter) => void;
   onSelectConv: (conv: Conversation) => void;
   onRefresh: () => void;
-  onOpenSimulator: () => void;
 }
 
 const CHANNEL_FILTERS: { id: ChannelFilter; label: string; icon: React.ReactNode; activeClass: string }[] = [
@@ -55,7 +56,7 @@ export const getInitials = (name: string) => name.slice(0, 2).toUpperCase();
 
 const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
   conversations, selectedConv, searchQuery, selectedChannelFilter,
-  onSearchChange, onChannelChange, onSelectConv, onRefresh, onOpenSimulator,
+  onSearchChange, onChannelChange, onSelectConv, onRefresh,
 }) => (
   <aside className={`w-full md:w-80 border-r border-gray-150 bg-slate-50/50 shrink-0 ${selectedConv ? 'hidden md:flex flex-col' : 'flex flex-col'}`}>
     {/* Header */}
@@ -67,9 +68,6 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
         <button onClick={onRefresh} className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Actualizar chats">
           <RefreshCw size={16} />
         </button>
-        {/* <button onClick={onOpenSimulator} className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-100 hover:bg-indigo-100 transition-colors cursor-pointer" title="Simular Mensaje">
-          <Sparkles size={12} /> Simulador
-        </button> */}
       </div>
     </div>
 
@@ -147,10 +145,17 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
                   {windowStatus.isWhatsApp && (
                     <div className="mt-1.5 flex items-center">
                       <span
-                        className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${windowStatus.badgeClass}`}
+                        className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border shadow-2xs ${windowStatus.badgeClass}`}
                         title={windowStatus.detailedExplanation}
                       >
-                        {windowStatus.badgeText}
+                        {windowStatus.isExpired ? (
+                          <AlertTriangle size={11} className="shrink-0 text-rose-700" />
+                        ) : windowStatus.isWarning ? (
+                          <Clock size={11} className="shrink-0 text-amber-900" />
+                        ) : (
+                          <ShieldCheck size={11} className="shrink-0 text-emerald-800" />
+                        )}
+                        <span>{windowStatus.badgeText}</span>
                       </span>
                     </div>
                   )}

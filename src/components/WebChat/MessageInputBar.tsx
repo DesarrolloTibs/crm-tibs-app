@@ -32,7 +32,6 @@ interface MessageInputBarProps {
   onInputChange: (v: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   isWhatsAppWindowClosed?: boolean;
-  onOpenTemplates?: () => void;
   conversation?: Conversation | null;
   onTemplateSent?: (msg: Message) => void;
   onShowNotification?: (type: 'success' | 'error' | 'warning' | 'confirmation', title: string, message: string) => void;
@@ -45,7 +44,6 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
   onInputChange,
   onSubmit,
   isWhatsAppWindowClosed = false,
-  onOpenTemplates,
   conversation,
   onTemplateSent,
   onShowNotification,
@@ -278,15 +276,6 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
               </h4>
               <p className="text-xs text-amber-800/90 font-medium mt-0.5 leading-relaxed">
                 Para reactivar el contacto con este cliente, debes enviar una plantilla oficial pre-aprobada por Meta.
-                {onOpenTemplates && (
-                  <Button
-                    variant="ghost"
-                    onClick={onOpenTemplates}
-                    className="!text-emerald-700 hover:!text-emerald-800 !font-bold !underline ml-1.5 !inline-flex !p-0 hover:!bg-transparent"
-                  >
-                    Ver catálogo completo
-                  </Button>
-                )}
               </p>
             </div>
           </div>

@@ -8,7 +8,6 @@ import ChatListSidebar from '../components/WebChat/ChatListSidebar';
 import ChatWindowHeader from '../components/WebChat/ChatWindowHeader';
 import MessageFeed from '../components/WebChat/MessageFeed';
 import MessageInputBar from '../components/WebChat/MessageInputBar';
-import SimulatorPanel from '../components/WebChat/SimulatorPanel';
 import WhatsAppTemplateSelectorModal from '../components/WebChat/WhatsAppTemplateSelectorModal';
 import { getWhatsAppWindowStatus } from '../utils/messageUtils';
 
@@ -32,7 +31,6 @@ const ConversationsPage: React.FC = () => {
         onChannelChange={cv.setSelectedChannelFilter}
         onSelectConv={cv.setSelectedConv}
         onRefresh={() => cv.loadConversationsList()}
-        onOpenSimulator={() => cv.setIsSimPanelOpen(true)}
       />
 
       {/* Center column: active chat */}
@@ -60,7 +58,6 @@ const ConversationsPage: React.FC = () => {
                   onSubmit={cv.handleSendMessage}
                   isWhatsAppWindowClosed={isWhatsAppWindowClosed}
                   conversation={cv.selectedConv}
-                  onOpenTemplates={() => cv.setIsTemplateModalOpen(true)}
                   onTemplateSent={cv.handleTemplateSent}
                   onShowNotification={cv.showNotif}
                 />
@@ -71,27 +68,11 @@ const ConversationsPage: React.FC = () => {
           <EmptyState
             icon={<MessageSquare className="w-8 h-8 text-indigo-500" />}
             title="Ninguna conversación seleccionada"
-            message="Elige una conversación de la columna izquierda para leer los mensajes o simula un mensaje de prueba para interactuar con la IA."
+            message="Elige una conversación de la columna izquierda para interactuar con tus clientes en tiempo real."
             className="flex-grow bg-slate-50/10"
           />
         )}
       </main>
-
-      {/* Simulator slide-in panel */}
-      {cv.isSimPanelOpen && (
-        <SimulatorPanel
-          simChannel={cv.simChannel}
-          simExternalId={cv.simExternalId}
-          simNickname={cv.simNickname}
-          simText={cv.simText}
-          onChannelChange={cv.setSimChannel}
-          onExternalIdChange={cv.setSimExternalId}
-          onNicknameChange={cv.setSimNickname}
-          onTextChange={cv.setSimText}
-          onSubmit={cv.handleSimulate}
-          onClose={() => cv.setIsSimPanelOpen(false)}
-        />
-      )}
 
       {/* WhatsApp Official Template Selector Modal */}
       <WhatsAppTemplateSelectorModal
