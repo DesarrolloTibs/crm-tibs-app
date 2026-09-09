@@ -63,9 +63,9 @@ const ProductsPage: React.FC = () => {
                 <Select value={{ value: filterStatus, label: filterStatus === 'all' ? 'Todos los Estados' : filterStatus === 'active' ? 'Solo Activos' : 'Solo Inactivos' }} onChange={opt => setFilterStatus(opt ? opt.value : 'all')} options={[{ value: 'all', label: 'Todos los Estados' }, { value: 'active', label: 'Solo Activos' }, { value: 'inactive', label: 'Solo Inactivos' }]} placeholder="Todos los Estados" />
               </div>
               <div className="border-t border-gray-100 my-1 pt-2 w-full" />
-              <button type="button" onClick={clearFilters} className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0">
+              <Button variant="ghost-danger" onClick={clearFilters} className="gap-1.5 w-full justify-start">
                 <XCircle size={12} /> Limpiar Filtros
-              </button>
+              </Button>
             </div>
           </UnifiedSearchBar>
           <Button variant="success" className="w-full sm:w-auto whitespace-nowrap h-[38px] py-0 px-4 flex items-center justify-center" onClick={openCreateModal}>

@@ -7,6 +7,9 @@ export interface ModalProps {
   children: React.ReactNode;
   maxWidth?: string;
   height?: string;
+  className?: string;
+  padding?: string;
+  hideCloseButton?: boolean;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -15,6 +18,9 @@ const Modal: React.FC<ModalProps> = ({
   children,
   maxWidth = 'max-w-4xl',
   height = 'h-[95vh]',
+  className = '',
+  padding = 'p-4 sm:p-6',
+  hideCloseButton = false,
 }) => {
   if (!open) return null;
 
@@ -24,16 +30,18 @@ const Modal: React.FC<ModalProps> = ({
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-lg shadow-xl w-full ${maxWidth} ${height} relative flex flex-col cursor-default`}
+        className={`bg-white rounded-lg shadow-xl w-full ${maxWidth} ${height} relative flex flex-col cursor-default ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full p-1.5 transition-colors z-10"
-        >
-          <X size={24} />
-        </button>
-        <div className="p-4 sm:p-6 flex-grow h-full overflow-y-auto">
+        {!hideCloseButton && (
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full p-1.5 transition-colors z-10"
+          >
+            <X size={24} />
+          </button>
+        )}
+        <div className={`${padding} flex-grow h-full overflow-y-auto`}>
           {children}
         </div>
       </div>

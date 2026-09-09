@@ -1,19 +1,58 @@
 import axiosInstance from '../core/axios/axiosInstance';
+import type {
+    Conversation,
+    Message,
+    WhatsAppTemplate,
+    SendTemplatePayload,
+    WhatsAppBaseTemplate,
+    UpsertBaseTemplateDto,
+    SelectExistingBaseTemplateDto,
+} from '../core/models/Conversation';
 
 const urlBase = (import.meta.env.VITE_BASE_URL || 'http://localhost:3091') + '/api/conversations';
 
-export async function getConversations(): Promise<any[]> {
+export async function getConversations(): Promise<Conversation[]> {
     const response = await axiosInstance.get(urlBase);
     return response.data;
 }
 
-export async function getConversationMessages(id: string): Promise<any[]> {
+export async function getConversationMessages(id: string): Promise<Message[]> {
     const response = await axiosInstance.get(`${urlBase}/${id}/messages`);
     return response.data;
 }
 
-export async function sendMessage(id: string, content: string): Promise<any> {
+export async function sendMessage(id: string, content: string): Promise<Message> {
     const response = await axiosInstance.post(`${urlBase}/${id}/messages`, { content });
+    return response.data;
+}
+
+export async function getWhatsAppTemplates(conversationId: string): Promise<WhatsAppTemplate[]> {
+    const response = await axiosInstance.get(`${urlBase}/${conversationId}/templates`);
+    return response.data;
+}
+
+export async function sendWhatsAppTemplate(conversationId: string, payload: SendTemplatePayload): Promise<Message> {
+    const response = await axiosInstance.post(`${urlBase}/${conversationId}/template-message`, payload);
+    return response.data;
+}
+
+export async function getChannelBaseTemplate(channelConfigId: string): Promise<WhatsAppBaseTemplate> {
+    const response = await axiosInstance.get(`${urlBase}/channels/${channelConfigId}/base-template`);
+    return response.data;
+}
+
+export async function saveChannelBaseTemplate(channelConfigId: string, payload: UpsertBaseTemplateDto): Promise<WhatsAppBaseTemplate> {
+    const response = await axiosInstance.put(`${urlBase}/channels/${channelConfigId}/base-template`, payload);
+    return response.data;
+}
+
+export async function selectExistingBaseTemplate(channelConfigId: string, payload: SelectExistingBaseTemplateDto): Promise<WhatsAppBaseTemplate> {
+    const response = await axiosInstance.post(`${urlBase}/channels/${channelConfigId}/select-base-template`, payload);
+    return response.data;
+}
+
+export async function getConversationBaseTemplate(conversationId: string): Promise<WhatsAppBaseTemplate> {
+    const response = await axiosInstance.get(`${urlBase}/${conversationId}/base-template`);
     return response.data;
 }
 

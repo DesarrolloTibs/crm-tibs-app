@@ -648,9 +648,9 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                 <div className="md:col-span-2">
                   <div className="flex justify-between items-center mb-1 pr-1">
                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1Block block">Contacto *</label>
-                    <button type="button" onClick={() => setIsClientModalOpen(true)} className="text-[10px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-widest transition-colors">
+                    <Button variant="ghost" onClick={() => setIsClientModalOpen(true)} className="!text-[10px] !font-black !text-indigo-600 hover:!text-indigo-800 !uppercase !tracking-widest !p-0 hover:!bg-transparent">
                       + Nuevo Contacto
-                    </button>
+                    </Button>
                   </div>
                   <Select
                     inputId="cliente_id"

@@ -60,9 +60,9 @@ const CompaniesPage: React.FC = () => {
                 <Select inputId="ejecutivo-filter" options={executives} value={executives.find(o => o.value === filterEjecutivoId) || null} onChange={(o: any) => setFilterEjecutivoId(o ? o.value : null)} placeholder="Filtrar por ejecutivo" isClearable isSearchable className="w-full" />
               </div>
               <div className="border-t border-gray-100 my-1 pt-2 w-full" />
-              <button type="button" onClick={clearFilters} className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0">
+              <Button variant="ghost-danger" onClick={clearFilters} className="gap-1.5 w-full justify-start">
                 <XCircle size={12} /> Limpiar Filtros
-              </button>
+              </Button>
             </div>
           </UnifiedSearchBar>
           <Button variant="success" className="w-full sm:w-auto h-[38px] py-0 px-4 whitespace-nowrap flex items-center justify-center" onClick={openCreateModal}>

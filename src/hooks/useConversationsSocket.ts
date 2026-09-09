@@ -4,6 +4,11 @@ import { io, Socket } from 'socket.io-client';
 import { useAuth } from './useAuth';
 import { useConfigStore } from '../store/useConfigStore';
 import { getUsers } from '../services/usersService';
+import type {
+  Conversation,
+  Message,
+  MessageStatusUpdatedEvent,
+} from '../core/models/Conversation';
 import {
   getConversations,
   getConversationMessages,
@@ -11,7 +16,10 @@ import {
   toggleBotStatus,
   assignConversation,
   simulateIncomingMessage,
+  getConversationBaseTemplate,
+  sendWhatsAppTemplate,
 } from '../services/conversationsService';
+import type { SendTemplatePayload } from '../core/models/Conversation';
 
 export type ChannelFilter = 'all' | 'whatsapp' | 'messenger' | 'instagram' | 'webchat';
 
@@ -35,9 +43,9 @@ export function useConversationsSocket() {
 
   // ── Core state ──
   const [loading, setLoading] = useState(true);
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [selectedConv, setSelectedConv] = useState<any | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
 
   // ── UI state ──
@@ -45,6 +53,7 @@ export function useConversationsSocket() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChannelFilter, setSelectedChannelFilter] = useState<ChannelFilter>('all');
   const [isSimPanelOpen, setIsSimPanelOpen] = useState(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [notification, setNotification] = useState<ConvNotification>(NOTIF_HIDDEN);
 
@@ -54,10 +63,19 @@ export function useConversationsSocket() {
   const [simNickname, setSimNickname] = useState('Pedro Pérez');
   const [simText, setSimText] = useState('Hola, quiero cotizar unas licencias de software');
 
+  // ── Countdown re-render tick (actualiza badges de tiempo cada 60s) ──
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   // ── Refs (stale closure prevention) ──
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
-  const selectedConvRef = useRef<any>(null);
+  const selectedConvRef = useRef<Conversation | null>(null);
   const allUsersRef = useRef<any[]>([]);
   const isAdminRef = useRef<boolean>(false);
   const loadConversationsListRef = useRef<any>(null);
@@ -89,12 +107,12 @@ export function useConversationsSocket() {
       const currentIsAdmin = isAdminRef.current;
 
       if (selectId) {
-        const found = list.find((c: any) => c.id === selectId);
+        const found = list.find((c) => c.id === selectId);
         if (found) { setSelectedConv(found); return; }
       }
 
       if (currentSelected) {
-        const updated = list.find((c: any) => c.id === currentSelected.id);
+        const updated = list.find((c) => c.id === currentSelected.id);
         if (updated) {
           setSelectedConv(updated);
         } else if (!currentIsAdmin) {
@@ -154,11 +172,50 @@ export function useConversationsSocket() {
       console.log('Conectado a Websockets de Conversaciones');
     });
 
-    socket.on('message_received', (newMsg: any) => {
-      if (loadConversationsListRef.current) loadConversationsListRef.current();
+    // 1. Mensaje recibido (entrante de cliente o emitido por usuario/bot)
+    socket.on('message_received', (newMsg: Message) => {
+      const isCustomer = newMsg.sender === 'contact';
+      const safetyExpires = isCustomer
+        ? new Date(new Date(newMsg.createdAt).getTime() + 23 * 3600 * 1000).toISOString()
+        : undefined;
+      const windowExpires = isCustomer
+        ? new Date(new Date(newMsg.createdAt).getTime() + 24 * 3600 * 1000).toISOString()
+        : undefined;
+
+      // Actualizar lista de conversaciones
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === newMsg.conversationId) {
+            return {
+              ...c,
+              lastMessage: newMsg,
+              lastCustomerMessageAt: isCustomer ? newMsg.createdAt : c.lastCustomerMessageAt,
+              is24HourWindowActive: isCustomer ? true : c.is24HourWindowActive,
+              safetyWindowExpiresAt: isCustomer && safetyExpires ? safetyExpires : c.safetyWindowExpiresAt,
+              windowExpiresAt: isCustomer && windowExpires ? windowExpires : c.windowExpiresAt,
+            };
+          }
+          return c;
+        })
+      );
+
       const currentSelected = selectedConvRef.current;
-      if (currentSelected && newMsg.conversationId === currentSelected.id) {
-        setMessages((prev: any[]) => {
+      if (currentSelected && currentSelected.id === newMsg.conversationId) {
+        if (isCustomer) {
+          setSelectedConv((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  lastMessage: newMsg,
+                  lastCustomerMessageAt: newMsg.createdAt,
+                  is24HourWindowActive: true,
+                  safetyWindowExpiresAt: safetyExpires || prev.safetyWindowExpiresAt,
+                  windowExpiresAt: windowExpires || prev.windowExpiresAt,
+                }
+              : null
+          );
+        }
+        setMessages((prev) => {
           if (prev.some((m) => m.id === newMsg.id)) return prev;
           return [...prev, newMsg];
         });
@@ -166,19 +223,59 @@ export function useConversationsSocket() {
       }
     });
 
-    socket.on('bot_status_changed', (data: { conversationId: string; botActive: boolean }) => {
-      const currentSelected = selectedConvRef.current;
-      if (currentSelected && currentSelected.id === data.conversationId) {
-        setSelectedConv((prev: any) => prev ? { ...prev, botActive: data.botActive } : null);
-      }
-      setConversations((prev: any[]) =>
-        prev.map((c) => c.id === data.conversationId ? { ...c, botActive: data.botActive } : c)
+    // 2. Estado de entrega actualizado por webhook de Meta (sent, delivered, read, failed)
+    socket.on('message_status_updated', (data: MessageStatusUpdatedEvent) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === data.messageId || (data.externalMessageId && m.externalMessageId === data.externalMessageId)
+            ? {
+                ...m,
+                status: data.status,
+                externalMessageId: data.externalMessageId ?? m.externalMessageId,
+                errorMessage: data.errorMessage ?? m.errorMessage,
+              }
+            : m
+        )
+      );
+
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (
+            c.id === data.conversationId &&
+            c.lastMessage &&
+            (c.lastMessage.id === data.messageId ||
+              (data.externalMessageId && c.lastMessage.externalMessageId === data.externalMessageId))
+          ) {
+            return {
+              ...c,
+              lastMessage: {
+                ...c.lastMessage,
+                status: data.status,
+                externalMessageId: data.externalMessageId ?? c.lastMessage.externalMessageId,
+                errorMessage: data.errorMessage ?? c.lastMessage.errorMessage,
+              },
+            };
+          }
+          return c;
+        })
       );
     });
 
+    // 3. Cambio de estado del bot
+    socket.on('bot_status_changed', (data: { conversationId: string; botActive: boolean }) => {
+      const currentSelected = selectedConvRef.current;
+      if (currentSelected && currentSelected.id === data.conversationId) {
+        setSelectedConv((prev) => (prev ? { ...prev, botActive: data.botActive } : null));
+      }
+      setConversations((prev) =>
+        prev.map((c) => (c.id === data.conversationId ? { ...c, botActive: data.botActive } : c))
+      );
+    });
+
+    // 4. Asignación de ejecutivo
     socket.on('conversation_assigned', (data: { conversationId: string; assignedUserId: string | null }) => {
       const newAssignedUser = allUsersRef.current.find((u) => u.id === data.assignedUserId) || null;
-      setConversations((prev: any[]) =>
+      setConversations((prev) =>
         prev.map((c) =>
           c.id === data.conversationId
             ? { ...c, assignedUserId: data.assignedUserId, assignedUser: newAssignedUser }
@@ -187,7 +284,7 @@ export function useConversationsSocket() {
       );
       const currentSelected = selectedConvRef.current;
       if (currentSelected && currentSelected.id === data.conversationId) {
-        setSelectedConv((prev: any) =>
+        setSelectedConv((prev) =>
           prev && prev.id === data.conversationId
             ? { ...prev, assignedUserId: data.assignedUserId, assignedUser: newAssignedUser }
             : prev
@@ -208,7 +305,7 @@ export function useConversationsSocket() {
     try {
       setSending(true);
       const msg = await sendMessage(selectedConv.id, textToSend);
-      setMessages((prev: any[]) => {
+      setMessages((prev) => {
         if (!msg || (msg.id && prev.some((m) => m.id === msg.id))) {
           return prev;
         }
@@ -216,10 +313,119 @@ export function useConversationsSocket() {
       });
       scrollToBottom();
       loadConversationsList();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error al enviar mensaje:', err);
       setInputText(textToSend);
-      showNotif('error', 'Error', 'No se pudo enviar el mensaje.');
+
+      const errMsg = err?.response?.data?.message || '';
+      const isWindowExpiredError =
+        err?.response?.status === 400 &&
+        (errMsg.toLowerCase().includes('ventana') ||
+          errMsg.toLowerCase().includes('plantilla') ||
+          errMsg.toLowerCase().includes('23 horas') ||
+          errMsg.toLowerCase().includes('expirad'));
+
+      if (isWindowExpiredError) {
+        // Bloquear localmente el input al detectar corte de ventana
+        if (selectedConv) {
+          setSelectedConv((prev) => (prev ? { ...prev, is24HourWindowActive: false } : null));
+          setConversations((prev) =>
+            prev.map((c) => (c.id === selectedConv.id ? { ...c, is24HourWindowActive: false } : c))
+          );
+        }
+        showNotif(
+          'warning',
+          'Ventana de WhatsApp Expirada',
+          'La ventana de atención de 24 horas (margen seguro de 23h) ha expirado. Abriendo catálogo de plantillas pre-aprobadas de Meta...'
+        );
+        setTimeout(() => {
+          setIsTemplateModalOpen(true);
+        }, 600);
+      } else {
+        showNotif('error', 'Error', errMsg || 'No se pudo enviar el mensaje.');
+      }
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleTemplateSent = (newMsg: Message) => {
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === newMsg.id)) return prev;
+      return [...prev, newMsg];
+    });
+    scrollToBottom();
+    setConversations((prev) =>
+      prev.map((c) => (c.id === newMsg.conversationId ? { ...c, lastMessage: newMsg } : c))
+    );
+    showNotif('success', 'Plantilla Enviada', 'La plantilla oficial de WhatsApp ha sido despachada con éxito.');
+  };
+
+  const handleSendBaseTemplate = async (conversationId?: string) => {
+    const targetConv = conversationId
+      ? conversations.find((c) => c.id === conversationId) || selectedConv
+      : selectedConv;
+    if (!targetConv || sending) return;
+
+    try {
+      setSending(true);
+      const baseTpl = await getConversationBaseTemplate(targetConv.id);
+      if (!baseTpl) {
+        showNotif(
+          'error',
+          'Plantilla No Configurada',
+          'No se encontró la plantilla base configurada para este canal de WhatsApp.'
+        );
+        return;
+      }
+
+      const matches = baseTpl.bodyText?.match(/\{\{(\d+)\}\}/g) || [];
+      const varNumbers = Array.from(
+        new Set(matches.map((m) => parseInt(m.replace(/\D/g, ''), 10)))
+      ).sort((a, b) => a - b);
+
+      const clientName =
+        baseTpl.resolvedVariables?.[1] ||
+        baseTpl.contact?.name ||
+        targetConv.clientName?.trim() ||
+        'Cliente';
+
+      const companyName =
+        baseTpl.resolvedVariables?.[2] ??
+        baseTpl.contact?.company ??
+        (targetConv.client as any)?.company?.nombre ??
+        (targetConv.client as any)?.empresa ??
+        '';
+
+      const agentName =
+        baseTpl.resolvedVariables?.[3] ||
+        baseTpl.contact?.agent ||
+        targetConv.assignedUser?.username ||
+        user?.username ||
+        'Asesor';
+
+      const parameters = varNumbers.map((n) => {
+        if (n === 1) return { type: 'text' as const, text: clientName.trim() || targetConv.clientName || 'Cliente' };
+        if (n === 2) return { type: 'text' as const, text: companyName.trim() || ' ' };
+        if (n === 3) return { type: 'text' as const, text: agentName };
+        return { type: 'text' as const, text: '-' };
+      });
+
+      const payload: SendTemplatePayload = {
+        templateName: baseTpl.name || 'crm_inicio_conversacion',
+        languageCode: baseTpl.language || 'es',
+        components: parameters.length > 0 ? [{ type: 'body', parameters }] : undefined,
+      };
+
+      const newMsg = await sendWhatsAppTemplate(targetConv.id, payload);
+      handleTemplateSent(newMsg);
+    } catch (err: any) {
+      console.error('Error al enviar plantilla base directa:', err);
+      showNotif(
+        'error',
+        'Error al Enviar Plantilla',
+        err?.response?.data?.message || 'Fallo al despachar la plantilla a WhatsApp Cloud API.'
+      );
     } finally {
       setSending(false);
     }
@@ -230,7 +436,7 @@ export function useConversationsSocket() {
     const newStatus = !selectedConv.botActive;
     try {
       await toggleBotStatus(selectedConv.id, newStatus);
-      setSelectedConv((prev: any) => ({ ...prev, botActive: newStatus }));
+      setSelectedConv((prev) => (prev ? { ...prev, botActive: newStatus } : null));
     } catch (err) {
       console.error('Error al alternar bot:', err);
     }
@@ -245,12 +451,12 @@ export function useConversationsSocket() {
     try {
       await assignConversation(selectedConv.id, userId);
       const newAssignedUser = allUsers.find((u) => u.id === userId) || null;
-      setSelectedConv((prev: any) =>
+      setSelectedConv((prev) =>
         prev && prev.id === selectedConv.id
           ? { ...prev, assignedUserId: userId || null, assignedUser: newAssignedUser || prev.assignedUser }
           : prev
       );
-      setConversations((prev: any[]) =>
+      setConversations((prev) =>
         prev.map((c) =>
           c.id === selectedConv.id
             ? { ...c, assignedUserId: userId || null, assignedUser: newAssignedUser || c.assignedUser }
@@ -285,8 +491,8 @@ export function useConversationsSocket() {
   const filteredConversations = conversations.filter((c) => {
     const q = searchQuery.toLowerCase();
     const matchesQuery =
-      c.clientName.toLowerCase().includes(q) ||
-      c.externalId.toLowerCase().includes(q) ||
+      (c.clientName || '').toLowerCase().includes(q) ||
+      (c.externalId || '').toLowerCase().includes(q) ||
       (c.client?.nombre || '').toLowerCase().includes(q) ||
       (c.assignedUser?.username || '').toLowerCase().includes(q);
     const matchesChannel = selectedChannelFilter === 'all' || c.channel === selectedChannelFilter;
@@ -297,18 +503,18 @@ export function useConversationsSocket() {
     // state
     loading, conversations, selectedConv, messages, allUsers,
     inputText, searchQuery, selectedChannelFilter,
-    isSimPanelOpen, sending, notification,
+    isSimPanelOpen, isTemplateModalOpen, sending, notification,
     simChannel, simExternalId, simNickname, simText,
     filteredConversations,
     // refs
     messagesEndRef,
     // setters
     setSelectedConv, setInputText, setSearchQuery,
-    setSelectedChannelFilter, setIsSimPanelOpen,
+    setSelectedChannelFilter, setIsSimPanelOpen, setIsTemplateModalOpen,
     setSimChannel, setSimExternalId, setSimNickname, setSimText,
-    hideNotif,
+    hideNotif, showNotif,
     // actions
-    handleSendMessage, handleToggleBot, handleAssignUser, handleSimulate,
+    handleSendMessage, handleSendBaseTemplate, handleTemplateSent, handleToggleBot, handleAssignUser, handleSimulate,
     loadConversationsList,
     // auth
     isAdmin, currentUserId,

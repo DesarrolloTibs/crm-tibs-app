@@ -52,12 +52,12 @@ const SupportQueryPanel: React.FC<Props> = ({ activeTabMobile, setActiveTabMobil
       <div className="relative z-10 bg-white/90 backdrop-blur-md shadow-2xl border border-slate-200/50 rounded-3xl p-6 sm:p-8 w-full max-w-[480px] flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar">
         {/* Mobile tab selector */}
         <div className="flex w-full mb-6 bg-slate-100 p-1 rounded-xl lg:hidden">
-          <button type="button" onClick={() => setActiveTabMobile('register')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-300 ${activeTabMobile === 'register' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+          <Button variant="ghost" onClick={() => setActiveTabMobile('register')} className={`flex-1 !py-2 !text-xs !font-bold !rounded-lg ${activeTabMobile === 'register' ? '!bg-white shadow-sm !text-indigo-600' : '!text-slate-500'}`}>
             Registrar Ticket
-          </button>
-          <button type="button" onClick={() => setActiveTabMobile('query')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-300 ${activeTabMobile === 'query' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+          </Button>
+          <Button variant="ghost" onClick={() => setActiveTabMobile('query')} className={`flex-1 !py-2 !text-xs !font-bold !rounded-lg ${activeTabMobile === 'query' ? '!bg-white shadow-sm !text-indigo-600' : '!text-slate-500'}`}>
             Consultar Estatus
-          </button>
+          </Button>
         </div>
 
         {queriedTickets === null ? (

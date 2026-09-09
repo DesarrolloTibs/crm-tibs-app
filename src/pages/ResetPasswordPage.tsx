@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Lock, CheckCircle, AlertTriangle, Eye, EyeOff, ArrowLeft, LogIn, ShieldAlert } from 'lucide-react';
 import LoginBackground from '../components/Login/LoginBackground';
+import Button from '../components/shared/Button';
 import { useResetPassword } from '../hooks/useAuthForms';
 import '../components/Login/Login.css';
 
@@ -65,9 +66,9 @@ const ResetPasswordPage: React.FC = () => {
                     <div className="relative">
                       <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-rose-500'}`} size={18} />
                       <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={e => { setPassword(e.target.value); if (error) setError(''); }} className={`login-input-premium pl-12 pr-12 focus:border-rose-500 focus:ring-rose-500 ${error ? 'border-rose-300 bg-rose-50/30' : ''}`} required />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 transition-all p-1.5 rounded-lg" tabIndex={-1}>
+                      <Button variant="icon" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 !text-slate-300 hover:!text-rose-500" tabIndex={-1}>
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
+                      </Button>
                     </div>
                   </div>
 

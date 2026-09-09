@@ -71,12 +71,12 @@ const SupportRegisterPanel: React.FC<Props> = ({ activeTabMobile, setActiveTabMo
       <div className="w-full max-w-[420px] py-4 animate-in fade-in slide-in-from-left-8 duration-700">
         {/* Mobile tab selector */}
         <div className="flex w-full mb-6 bg-slate-100 p-1 rounded-xl lg:hidden">
-          <button type="button" onClick={() => setActiveTabMobile('register')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-300 ${activeTabMobile === 'register' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+          <Button variant="ghost" onClick={() => setActiveTabMobile('register')} className={`flex-1 !py-2 !text-xs !font-bold !rounded-lg ${activeTabMobile === 'register' ? '!bg-white shadow-sm !text-indigo-600' : '!text-slate-500'}`}>
             Registrar Ticket
-          </button>
-          <button type="button" onClick={() => setActiveTabMobile('query')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-300 ${activeTabMobile === 'query' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+          </Button>
+          <Button variant="ghost" onClick={() => setActiveTabMobile('query')} className={`flex-1 !py-2 !text-xs !font-bold !rounded-lg ${activeTabMobile === 'query' ? '!bg-white shadow-sm !text-indigo-600' : '!text-slate-500'}`}>
             Consultar Estatus
-          </button>
+          </Button>
         </div>
 
         {ticketSuccessNumber ? (

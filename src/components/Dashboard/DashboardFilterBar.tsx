@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import UnifiedSearchBar from '../shared/UnifiedSearchBar';
 import Select from '../shared/Select';
 import Input from '../shared/Input';
+import Button from '../shared/Button';
 import type { SearchBadge } from '../shared/UnifiedSearchBar';
 import type { DatePeriod, CurrencyFilter, ActiveTab } from '../../hooks/useDashboard';
 
@@ -82,9 +83,9 @@ const DashboardFilterBar: React.FC<DashboardFilterBarProps> = (props) => {
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filtros del módulo</span>
               {badges.length > 0 && <span className="bg-indigo-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{badges.length}</span>}
             </div>
-            <button type="button" onClick={onReset} className="text-[10px] font-bold text-rose-400 hover:text-rose-600 uppercase tracking-wide cursor-pointer transition-colors">
+            <Button variant="ghost-danger" onClick={onReset} className="!text-[10px] !uppercase !tracking-wide !font-bold">
               Restablecer todo
-            </button>
+            </Button>
           </div>
 
           {/* Source */}
@@ -134,10 +135,10 @@ const DashboardFilterBar: React.FC<DashboardFilterBarProps> = (props) => {
           )}
 
           {/* Apply */}
-          <button type="button" onClick={() => setShowFilters(false)} className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-xs rounded-2xl transition-all cursor-pointer shadow-md shadow-indigo-600/20 active:scale-[0.98] flex items-center justify-center gap-2">
+          <Button variant="indigo" onClick={() => setShowFilters(false)} className="w-full !py-2.5 !rounded-2xl !text-xs !font-bold !normal-case !tracking-normal gap-2">
             <ArrowRight size={13} />
             Aplicar filtros{badges.length > 0 ? ` (${badges.length} activo${badges.length!==1?'s':''})` : ''}
-          </button>
+          </Button>
         </div>
       </UnifiedSearchBar>
     </div>

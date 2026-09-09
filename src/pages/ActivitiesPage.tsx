@@ -86,9 +86,9 @@ const ActivitiesPage: React.FC = () => {
                   <Input type="date" value={a.filterDate} onChange={e => a.setFilterDate(e.target.value)} className="text-xs bg-white cursor-pointer py-2 rounded-xl" />
                 </div>
                 <div className="border-t border-gray-100 pt-2">
-                  <button type="button" onClick={a.handleClearFilters} className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer">
+                  <Button variant="ghost-danger" onClick={a.handleClearFilters} className="gap-1.5 w-full justify-start">
                     <XCircle size={12} /> Limpiar Filtros
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

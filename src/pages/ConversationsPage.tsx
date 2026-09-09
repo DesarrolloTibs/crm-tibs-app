@@ -2,12 +2,15 @@ import React from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useConversationsSocket } from '../hooks/useConversationsSocket';
 import Loader from '../components/shared/Loader';
+import EmptyState from '../components/shared/EmptyState';
 import Notification from '../components/shared/Notification';
 import ChatListSidebar from '../components/WebChat/ChatListSidebar';
 import ChatWindowHeader from '../components/WebChat/ChatWindowHeader';
 import MessageFeed from '../components/WebChat/MessageFeed';
 import MessageInputBar from '../components/WebChat/MessageInputBar';
 import SimulatorPanel from '../components/WebChat/SimulatorPanel';
+import WhatsAppTemplateSelectorModal from '../components/WebChat/WhatsAppTemplateSelectorModal';
+import { getWhatsAppWindowStatus } from '../utils/messageUtils';
 
 const ConversationsPage: React.FC = () => {
   const cv = useConversationsSocket();
@@ -42,24 +45,35 @@ const ConversationsPage: React.FC = () => {
               onBack={() => cv.setSelectedConv(null)}
               onAssignUser={cv.handleAssignUser}
               onToggleBot={cv.handleToggleBot}
+              onOpenTemplates={() => cv.setIsTemplateModalOpen(true)}
             />
             <MessageFeed messages={cv.messages} messagesEndRef={cv.messagesEndRef} />
-            <MessageInputBar
-              botActive={cv.selectedConv.botActive}
-              inputText={cv.inputText}
-              sending={cv.sending}
-              onInputChange={cv.setInputText}
-              onSubmit={cv.handleSendMessage}
-            />
+            {(() => {
+              const windowStatus = getWhatsAppWindowStatus(cv.selectedConv);
+              const isWhatsAppWindowClosed = windowStatus.isWhatsApp && windowStatus.isExpired;
+              return (
+                <MessageInputBar
+                  botActive={cv.selectedConv.botActive}
+                  inputText={cv.inputText}
+                  sending={cv.sending}
+                  onInputChange={cv.setInputText}
+                  onSubmit={cv.handleSendMessage}
+                  isWhatsAppWindowClosed={isWhatsAppWindowClosed}
+                  conversation={cv.selectedConv}
+                  onOpenTemplates={() => cv.setIsTemplateModalOpen(true)}
+                  onTemplateSent={cv.handleTemplateSent}
+                  onShowNotification={cv.showNotif}
+                />
+              );
+            })()}
           </>
         ) : (
-          <div className="flex-grow flex flex-col items-center justify-center py-20 text-center text-gray-400 bg-slate-50/10">
-            <MessageSquare size={64} className="mb-4 text-gray-200 stroke-[1.5]" />
-            <h3 className="font-extrabold text-gray-800 text-lg">Ninguna conversación seleccionada</h3>
-            <p className="text-sm text-gray-500 mt-1 max-w-sm">
-              Elige una conversación de la columna izquierda para leer los mensajes o simula un mensaje de prueba para interactuar con la IA.
-            </p>
-          </div>
+          <EmptyState
+            icon={<MessageSquare className="w-8 h-8 text-indigo-500" />}
+            title="Ninguna conversación seleccionada"
+            message="Elige una conversación de la columna izquierda para leer los mensajes o simula un mensaje de prueba para interactuar con la IA."
+            className="flex-grow bg-slate-50/10"
+          />
         )}
       </main>
 
@@ -78,6 +92,14 @@ const ConversationsPage: React.FC = () => {
           onClose={() => cv.setIsSimPanelOpen(false)}
         />
       )}
+
+      {/* WhatsApp Official Template Selector Modal */}
+      <WhatsAppTemplateSelectorModal
+        open={cv.isTemplateModalOpen}
+        onClose={() => cv.setIsTemplateModalOpen(false)}
+        conversation={cv.selectedConv}
+        onTemplateSent={cv.handleTemplateSent}
+      />
 
       {/* Global notification (replaces Swal) */}
       <Notification

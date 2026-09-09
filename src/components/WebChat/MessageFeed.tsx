@@ -1,10 +1,16 @@
 import React, { useMemo } from 'react';
-import { ShieldAlert, Bot } from 'lucide-react';
+import { ShieldAlert, Bot, Smartphone } from 'lucide-react';
+import type { Message } from '../../core/models/Conversation';
 import { getInitials } from './ChatListSidebar';
-import { renderMessageContent, groupMessagesByDate, formatMessageTime } from '../../utils/messageUtils';
+import {
+  renderMessageContent,
+  groupMessagesByDate,
+  formatMessageTime,
+  renderDeliveryStatusIcon,
+} from '../../utils/messageUtils';
 
 interface MessageFeedProps {
-  messages: any[];
+  messages: Message[];
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -36,7 +42,8 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
             }
 
             const isContact = msg.sender === 'contact';
-            const isBot = msg.sender === 'agent';
+            const isBot = msg.sender === 'agent' || msg.sender === 'bot';
+            const isTemplate = msg.messageType === 'template' || msg.content.includes('[Plantilla WhatsApp:');
 
             return (
               <div
@@ -69,16 +76,31 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
                     className={`rounded-2xl px-4 py-2.5 text-sm font-medium shadow-xs leading-relaxed ${
                       isContact
                         ? 'bg-white text-gray-800 border border-gray-150 rounded-bl-xs'
-                        : isBot
-                          ? 'bg-blue-600 text-white rounded-br-xs'
-                          : 'bg-emerald-600 text-white rounded-br-xs'
+                        : isTemplate
+                          ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-br-xs border border-emerald-500/50'
+                          : isBot
+                            ? 'bg-blue-600 text-white rounded-br-xs'
+                            : 'bg-emerald-600 text-white rounded-br-xs'
                     }`}
                   >
-                    {renderMessageContent(msg.content)}
+                    {isTemplate ? (
+                      <div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-100 pb-1.5 mb-1.5 border-b border-white/20 select-none">
+                          <Smartphone size={12} className="text-emerald-200" />
+                          <span>Plantilla de WhatsApp</span>
+                        </div>
+                        {renderMessageContent(msg.content)}
+                      </div>
+                    ) : (
+                      renderMessageContent(msg.content)
+                    )}
                   </div>
-                  <span className="text-[10px] text-gray-400 font-bold px-1.5 mt-0.5">
-                    {formatMessageTime(msg.createdAt)}
-                  </span>
+
+                  {/* Timestamp + Delivery Status */}
+                  <div className={`flex items-center gap-1 text-[10px] text-gray-400 font-bold px-1.5 mt-0.5 select-none ${!isContact ? 'justify-end' : 'justify-start'}`}>
+                    <span>{formatMessageTime(msg.createdAt)}</span>
+                    {!isContact && renderDeliveryStatusIcon(msg.status, msg.errorMessage)}
+                  </div>
                 </div>
               </div>
             );

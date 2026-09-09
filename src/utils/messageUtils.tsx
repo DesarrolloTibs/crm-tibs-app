@@ -1,5 +1,6 @@
 import React from 'react';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, Clock, Check, CheckCheck, AlertCircle } from 'lucide-react';
+import type { Conversation, MessageDeliveryStatus } from '../core/models/Conversation';
 
 /** Renderiza el contenido de un mensaje, detectando links a PDF para mostrar un card descargable. */
 export const renderMessageContent = (content: string): React.ReactNode => {
@@ -234,5 +235,156 @@ export const formatSidebarDate = (dateInput?: string | Date): string => {
     month: '2-digit',
     year: '2-digit',
   });
+};
+
+/**
+ * Formatea una fecha completa y amigable con hora (ej: "9 sep, 04:30 p. m.")
+ */
+export const formatFullDateTime = (dateInput?: string | Date | null): string => {
+  if (!dateInput) return '';
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleString('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+export interface WhatsAppWindowStatus {
+  isWhatsApp: boolean;
+  isOpen: boolean;
+  isWarning: boolean;
+  isExpired: boolean;
+  remainingMs: number;
+  badgeText: string;
+  badgeClass: string;
+  detailedExplanation: string;
+  safetyExpiresAt: Date | null;
+}
+
+/**
+ * Calcula el estado de la ventana de atención de WhatsApp (política de 24h con margen de seguridad de 23h).
+ */
+export const getWhatsAppWindowStatus = (conv?: Conversation | null): WhatsAppWindowStatus => {
+  if (!conv || conv.channel !== 'whatsapp') {
+    return {
+      isWhatsApp: false,
+      isOpen: true,
+      isWarning: false,
+      isExpired: false,
+      remainingMs: 0,
+      badgeText: '',
+      badgeClass: '',
+      detailedExplanation: '',
+      safetyExpiresAt: null,
+    };
+  }
+
+  // Si el backend ya marcó la ventana como inactiva explícitamente
+  let safetyDate: Date | null = null;
+  if (conv.safetyWindowExpiresAt) {
+    safetyDate = new Date(conv.safetyWindowExpiresAt);
+  } else if (conv.lastCustomerMessageAt) {
+    safetyDate = new Date(new Date(conv.lastCustomerMessageAt).getTime() + 23 * 3600 * 1000);
+  }
+
+  const now = Date.now();
+  const remainingMs = safetyDate && !isNaN(safetyDate.getTime()) ? safetyDate.getTime() - now : 0;
+  const isBackendClosed = conv.is24HourWindowActive === false;
+  const isTimeExpired = !safetyDate || remainingMs <= 0;
+
+  if (isBackendClosed || isTimeExpired) {
+    return {
+      isWhatsApp: true,
+      isOpen: false,
+      isWarning: false,
+      isExpired: true,
+      remainingMs: 0,
+      badgeText: 'Ventana cerrada (23h) • Usar plantilla',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      detailedExplanation: `Ventana de atención segura de WhatsApp expirada${safetyDate ? ' el ' + formatFullDateTime(safetyDate) : ''}. Para contactar a este cliente debes enviar una plantilla pre-aprobada por Meta.`,
+      safetyExpiresAt: safetyDate,
+    };
+  }
+
+  const twoHoursMs = 2 * 3600 * 1000;
+  if (remainingMs < twoHoursMs) {
+    const hours = Math.floor(remainingMs / 3600000);
+    const mins = Math.max(1, Math.floor((remainingMs % 3600000) / 60000));
+    const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+
+    return {
+      isWhatsApp: true,
+      isOpen: true,
+      isWarning: true,
+      isExpired: false,
+      remainingMs,
+      badgeText: `Expira en ${timeStr}`,
+      badgeClass: 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse',
+      detailedExplanation: `Ventana de atención segura de WhatsApp: vence el ${formatFullDateTime(safetyDate)} (límite de seguridad de 23h). Fuera de este tiempo, Meta requiere plantillas oficiales.`,
+      safetyExpiresAt: safetyDate,
+    };
+  }
+
+  const hoursRemaining = Math.floor(remainingMs / 3600000);
+  return {
+    isWhatsApp: true,
+    isOpen: true,
+    isWarning: false,
+    isExpired: false,
+    remainingMs,
+    badgeText: `${hoursRemaining}h restantes`,
+    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    detailedExplanation: `Ventana de atención segura de WhatsApp: vence el ${formatFullDateTime(safetyDate)} (límite de seguridad de 23h). Fuera de este tiempo, Meta requiere plantillas oficiales.`,
+    safetyExpiresAt: safetyDate,
+  };
+};
+
+/**
+ * Renderiza el icono correspondiente al estado de entrega de un mensaje saliente.
+ */
+export const renderDeliveryStatusIcon = (status?: MessageDeliveryStatus, errorMessage?: string | null): React.ReactNode => {
+  if (!status) return null;
+
+  switch (status) {
+    case 'pending':
+      return (
+        <span title="Pendiente de envío..." className="inline-flex items-center">
+          <Clock size={12} className="text-gray-400 shrink-0 inline-block" />
+        </span>
+      );
+    case 'sent':
+      return (
+        <span title="Enviado a Meta" className="inline-flex items-center">
+          <Check size={14} className="text-gray-400 shrink-0 inline-block" />
+        </span>
+      );
+    case 'delivered':
+      return (
+        <span title="Entregado al destinatario" className="inline-flex items-center">
+          <CheckCheck size={14} className="text-gray-400 shrink-0 inline-block" />
+        </span>
+      );
+    case 'read':
+      return (
+        <span title="Leído por el destinatario" className="inline-flex items-center">
+          <CheckCheck size={14} className="text-sky-400 shrink-0 inline-block" />
+        </span>
+      );
+    case 'failed':
+      return (
+        <span className="relative group inline-flex items-center cursor-help" title={errorMessage || 'Fallo en la entrega de Meta'}>
+          <AlertCircle size={14} className="text-rose-500 shrink-0 inline-block animate-bounce" />
+          <span className="absolute bottom-full mb-1 right-0 hidden group-hover:block bg-gray-900 text-white text-[10px] font-medium py-1 px-2 rounded shadow-lg whitespace-nowrap z-50 max-w-xs truncate pointer-events-none">
+            {errorMessage || 'Fallo en la entrega de Meta'}
+          </span>
+        </span>
+      );
+    default:
+      return null;
+  }
 };
 

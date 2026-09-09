@@ -18,6 +18,7 @@ import Loader from '../Loader/Loader';
 import Notification from '../Modal/Notification';
 import SettingsContainer from '../shared/SettingsContainer';
 import Modal from '../Modal/Modal';
+import WhatsAppBaseTemplateSettings from './WhatsAppBaseTemplateSettings';
 import { 
     Brain, 
     Sliders, 
@@ -93,6 +94,7 @@ const AiAgentSettings: React.FC = () => {
     const [channelConfigs, setChannelConfigs] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChannel, setEditingChannel] = useState<any | null>(null);
+    const [channelModalTab, setChannelModalTab] = useState<'credentials' | 'base-template'>('credentials');
 
     // Modal Form States
     const [channelType, setChannelType] = useState<'whatsapp' | 'facebook' | 'instagram'>('whatsapp');
@@ -506,6 +508,7 @@ const AiAgentSettings: React.FC = () => {
         setPhoneNumberId('');
         setAccessToken('');
         setVerifyToken('');
+        setChannelModalTab('credentials');
         setIsModalOpen(true);
     };
 
@@ -518,6 +521,7 @@ const AiAgentSettings: React.FC = () => {
         setPhoneNumberId(config.phoneNumberId || '');
         setAccessToken(config.accessToken || '');
         setVerifyToken(config.verifyToken || '');
+        setChannelModalTab('credentials');
         setIsModalOpen(true);
     };
 
@@ -1118,23 +1122,25 @@ const AiAgentSettings: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                                <div className="pt-5 flex gap-2">
+                                <div className="pt-5 flex flex-wrap gap-2">
                                     <Button 
                                         type="button" 
                                         variant={whatsappConfig ? "secondary" : "primary"}
-                                        className="w-full text-xs py-2 font-bold cursor-pointer"
+                                        className="flex-grow text-xs py-2 font-bold cursor-pointer"
                                         onClick={() => whatsappConfig ? handleOpenEditModal(whatsappConfig) : handleOpenCreateModal('whatsapp')}
                                     >
                                         {whatsappConfig ? 'Configurar / Editar' : 'Link Account'}
                                     </Button>
                                     {whatsappConfig && (
-                                        <button
-                                            onClick={() => handleDeleteChannel(whatsappConfig.id)}
-                                            className="p-2 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
-                                            title="Desconectar cuenta"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={() => handleDeleteChannel(whatsappConfig.id)}
+                                                className="p-2 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                                                title="Desconectar cuenta"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </>
                                     )}
                                 </div>
                             </div>
@@ -1240,142 +1246,188 @@ const AiAgentSettings: React.FC = () => {
 
 
             {/* ── MODAL DE CONFIGURACIÓN DE CREDENCIALES DE CANAL ───────────────────────── */}
-            <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} maxWidth="max-w-lg" height="h-auto max-h-[90vh]">
+            <Modal 
+                open={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                maxWidth={channelType === 'whatsapp' && editingChannel && channelModalTab === 'base-template' ? 'max-w-4xl' : 'max-w-lg'} 
+                height="h-auto max-h-[90vh]"
+            >
                 {/* Header */}
                 <div className="pb-4 border-b border-gray-150 flex justify-between items-center pr-8 text-left">
                     <div>
                         <h3 className="font-extrabold text-gray-800 text-base flex items-center gap-2">
                             {channelType === 'whatsapp' ? <Smartphone size={18} className="text-emerald-500" /> : channelType === 'facebook' ? <Facebook size={18} className="text-blue-500" /> : <Instagram size={18} className="text-pink-500" />}
-                            {editingChannel ? 'Editar Configuración' : 'Conectar Nuevo Canal'}
+                            {editingChannel ? `Configuración: ${channelName || editingChannel.name}` : 'Conectar Nuevo Canal'}
                         </h3>
-                        <p className="text-xs text-gray-400 mt-0.5">Rellene los campos requeridos obtenidos de Meta for Developers.</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                            {channelModalTab === 'base-template'
+                                ? 'Gestiona la plantilla oficial pre-aprobada para iniciar y reanudar conversaciones con impacto directo en Meta.'
+                                : 'Rellene los campos requeridos obtenidos de Meta for Developers.'}
+                        </p>
                     </div>
                 </div>
 
-                {/* Formulario */}
-                <form onSubmit={handleSaveChannel} className="mt-4 space-y-4 text-left">
-                    <div>
-                        <Input 
-                            label="Nombre descriptivo de la Cuenta (Nombre)"
-                            id="channelName"
-                            type="text"
-                            value={channelName}
-                            onChange={(e: any) => setChannelName(e.target.value)}
-                            placeholder={channelType === 'whatsapp' ? 'Ej: Cuenta Principal de Ventas' : channelType === 'facebook' ? 'Ej: Página Oficial Tibs CRM' : 'Ej: Instagram Comercial'}
-                            required
+                {/* Switcher de pestañas cuando se edita WhatsApp */}
+                {channelType === 'whatsapp' && editingChannel && (
+                    <div className="flex gap-2 border-b border-gray-150 pt-3 pb-2 text-left">
+                        <button
+                            type="button"
+                            onClick={() => setChannelModalTab('credentials')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                channelModalTab === 'credentials'
+                                    ? 'bg-blue-600 text-white shadow-xs'
+                                    : 'text-gray-500 hover:bg-gray-100'
+                            }`}
+                        >
+                            Credenciales & Webhook
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setChannelModalTab('base-template')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                channelModalTab === 'base-template'
+                                    ? 'bg-emerald-600 text-white shadow-xs'
+                                    : 'text-gray-500 hover:bg-gray-100'
+                            }`}
+                        >
+                            <span>Plantilla Base de Inicio</span>
+                        </button>
+                    </div>
+                )}
+
+                {channelType === 'whatsapp' && editingChannel && channelModalTab === 'base-template' ? (
+                    <div className="mt-4">
+                        <WhatsAppBaseTemplateSettings 
+                            channelConfig={editingChannel}
+                            onNotification={(type, title, message) => showNotification(type, title, message)}
                         />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                ) : (
+                    /* Formulario de credenciales */
+                    <form onSubmit={handleSaveChannel} className="mt-4 space-y-4 text-left">
                         <div>
                             <Input 
-                                label="App ID de Meta"
-                                id="appId"
+                                label="Nombre descriptivo de la Cuenta (Nombre)"
+                                id="channelName"
                                 type="text"
-                                value={appId}
-                                onChange={(e: any) => setAppId(e.target.value)}
-                                placeholder="Ej: 1234567890"
-                            />
-                        </div>
-                        <div>
-                            <Input 
-                                label={channelType === 'whatsapp' ? 'WhatsApp Business Account ID' : channelType === 'facebook' ? 'Facebook Page ID' : 'Instagram Business Account ID'}
-                                id="accountId"
-                                type="text"
-                                value={accountId}
-                                onChange={(e: any) => setAccountId(e.target.value)}
-                                placeholder="Ej: 1234567890"
+                                value={channelName}
+                                onChange={(e: any) => setChannelName(e.target.value)}
+                                placeholder={channelType === 'whatsapp' ? 'Ej: Cuenta Principal de Ventas' : channelType === 'facebook' ? 'Ej: Página Oficial Tibs CRM' : 'Ej: Instagram Comercial'}
                                 required
                             />
                         </div>
-                    </div>
 
-                    {channelType === 'whatsapp' && (
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Input 
+                                    label="App ID de Meta"
+                                    id="appId"
+                                    type="text"
+                                    value={appId}
+                                    onChange={(e: any) => setAppId(e.target.value)}
+                                    placeholder="Ej: 1234567890"
+                                />
+                            </div>
+                            <div>
+                                <Input 
+                                    label={channelType === 'whatsapp' ? 'WhatsApp Business Account ID' : channelType === 'facebook' ? 'Facebook Page ID' : 'Instagram Business Account ID'}
+                                    id="accountId"
+                                    type="text"
+                                    value={accountId}
+                                    onChange={(e: any) => setAccountId(e.target.value)}
+                                    placeholder="Ej: 1234567890"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {channelType === 'whatsapp' && (
+                            <div>
+                                <Input 
+                                    label="Phone Number ID (WhatsApp Cloud API)"
+                                    id="phoneNumberId"
+                                    type="text"
+                                    value={phoneNumberId}
+                                    onChange={(e: any) => setPhoneNumberId(e.target.value)}
+                                    placeholder="Ej: 1234123455"
+                                    required
+                                />
+                            </div>
+                        )}
+
                         <div>
                             <Input 
-                                label="Phone Number ID (WhatsApp Cloud API)"
-                                id="phoneNumberId"
-                                type="text"
-                                value={phoneNumberId}
-                                onChange={(e: any) => setPhoneNumberId(e.target.value)}
-                                placeholder="Ej: 1234123455"
+                                label="Token de Acceso Permanente (Access Token)"
+                                id="accessToken"
+                                type="password"
+                                value={accessToken}
+                                onChange={(e) => setAccessToken(e.target.value)}
+                                placeholder="Ingrese el Token permanente generado de Meta"
                                 required
                             />
                         </div>
-                    )}
 
-                    <div>
-                        <Input 
-                            label="Token de Acceso Permanente (Access Token)"
-                            id="accessToken"
-                            type="password"
-                            value={accessToken}
-                            onChange={(e) => setAccessToken(e.target.value)}
-                            placeholder="Ingrese el Token permanente generado de Meta"
-                            required
-                        />
-                    </div>
+                        <div>
+                            <Input 
+                                label="Token de Verificación del Webhook (Verify Token)"
+                                id="verifyToken"
+                                type="text"
+                                value={verifyToken}
+                                onChange={(e) => setVerifyToken(e.target.value)}
+                                placeholder="Defina un código secreto para configurar en el webhook (ej: mi_secreto_99)"
+                                required
+                            />
+                            <p className="text-[10px] text-gray-400 mt-1 ml-1 leading-relaxed">
+                                Este es el código que deberás colocar en el campo <strong>Verify Token</strong> al configurar el webhook en el portal de desarrolladores de Meta.
+                            </p>
+                        </div>
 
-                    <div>
-                        <Input 
-                            label="Token de Verificación del Webhook (Verify Token)"
-                            id="verifyToken"
-                            type="text"
-                            value={verifyToken}
-                            onChange={(e) => setVerifyToken(e.target.value)}
-                            placeholder="Defina un código secreto para configurar en el webhook (ej: mi_secreto_99)"
-                            required
-                        />
-                        <p className="text-[10px] text-gray-400 mt-1 ml-1 leading-relaxed">
-                            Este es el código que deberás colocar en el campo <strong>Verify Token</strong> al configurar el webhook en el portal de desarrolladores de Meta.
-                        </p>
-                    </div>
-
-                    {/* Detalle visual del Webhook según configuración de .env */}
-                    <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3.5 space-y-2 text-xs">
-                        <h4 className="font-extrabold text-blue-900 flex items-center gap-1.5">
-                            <Link2 size={14} className="text-blue-600" />
-                            Configuración de Webhook en Meta
-                        </h4>
-                        <p className="text-[11px] text-blue-800/80 leading-relaxed">
-                            Copia estos valores y pégalos en la sección de Webhooks en tu panel de Meta for Developers:
-                        </p>
-                        <div className="space-y-2 pt-1">
-                            <div>
-                                <span className="block text-[9px] font-bold text-blue-700/75 uppercase tracking-wider mb-1">URL de devolución de llamada (Callback URL)</span>
-                                <div className="flex items-center bg-white border border-blue-200 rounded-lg px-2.5 py-1.5 font-mono text-[10px] text-gray-700 break-all select-all font-semibold">
-                                    {(import.meta.env.VITE_BASE_URL || 'http://localhost:3091')}/api/conversations/webhook/{channelType}
+                        {/* Detalle visual del Webhook según configuración de .env */}
+                        <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3.5 space-y-2 text-xs">
+                            <h4 className="font-extrabold text-blue-900 flex items-center gap-1.5">
+                                <Link2 size={14} className="text-blue-600" />
+                                Configuración de Webhook en Meta
+                            </h4>
+                            <p className="text-[11px] text-blue-800/80 leading-relaxed">
+                                Copia estos valores y pégalos en la sección de Webhooks en tu panel de Meta for Developers:
+                            </p>
+                            <div className="space-y-2 pt-1">
+                                <div>
+                                    <span className="block text-[9px] font-bold text-blue-700/75 uppercase tracking-wider mb-1">URL de devolución de llamada (Callback URL)</span>
+                                    <div className="flex items-center bg-white border border-blue-200 rounded-lg px-2.5 py-1.5 font-mono text-[10px] text-gray-700 break-all select-all font-semibold">
+                                        {(import.meta.env.VITE_BASE_URL || 'http://localhost:3091')}/api/conversations/webhook/{channelType}
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <span className="block text-[9px] font-bold text-blue-700/75 uppercase tracking-wider mb-1">Token de verificación (Verify Token)</span>
-                                <div className="flex items-center bg-white border border-blue-200 rounded-lg px-2.5 py-1.5 font-mono text-[10px] text-gray-700 select-all font-semibold">
-                                    {verifyToken || 'Define el token de verificación arriba...'}
+                                <div>
+                                    <span className="block text-[9px] font-bold text-blue-700/75 uppercase tracking-wider mb-1">Token de verificación (Verify Token)</span>
+                                    <div className="flex items-center bg-white border border-blue-200 rounded-lg px-2.5 py-1.5 font-mono text-[10px] text-gray-700 select-all font-semibold">
+                                        {verifyToken || 'Define el token de verificación arriba...'}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Footer del Modal */}
-                    <div className="flex justify-end gap-3 border-t border-gray-150 pt-4 mt-6">
-                        <Button 
-                            type="button" 
-                            variant="secondary" 
-                            onClick={() => setIsModalOpen(false)}
-                            className="px-4 py-2 text-xs font-bold cursor-pointer font-medium"
-                        >
-                            Cancelar
-                        </Button>
-                        <Button 
-                            type="submit" 
-                            variant="success" 
-                            loading={saving}
-                            className="px-4 py-2 text-xs font-bold cursor-pointer"
-                        >
-                            Guardar Configuración
-                        </Button>
-                    </div>
-                </form>
+                        {/* Footer del Modal */}
+                        <div className="flex justify-end gap-3 border-t border-gray-150 pt-4 mt-6">
+                            <Button 
+                                type="button" 
+                                variant="secondary" 
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-4 py-2 text-xs font-bold cursor-pointer font-medium"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button 
+                                type="submit" 
+                                variant="success" 
+                                loading={saving}
+                                className="px-4 py-2 text-xs font-bold cursor-pointer"
+                            >
+                                Guardar Configuración
+                            </Button>
+                        </div>
+                    </form>
+                )}
             </Modal>
 
             {/* ── MODAL DE CONFIGURACIÓN DE SUB-AGENTE (CATÁLOGO / DRAG AND DROP) ───────── */}

@@ -12,17 +12,23 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { ChannelFilter } from '../../hooks/useConversationsSocket';
+import type { Conversation } from '../../core/models/Conversation';
 import EmptyState from '../shared/EmptyState';
-import { formatSidebarDate } from '../../utils/messageUtils';
+import Badge from '../shared/Badge';
+import {
+  formatSidebarDate,
+  getWhatsAppWindowStatus,
+  renderDeliveryStatusIcon,
+} from '../../utils/messageUtils';
 
 interface ChatListSidebarProps {
-  conversations: any[];
-  selectedConv: any | null;
+  conversations: Conversation[];
+  selectedConv: Conversation | null;
   searchQuery: string;
   selectedChannelFilter: ChannelFilter;
   onSearchChange: (v: string) => void;
   onChannelChange: (v: ChannelFilter) => void;
-  onSelectConv: (conv: any) => void;
+  onSelectConv: (conv: Conversation) => void;
   onRefresh: () => void;
   onOpenSimulator: () => void;
 }
@@ -61,9 +67,9 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
         <button onClick={onRefresh} className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Actualizar chats">
           <RefreshCw size={16} />
         </button>
-        <button onClick={onOpenSimulator} className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-100 hover:bg-indigo-100 transition-colors cursor-pointer" title="Simular Mensaje">
+        {/* <button onClick={onOpenSimulator} className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-100 hover:bg-indigo-100 transition-colors cursor-pointer" title="Simular Mensaje">
           <Sparkles size={12} /> Simulador
-        </button>
+        </button> */}
       </div>
     </div>
 
@@ -102,11 +108,17 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
         <ul className="divide-y divide-gray-100">
           {conversations.map((conv) => {
             const isSelected = selectedConv && selectedConv.id === conv.id;
+            const windowStatus = getWhatsAppWindowStatus(conv);
+            const lastMsg = conv.lastMessage;
+            const isOutgoingLastMsg = lastMsg && lastMsg.sender !== 'contact' && lastMsg.sender !== 'system';
+
             return (
               <li
                 key={conv.id}
                 onClick={() => onSelectConv(conv)}
-                className={`p-4 flex gap-3 cursor-pointer transition-all hover:bg-blue-50/50 ${isSelected ? 'bg-blue-50 border-l-4 border-blue-600 pl-3' : 'border-l-4 border-transparent'}`}
+                className={`p-4 flex gap-3 cursor-pointer transition-all hover:bg-blue-50/50 ${
+                  isSelected ? 'bg-blue-50 border-l-4 border-blue-600 pl-3' : 'border-l-4 border-transparent'
+                }`}
               >
                 <div className="w-11 h-11 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-sm shrink-0 border border-indigo-200">
                   {getInitials(conv.clientName)}
@@ -115,21 +127,47 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
                   <div className="flex justify-between items-center gap-1">
                     <span className="font-bold text-gray-800 text-sm truncate">{conv.clientName}</span>
                     <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
-                      {conv.lastMessage ? formatSidebarDate(conv.lastMessage.createdAt) : ''}
+                      {lastMsg ? formatSidebarDate(lastMsg.createdAt) : ''}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 truncate font-medium mt-1">
-                    {conv.lastMessage ? conv.lastMessage.content : 'Sin mensajes'}
-                  </p>
+
+                  {/* Mensaje + tick de entrega si es saliente */}
+                  <div className="flex items-center gap-1 text-xs text-gray-500 font-medium mt-1">
+                    {isOutgoingLastMsg && (
+                      <span className="shrink-0 flex items-center">
+                        {renderDeliveryStatusIcon(lastMsg?.status, lastMsg?.errorMessage)}
+                      </span>
+                    )}
+                    <span className="truncate">
+                      {lastMsg ? lastMsg.content : 'Sin mensajes'}
+                    </span>
+                  </div>
+
+                  {/* Badge de Ventana de 23h para WhatsApp */}
+                  {windowStatus.isWhatsApp && (
+                    <div className="mt-1.5 flex items-center">
+                      <span
+                        className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${windowStatus.badgeClass}`}
+                        title={windowStatus.detailedExplanation}
+                      >
+                        {windowStatus.badgeText}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center mt-2.5">
                     <div className="flex items-center gap-1.5">
                       {getChannelIcon(conv.channel)}
                       <span className="text-[10px] text-gray-400 font-bold truncate max-w-[90px]">{conv.externalId}</span>
                     </div>
                     {conv.botActive ? (
-                      <span className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[9px] font-black rounded uppercase border border-blue-100"><Bot size={10} /> Bot</span>
+                      <Badge variant="indigo" size="sm" className="text-[9px] py-0 px-1.5 flex items-center gap-1 font-black">
+                        <Bot size={10} /> Bot
+                      </Badge>
                     ) : (
-                      <span className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 text-amber-700 text-[9px] font-black rounded uppercase border border-amber-100"><User size={10} /> Humano</span>
+                      <Badge variant="warning" size="sm" className="text-[9px] py-0 px-1.5 flex items-center gap-1 font-black">
+                        <User size={10} /> Humano
+                      </Badge>
                     )}
                   </div>
                 </div>

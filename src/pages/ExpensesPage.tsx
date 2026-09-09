@@ -52,9 +52,9 @@ const ExpensesPage: React.FC = () => {
                 <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="text-xs bg-white cursor-pointer py-2 rounded-xl" />
               </div>
               <div className="border-t border-gray-100 my-1 pt-2 w-full" />
-              <button type="button" onClick={handleClearFilters} className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0">
+              <Button variant="ghost-danger" onClick={handleClearFilters} className="gap-1.5 w-full justify-start">
                 <XCircle size={12} /> Limpiar Filtros
-              </button>
+              </Button>
             </div>
           </UnifiedSearchBar>
           <Button variant="success" onClick={openCreateModal} className="w-full sm:w-auto py-2.5 px-4 h-[38px] flex items-center justify-center whitespace-nowrap">

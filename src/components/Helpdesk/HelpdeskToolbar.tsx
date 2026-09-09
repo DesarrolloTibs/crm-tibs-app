@@ -60,21 +60,21 @@ const HelpdeskToolbar: React.FC<Props> = ({
         <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
           <Filter size={11} /> Filtros
         </h4>
-        <button type="button" onClick={() => setArchivedFilter(archivedFilter === 'archived' ? 'active' : 'archived')} className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer font-semibold">
+        <Button variant="ghost" onClick={() => setArchivedFilter(archivedFilter === 'archived' ? 'active' : 'archived')} className="!justify-between w-full !text-xs !text-gray-700 !px-2 !py-1 !rounded !font-semibold">
           <span>Tickets Archivados</span>
           {archivedFilter === 'archived' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-        </button>
-        <button type="button" onClick={() => setArchivedFilter(archivedFilter === 'all' ? 'active' : 'all')} className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer font-semibold">
+        </Button>
+        <Button variant="ghost" onClick={() => setArchivedFilter(archivedFilter === 'all' ? 'active' : 'all')} className="!justify-between w-full !text-xs !text-gray-700 !px-2 !py-1 !rounded !font-semibold">
           <span>Todos los Tickets</span>
           {archivedFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-        </button>
+        </Button>
         <div className="border-t border-gray-100 my-1 shrink-0" />
         <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-0.5 shrink-0 select-none">Prioridad</h5>
         <div className="flex items-center gap-0.5 px-2 py-1">
           {[1, 2, 3].map(star => (
-            <button key={star} type="button" onClick={() => setPriorityFilter(priorityFilter === star ? 'all' : star)} title={star === 1 ? 'Baja' : star === 2 ? 'Media' : 'Alta'} className="p-0.5 transition-transform hover:scale-110 cursor-pointer">
+            <Button key={star} variant="icon" onClick={() => setPriorityFilter(priorityFilter === star ? 'all' : star)} title={star === 1 ? 'Baja' : star === 2 ? 'Media' : 'Alta'} className="!p-0.5 hover:!scale-110 !transform">
               <Star size={18} className={priorityFilter !== 'all' && typeof priorityFilter === 'number' && priorityFilter > 0 && star <= priorityFilter ? 'text-amber-400 fill-current' : 'text-slate-300 hover:text-amber-300'} />
-            </button>
+            </Button>
           ))}
           {priorityFilter !== 'all' && (
             <span className="text-[10px] text-slate-500 ml-1">{priorityFilter === 0 ? 'Sin prioridad' : priorityFilter === 1 ? 'Baja' : priorityFilter === 2 ? 'Media' : 'Alta'}</span>
@@ -83,41 +83,41 @@ const HelpdeskToolbar: React.FC<Props> = ({
         <div className="border-t border-gray-100 my-1 shrink-0" />
         <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-0.5 shrink-0 select-none">Etapas</h5>
         {stages.filter(s => s.blnstatus).map(stage => (
-          <button key={stage.id} type="button" onClick={() => setShowFilters(false)} className="flex items-center gap-2 text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer">
+          <Button key={stage.id} variant="ghost" onClick={() => setShowFilters(false)} className="!justify-start !gap-2 !text-xs !text-gray-700 !px-2 !py-1 !rounded w-full">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.strcolor || '#6366f1' }} />
             <span className="truncate">{stage.strname}</span>
-          </button>
+          </Button>
         ))}
       </div>
       <div className="flex-1 flex flex-col gap-1 border-l border-gray-100 pl-4 max-h-[300px] overflow-y-auto">
         <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-1 shrink-0 select-none">
           <Tag size={11} /> Tipo de Incidencia
         </h4>
-        <button type="button" onClick={() => setIncidenceTypeFilter('all')} className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer">
+        <Button variant="ghost" onClick={() => setIncidenceTypeFilter('all')} className="!justify-between w-full !text-xs !text-gray-700 !px-2 !py-1 !rounded">
           <span>Todos</span>
           {incidenceTypeFilter === 'all' && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-        </button>
+        </Button>
         {uniqueIncidenceTypes.filter(Boolean).map(type => (
-          <button key={type} type="button" onClick={() => setIncidenceTypeFilter(incidenceTypeFilter === type ? 'all' : type)} className="flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 px-2 py-1 rounded w-full text-left transition-colors cursor-pointer">
+          <Button key={type} variant="ghost" onClick={() => setIncidenceTypeFilter(incidenceTypeFilter === type ? 'all' : type)} className="!justify-between w-full !text-xs !text-gray-700 !px-2 !py-1 !rounded">
             <span className="truncate">{type}</span>
             {incidenceTypeFilter === type && <span className="text-indigo-600 font-extrabold text-sm">✓</span>}
-          </button>
+          </Button>
         ))}
         <div className="border-t border-gray-100 my-1 mt-auto shrink-0" />
-        <button type="button" onClick={() => { setPriorityFilter('all'); setIncidenceTypeFilter('all'); setSearchTerm(''); setArchivedFilter('active'); }} className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0">
+        <Button variant="ghost-danger" onClick={() => { setPriorityFilter('all'); setIncidenceTypeFilter('all'); setSearchTerm(''); setArchivedFilter('active'); }} className="gap-1.5 w-full !justify-start">
           <XCircle size={12} /> Limpiar Filtros
-        </button>
+        </Button>
       </div>
     </UnifiedSearchBar>
 
     <div className="flex items-center gap-2 w-full sm:w-auto">
       <div className="flex border border-gray-300 rounded-lg overflow-hidden p-0.5 bg-gray-50 shadow-sm shrink-0">
-        <button onClick={() => setViewMode('kanban')} className={`px-3 py-1.5 flex items-center gap-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${viewMode === 'kanban' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`} title="Vista Kanban">
+        <Button variant="ghost" onClick={() => setViewMode('kanban')} className={`!px-3 !py-1.5 !gap-1.5 !rounded-md !text-xs !font-semibold ${viewMode === 'kanban' ? '!bg-white !text-indigo-600 shadow-sm' : '!text-slate-500'}`} title="Vista Kanban">
           <KanbanIcon size={14} /><span>Kanban</span>
-        </button>
-        <button onClick={() => setViewMode('list')} className={`px-3 py-1.5 flex items-center gap-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`} title="Vista Lista">
+        </Button>
+        <Button variant="ghost" onClick={() => setViewMode('list')} className={`!px-3 !py-1.5 !gap-1.5 !rounded-md !text-xs !font-semibold ${viewMode === 'list' ? '!bg-white !text-indigo-600 shadow-sm' : '!text-slate-500'}`} title="Vista Lista">
           <ListIcon size={14} /><span>Lista</span>
-        </button>
+        </Button>
       </div>
       {viewMode === 'kanban' && (
         <StageVisibilitySelector stages={stages} visibleStageIds={visibleStageIds} onVisibilityChange={onVisibilityChange} zIndex={50} labelSize="xs" themeColor="indigo" align="responsive" />

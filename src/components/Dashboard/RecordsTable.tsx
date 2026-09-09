@@ -6,6 +6,7 @@ import type { Ticket } from '../../core/models/Ticket';
 import type { ActiveTab, CurrencyFilter } from '../../hooks/useDashboard';
 import { formatCurrency } from '../../utils/formatters';
 import EmptyState from '../shared/EmptyState';
+import Button from '../shared/Button';
 
 interface RecordsTableProps {
   activeTab: ActiveTab;
@@ -107,9 +108,9 @@ const RecordsTable: React.FC<RecordsTableProps> = ({
                     })()}
                   </td>
                   <td className="p-3.5 text-center">
-                    <button type="button" onClick={() => navigate(`/pipeline?opportunityId=${opp.id}`)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer" title="Ir a oportunidad">
+                    <Button variant="icon" onClick={() => navigate(`/pipeline?opportunityId=${opp.id}`)} className="!text-slate-400 hover:!text-indigo-600 hover:!bg-indigo-50" title="Ir a oportunidad">
                       <ArrowRight size={15} />
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -151,9 +152,9 @@ const RecordsTable: React.FC<RecordsTableProps> = ({
                     </span>
                   </td>
                   <td className="p-3.5 text-center">
-                    <button type="button" onClick={() => navigate(`/helpdesk?ticketId=${t.id}`)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer" title="Ir a ticket">
+                    <Button variant="icon" onClick={() => navigate(`/helpdesk?ticketId=${t.id}`)} className="!text-slate-400 hover:!text-indigo-600 hover:!bg-indigo-50" title="Ir a ticket">
                       <ArrowRight size={15} />
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -167,9 +168,9 @@ const RecordsTable: React.FC<RecordsTableProps> = ({
         <div className="flex justify-between items-center mt-6 pt-4 border-t border-slate-100 flex-wrap gap-2 text-xs font-bold text-slate-500">
           <span>Mostrando {Math.min(tableDataList.length,(currentPage-1)*pageSize+1)} - {Math.min(tableDataList.length,currentPage*pageSize)} de {tableDataList.length} registros</span>
           <div className="flex gap-1">
-            <button type="button" disabled={currentPage===1} onClick={()=>onPageChange(p=>Math.max(1,p-1))} className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer">Anterior</button>
-            <div className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-lg">Pág. {currentPage} de {totalPages}</div>
-            <button type="button" disabled={currentPage===totalPages} onClick={()=>onPageChange(p=>Math.min(totalPages,p+1))} className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer">Siguiente</button>
+            <Button variant="secondary" disabled={currentPage===1} onClick={()=>onPageChange(p=>Math.max(1,p-1))} className="!py-1.5 !px-3 !text-xs !font-bold !normal-case !tracking-normal">Anterior</Button>
+            <div className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-lg text-xs font-bold">Pág. {currentPage} de {totalPages}</div>
+            <Button variant="secondary" disabled={currentPage===totalPages} onClick={()=>onPageChange(p=>Math.min(totalPages,p+1))} className="!py-1.5 !px-3 !text-xs !font-bold !normal-case !tracking-normal">Siguiente</Button>
           </div>
         </div>
       )}

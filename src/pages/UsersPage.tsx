@@ -48,9 +48,9 @@ const UsersPage: React.FC = () => {
                 <Select options={roleOptions} value={roleOptions.find(o => o.value === filterRole)} onChange={sel => setFilterRole(sel ? sel.value : '')} placeholder="Todos los Roles" />
               </div>
               <div className="border-t border-gray-100 my-1 pt-2 w-full" />
-              <button type="button" onClick={handleClearFilters} className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded w-full text-left hover:bg-red-50 transition-colors cursor-pointer shrink-0">
+              <Button variant="ghost-danger" onClick={handleClearFilters} className="gap-1.5 w-full justify-start">
                 <XCircle size={12} /> Limpiar Filtros
-              </button>
+              </Button>
             </div>
           </UnifiedSearchBar>
           <Button variant="primary" onClick={openCreateModal} className="w-full sm:w-auto h-[38px] py-0 px-4 flex items-center justify-center whitespace-nowrap">

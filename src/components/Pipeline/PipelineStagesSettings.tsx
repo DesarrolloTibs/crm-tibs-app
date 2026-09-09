@@ -4,6 +4,7 @@ import type { Stage } from '../../core/models/Opportunity';
 import { ArrowUp, ArrowDown, Plus, Trash2, Save, Info, Check, Sliders } from 'lucide-react';
 import Notification from '../Modal/Notification';
 import Loader from '../Loader/Loader';
+import Button from '../shared/Button';
 
 interface Props {
   onSaveSuccess?: () => void;
@@ -356,14 +357,14 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                     {/* Reorder arrows */}
                     {!onlyPipelineDetails && (
                       <div className="flex flex-col shrink-0">
-                        <button type="button" onClick={() => moveStage(idx, 'up')} disabled={idx === 0}
-                          className="p-0.5 text-gray-400 hover:text-blue-600 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer">
+                        <Button variant="icon" onClick={() => moveStage(idx, 'up')} disabled={idx === 0}
+                          className="!p-0.5 !text-gray-400 hover:!text-blue-600 disabled:!opacity-20">
                           <ArrowUp size={13} />
-                        </button>
-                        <button type="button" onClick={() => moveStage(idx, 'down')} disabled={idx === stages.length - 1}
-                          className="p-0.5 text-gray-400 hover:text-blue-600 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer">
+                        </Button>
+                        <Button variant="icon" onClick={() => moveStage(idx, 'down')} disabled={idx === stages.length - 1}
+                          className="!p-0.5 !text-gray-400 hover:!text-blue-600 disabled:!opacity-20">
                           <ArrowDown size={13} />
-                        </button>
+                        </Button>
                       </div>
                     )}
 
@@ -452,10 +453,10 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                     {/* Delete unsaved */}
                     <div className="w-7 shrink-0 flex justify-center">
                       {isNew ? (
-                        <button type="button" onClick={() => handleRemoveStage(idx)}
-                          className="p-1 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 cursor-pointer">
+                        <Button variant="icon" onClick={() => handleRemoveStage(idx)}
+                          className="!text-red-400 hover:!text-red-600 hover:!bg-red-50">
                           <Trash2 size={14} />
-                        </button>
+                        </Button>
                       ) : (
                         <div className="w-7 h-7" />
                       )}

@@ -66,11 +66,12 @@ Este documento compendia la totalidad de vistas y componentes modulares que conf
 * [`ActivityTypeLegend.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivityTypeLegend.tsx) — Barra de insignias cromáticas explicativas de cada tipo de actividad operativa.
 
 ### 2.4 Chat Omnicanal y Asistente Virtual (`src/components/WebChat/`)
-* [`ChatListSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatListSidebar.tsx) — Bandeja lateral de conversaciones entrantes con buscador, filtros por canal y estado del bot.
-* [`ChatWindowHeader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatWindowHeader.tsx) — Encabezado de la conversación activa con badge de canal, asignación y toggle IA / Humano.
-* [`MessageFeed.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/MessageFeed.tsx) — Feed cronológico con divisores de día estilo WhatsApp y detección de cotizaciones PDF.
-* [`MessageInputBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/MessageInputBar.tsx) — Barra de entrada de texto enriquecido y envío instantáneo vía WebSocket.
-* [`SimulatorPanel.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/SimulatorPanel.tsx) — Panel desplegable para simular mensajes entrantes de WhatsApp o redes sociales.
+* [`ChatListSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatListSidebar.tsx) — Bandeja lateral de conversaciones entrantes con buscador, filtros por canal, badges compartidos (`Badge`) de estado bot/humano y ventana de WhatsApp, y estado vacío (`EmptyState`).
+* [`ChatWindowHeader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatWindowHeader.tsx) — Encabezado limpio de la conversación activa con badge de canal, selector compacto de asignación de ejecutivo y toggle interactivo IA / Humano.
+* [`MessageFeed.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/MessageFeed.tsx) — Feed cronológico con divisores de día estilo WhatsApp, visualización de estados de entrega y renderizado de plantillas y cotizaciones PDF.
+* [`MessageInputBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/MessageInputBar.tsx) — Barra de entrada con detección de ventana de 23h, botón compartido (`Button`) con spinner de carga (`Loader`), badge de verificación de Meta (`Badge`), hover preview interactivo de WhatsApp en vivo y enlace al catálogo completo.
+* [`WhatsAppTemplateSelectorModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/WhatsAppTemplateSelectorModal.tsx) — Modal modular basado en el componente compartido (`Modal`) con catálogo filtrable de plantillas de Meta, insignias (`Badge`), campos dinámicos de parámetros (`Input`), estados vacíos (`EmptyState`) y botones de acción (`Button`).
+* [`SimulatorPanel.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/SimulatorPanel.tsx) — Panel desplegable para simular mensajes entrantes de WhatsApp o redes sociales, estandarizado con componentes compartidos (`Input`, `TextArea`, `Button`).
 * [`WebChat.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/WebChat.tsx) — Widget flotante de asistencia inteligente en el sistema para consultas en lenguaje natural.
 
 ### 2.5 Centro de Configuración (`src/components/Settings/`)
@@ -78,11 +79,10 @@ Este documento compendia la totalidad de vistas y componentes modulares que conf
 * [`MyCompanySection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/MyCompanySection.tsx) — Ajustes de la organización: nombre comercial, logotipo y datos fiscales.
 * [`CalendarIntegrationSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/CalendarIntegrationSettings.tsx) — Vinculación OAuth2 con Google Calendar, Microsoft Outlook y CalDAV de Apple iCloud.
 * [`AiAgentSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiAgentSettings.tsx) — Parámetros de comportamiento del bot omnicanal y gestión de sub-agentes.
+* [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/WhatsAppBaseTemplateSettings.tsx) — Configuración y sincronización directa con Meta de la Plantilla Base de WhatsApp. Interfaz minimalista enfocada exclusivamente en los 3 campos de contenido (encabezado, cuerpo con validación matemática de ratio de Meta y pie de mensaje), omitiendo completamente el nombre técnico, categorías e idiomas para evitar sobrecargar al usuario.
 * [`GlobalAiCredentialsSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/GlobalAiCredentialsSettings.tsx) — Configuración de llaves de API (OpenAI, Anthropic, Gemini) a nivel de plataforma.
 * [`TenantsSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/TenantsSection.tsx) — Aprovisionamiento de inquilinos, monitoreo de cuotas y asignación de esquemas DB.
 * [`PlansSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/PlansSection.tsx) — Catálogo de planes SaaS, límites de tokens y precios de suscripción.
-
----
 
 ## 🛠️ 3. Componentes Compartidos del Sistema (`src/components/shared/`)
 

@@ -48,14 +48,14 @@ const SimulatorPanel: React.FC<SimulatorPanelProps> = ({
         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Canal</label>
         <div className="grid grid-cols-4 gap-2">
           {SIM_CHANNELS.map((c) => (
-            <button
+            <Button
               key={c.id}
-              type="button"
+              variant="ghost"
               onClick={() => { onChannelChange(c.id); onExternalIdChange(c.defaultId); }}
-              className={`py-2 px-3 flex flex-col items-center gap-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${simChannel === c.id ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+              className={`!py-2 !px-3 !flex-col !gap-1 !rounded-lg !text-xs !font-bold !border ${simChannel === c.id ? '!bg-indigo-50 !border-indigo-600 !text-indigo-700' : '!bg-white !border-gray-200 !text-gray-600'}`}
             >
               {c.icon}{c.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
