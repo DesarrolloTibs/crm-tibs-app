@@ -7,7 +7,8 @@ import {
     deleteChannelConfig,
     getSubAgents,
     saveSubAgent,
-    deleteSubAgent
+    deleteSubAgent,
+    type ChannelConfig,
 } from '../../services/conversationsService';
 import { getUsers } from '../../services/usersService';
 import Button from '../shared/Button';
@@ -32,7 +33,8 @@ import {
     MessageSquare,
     CheckCircle,
     Maximize2,
-    Minimize2
+    Minimize2,
+    RefreshCw,
 } from 'lucide-react';
 
 const REMINDER_OFFSET_OPTIONS = [
@@ -91,9 +93,10 @@ const AiAgentSettings: React.FC = () => {
     const [defaultUserId, setDefaultUserId] = useState('');
 
     // Channels states
-    const [channelConfigs, setChannelConfigs] = useState<any[]>([]);
+    const [channelConfigs, setChannelConfigs] = useState<ChannelConfig[]>([]);
+    const [isLoadingChannels, setIsLoadingChannels] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingChannel, setEditingChannel] = useState<any | null>(null);
+    const [editingChannel, setEditingChannel] = useState<ChannelConfig | null>(null);
     const [channelModalTab, setChannelModalTab] = useState<'credentials' | 'base-template'>('credentials');
 
     // Modal Form States
@@ -183,6 +186,7 @@ const AiAgentSettings: React.FC = () => {
     const loadSettings = async () => {
         try {
             setLoading(true);
+            setIsLoadingChannels(true);
             const [config, allUsers, configsList, subAgentsList] = await Promise.all([
                 getAiAgentConfig(),
                 getUsers(),
@@ -217,6 +221,21 @@ const AiAgentSettings: React.FC = () => {
             showNotification('error', 'Error', 'No se pudieron cargar las configuraciones del agente IA.');
         } finally {
             setLoading(false);
+            setIsLoadingChannels(false);
+        }
+    };
+
+    const handleRefreshChannels = async () => {
+        try {
+            setIsLoadingChannels(true);
+            const list = await getChannelConfigs();
+            setChannelConfigs(list);
+            showNotification('success', 'Sincronizado', 'Canales sincronizados exitosamente con Meta Graph API.');
+        } catch (error) {
+            console.error('Error al sincronizar canales con Meta:', error);
+            showNotification('error', 'Error', 'No se pudieron sincronizar los canales con Meta.');
+        } finally {
+            setIsLoadingChannels(false);
         }
     };
 
@@ -512,9 +531,9 @@ const AiAgentSettings: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleOpenEditModal = (config: any) => {
+    const handleOpenEditModal = (config: ChannelConfig) => {
         setEditingChannel(config);
-        setChannelType(config.channel);
+        setChannelType(config.channel as 'whatsapp' | 'facebook' | 'instagram');
         setChannelName(config.name || '');
         setAppId(config.appId || '');
         setAccountId(config.accountId || '');
@@ -551,6 +570,7 @@ const AiAgentSettings: React.FC = () => {
             setIsModalOpen(false);
             
             // Recargar lista de canales
+            setIsLoadingChannels(true);
             const list = await getChannelConfigs();
             setChannelConfigs(list);
         } catch (err) {
@@ -562,6 +582,7 @@ const AiAgentSettings: React.FC = () => {
             );
         } finally {
             setSaving(false);
+            setIsLoadingChannels(false);
         }
     };
 
@@ -583,6 +604,7 @@ const AiAgentSettings: React.FC = () => {
                         onConfirm: hideNotification,
                         onCancel: hideNotification
                     });
+                    setIsLoadingChannels(true);
                     const list = await getChannelConfigs();
                     setChannelConfigs(list);
                 } catch (err) {
@@ -595,6 +617,8 @@ const AiAgentSettings: React.FC = () => {
                         onConfirm: hideNotification,
                         onCancel: hideNotification
                     });
+                } finally {
+                    setIsLoadingChannels(false);
                 }
             },
             onCancel: hideNotification
@@ -1085,12 +1109,24 @@ const AiAgentSettings: React.FC = () => {
                 // ── CONTENIDO: PESTAÑA CANALES DE COMUNICACIÓN ────────────────────
                 <div className="space-y-6 text-left w-full animate-fade-in">
                     <div className="bg-white rounded-2xl border border-gray-150 p-6 shadow-sm space-y-4">
-                        <div className="pb-3 border-b border-gray-100">
-                            <h3 className="font-extrabold text-gray-800 text-base flex items-center gap-2">
-                                <MessageSquare className="text-indigo-500" size={20} />
-                                Canales de Comunicación (Meta APIs)
-                            </h3>
-                            <p className="text-xs text-gray-400 mt-1">Conecta tus cuentas de WhatsApp Cloud API, Facebook Messenger y cuentas de Instagram Business para recibir chats y responder desde el CRM.</p>
+                        <div className="pb-3 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                                <h3 className="font-extrabold text-gray-800 text-base flex items-center gap-2">
+                                    <MessageSquare className="text-indigo-500" size={20} />
+                                    Canales de Comunicación (Meta APIs)
+                                </h3>
+                                <p className="text-xs text-gray-400 mt-1">Conecta tus cuentas de WhatsApp Cloud API, Facebook Messenger y cuentas de Instagram Business para recibir chats y responder desde el CRM.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleRefreshChannels}
+                                disabled={isLoadingChannels}
+                                className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-indigo-600 bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-200 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                                title="Sincronizar canales con Meta Graph API en tiempo real"
+                            >
+                                <RefreshCw size={13} className={isLoadingChannels ? 'animate-spin text-indigo-600' : ''} />
+                                <span>{isLoadingChannels ? 'Sincronizando...' : 'Sincronizar Meta'}</span>
+                            </button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1104,43 +1140,77 @@ const AiAgentSettings: React.FC = () => {
                                     <div>
                                         <h4 className="font-extrabold text-gray-800 text-sm flex items-center gap-1.5">
                                             WhatsApp
-                                            {whatsappConfig && (
+                                            {isLoadingChannels ? (
+                                                <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-medium bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 animate-pulse">
+                                                    <RefreshCw size={9} className="animate-spin" /> Verificando...
+                                                </span>
+                                            ) : whatsappConfig ? (
                                                 <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                                                     <CheckCircle size={10} /> Conectado
                                                 </span>
-                                            )}
+                                            ) : null}
                                         </h4>
                                         <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                                             Conecta tu cuenta de WhatsApp Cloud API para responder a tus clientes y automatizar la captura de prospectos con el agente IA.
                                         </p>
                                     </div>
-                                    {whatsappConfig && (
-                                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-gray-600 space-y-1 font-medium">
-                                            <div><strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">Nombre de Cuenta</strong> {whatsappConfig.name}</div>
-                                            <div className="font-mono mt-1 text-[10px]"><strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">Phone Number ID</strong> {whatsappConfig.phoneNumberId}</div>
-                                            <div className="font-mono mt-1 text-[10px]"><strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">WhatsApp Business Account ID</strong> {whatsappConfig.accountId}</div>
+
+                                    {isLoadingChannels ? (
+                                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 space-y-2 animate-pulse">
+                                            <div className="h-2.5 bg-gray-200 rounded w-1/3"></div>
+                                            <div className="h-3.5 bg-gray-300 rounded w-2/3"></div>
+                                            <div className="h-2 bg-gray-200 rounded w-1/2"></div>
                                         </div>
-                                    )}
+                                    ) : whatsappConfig ? (
+                                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-gray-600 space-y-2 font-medium">
+                                            <div>
+                                                <strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">
+                                                    NOMBRE DE CUENTA OFICIAL
+                                                </strong>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    {whatsappConfig.metaDetails?.profile_picture_url && (
+                                                        <img 
+                                                            src={whatsappConfig.metaDetails.profile_picture_url} 
+                                                            alt="WhatsApp Avatar" 
+                                                            className="w-5 h-5 rounded-full object-cover border border-emerald-200 shrink-0" 
+                                                        />
+                                                    )}
+                                                    <span className="font-bold text-gray-800 text-xs">
+                                                        {whatsappConfig.waVerifiedName || whatsappConfig.name || 'Sin nombre registrado'}
+                                                    </span>
+                                                    {whatsappConfig.waVerifiedName && (
+                                                        <span title="Nombre verificado por Meta" className="inline-flex text-emerald-600">
+                                                            <CheckCircle size={12} />
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {(whatsappConfig.phoneNumberId || whatsappConfig.metaDetails?.display_phone_number) && (
+                                                    <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                                                        {whatsappConfig.metaDetails?.display_phone_number || whatsappConfig.phoneNumberId}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : null}
                                 </div>
                                 <div className="pt-5 flex flex-wrap gap-2">
                                     <Button 
                                         type="button" 
                                         variant={whatsappConfig ? "secondary" : "primary"}
-                                        className="flex-grow text-xs py-2 font-bold cursor-pointer"
+                                        disabled={isLoadingChannels}
+                                        className="flex-grow text-xs py-2 font-bold cursor-pointer disabled:opacity-60"
                                         onClick={() => whatsappConfig ? handleOpenEditModal(whatsappConfig) : handleOpenCreateModal('whatsapp')}
                                     >
-                                        {whatsappConfig ? 'Configurar / Editar' : 'Link Account'}
+                                        {isLoadingChannels ? 'Cargando...' : whatsappConfig ? 'Configurar / Editar' : 'Link Account'}
                                     </Button>
-                                    {whatsappConfig && (
-                                        <>
-                                            <button
-                                                onClick={() => handleDeleteChannel(whatsappConfig.id)}
-                                                className="p-2 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
-                                                title="Desconectar cuenta"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </>
+                                    {whatsappConfig && !isLoadingChannels && (
+                                        <button
+                                            onClick={() => handleDeleteChannel(whatsappConfig.id)}
+                                            className="p-2 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                                            title="Desconectar cuenta"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
                                     )}
                                 </div>
                             </div>
@@ -1154,33 +1224,65 @@ const AiAgentSettings: React.FC = () => {
                                     <div>
                                         <h4 className="font-extrabold text-gray-800 text-sm flex items-center gap-1.5">
                                             Facebook
-                                            {facebookConfig && (
+                                            {isLoadingChannels ? (
+                                                <span className="flex items-center gap-1 text-[10px] text-blue-700 font-medium bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 animate-pulse">
+                                                    <RefreshCw size={9} className="animate-spin" /> Verificando...
+                                                </span>
+                                            ) : facebookConfig ? (
                                                 <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                                                     <CheckCircle size={10} /> Conectado
                                                 </span>
-                                            )}
+                                            ) : null}
                                         </h4>
                                         <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                                             Gestiona tus páginas de Facebook, responde a los chats de Messenger y programa las publicaciones de tus prospectos de forma interactiva.
                                         </p>
                                     </div>
-                                    {facebookConfig && (
-                                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-gray-600 space-y-1 font-medium">
-                                            <div><strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">Nombre de Página</strong> {facebookConfig.name}</div>
-                                            <div className="font-mono mt-1 text-[10px]"><strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">ID de Página (Account ID)</strong> {facebookConfig.accountId}</div>
+
+                                    {isLoadingChannels ? (
+                                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 space-y-2 animate-pulse">
+                                            <div className="h-2.5 bg-gray-200 rounded w-1/3"></div>
+                                            <div className="h-3.5 bg-gray-300 rounded w-2/3"></div>
+                                            <div className="h-2 bg-gray-200 rounded w-1/2"></div>
                                         </div>
-                                    )}
+                                    ) : facebookConfig ? (
+                                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-gray-600 space-y-1.5 font-medium">
+                                            <div>
+                                                <strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">
+                                                    PÁGINA DE FACEBOOK CONECTADA
+                                                </strong>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    {facebookConfig.metaDetails?.profile_picture_url && (
+                                                        <img 
+                                                            src={facebookConfig.metaDetails.profile_picture_url} 
+                                                            alt="Facebook Avatar" 
+                                                            className="w-5 h-5 rounded-full object-cover border border-blue-200 shrink-0" 
+                                                        />
+                                                    )}
+                                                    <span className="font-bold text-gray-800 text-xs">
+                                                        {facebookConfig.fbPageName || facebookConfig.name || 'Fan Page no detectada'}
+                                                    </span>
+                                                </div>
+                                                {facebookConfig.accountId && (
+                                                    <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                                                        ID: {facebookConfig.accountId}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : null}
                                 </div>
                                 <div className="pt-5 flex gap-2">
                                     <Button 
                                         type="button" 
                                         variant={facebookConfig ? "secondary" : "primary"}
-                                        className="w-full text-xs py-2 font-bold cursor-pointer"
+                                        disabled={isLoadingChannels}
+                                        className="w-full text-xs py-2 font-bold cursor-pointer disabled:opacity-60"
                                         onClick={() => facebookConfig ? handleOpenEditModal(facebookConfig) : handleOpenCreateModal('facebook')}
                                     >
-                                        {facebookConfig ? 'Configurar / Editar' : 'Link Account'}
+                                        {isLoadingChannels ? 'Cargando...' : facebookConfig ? 'Configurar / Editar' : 'Link Account'}
                                     </Button>
-                                    {facebookConfig && (
+                                    {facebookConfig && !isLoadingChannels && (
                                         <button
                                             onClick={() => handleDeleteChannel(facebookConfig.id)}
                                             className="p-2 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
@@ -1201,33 +1303,65 @@ const AiAgentSettings: React.FC = () => {
                                     <div>
                                         <h4 className="font-extrabold text-gray-800 text-sm flex items-center gap-1.5">
                                             Instagram
-                                            {instagramConfig && (
+                                            {isLoadingChannels ? (
+                                                <span className="flex items-center gap-1 text-[10px] text-pink-700 font-medium bg-pink-50 px-1.5 py-0.5 rounded border border-pink-100 animate-pulse">
+                                                    <RefreshCw size={9} className="animate-spin" /> Verificando...
+                                                </span>
+                                            ) : instagramConfig ? (
                                                 <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                                                     <CheckCircle size={10} /> Conectado
                                                 </span>
-                                            )}
+                                            ) : null}
                                         </h4>
                                         <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                                             Administra tus cuentas comerciales de Instagram, recibe las consultas por mensaje directo y automatiza la captura de datos con el agente IA.
                                         </p>
                                     </div>
-                                    {instagramConfig && (
-                                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-gray-600 space-y-1 font-medium">
-                                            <div><strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">Nombre de Cuenta</strong> {instagramConfig.name}</div>
-                                            <div className="font-mono mt-1 text-[10px]"><strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">ID de Cuenta (Instagram Account ID)</strong> {instagramConfig.accountId}</div>
+
+                                    {isLoadingChannels ? (
+                                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 space-y-2 animate-pulse">
+                                            <div className="h-2.5 bg-gray-200 rounded w-1/3"></div>
+                                            <div className="h-3.5 bg-gray-300 rounded w-2/3"></div>
+                                            <div className="h-2 bg-gray-200 rounded w-1/2"></div>
                                         </div>
-                                    )}
+                                    ) : instagramConfig ? (
+                                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-gray-600 space-y-1.5 font-medium">
+                                            <div>
+                                                <strong className="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">
+                                                    CUENTA INSTAGRAM BUSINESS
+                                                </strong>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    {instagramConfig.metaDetails?.profile_picture_url && (
+                                                        <img 
+                                                            src={instagramConfig.metaDetails.profile_picture_url} 
+                                                            alt="Instagram Avatar" 
+                                                            className="w-5 h-5 rounded-full object-cover border border-pink-200 shrink-0" 
+                                                        />
+                                                    )}
+                                                    <span className="font-bold text-gray-800 text-xs text-pink-700">
+                                                        {instagramConfig.metaProfileName || (instagramConfig.igUsername ? `@${instagramConfig.igUsername}` : instagramConfig.name)}
+                                                    </span>
+                                                </div>
+                                                {instagramConfig.accountId && (
+                                                    <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                                                        ID: {instagramConfig.accountId}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : null}
                                 </div>
                                 <div className="pt-5 flex gap-2">
                                     <Button 
                                         type="button" 
                                         variant={instagramConfig ? "secondary" : "primary"}
-                                        className="w-full text-xs py-2 font-bold cursor-pointer"
+                                        disabled={isLoadingChannels}
+                                        className="w-full text-xs py-2 font-bold cursor-pointer disabled:opacity-60"
                                         onClick={() => instagramConfig ? handleOpenEditModal(instagramConfig) : handleOpenCreateModal('instagram')}
                                     >
-                                        {instagramConfig ? 'Configurar / Editar' : 'Link Account'}
+                                        {isLoadingChannels ? 'Cargando...' : instagramConfig ? 'Configurar / Editar' : 'Link Account'}
                                     </Button>
-                                    {instagramConfig && (
+                                    {instagramConfig && !isLoadingChannels && (
                                         <button
                                             onClick={() => handleDeleteChannel(instagramConfig.id)}
                                             className="p-2 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"

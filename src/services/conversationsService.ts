@@ -7,7 +7,10 @@ import type {
     WhatsAppBaseTemplate,
     UpsertBaseTemplateDto,
     SelectExistingBaseTemplateDto,
+    ChannelConfig,
 } from '../core/models/Conversation';
+
+export type { ChannelConfig };
 
 const urlBase = (import.meta.env.VITE_BASE_URL || 'http://localhost:3091') + '/api/conversations';
 
@@ -86,12 +89,12 @@ export async function simulateIncomingMessage(channel: string, externalId: strin
     return response.data;
 }
 
-export async function getChannelConfigs(): Promise<any[]> {
+export async function getChannelConfigs(): Promise<ChannelConfig[]> {
     const response = await axiosInstance.get(`${urlBase}/channels`);
     return response.data;
 }
 
-export async function saveChannelConfig(config: any): Promise<any> {
+export async function saveChannelConfig(config: any): Promise<ChannelConfig> {
     const response = await axiosInstance.post(`${urlBase}/channels`, config);
     return response.data;
 }

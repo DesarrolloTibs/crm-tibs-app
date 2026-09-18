@@ -130,3 +130,27 @@ export interface SelectExistingBaseTemplateDto {
   category?: string;
   bodyText?: string;
 }
+
+export interface ChannelConfig {
+  id: string;
+  channel: 'whatsapp' | 'facebook' | 'instagram' | string;
+  name: string;
+  accountId?: string | null;
+  phoneNumberId?: string | null;
+  appId?: string | null;
+  accessToken?: string | null;
+  verifyToken?: string | null;
+  isActive: boolean;
+  igUsername?: string | null;       
+  fbPageName?: string | null;       
+  waVerifiedName?: string | null;   
+  metaProfileName?: string | null;  
+  metaDetails?: {
+    username?: string;
+    name?: string;
+    id?: string;
+    profile_picture_url?: string;
+    display_phone_number?: string;
+  } | null;
+}
+

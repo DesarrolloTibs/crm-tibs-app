@@ -209,3 +209,23 @@ Adicional a la consola omnicanal, el sistema incluye un asistente conversacional
 * [[CRM TIBS - Cotizaciones PDF & Modulo de Productos]] — Detección y envío de cotizaciones en el feed.
 * [[CRM TIBS - Modulo de Clientes, Empresas & CRM]] — Datos del cliente que nutren la cabecera del chat.
 * [[CRM TIBS - Centro de Configuracion, Tenants & Roles]] — Configuración del bot y sub-agentes.
+
+## 🏛️ 8. Cumplimiento de Requisitos Meta App Review (pages_show_list & instagram_business_basic)
+
+### 🏛️ 8. Cumplimiento de Requisitos Meta App Review (pages_show_list & instagram_business_basic)
+
+Para satisfacer las directivas de Meta App Review manteniendo una interfaz limpia y amigable:
+
+##### 8.1 Sección Canales de Comunicación (`AiAgentSettings.tsx`)
+* **Enriquecimiento en Tiempo Real con Meta Graph API:** El endpoint `GET /api/conversations/channels` consulta directamente a Meta en tiempo real retornando nombres oficiales, fotos de perfil y números formateados mediante la interfaz `ChannelConfig`.
+* **WhatsApp Cloud API:** Muestra prioritariamente el nombre verificado oficial (`waVerifiedName`), con fallback a `channel.name`. Muestra además el número telefónico formateado (`metaDetails.display_phone_number`) o `phoneNumberId`, avatar oficial si está disponible, y estado `Conectado`.
+* **Facebook Messenger:** Muestra el nombre oficial de la Fan Page conectada (`fbPageName`), con fallback a `channel.name`. Muestra en texto secundario el ID de la página (`ID: ${channel.accountId}`), avatar de la Fan Page y badge de estado.
+* **Instagram Direct:** Muestra la cuenta comercial formateada con `@username` (`metaProfileName` o `@${igUsername}`), con fallback a `channel.name`. Expone el ID de la cuenta de Instagram (`ID: ${channel.accountId}`) y avatar oficial.
+* **Estados de Carga y Sincronización Manual:** Durante la consulta a Meta (`isLoadingChannels`), las tarjetas despliegan un skeleton animado suave. Además, se integra un botón "Sincronizar Meta" que permite forzar la re-verificación contra Meta Graph API sin recargar la pantalla.
+
+##### 8.2 Cabecera de Conversación Activa (`ChatWindowHeader.tsx`)
+* **Identificación del Activo:** En lugar de identificadores numéricos crudos, la cabecera expone directamente el nombre de la página o activo con el que se atiende al cliente:
+  - Facebook: `Atendiendo desde Facebook Page: [Nombre de la Fan Page]`
+  - Instagram: `Atendiendo desde Instagram: @[username]`
+  - WhatsApp: `Atendiendo desde WhatsApp: [Nombre de Cuenta]`
+* **Carga Defensiva:** Resuelve automáticamente el nombre del canal activo incluso ante recargas o navegación directa por parámetro URL.

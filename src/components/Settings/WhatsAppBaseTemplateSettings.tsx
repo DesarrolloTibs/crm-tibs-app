@@ -17,6 +17,7 @@ import { ValidationError } from 'yup';
 import type {
   WhatsAppBaseTemplate,
   UpsertBaseTemplateDto,
+  ChannelConfig,
 } from '../../core/models/Conversation';
 import {
   getChannelBaseTemplate,
@@ -32,12 +33,12 @@ import {
 } from '../../utils/whatsappTemplateSchema';
 
 interface WhatsAppBaseTemplateSettingsProps {
-  channelConfig: {
+  channelConfig: ChannelConfig | {
     id: string;
-    name?: string;
-    channel?: string;
-    accountId?: string;
-    phoneNumberId?: string;
+    name?: string | null;
+    channel?: string | null;
+    accountId?: string | null;
+    phoneNumberId?: string | null;
   };
   onNotification?: (type: 'success' | 'error' | 'warning', title: string, message: string) => void;
 }
