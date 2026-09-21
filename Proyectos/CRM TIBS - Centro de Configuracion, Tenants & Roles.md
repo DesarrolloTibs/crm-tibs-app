@@ -22,7 +22,7 @@ Este documento describe la arquitectura del panel de administración central ([`
 ```mermaid
 graph TD
     subgraph AmbitoSuperAdmin ["👑 Ámbito SuperAdmin (Plataforma Global)"]
-        Tenants["🏢 Gestión de Tenants (`TenantsSection`)<br/>- Aprovisionamiento de Esquemas PostgreSQL<br/>- Monitoreo de Consumo de Tokens<br/>- Tolerancia de Sobregiro (allow_extra)"]
+        Tenants["🏢 Gestión de Tenants (`TenantsSection`)<br/>- Aprovisionamiento de Esquemas PostgreSQL<br/>- Asignación Flexible de Planes (Inmediato vs Próximo Período)<br/>- Gestor Visual de Colas de Renovación Proyectadas<br/>- Monitoreo de Consumo de Tokens<br/>- Tolerancia de Sobregiro (allow_extra)"]
         Plans["💳 Catálogo de Planes SaaS (`PlansSection`)<br/>- Límite de Tokens, Precio y Facturación"]
         AICreds["🔑 Credenciales Globales IA (`GlobalAiCredentialsSettings`)<br/>- API Keys de OpenAI, Gemini y Anthropic"]
     end
@@ -53,13 +53,31 @@ graph TD
 
 ---
 
-## 🏢 1. Aprovisionamiento y Monitoreo de Tenants
+## 🏢 1. Aprovisionamiento, Asignación de Planes y Colas de Renovación (`TenantsSection.tsx`)
 
-El módulo de inquilinos ([`TenantsSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/TenantsSection.tsx) y [`tenantsService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/tenantsService.ts)) permite a los SuperAdmins:
-* **Creación de Organizaciones:** Dispara la inicialización de un nuevo esquema PostgreSQL independiente en el backend.
-* **Asignación de Planes SaaS:** Vinculación con [`plansService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/plansService.ts) para asignar límites de tokens de IA por ciclo de facturación.
-* **Control de Sobregiro (`allow_extra`):** Bandera booleana que determina si un cliente corporativo puede exceder temporalmente su cuota de tokens sin que el backend bloquee las consultas con error 402.
-* **Telemetría de Consumo:** `getTenantConsumption(schemaName)` expone el porcentaje de cuota utilizado y la fecha programada de renovación.
+El módulo de inquilinos ([`TenantsSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/TenantsSection.tsx) y [`tenantsService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/tenantsService.ts)) proporciona a los SuperAdmins una interfaz integral para el ciclo de vida del cliente corporativo:
+
+### 1.1. Aprovisionamiento Atómico
+* **Creación de Organizaciones:** Dispara la inicialización de un nuevo esquema PostgreSQL independiente en el backend con su usuario administrador inicial y plan de arranque.
+
+### 1.2. Asignación Flexible de Planes
+Modal interactivo de suscripción que soporta:
+* ⚡ **Cambio Inmediato (`immediate`):**
+  * `reset_date`: Reinicia el ciclo computando desde hoy (`NOW() + months`).
+  * `keep_current_date`: Aplica upgrade instantáneo de nivel y tokens conservando la fecha de corte actual.
+  * `updateQueuedPlans`: Actualiza en cascada los períodos ya encolados al nuevo plan.
+* 🕒 **Cambio al Próximo Período (`next_period`):**
+  * Programa el nuevo plan en la cola sin alterar el ciclo vigente para su adopción automática al corte.
+
+### 1.3. Gestor Visual de Colas de Renovación Automática
+* **Monitoreo en Tiempo Real (`getTenantRenewalQueue`):** Expone tarjetas de métricas con el corte actual, períodos en cola y la fecha límite de cobertura proyectada (`coverage_until`).
+* **Secuencia de Períodos Proyectados:** Lista ordenada `#1, #2...` con tokens, precio, duración y fechas calculadas dinámicamente (`projected_start_date` $\rightarrow$ `projected_end_date`).
+* **Cancelación Unitaria:** Cancelación de períodos específicos mediante confirmación visual con `Notification`.
+* **Encolado por Lote (`periodsCount`):** Selector de cantidad (1, 2, 3, 6, 12 períodos) para registrar pagos prepagados en una sola operación.
+* **Badges en Tabla Principal:** Chip `+N en cola` con acceso directo al gestor de renovaciones.
+
+### 1.4. Control de Consumo y Sobregiro (`allow_extra`)
+* Bandera booleana que determina si un cliente corporativo puede exceder temporalmente su cuota de tokens sin que el backend bloquee las consultas con error 402.
 
 ---
 

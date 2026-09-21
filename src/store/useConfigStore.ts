@@ -18,6 +18,8 @@ export interface TenantPlanInfo {
   allow_extra: boolean;
   logo: string | null;
   created_at: string;
+  total_queued_periods?: number;
+  queued_periods_count?: number;
   plan?: {
     plan_id: number;
     plan_name: string;

@@ -82,6 +82,10 @@ export const getSelectStyles = (error?: string) => ({
         ...baseStyles,
         color: '#94a3b8',
         fontWeight: '500'
+    }),
+    menuPortal: (baseStyles: any) => ({
+        ...baseStyles,
+        zIndex: 9999
     })
 });
 
@@ -101,8 +105,11 @@ export const Select: React.FC<CustomSelectProps> = ({
                 placeholder="Seleccione una opción..."
                 isSearchable={false}
                 className="w-full text-sm font-medium text-slate-900"
-                styles={getSelectStyles(error)}
                 {...props}
+                styles={{
+                    ...getSelectStyles(error),
+                    ...(props.styles || {})
+                }}
             />
             {error && (
                 <p className="text-rose-600 text-[10px] font-medium mt-1 ml-1">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Filter, X, Trash2, Star } from 'lucide-react';
 import Button from '../shared/Button';
+import Modal from '../shared/Modal';
 import type { FilterRule } from '../../hooks/usePipeline';
 import type { Stage } from '../../core/models/Opportunity';
 import type { OpportunityCatalogOption } from '../../core/models/OpportunityCatalog';
@@ -52,66 +53,67 @@ const PipelineCustomFilterModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50">
-          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Filter size={18} className="text-indigo-600" /> Filtro Personalizado</h3>
-          <Button variant="icon" onClick={onClose} className="!text-slate-400 hover:!text-slate-600"><X size={18} /></Button>
-        </div>
-        <div className="p-6 flex-grow overflow-y-auto flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/60 shrink-0">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-              <span>Buscar oportunidades que cumplan</span>
-              <select value={matchType} onChange={e => setMatchType(e.target.value as 'any'|'all')} className="border border-slate-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-semibold text-indigo-700 cursor-pointer">
-                <option value="any">cualquiera de</option>
-                <option value="all">todas</option>
-              </select>
-              <span>las siguientes reglas:</span>
-            </div>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer select-none">
-              <input type="checkbox" checked={includeArchived} onChange={e => setIncludeArchived(e.target.checked)} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer h-4 w-4" />
-              <span>Incluir archivadas</span>
-            </label>
+    <Modal
+      open={open}
+      onClose={onClose}
+      maxWidth="max-w-3xl"
+      height="max-h-[90vh]"
+      padding="p-0"
+      className="rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col"
+      hideCloseButton={true}
+    >
+      <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
+        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Filter size={18} className="text-indigo-600" /> Filtro Personalizado</h3>
+        <Button variant="icon" onClick={onClose} className="!text-slate-400 hover:!text-slate-600"><X size={18} /></Button>
+      </div>
+      <div className="p-6 flex-grow overflow-y-auto flex flex-col gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/60 shrink-0">
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <span>Buscar oportunidades que cumplan</span>
+            <select value={matchType} onChange={e => setMatchType(e.target.value as 'any'|'all')} className="border border-slate-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-semibold text-indigo-700 cursor-pointer">
+              <option value="any">cualquiera de</option>
+              <option value="all">todas</option>
+            </select>
+            <span>las siguientes reglas:</span>
           </div>
-          <div className="flex flex-col gap-3">
-            {customRules.length === 0 ? (
-              <div className="text-center py-8 border border-dashed border-slate-300 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center gap-3">
-                <p className="text-slate-500 text-sm">No has añadido ninguna regla de filtrado.</p>
-                <Button variant="secondary" onClick={() => setCustomRules([{ field:'nombre_proyecto', operator:'contains', value:'' }])} className="!py-2 !px-4 !text-indigo-600 !rounded-lg !text-sm !font-bold !normal-case !tracking-normal">+ Añadir primera regla</Button>
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <input type="checkbox" id="incArchived" checked={includeArchived} onChange={e => setIncludeArchived(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" />
+            <label htmlFor="incArchived" className="cursor-pointer select-none">Incluir archivadas</label>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3">
+          {customRules.map((rule, idx) => {
+            const operators = getOperatorsForField(rule.field);
+            return (
+              <div key={idx} className="flex flex-col sm:flex-row items-center gap-3 bg-white p-3 border border-slate-200 rounded-xl shadow-sm hover:border-slate-300 transition-all">
+                <select value={rule.field} onChange={e => handleRuleFieldChange(idx,e.target.value)} className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full sm:w-48 cursor-pointer">
+                  <option value="nombre_proyecto">Nombre del Proyecto</option>
+                  <option value="empresa">Empresa</option>
+                  <option value="contacto">Contacto Relacionado</option>
+                  <option value="linea_negocio">Línea de Negocio</option>
+                  <option value="monto_total">Monto Total</option>
+                  <option value="priority">Prioridad</option>
+                  <option value="stage_id">Etapa</option>
+                  <option value="ejecutivo_id">Ejecutivo</option>
+                </select>
+                <select value={rule.operator} onChange={e => handleRuleChange(idx,'operator',e.target.value)} className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full sm:w-40 cursor-pointer">
+                  {operators.map(op => <option key={op.value} value={op.value}>{op.label}</option>)}
+                </select>
+                <div className="flex-1 w-full">{renderValueInput(rule, idx)}</div>
+                <Button variant="icon" onClick={() => setCustomRules(prev => prev.filter((_,i) => i!==idx))} className="!text-rose-500 hover:!text-rose-700 hover:!bg-rose-50 shrink-0" title="Eliminar regla"><Trash2 size={16} /></Button>
               </div>
-            ) : customRules.map((rule, idx) => {
-              const operators = getOperatorsForField(rule.field);
-              return (
-                <div key={idx} className="flex flex-col sm:flex-row items-center gap-3 bg-white p-3 border border-slate-200 rounded-xl shadow-sm hover:border-slate-300 transition-all">
-                  <select value={rule.field} onChange={e => handleRuleFieldChange(idx,e.target.value)} className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full sm:w-48 cursor-pointer">
-                    <option value="nombre_proyecto">Nombre del Proyecto</option>
-                    <option value="empresa">Empresa</option>
-                    <option value="contacto">Contacto Relacionado</option>
-                    <option value="linea_negocio">Línea de Negocio</option>
-                    <option value="monto_total">Monto Total</option>
-                    <option value="priority">Prioridad</option>
-                    <option value="stage_id">Etapa</option>
-                    <option value="ejecutivo_id">Ejecutivo</option>
-                  </select>
-                  <select value={rule.operator} onChange={e => handleRuleChange(idx,'operator',e.target.value)} className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium w-full sm:w-40 cursor-pointer">
-                    {operators.map(op => <option key={op.value} value={op.value}>{op.label}</option>)}
-                  </select>
-                  <div className="flex-1 w-full">{renderValueInput(rule, idx)}</div>
-                  <Button variant="icon" onClick={() => setCustomRules(prev => prev.filter((_,i) => i!==idx))} className="!text-rose-500 hover:!text-rose-700 hover:!bg-rose-50 shrink-0" title="Eliminar regla"><Trash2 size={16} /></Button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="flex justify-between items-center px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0">
-          <Button variant="secondary" onClick={() => setCustomRules(prev => [...prev, { field:'nombre_proyecto', operator:'contains', value:'' }])} className="!py-2 !px-4 !text-sm !font-bold !normal-case !tracking-normal">+ Añadir regla</Button>
-          <div className="flex items-center gap-3">
-            <Button variant="secondary" onClick={onClose} className="!py-2 !px-4 !text-sm !font-bold !normal-case !tracking-normal">Cancelar</Button>
-            <Button variant="indigo" onClick={onApply} disabled={customRules.length===0} className="!py-2 !px-5 !text-sm !font-bold !normal-case !tracking-normal">Aplicar filtro</Button>
-          </div>
+            );
+          })}
         </div>
       </div>
-    </div>
+      <div className="flex justify-between items-center px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0">
+        <Button variant="secondary" onClick={() => setCustomRules(prev => [...prev, { field:'nombre_proyecto', operator:'contains', value:'' }])} className="!py-2 !px-4 !text-sm !font-bold !normal-case !tracking-normal">+ Añadir regla</Button>
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" onClick={onClose} className="!py-2 !px-4 !text-sm !font-bold !normal-case !tracking-normal">Cancelar</Button>
+          <Button variant="indigo" onClick={onApply} disabled={customRules.length===0} className="!py-2 !px-5 !text-sm !font-bold !normal-case !tracking-normal">Aplicar filtro</Button>
+        </div>
+      </div>
+    </Modal>
   );
 };
 

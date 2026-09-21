@@ -36,6 +36,54 @@ export interface TenantConsumptionData {
   price: number;
 }
 
+export interface RenewalQueueItem {
+  queue_id: number;
+  tenant_id: string;
+  queue_position: number;
+  plan_id: number;
+  plan_name: string;
+  tokens_limit: number;
+  price: number;
+  billing_period_months: number;
+  projected_start_date: string;
+  projected_end_date: string;
+  created_at: string;
+}
+
+export interface RenewalQueueResponse {
+  tenant_id: number;
+  tenant_name: string;
+  current_plan: any;
+  current_next_renewal_date: string | null;
+  is_active: boolean;
+  total_queued_periods: number;
+  total_queued_months: number;
+  coverage_until: string | null;
+  items: RenewalQueueItem[];
+}
+
+export interface UpdateTenantPlanPayload {
+  planId: number;
+  changeType?: 'immediate' | 'next_period';
+  immediatePolicy?: 'reset_date' | 'keep_current_date';
+  months?: number;
+  updateQueuedPlans?: boolean;
+  allowExtra?: boolean;
+}
+
+export interface UpdateTenantPlanResponse {
+  message?: string;
+  change_type?: 'immediate' | 'next_period';
+  scheduled_plan?: any;
+  tenant: TenantPlanInfo;
+}
+
+export interface EnqueueRenewalPayload {
+  planId?: number;
+  months?: number;
+  periodsCount?: number;
+}
+
 let tenantsCache: { data: TenantPlanInfo[]; timestamp: number } | null = null;
 let pendingTenantsPromise: Promise<TenantPlanInfo[]> | null = null;
 
@@ -57,7 +105,7 @@ export const getTenants = async (forceRefresh = false): Promise<TenantPlanInfo[]
   const promise = (async () => {
     try {
       const response = await axiosInstance.get(TENANTS.TENANTS);
-      const raw = response.data;
+      const raw = (response.data as any)?.data ?? response.data;
       const data: TenantPlanInfo[] = Array.isArray(raw) ? raw : (raw?.data || []);
       tenantsCache = { data, timestamp: Date.now() };
       return data;
@@ -77,14 +125,16 @@ export const getTenants = async (forceRefresh = false): Promise<TenantPlanInfo[]
 
 export const getTenantById = async (id: number): Promise<TenantPlanInfo> => {
   const response = await axiosInstance.get(`${TENANTS.TENANTS}/${id}`);
-  return response.data;
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
 };
 
 export const getMyTenantInfo = async (schemaName?: string): Promise<TenantPlanInfo | null> => {
   const response = await axiosInstance.get(`${TENANTS.TENANTS}/my-tenant`, {
     params: schemaName ? { schemaName } : {},
   });
-  return response.data;
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
 };
 
 export const uploadTenantLogo = async (tenantId: number, file: File): Promise<TenantPlanInfo> => {
@@ -95,7 +145,8 @@ export const uploadTenantLogo = async (tenantId: number, file: File): Promise<Te
       'Content-Type': 'multipart/form-data',
     },
   });
-  return response.data;
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
 };
 
 let consumptionCache: Record<string, { data: TenantConsumptionData; timestamp: number }> = {};
@@ -159,28 +210,76 @@ export const getTenantConsumption = async (schemaName?: string, forceRefresh = f
 export const provisionTenant = async (payload: ProvisionTenantPayload): Promise<ProvisionTenantResponse> => {
   const response = await axiosInstance.post(`${TENANTS.TENANTS}/provision`, payload);
   clearTenantsCache();
-  return response.data;
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
+};
+
+export const getTenantRenewalQueue = async (tenantId: number): Promise<RenewalQueueResponse> => {
+  const response = await axiosInstance.get(`${TENANTS.TENANTS}/${tenantId}/renewal-queue`);
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
 };
 
 export const updateTenantPlan = async (
   tenantId: number,
-  planId: number,
+  payloadOrPlanId: UpdateTenantPlanPayload | number,
   months: number = 1,
   allowExtra?: boolean
-): Promise<TenantPlanInfo> => {
-  const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}/plan`, { planId, months, allowExtra });
+): Promise<UpdateTenantPlanResponse> => {
+  const payload: UpdateTenantPlanPayload = typeof payloadOrPlanId === 'number'
+    ? { planId: payloadOrPlanId, months, allowExtra }
+    : payloadOrPlanId;
+
+  const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}/plan`, payload);
   clearTenantsCache();
-  return response.data;
+  const raw = (response.data as any)?.data ?? response.data;
+  const tenantObj = raw?.tenant ?? raw;
+
+  return {
+    message: raw?.message,
+    change_type: raw?.change_type,
+    scheduled_plan: raw?.scheduled_plan,
+    tenant: tenantObj,
+  };
 };
 
 export const enqueueTenantRenewal = async (
   tenantId: number,
-  planId: number,
+  payloadOrPlanId?: EnqueueRenewalPayload | number,
   months: number = 1
 ): Promise<any> => {
-  const response = await axiosInstance.post(`${TENANTS.TENANTS}/${tenantId}/enqueue-renewal`, { planId, months });
+  const payload: EnqueueRenewalPayload = typeof payloadOrPlanId === 'number'
+    ? { planId: payloadOrPlanId, months }
+    : (payloadOrPlanId || {});
+
+  const response = await axiosInstance.post(`${TENANTS.TENANTS}/${tenantId}/enqueue-renewal`, payload);
   clearTenantsCache();
-  return response.data;
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
+};
+
+export const updateQueueItem = async (
+  queueItemId: number,
+  payload: { planId?: number; billing_period_months?: number }
+): Promise<any> => {
+  const response = await axiosInstance.patch(`${TENANTS.TENANTS}/renewal-queue/${queueItemId}`, payload);
+  clearTenantsCache();
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
+};
+
+export const removeQueueItem = async (queueItemId: number): Promise<{ message: string }> => {
+  const response = await axiosInstance.delete(`${TENANTS.TENANTS}/renewal-queue/${queueItemId}`);
+  clearTenantsCache();
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
+};
+
+export const clearRenewalQueue = async (tenantId: number): Promise<{ message: string }> => {
+  const response = await axiosInstance.delete(`${TENANTS.TENANTS}/${tenantId}/renewal-queue`);
+  clearTenantsCache();
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
 };
 
 export const updateAllowExtra = async (
@@ -189,7 +288,8 @@ export const updateAllowExtra = async (
 ): Promise<TenantPlanInfo> => {
   const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}/allow-extra`, { allowExtra });
   clearTenantsCache();
-  return response.data;
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
 };
 
 export const updateTenant = async (
@@ -198,13 +298,13 @@ export const updateTenant = async (
 ): Promise<TenantPlanInfo> => {
   const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}`, payload);
   clearTenantsCache();
-  return response.data;
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
 };
 
 export const deleteTenant = async (tenantId: number): Promise<{ message: string }> => {
   const response = await axiosInstance.delete(`${TENANTS.TENANTS}/${tenantId}`);
   clearTenantsCache();
-  return response.data;
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw;
 };
-
-

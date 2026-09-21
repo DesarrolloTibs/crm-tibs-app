@@ -23,6 +23,7 @@ import TextArea from '../shared/TextArea';
 import Select from '../shared/Select';
 import Button from '../shared/Button';
 import StageStepper from '../shared/StageStepper';
+import Modal from '../shared/Modal';
 
 interface Props {
   initialData?: Opportunity;
@@ -1008,18 +1009,19 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         </div>
       </form>
 
-      {isClientModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-full overflow-y-auto">
-            <div className="p-6">
-              <ClientForm 
-                onSubmit={handleCreateClient}
-                onCancel={() => setIsClientModalOpen(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={isClientModalOpen}
+        onClose={() => setIsClientModalOpen(false)}
+        maxWidth="max-w-2xl"
+        height="h-auto"
+        padding="p-6"
+        hideCloseButton={true}
+      >
+        <ClientForm 
+          onSubmit={handleCreateClient}
+          onCancel={() => setIsClientModalOpen(false)}
+        />
+      </Modal>
     </>
   );
 };
