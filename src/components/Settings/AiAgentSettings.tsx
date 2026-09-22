@@ -3,6 +3,7 @@ import {
     getAiAgentConfig, 
     saveAiAgentConfig,
     getChannelConfigs,
+    getFacebookAuthUrl,
     saveChannelConfig,
     deleteChannelConfig,
     getSubAgents,
@@ -10,6 +11,7 @@ import {
     deleteSubAgent,
     type ChannelConfig,
 } from '../../services/conversationsService';
+import { showToast } from '../../utils/toast';
 import { getUsers } from '../../services/usersService';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
@@ -65,7 +67,8 @@ const AiAgentSettings: React.FC = () => {
 
     
     // Tab State
-    const [activeTab, setActiveTab] = useState<'general' | 'channels'>('general');
+    const initialTab = (typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('tab') === 'channels' || new URLSearchParams(window.location.search).get('meta_oauth'))) ? 'channels' : 'general';
+    const [activeTab, setActiveTab] = useState<'general' | 'channels'>(initialTab);
 
     // Config states
     const [isActive, setIsActive] = useState(true);
@@ -95,9 +98,98 @@ const AiAgentSettings: React.FC = () => {
     // Channels states
     const [channelConfigs, setChannelConfigs] = useState<ChannelConfig[]>([]);
     const [isLoadingChannels, setIsLoadingChannels] = useState(false);
+    const [connectingMetaChannel, setConnectingMetaChannel] = useState<'facebook' | 'instagram' | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChannel, setEditingChannel] = useState<ChannelConfig | null>(null);
     const [channelModalTab, setChannelModalTab] = useState<'credentials' | 'base-template'>('credentials');
+
+    const metaMessageListenerRef = useRef<((event: MessageEvent) => void) | null>(null);
+    const metaStorageListenerRef = useRef<((event: StorageEvent) => void) | null>(null);
+    const metaBroadcastChannelRef = useRef<BroadcastChannel | null>(null);
+    const metaPollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const metaPopupRef = useRef<Window | null>(null);
+
+    const cleanupMetaListeners = () => {
+        if (metaMessageListenerRef.current) {
+            window.removeEventListener('message', metaMessageListenerRef.current);
+            metaMessageListenerRef.current = null;
+        }
+        if (metaStorageListenerRef.current) {
+            window.removeEventListener('storage', metaStorageListenerRef.current);
+            metaStorageListenerRef.current = null;
+        }
+        if (metaBroadcastChannelRef.current) {
+            metaBroadcastChannelRef.current.close();
+            metaBroadcastChannelRef.current = null;
+        }
+        if (metaPollIntervalRef.current) {
+            clearInterval(metaPollIntervalRef.current);
+            metaPollIntervalRef.current = null;
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            cleanupMetaListeners();
+            if (metaPopupRef.current && !metaPopupRef.current.closed) {
+                metaPopupRef.current.close();
+            }
+        };
+    }, []);
+
+    // Listener global persistente para recargar canales tan pronto termine la conexión
+    useEffect(() => {
+        const handleOAuthGlobalResult = async (data: any) => {
+            if (data?.type === 'META_OAUTH_SUCCESS') {
+                setActiveTab('channels');
+                showToast.success(data.payload?.message || '¡Canal de Meta conectado con éxito!');
+                setIsLoadingChannels(true);
+                try {
+                    const list = await getChannelConfigs();
+                    setChannelConfigs(list);
+                    // Doble verificación diferida para asegurar sincronización en BD
+                    setTimeout(async () => {
+                        try {
+                            const updated = await getChannelConfigs();
+                            setChannelConfigs(updated);
+                        } catch (e) {}
+                    }, 1200);
+                } catch (err) {
+                    console.error('Error al recargar canales:', err);
+                } finally {
+                    setIsLoadingChannels(false);
+                    setConnectingMetaChannel(null);
+                }
+            } else if (data?.type === 'META_OAUTH_ERROR') {
+                showToast.error(data.payload?.message || 'Error al conectar con Meta.');
+                setConnectingMetaChannel(null);
+            }
+        };
+
+        let bc: BroadcastChannel | null = null;
+        try {
+            bc = new BroadcastChannel('meta_oauth_channel');
+            bc.onmessage = (event) => {
+                handleOAuthGlobalResult(event.data);
+            };
+        } catch (e) {}
+
+        const handleStorage = (event: StorageEvent) => {
+            if (event.key === 'meta_oauth_result' && event.newValue) {
+                try {
+                    const parsed = JSON.parse(event.newValue);
+                    localStorage.removeItem('meta_oauth_result');
+                    handleOAuthGlobalResult(parsed);
+                } catch (e) {}
+            }
+        };
+        window.addEventListener('storage', handleStorage);
+
+        return () => {
+            if (bc) bc.close();
+            window.removeEventListener('storage', handleStorage);
+        };
+    }, []);
 
     // Modal Form States
     const [channelType, setChannelType] = useState<'whatsapp' | 'facebook' | 'instagram'>('whatsapp');
@@ -241,6 +333,18 @@ const AiAgentSettings: React.FC = () => {
 
     useEffect(() => {
         loadSettings();
+
+        // Verificar si la pantalla cargó con parámetros de meta_oauth
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('meta_oauth') === 'success') {
+            setActiveTab('channels');
+            showToast.success(params.get('message') || '¡Canal conectado con éxito!');
+            handleRefreshChannels();
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (params.get('meta_oauth') === 'error') {
+            showToast.error(params.get('message') || 'Error al conectar con Meta.');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     }, []);
 
     const handleSave = async (e: React.FormEvent) => {
@@ -518,7 +622,11 @@ const AiAgentSettings: React.FC = () => {
 
     // ── GESTIÓN DE CANALES (CRUD FRONTEND) ────────────────────────────────────
 
-    const handleOpenCreateModal = (type: 'whatsapp' | 'facebook' | 'instagram') => {
+    const handleOpenCreateModal = (type: 'whatsapp' | 'facebook' | 'instagram' = 'whatsapp') => {
+        if (type === 'facebook' || type === 'instagram') {
+            handleConnectMeta(type);
+            return;
+        }
         setChannelType(type);
         setEditingChannel(null);
         setChannelName('');
@@ -532,6 +640,10 @@ const AiAgentSettings: React.FC = () => {
     };
 
     const handleOpenEditModal = (config: ChannelConfig) => {
+        if (config.channel === 'facebook' || config.channel === 'instagram') {
+            handleConnectMeta(config.channel as 'facebook' | 'instagram');
+            return;
+        }
         setEditingChannel(config);
         setChannelType(config.channel as 'whatsapp' | 'facebook' | 'instagram');
         setChannelName(config.name || '');
@@ -542,6 +654,111 @@ const AiAgentSettings: React.FC = () => {
         setVerifyToken(config.verifyToken || '');
         setChannelModalTab('credentials');
         setIsModalOpen(true);
+    };
+
+    const handleConnectMeta = async (channel: 'facebook' | 'instagram') => {
+        setConnectingMetaChannel(channel);
+        cleanupMetaListeners();
+
+        try {
+            const response = await getFacebookAuthUrl(channel);
+            const authUrl = response?.authUrl || (response as any)?.data?.authUrl;
+
+            if (!authUrl) {
+                throw new Error('No se recibió la URL de autenticación de Meta.');
+            }
+
+            const width = 600;
+            const height = 750;
+            const left = window.screenX + (window.outerWidth - width) / 2;
+            const top = window.screenY + (window.outerHeight - height) / 2;
+
+            const popup = window.open(
+                authUrl,
+                'meta-oauth-popup',
+                `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=no`
+            );
+
+            if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+                setConnectingMetaChannel(null);
+                showToast.error('La ventana emergente fue bloqueada por tu navegador. Permite las ventanas emergentes e intenta de nuevo.');
+                return;
+            }
+
+            metaPopupRef.current = popup;
+
+            const onOAuthResult = (data: any) => {
+                cleanupMetaListeners();
+                if (metaPopupRef.current && !metaPopupRef.current.closed) {
+                    try {
+                        metaPopupRef.current.close();
+                    } catch (e) {
+                        console.warn('No se pudo cerrar popup desde ventana principal:', e);
+                    }
+                }
+                if (data?.type === 'META_OAUTH_SUCCESS') {
+                    showToast.success(data.payload?.message || `¡Canal ${channel === 'facebook' ? 'Facebook' : 'Instagram'} conectado con éxito!`);
+                    setIsLoadingChannels(true);
+                    getChannelConfigs()
+                        .then(list => setChannelConfigs(list))
+                        .catch(err => console.error('Error al recargar canales:', err))
+                        .finally(() => setIsLoadingChannels(false));
+                } else if (data?.type === 'META_OAUTH_ERROR') {
+                    showToast.error(data.payload?.message || 'Error al conectar con Meta.');
+                }
+                setConnectingMetaChannel(null);
+            };
+
+            // 1. Escuchar por window postMessage
+            const messageListener = (event: MessageEvent) => {
+                if (event.data?.type === 'META_OAUTH_SUCCESS' || event.data?.type === 'META_OAUTH_ERROR') {
+                    onOAuthResult(event.data);
+                }
+            };
+            metaMessageListenerRef.current = messageListener;
+            window.addEventListener('message', messageListener);
+
+            // 2. Escuchar por BroadcastChannel (Brave / navegadores estrictos)
+            try {
+                const bc = new BroadcastChannel('meta_oauth_channel');
+                bc.onmessage = (event) => {
+                    if (event.data?.type === 'META_OAUTH_SUCCESS' || event.data?.type === 'META_OAUTH_ERROR') {
+                        onOAuthResult(event.data);
+                    }
+                };
+                metaBroadcastChannelRef.current = bc;
+            } catch (e) {
+                console.warn('BroadcastChannel no soportado:', e);
+            }
+
+            // 3. Escuchar por evento de almacenamiento (localStorage)
+            const storageListener = (event: StorageEvent) => {
+                if (event.key === 'meta_oauth_result' && event.newValue) {
+                    try {
+                        const parsed = JSON.parse(event.newValue);
+                        if (parsed?.type === 'META_OAUTH_SUCCESS' || parsed?.type === 'META_OAUTH_ERROR') {
+                            localStorage.removeItem('meta_oauth_result');
+                            onOAuthResult(parsed);
+                        }
+                    } catch (e) {
+                        console.warn('Error leyendo storage de OAuth:', e);
+                    }
+                }
+            };
+            metaStorageListenerRef.current = storageListener;
+            window.addEventListener('storage', storageListener);
+
+            metaPollIntervalRef.current = setInterval(() => {
+                if (popup.closed) {
+                    cleanupMetaListeners();
+                    setConnectingMetaChannel(null);
+                }
+            }, 1000);
+        } catch (error: any) {
+            cleanupMetaListeners();
+            setConnectingMetaChannel(null);
+            showToast.error(error.response?.data?.message || error.message || 'No se pudo iniciar la conexión con Meta.');
+        }
     };
 
     const handleSaveChannel = async (e: React.FormEvent) => {
@@ -1276,11 +1493,12 @@ const AiAgentSettings: React.FC = () => {
                                     <Button 
                                         type="button" 
                                         variant={facebookConfig ? "secondary" : "primary"}
-                                        disabled={isLoadingChannels}
+                                        disabled={isLoadingChannels || connectingMetaChannel !== null}
+                                        loading={connectingMetaChannel === 'facebook'}
                                         className="w-full text-xs py-2 font-bold cursor-pointer disabled:opacity-60"
-                                        onClick={() => facebookConfig ? handleOpenEditModal(facebookConfig) : handleOpenCreateModal('facebook')}
+                                        onClick={() => handleConnectMeta('facebook')}
                                     >
-                                        {isLoadingChannels ? 'Cargando...' : facebookConfig ? 'Configurar / Editar' : 'Link Account'}
+                                        {isLoadingChannels ? 'Cargando...' : facebookConfig ? 'Reconectar con Meta' : 'Conectar con Meta'}
                                     </Button>
                                     {facebookConfig && !isLoadingChannels && (
                                         <button
@@ -1355,11 +1573,12 @@ const AiAgentSettings: React.FC = () => {
                                     <Button 
                                         type="button" 
                                         variant={instagramConfig ? "secondary" : "primary"}
-                                        disabled={isLoadingChannels}
+                                        disabled={isLoadingChannels || connectingMetaChannel !== null}
+                                        loading={connectingMetaChannel === 'instagram'}
                                         className="w-full text-xs py-2 font-bold cursor-pointer disabled:opacity-60"
-                                        onClick={() => instagramConfig ? handleOpenEditModal(instagramConfig) : handleOpenCreateModal('instagram')}
+                                        onClick={() => handleConnectMeta('instagram')}
                                     >
-                                        {isLoadingChannels ? 'Cargando...' : instagramConfig ? 'Configurar / Editar' : 'Link Account'}
+                                        {isLoadingChannels ? 'Cargando...' : instagramConfig ? 'Reconectar con Meta' : 'Conectar con Meta'}
                                     </Button>
                                     {instagramConfig && !isLoadingChannels && (
                                         <button
@@ -1379,30 +1598,30 @@ const AiAgentSettings: React.FC = () => {
             )}
 
 
-            {/* ── MODAL DE CONFIGURACIÓN DE CREDENCIALES DE CANAL ───────────────────────── */}
+            {/* ── MODAL DE CONFIGURACIÓN DE CREDENCIALES DE WHATSAPP ───────────────────── */}
             <Modal 
                 open={isModalOpen} 
                 onClose={() => setIsModalOpen(false)} 
-                maxWidth={channelType === 'whatsapp' && editingChannel && channelModalTab === 'base-template' ? 'max-w-4xl' : 'max-w-lg'} 
+                maxWidth={editingChannel && channelModalTab === 'base-template' ? 'max-w-4xl' : 'max-w-lg'} 
                 height="h-auto max-h-[90vh]"
             >
                 {/* Header */}
                 <div className="pb-4 border-b border-gray-150 flex justify-between items-center pr-8 text-left">
                     <div>
                         <h3 className="font-extrabold text-gray-800 text-base flex items-center gap-2">
-                            {channelType === 'whatsapp' ? <Smartphone size={18} className="text-emerald-500" /> : channelType === 'facebook' ? <Facebook size={18} className="text-blue-500" /> : <Instagram size={18} className="text-pink-500" />}
-                            {editingChannel ? `Configuración: ${channelName || editingChannel.name}` : 'Conectar Nuevo Canal'}
+                            <Smartphone size={18} className="text-emerald-500" />
+                            {editingChannel ? `Configuración WhatsApp: ${channelName || editingChannel.name}` : 'Conectar WhatsApp Cloud API'}
                         </h3>
                         <p className="text-xs text-gray-400 mt-0.5">
                             {channelModalTab === 'base-template'
                                 ? 'Gestiona la plantilla oficial pre-aprobada para iniciar y reanudar conversaciones con impacto directo en Meta.'
-                                : 'Rellene los campos requeridos obtenidos de Meta for Developers.'}
+                                : 'Rellene los campos requeridos obtenidos de Meta for Developers para WhatsApp.'}
                         </p>
                     </div>
                 </div>
 
                 {/* Switcher de pestañas cuando se edita WhatsApp */}
-                {channelType === 'whatsapp' && editingChannel && (
+                {editingChannel && (
                     <div className="flex gap-2 border-b border-gray-150 pt-3 pb-2 text-left">
                         <button
                             type="button"
@@ -1429,7 +1648,7 @@ const AiAgentSettings: React.FC = () => {
                     </div>
                 )}
 
-                {channelType === 'whatsapp' && editingChannel && channelModalTab === 'base-template' ? (
+                {editingChannel && channelModalTab === 'base-template' ? (
                     <div className="mt-4">
                         <WhatsAppBaseTemplateSettings 
                             channelConfig={editingChannel}
@@ -1437,7 +1656,7 @@ const AiAgentSettings: React.FC = () => {
                         />
                     </div>
                 ) : (
-                    /* Formulario de credenciales */
+                    /* Formulario de credenciales WhatsApp */
                     <form onSubmit={handleSaveChannel} className="mt-4 space-y-4 text-left">
                         <div>
                             <Input 
@@ -1446,7 +1665,7 @@ const AiAgentSettings: React.FC = () => {
                                 type="text"
                                 value={channelName}
                                 onChange={(e: any) => setChannelName(e.target.value)}
-                                placeholder={channelType === 'whatsapp' ? 'Ej: Cuenta Principal de Ventas' : channelType === 'facebook' ? 'Ej: Página Oficial Tibs CRM' : 'Ej: Instagram Comercial'}
+                                placeholder="Ej: Cuenta Principal de Ventas WhatsApp"
                                 required
                             />
                         </div>
@@ -1464,7 +1683,7 @@ const AiAgentSettings: React.FC = () => {
                             </div>
                             <div>
                                 <Input 
-                                    label={channelType === 'whatsapp' ? 'WhatsApp Business Account ID' : channelType === 'facebook' ? 'Facebook Page ID' : 'Instagram Business Account ID'}
+                                    label="WhatsApp Business Account ID"
                                     id="accountId"
                                     type="text"
                                     value={accountId}
@@ -1475,19 +1694,17 @@ const AiAgentSettings: React.FC = () => {
                             </div>
                         </div>
 
-                        {channelType === 'whatsapp' && (
-                            <div>
-                                <Input 
-                                    label="Phone Number ID (WhatsApp Cloud API)"
-                                    id="phoneNumberId"
-                                    type="text"
-                                    value={phoneNumberId}
-                                    onChange={(e: any) => setPhoneNumberId(e.target.value)}
-                                    placeholder="Ej: 1234123455"
-                                    required
-                                />
-                            </div>
-                        )}
+                        <div>
+                            <Input 
+                                label="Phone Number ID (WhatsApp Cloud API)"
+                                id="phoneNumberId"
+                                type="text"
+                                value={phoneNumberId}
+                                onChange={(e: any) => setPhoneNumberId(e.target.value)}
+                                placeholder="Ej: 1234123455"
+                                required
+                            />
+                        </div>
 
                         <div>
                             <Input 
@@ -1529,7 +1746,7 @@ const AiAgentSettings: React.FC = () => {
                                 <div>
                                     <span className="block text-[9px] font-bold text-blue-700/75 uppercase tracking-wider mb-1">URL de devolución de llamada (Callback URL)</span>
                                     <div className="flex items-center bg-white border border-blue-200 rounded-lg px-2.5 py-1.5 font-mono text-[10px] text-gray-700 break-all select-all font-semibold">
-                                        {(import.meta.env.VITE_BASE_URL || 'http://localhost:3091')}/api/conversations/webhook/{channelType}
+                                        {(import.meta.env.VITE_BASE_URL || 'http://localhost:3091')}/api/conversations/webhook/whatsapp
                                     </div>
                                 </div>
                                 <div>

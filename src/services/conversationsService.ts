@@ -94,6 +94,12 @@ export async function getChannelConfigs(): Promise<ChannelConfig[]> {
     return response.data;
 }
 
+export async function getFacebookAuthUrl(channel?: 'facebook' | 'instagram'): Promise<{ authUrl: string }> {
+    const params = channel ? { channel } : undefined;
+    const response = await axiosInstance.get(`${urlBase}/oauth/facebook/auth-url`, { params });
+    return response.data;
+}
+
 export async function saveChannelConfig(config: any): Promise<ChannelConfig> {
     const response = await axiosInstance.post(`${urlBase}/channels`, config);
     return response.data;

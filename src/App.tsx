@@ -18,11 +18,25 @@ import HelpdeskPage from './pages/HelpdeskPage';
 import SupportTicketPage from './pages/SupportTicketPage';
 import DashboardPage from './pages/DashboardPage';
 import ConversationsPage from './pages/ConversationsPage';
+import OAuthCallbackPopup from './components/Settings/OAuthCallbackPopup';
 
-const App: React.FC = () => (
-    <BrowserRouter>
-        <Routes>
-            <Route path="/login" element={<LoginPage />} />
+const isOAuthPopup = typeof window !== 'undefined' && (
+    window.location.search.includes('meta_oauth') ||
+    window.location.search.includes('oauth=') ||
+    window.name === 'meta-oauth-popup' ||
+    window.location.pathname === '/oauth/callback'
+);
+
+const App: React.FC = () => {
+    if (isOAuthPopup) {
+        return <OAuthCallbackPopup />;
+    }
+
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/oauth/callback" element={<OAuthCallbackPopup />} />
+                <Route path="/login" element={<LoginPage />} />
             <Route path="/support" element={<SupportTicketPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -141,7 +155,8 @@ const App: React.FC = () => (
             <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
     </BrowserRouter>
-);
+    );
+};
 
 const CrmApp: React.FC = () => <App />;
 

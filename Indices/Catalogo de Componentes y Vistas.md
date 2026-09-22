@@ -33,7 +33,7 @@ Este documento compendia la totalidad de vistas y componentes modulares que conf
 | [`ActivitiesPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/ActivitiesPage.tsx) | `/activities` | Protegido | Calendario operativo con FullCalendar (`@fullcalendar/react`), tipos cromáticos y tabla de citas. |
 | [`ExpensesPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/ExpensesPage.tsx) | `/expenses` | Protegido | Registro y control de gastos corporativos, subida y descarga de comprobantes / facturas. |
 | [`UsersPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/UsersPage.tsx) | `/users` | Protegido (Admin) | Administración de usuarios, asignación de roles RBAC, activación/desactivación y avatar. |
-| [`SettingsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/SettingsPage.tsx) | `/settings` | Protegido | Centro global de configuración: empresa, calendarios externos, catálogos, credenciales IA y tenants. |
+| [`SettingsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/SettingsPage.tsx) | `/settings` | Protegido | Centro global de configuración: empresa, canales, calendarios externos, catálogos, credenciales IA y tenants. |
 
 ---
 
@@ -78,15 +78,17 @@ Este documento compendia la totalidad de vistas y componentes modulares que conf
 * [`SettingsSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/SettingsSidebar.tsx) — Menú de navegación vertical de opciones del tenant y del sistema.
 * [`MyCompanySection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/MyCompanySection.tsx) — Ajustes de la organización: nombre comercial, logotipo y datos fiscales.
 * [`CalendarIntegrationSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/CalendarIntegrationSettings.tsx) — Vinculación OAuth2 con Google Calendar, Microsoft Outlook y CalDAV de Apple iCloud.
-* [`AiAgentSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiAgentSettings.tsx) — Parámetros de comportamiento del bot omnicanal y gestión de sub-agentes.
+* [`AiAgentSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiAgentSettings.tsx) — Tarjetas de canales omnicanal (WhatsApp, Facebook Messenger, Instagram Direct) con vinculación OAuth2 directa, listeners IPC reactivos para auto-recarga de canales, parámetros de comportamiento del bot y gestión de sub-agentes.
+* [`FacebookInstagramConnectModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/FacebookInstagramConnectModal.tsx) — Modal unificado de conexión con Meta OAuth2 en 1 solo clic. Elimina inputs técnicos en la interfaz y conecta Facebook o Instagram mediante ventana emergente desatendida.
+* [`OAuthCallbackPopup.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/OAuthCallbackPopup.tsx) — Receptor de la redirección OAuth de Meta (`/oauth/callback`). Dispara comunicación multi-canal IPC (`BroadcastChannel`, `postMessage`, `localStorage`) hacia la ventana principal y ejecuta `window.close()` para retorno transparente.
 * [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/WhatsAppBaseTemplateSettings.tsx) — Configuración y sincronización directa con Meta de la Plantilla Base de WhatsApp. Interfaz minimalista enfocada exclusivamente en los 3 campos de contenido (encabezado, cuerpo con validación matemática de ratio de Meta y pie de mensaje), omitiendo completamente el nombre técnico, categorías e idiomas para evitar sobrecargar al usuario.
 * [`GlobalAiCredentialsSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/GlobalAiCredentialsSettings.tsx) — Configuración de llaves de API (OpenAI, Anthropic, Gemini) a nivel de plataforma.
 * [`TenantsSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/TenantsSection.tsx) — Aprovisionamiento de inquilinos, monitoreo de cuotas y asignación de esquemas DB.
 * [`PlansSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/PlansSection.tsx) — Catálogo de planes SaaS, límites de tokens y precios de suscripción.
 
-## 🛠️ 3. Componentes Compartidos del Sistema (`src/components/shared/`)
+## 🛠️ 3. Componentes Compartidos del Sistema (`src/components/shared/` & Utilerías)
 
-| Componente | Propósito Técnico |
+| Componente / Utilidad | Propósito Técnico |
 | :--- | :--- |
 | [`Button.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Button.tsx) | Botón interactivo multivariante (`primary`, `secondary`, `danger`, `outline`) con soporte de spinners de carga. |
 | [`Input.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Input.tsx) | Campo de texto accesible con soporte de iconos prefix/suffix y manejo de errores Yup. |
@@ -100,6 +102,7 @@ Este documento compendia la totalidad de vistas y componentes modulares que conf
 | [`UnifiedSearchBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/UnifiedSearchBar.tsx) | Barra de filtrado universal con debounce y chips de parámetros activos. |
 | [`StageStepper.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/StageStepper.tsx) | Indicador visual de progreso tipo "pasos" para el avance de oportunidades o tickets. |
 | [`Badge.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Badge.tsx) | Etiqueta cromática compacta para estatus, roles y tipos. |
+| [`toast.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/utils/toast.ts) | Utilería `showToast` construida sobre SweetAlert2 (`Swal.mixin({ toast: true, position: 'top-end', ... })`), proveyendo retroalimentación visual reactiva sin alterar la composición de componentes. |
 
 ---
 

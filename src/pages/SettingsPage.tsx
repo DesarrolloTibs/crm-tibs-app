@@ -30,6 +30,10 @@ const SettingsPage: React.FC = () => {
   const { selectedTenant } = useConfigStore();
 
   const [activeTab, setActiveTabState] = useState<SettingTab>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('meta_oauth') || params.get('tab') === 'channels' || params.get('tab') === 'ai-agent-settings') {
+      return 'ai-agent-settings';
+    }
     const saved = sessionStorage.getItem('settingsActiveTab') as SettingTab;
     if (saved) {
       if (!isAdmin && saved !== 'my-calendar') {

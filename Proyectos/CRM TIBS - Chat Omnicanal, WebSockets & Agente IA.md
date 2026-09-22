@@ -14,7 +14,7 @@ status: produccion
 
 # 💬 CRM TIBS — Chat Omnicanal, WebSockets & Agente IA
 
-Este documento detalla la arquitectura de comunicación en tiempo real de **CRM TIBS App**, la integración bidireccional con **Socket.IO Client** ([`socket.io-client`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/package.json)), el hook orquestador [`useConversationsSocket.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useConversationsSocket.ts), el conmutador de control del **Agente de IA**, el simulador de mensajes entrantes, la política de ventana de 23 horas de WhatsApp, el módulo de **Plantilla Base de WhatsApp para Apertura/Reactivación (`crm_inicio_conversacion`)**, y el widget asistente flotante [`WebChat.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/WebChat.tsx).
+Este documento detalla la arquitectura de comunicación en tiempo real de **CRM TIBS App**, la integración bidireccional con **Socket.IO Client** ([`socket.io-client`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/package.json)), el hook orquestador [`useConversationsSocket.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useConversationsSocket.ts), el conmutador de control del **Agente de IA**, el simulador de mensajes entrantes, la política de ventana de 23 horas de WhatsApp, el módulo de **Plantilla Base de WhatsApp para Apertura/Reactivación (`crm_inicio_conversacion`)**, el flujo de **Vinculación OAuth2 en 1 Clic para Facebook e Instagram**, y el widget asistente flotante [`WebChat.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/WebChat.tsx).
 
 ---
 
@@ -101,6 +101,8 @@ Debido a que los listeners de Socket.IO se registran una sola vez en un `useEffe
   * **Cabecera ([`ChatWindowHeader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatWindowHeader.tsx)):** Pill interactivo con tooltip que detalla la fecha y hora de expiración, con navegación directa al catálogo de plantillas al hacer clic.
 * **Intercepción Defensiva:** Si se intenta enviar un mensaje de texto libre y el backend retorna HTTP 400 por expiración de ventana, [`useConversationsSocket.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useConversationsSocket.ts) marca la ventana como inactiva localmente, notifica al usuario y abre automáticamente el selector.
 
+---
+
 ## ⚡ 4. Plantilla Base de WhatsApp: Configuración Meta y Envío Rápido en 1 Clic
 
 La Plantilla Base (`crm_inicio_conversacion`) resuelve la fricción de contactar a un cliente por primera vez o reanudar una conversación tras la expiración de la ventana de 23 horas.
@@ -171,6 +173,8 @@ Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proy
     * [`Input.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Input.tsx) y [`TextArea.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/TextArea.tsx): Captura de parámetros dinámicos de plantillas y entradas del panel simulador.
     * [`Loader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Loader.tsx) y [`Notification.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Notification.tsx): Cargas y avisos globales del sistema.
 
+---
+
 ## 📬 5. Rastreo de Estados de Entrega (Delivery Receipts)
 
 * **Estados soportados:** `'pending' | 'sent' | 'delivered' | 'read' | 'failed'`.
@@ -203,29 +207,84 @@ Adicional a la consola omnicanal, el sistema incluye un asistente conversacional
 
 ---
 
+## 🏛️ 8. Vinculación Meta OAuth2 en 1 Clic y Cumplimiento App Review
+
+Para satisfacer las directivas de Meta App Review (`pages_show_list`, `pages_manage_metadata`, `pages_messaging`, `instagram_business_basic`, `instagram_manage_messages`) manteniendo una interfaz limpia y amigable:
+
+### 8.1 Sección Canales de Comunicación (`AiAgentSettings.tsx`)
+* **Vinculación Desatendida OAuth2 en 1 Clic:**
+  * **Botones Independientes:** Cada tarjeta comercial cuenta con su propio botón de conexión dedicado:
+    - **Facebook Messenger:** Dispara `handleConnectMeta('facebook')` consumiendo `GET /api/conversations/oauth/facebook/auth-url?channel=facebook`. Solicita exclusivamente los permisos de Fan Page y vincula la página seleccionada.
+    - **Instagram Direct:** Dispara `handleConnectMeta('instagram')` consumiendo `GET /api/conversations/oauth/facebook/auth-url?channel=instagram`. Solicita los permisos de Instagram Business y vincula exclusivamente la cuenta de Instagram conectada.
+  * **Abstracción Total de Complejidad Técnica:** Se eliminaron definitivamente de la interfaz los inputs manuales técnicos (App ID, Page ID, Token de acceso permanente, Verify Token y Callback URL). La vinculación se resuelve íntegramente mediante el handshake de Meta.
+  * **Apertura en Popup Aislado:** La autorización se despliega en una ventana emergente centrada (`width=600, height=700`), manteniendo al usuario en su contexto de trabajo en el CRM.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User as Usuario / Admin
+    participant Settings as AiAgentSettings.tsx
+    participant Service as conversationsService
+    participant Backend as NestJS API (/oauth/facebook)
+    participant Meta as Meta Dialog OAuth
+    participant Popup as OAuthCallbackPopup.tsx (App.tsx)
+
+    User->>Settings: Clic "Conectar con Facebook" o "Instagram"
+    Settings->>Service: getFacebookAuthUrl(channel)
+    Service->>Backend: GET /api/conversations/oauth/facebook/auth-url?channel=:channel
+    Backend-->>Settings: { authUrl: "https://facebook.com/dialog/oauth?..." }
+    Settings->>Popup: window.open(authUrl, 'meta_oauth_popup', 'width=600,height=700')
+    Popup->>Meta: Usuario autoriza páginas/cuenta en Meta
+    Meta->>Backend: Callback con code OAuth2
+    Backend-->>Popup: Redirección /oauth/callback?meta_oauth=success&channel=:channel
+    Note over Popup: Intercepción temprana en App.tsx (sin cargar shell del CRM)
+    Popup->>Settings: Multi-Canal IPC (BroadcastChannel + postMessage + localStorage)
+    Popup->>Popup: window.close()
+    Note over Settings: Listener IPC reactivo recibe confirmación
+    Settings->>Backend: getChannelConfigs() (Hot-Reload)
+    Settings->>User: showToast("Canal conectado con éxito", "success")
+```
+
+### 8.2 Arquitectura de Retorno, Autocierre y Comunicación IPC Multi-Canal (`OAuthCallbackPopup.tsx`)
+* **Detección Temprana en `App.tsx`:**
+  * Para evitar que la ventana emergente cargue el shell completo del CRM, verifique sesión o intente navegar a `/conversations` (lo cual ocurría por políticas de protección o redirecciones predeterminadas), `App.tsx` evalúa tempranamente `window.location.search.includes('meta_oauth') || window.location.pathname === '/oauth/callback'`.
+  * Si la condición se cumple, se renderiza directamente `<OAuthCallbackPopup />` en aislamiento total.
+* **Mecanismo de Notificación Tripartita Resiliente a Escudos de Navegadores:**
+  * Ciertos navegadores con políticas estrictas de privacidad (como Brave Shields o Safari ITP) eliminan la referencia `window.opener` (`null`) al producirse redirecciones entre dominios cruzados (Meta $\rightarrow$ CRM).
+  * Para garantizar que la ventana principal reciba el evento sin importar las restricciones del navegador, `OAuthCallbackPopup` emite simultáneamente por 3 vías de comunicación inter-proceso (IPC):
+    1. **`BroadcastChannel('meta_oauth_channel')`:** Canal nativo entre ventanas/pestañas del mismo origen que no depende de punteros de memoria ni referencias a `window.opener`.
+    2. **`window.opener.postMessage(...)`:** Vía directa para navegadores convencionales (Chrome, Firefox, Edge).
+    3. **`localStorage.setItem('meta_oauth_result', ...)`:** Genera un evento `storage` capturado inmediatamente por listeners en la ventana padre.
+* **Cierre Automático y Contingencia en Padre:**
+  * El popup ejecuta `window.close()` en 300ms tras emitir las señales.
+  * Como contingencia adicional para navegadores que bloquean llamadas de cierre generadas por script, el componente padre [`AiAgentSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiAgentSettings.tsx) mantiene la referencia `metaPopupRef.current` y fuerza el cierre de la ventana en cuanto detecta el resultado.
+
+### 8.3 Recarga en Caliente de la Sección de Canales (Hot-Reload)
+* **Sincronización Reactiva:** [`AiAgentSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiAgentSettings.tsx) implementa un `useEffect` con suscripción triple a `BroadcastChannel`, eventos `storage` y eventos `message`.
+* **Actualización en Tiempo Real:** Al recibir la señal de éxito, dispara inmediatamente `getChannelConfigs()`, actualizando en caliente la tarjeta del canal vinculado (avatar oficial de Meta, nombre de Fan Page o @usuario de Instagram, ID de activo y badge `Conectado`) sin requerir recargar la página.
+* **Retroalimentación con SweetAlert2:** Notifica al usuario en la esquina superior con el sistema unificado de toasts ([`toast.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/utils/toast.ts)).
+
+### 8.4 Enriquecimiento en Tiempo Real con Meta Graph API
+* El endpoint `GET /api/conversations/channels` consulta directamente a Meta en tiempo real retornando nombres oficiales, fotos de perfil y números formateados mediante la interfaz `ChannelConfig`.
+* **WhatsApp Cloud API:** Muestra prioritariamente el nombre verificado oficial (`waVerifiedName`), con fallback a `channel.name`. Muestra además el número telefónico formateado (`metaDetails.display_phone_number`) o `phoneNumberId`, avatar oficial si está disponible, y estado `Conectado`.
+* **Facebook Messenger:** Muestra el nombre oficial de la Fan Page conectada (`fbPageName`), con fallback a `channel.name`. Muestra en texto secundario el ID de la página (`ID: ${channel.accountId}`), avatar de la Fan Page y badge de estado.
+* **Instagram Direct:** Muestra la cuenta comercial formateada con `@username` (`metaProfileName` o `@${igUsername}`), con fallback a `channel.name`. Expone el ID de la cuenta de Instagram (`ID: ${channel.accountId}`) y avatar oficial.
+* **Estados de Carga y Sincronización Manual:** Durante la consulta a Meta (`isLoadingChannels`), las tarjetas despliegan un skeleton animado suave. Además, se integra un botón "Sincronizar Meta" que permite forzar la re-verificación contra Meta Graph API sin recargar la pantalla.
+
+### 8.5 Cabecera de Conversación Activa (`ChatWindowHeader.tsx`)
+* **Identificación del Activo:** En lugar de identificadores numéricos crudos, la cabecera expone directamente el nombre de la página o activo con el que se atiende al cliente:
+  - Facebook: `Atendiendo desde Facebook Page: [Nombre de la Fan Page]`
+  - Instagram: `Atendiendo desde Instagram: @[username]`
+  - WhatsApp: `Atendiendo desde WhatsApp: [Nombre de Cuenta]`
+* **Carga Defensiva:** Resuelve automáticamente el nombre del canal activo incluso ante recargas o navegación directa por parámetro URL.
+
+---
+
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Arquitectura Frontend & React 19]] — Stack y estándares de desarrollo.
 * [[CRM TIBS - Cotizaciones PDF & Modulo de Productos]] — Detección y envío de cotizaciones en el feed.
 * [[CRM TIBS - Modulo de Clientes, Empresas & CRM]] — Datos del cliente que nutren la cabecera del chat.
 * [[CRM TIBS - Centro de Configuracion, Tenants & Roles]] — Configuración del bot y sub-agentes.
-
-## 🏛️ 8. Cumplimiento de Requisitos Meta App Review (pages_show_list & instagram_business_basic)
-
-### 🏛️ 8. Cumplimiento de Requisitos Meta App Review (pages_show_list & instagram_business_basic)
-
-Para satisfacer las directivas de Meta App Review manteniendo una interfaz limpia y amigable:
-
-##### 8.1 Sección Canales de Comunicación (`AiAgentSettings.tsx`)
-* **Enriquecimiento en Tiempo Real con Meta Graph API:** El endpoint `GET /api/conversations/channels` consulta directamente a Meta en tiempo real retornando nombres oficiales, fotos de perfil y números formateados mediante la interfaz `ChannelConfig`.
-* **WhatsApp Cloud API:** Muestra prioritariamente el nombre verificado oficial (`waVerifiedName`), con fallback a `channel.name`. Muestra además el número telefónico formateado (`metaDetails.display_phone_number`) o `phoneNumberId`, avatar oficial si está disponible, y estado `Conectado`.
-* **Facebook Messenger:** Muestra el nombre oficial de la Fan Page conectada (`fbPageName`), con fallback a `channel.name`. Muestra en texto secundario el ID de la página (`ID: ${channel.accountId}`), avatar de la Fan Page y badge de estado.
-* **Instagram Direct:** Muestra la cuenta comercial formateada con `@username` (`metaProfileName` o `@${igUsername}`), con fallback a `channel.name`. Expone el ID de la cuenta de Instagram (`ID: ${channel.accountId}`) y avatar oficial.
-* **Estados de Carga y Sincronización Manual:** Durante la consulta a Meta (`isLoadingChannels`), las tarjetas despliegan un skeleton animado suave. Además, se integra un botón "Sincronizar Meta" que permite forzar la re-verificación contra Meta Graph API sin recargar la pantalla.
-
-##### 8.2 Cabecera de Conversación Activa (`ChatWindowHeader.tsx`)
-* **Identificación del Activo:** En lugar de identificadores numéricos crudos, la cabecera expone directamente el nombre de la página o activo con el que se atiende al cliente:
-  - Facebook: `Atendiendo desde Facebook Page: [Nombre de la Fan Page]`
-  - Instagram: `Atendiendo desde Instagram: @[username]`
-  - WhatsApp: `Atendiendo desde WhatsApp: [Nombre de Cuenta]`
-* **Carga Defensiva:** Resuelve automáticamente el nombre del canal activo incluso ante recargas o navegación directa por parámetro URL.
+* [[Catalogo de Componentes y Vistas]] — Inventario de componentes y vistas del sistema.
+* [[Matriz de Servicios y Hooks API]] — Servicios REST y WebSocket de mensajería.

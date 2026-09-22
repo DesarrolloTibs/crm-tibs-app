@@ -13,7 +13,7 @@ status: produccion
 
 # ⚙️ CRM TIBS — Centro de Configuración, Tenants & Roles
 
-Este documento describe la arquitectura del panel de administración central ([`SettingsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/SettingsPage.tsx)), la gestión de inquilinos (**Tenants**) y planes de suscripción SaaS, la configuración de credenciales de Inteligencia Artificial y la gobernanza de usuarios mediante **Control de Acceso Basado en Roles (RBAC)**.
+Este documento describe la arquitectura del panel de administración central ([`SettingsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/SettingsPage.tsx)), la gestión de inquilinos (**Tenants**) y planes de suscripción SaaS, la configuración de canales de comunicación omnicanal, las credenciales de Inteligencia Artificial y la gobernanza de usuarios mediante **Control de Acceso Basado en Roles (RBAC)**.
 
 ---
 
@@ -32,7 +32,7 @@ graph TD
         Users["👥 Gestión de Usuarios (`UsersPage`)<br/>- Alta de Ejecutivos, Roles y Avatares"]
         Catalogs["📑 Catálogos Dinámicos (`CatalogSubTabsPanel`)<br/>- Líneas de Negocio, Entregas y Licencias"]
         CronSLA["⏰ Cron de Mesa de Ayuda (`HelpdeskCronSettings`)"]
-        BotConfig["🤖 Ajustes del Agente IA (`AiAgentSettings`)"]
+        BotConfig["🤖 Canales y Agente IA (`AiAgentSettings`)<br/>- WhatsApp Cloud API & Plantilla Base<br/>- Vinculación Meta OAuth2 (Facebook e Instagram)<br/>- Parámetros del Bot y Sub-Agentes"]
     end
 
     subgraph AmbitoPersonal ["👤 Ámbito Ejecutivo / Usuario"]
@@ -76,8 +76,7 @@ Modal interactivo de suscripción que soporta:
 * **Encolado por Lote (`periodsCount`):** Selector de cantidad (1, 2, 3, 6, 12 períodos) para registrar pagos prepagados en una sola operación.
 * **Badges en Tabla Principal:** Chip `+N en cola` con acceso directo al gestor de renovaciones.
 
-### 1.4. Control de Consumo y Sobregiro (`allow_extra`)
-* Bandera booleana que determina si un cliente corporativo puede exceder temporalmente su cuota de tokens sin que el backend bloquee las consultas con error 402.
+### 1.4. Control de Consumo y Sobregiro (`allow_extra`)\r\n* Bandera booleana que determina si un cliente corporativo puede exceder temporalmente su cuota de tokens sin que el backend bloquee las consultas con error 402.
 
 ---
 
@@ -102,8 +101,9 @@ A través de [`CatalogSubTabsPanel.tsx`](file:///c:/Users/sopor/Proyectos/CRM/cr
 
 ---
 
-## 🤖 4. Credenciales de IA y Ajustes del Agente Omnicanal
+## 🤖 4. Canales de Comunicación, Credenciales de IA y Agente Omnicanal
 
+* **Canales Omnicanal y Meta OAuth2 ([`AiAgentSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiAgentSettings.tsx)):** Gestión de canales comerciales (WhatsApp Cloud API, Facebook Messenger e Instagram Direct). Incluye vinculación en 1 solo clic vía OAuth2 con ventana emergente desatendida, autocierre mediante IPC (`BroadcastChannel`, `postMessage`, `localStorage`) y recarga reactiva de canales en caliente (`getChannelConfigs`).
 * **Credenciales Maestras ([`GlobalAiCredentialsSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/GlobalAiCredentialsSettings.tsx)):** Gestión de llaves de OpenAI, Google Gemini o Anthropic Claude utilizadas por los microservicios de IA de la plataforma.
 * **Comportamiento del Bot ([`AiAgentSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiAgentSettings.tsx)):** Parámetros de temperatura, instrucciones de saludo por canal y asignación de sub-agentes especializados por área de negocio.
 
