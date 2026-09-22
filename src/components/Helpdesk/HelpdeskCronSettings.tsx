@@ -114,9 +114,9 @@ const HelpdeskCronSettings: React.FC = () => {
       description="Configura cuándo se envía el correo automático para el recordatorio de oportunidades y tickets sin atención."
       icon={<Bell size={18} />}
     >
-
-      {/* Selector de modo */}
-      <div className="flex flex-col gap-2">
+      <div className="space-y-6 w-full">
+        {/* Selector de modo */}
+        <div className="flex flex-col gap-2">
         <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
           Modo de ejecución
         </span>
@@ -267,6 +267,7 @@ const HelpdeskCronSettings: React.FC = () => {
           <Save size={15} className="mr-2" />
           Guardar configuración
         </Button>
+      </div>
       </div>
     </SettingsContainer>
   );
