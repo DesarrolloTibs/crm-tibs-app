@@ -33,7 +33,7 @@ const ProfileImageUploadModal: React.FC<ProfileImageUploadModalProps> = ({ user,
     try {
       await uploadProfileImage(user.id, selectedFile);
       setNotification({ show: true, type: 'success', title: '¡Éxito!', message: 'Imagen de perfil actualizada.', onConfirm: () => { hideNotification(); onUploadSuccess(); } });
-    } catch (error) {
+    } catch {
       setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo subir la imagen.', onConfirm: hideNotification });
     } finally {
       setUploading(false);
