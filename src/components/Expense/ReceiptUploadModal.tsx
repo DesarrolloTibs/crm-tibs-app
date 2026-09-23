@@ -33,7 +33,7 @@ const ReceiptUploadModal: React.FC<ReceiptUploadModalProps> = ({ expense, onClos
         try {
             await uploadReceipt(expense.id, selectedFile);
             setNotification({ show: true, type: 'success', title: '¡Éxito!', message: 'Comprobante subido correctamente.', onConfirm: () => { hideNotification(); onUploadSuccess(); } });
-        } catch (error) {
+        } catch {
             setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo subir el comprobante.', onConfirm: hideNotification });
         } finally {
             setUploading(false);
@@ -44,7 +44,7 @@ const ReceiptUploadModal: React.FC<ReceiptUploadModalProps> = ({ expense, onClos
         if (expense.id && expense.receiptUrl) {
             try {
                 await downloadReceipt(expense.id, `comprobante-${expense.id}.jpg`);
-            } catch (error) {
+            } catch {
                 setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo descargar el comprobante.', onConfirm: hideNotification });
             }
         }

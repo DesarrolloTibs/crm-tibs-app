@@ -72,7 +72,10 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSelectChange = (option: any, field: 'client_id' | 'opportunity_id') => {
+    const handleSelectChange = (
+        option: { value: string; label: string } | null,
+        field: 'client_id' | 'opportunity_id'
+    ) => {
         setForm(prev => ({
             ...prev,
             [field]: option ? option.value : '',
@@ -87,7 +90,7 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
             if (!isNaN(amount)) {
                 setForm(prev => ({
                     ...prev,
-                    monto: amount.toFixed(2) as any
+                    monto: Number(amount.toFixed(2))
                 }));
             }
         }
