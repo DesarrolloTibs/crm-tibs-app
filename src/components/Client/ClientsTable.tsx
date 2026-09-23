@@ -1,160 +1,194 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import type { Client } from '../../core/models/Client';
-import { Edit, Inbox, UserCheck, UserX, ChevronDown, ChevronUp } from 'lucide-react';
-import Button from '../shared/Button';
+import { Edit, UserCheck, UserX } from 'lucide-react';
+import Table, { type ColumnDef } from '../shared/Table';
 
 interface Props {
   clients: Client[];
   onEdit: (client: Client) => void;
   onUpdateStatus: (client: Client) => void;
   isAdmin: boolean;
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  maxHeight?: string;
+  loading?: boolean;
 }
 
-const ClientsTable: React.FC<Props> = ({ clients, onEdit, onUpdateStatus, isAdmin, currentPage, totalPages, onPageChange }) => {
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+const ClientsTable: React.FC<Props> = ({
+  clients,
+  onEdit,
+  onUpdateStatus,
+  isAdmin,
+  currentPage,
+  totalPages,
+  onPageChange,
+  maxHeight,
+  loading = false,
+}) => {
+  const columns = useMemo<ColumnDef<Client>[]>(
+    () => [
+      {
+        id: 'cliente',
+        header: 'Cliente',
+        accessorFn: (row) => `${row.nombre} ${row.apellido}`,
+        cell: ({ row }) => (
+          <p className="font-semibold text-gray-900">
+            {row.original.nombre} {row.original.apellido}
+          </p>
+        ),
+        meta: {
+          mobileLabel: 'Cliente',
+        },
+      },
+      {
+        id: 'empresa',
+        header: 'Empresa',
+        accessorFn: (row) => row.company?.nombre || row.empresa || '',
+        cell: ({ row }) => (
+          <p className="text-gray-700">
+            {row.original.company?.nombre || row.original.empresa || '-'}
+          </p>
+        ),
+        meta: {
+          mobileLabel: 'Empresa',
+        },
+      },
+      {
+        accessorKey: 'correo',
+        header: 'Correo',
+        cell: ({ getValue }) => (
+          <p className="text-gray-700">{getValue<string>()}</p>
+        ),
+        meta: {
+          mobileLabel: 'Correo',
+          hideOnMobile: true,
+        },
+      },
+      {
+        accessorKey: 'telefono',
+        header: 'Teléfono',
+        cell: ({ getValue }) => (
+          <p className="text-gray-700">{getValue<string>()}</p>
+        ),
+        meta: {
+          mobileLabel: 'Teléfono',
+        },
+      },
+      {
+        accessorKey: 'category',
+        header: 'Categoría',
+        cell: ({ getValue }) => (
+          <p className="text-gray-700">{getValue<string>() ?? 'N/A'}</p>
+        ),
+        meta: {
+          mobileLabel: 'Categoría',
+          hideOnMobile: true,
+        },
+      },
+      {
+        accessorKey: 'estatus',
+        header: 'Estado',
+        cell: ({ getValue }) => {
+          const status = getValue<boolean>();
+          return (
+            <span
+              className={`relative inline-block px-3 py-1 font-semibold leading-tight ${
+                status ? 'text-green-900' : 'text-red-900'
+              } max-w-fit`}
+            >
+              <span
+                aria-hidden
+                className={`absolute inset-0 ${
+                  status ? 'bg-green-200' : 'bg-red-200'
+                } opacity-50 rounded-full`}
+              ></span>
+              <span className="relative">{status ? 'Activo' : 'Inactivo'}</span>
+            </span>
+          );
+        },
+        meta: {
+          mobileLabel: 'Estado',
+          hideOnMobile: true,
+        },
+      },
+      {
+        accessorKey: 'puesto',
+        header: 'Puesto',
+        cell: ({ getValue }) => (
+          <p className="text-gray-700">{getValue<string>()}</p>
+        ),
+        meta: {
+          mobileLabel: 'Puesto',
+          hideOnMobile: true,
+        },
+      },
+      {
+        id: 'ejecutivo',
+        header: 'Ejecutivo',
+        accessorFn: (row) => row.ejecutivo?.username ?? '',
+        cell: ({ row }) => (
+          <p className="text-gray-700">{row.original.ejecutivo?.username ?? 'N/A'}</p>
+        ),
+        meta: {
+          mobileLabel: 'Ejecutivo',
+          hideOnMobile: true,
+        },
+      },
+      {
+        id: 'acciones',
+        header: '',
+        enableSorting: false,
+        cell: ({ row }) => {
+          const client = row.original;
+          return (
+            <div className="flex space-x-1">
+              <button
+                onClick={() => onEdit(client)}
+                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full cursor-pointer"
+                title="Editar"
+              >
+                <Edit size={18} />
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => onUpdateStatus(client)}
+                  className={`p-2 text-gray-500 rounded-full cursor-pointer ${
+                    client.estatus
+                      ? 'hover:text-yellow-600 hover:bg-yellow-100'
+                      : 'hover:text-green-600 hover:bg-green-100'
+                  }`}
+                  title={client.estatus ? 'Desactivar' : 'Reactivar'}
+                >
+                  {client.estatus ? <UserX size={18} /> : <UserCheck size={18} />}
+                </button>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [isAdmin, onEdit, onUpdateStatus]
+  );
 
-  const toggleRow = (id: string) => {
-    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
-  };
+  const isExternalPagination =
+    typeof totalPages === 'number' && typeof onPageChange === 'function';
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full border-separate block md:table" style={{ borderSpacing: '0 0.75rem' }}>
-        <thead className="hidden md:table-header-group">
-          <tr>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Empresa</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Correo</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Teléfono</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Categoría</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Puesto</th>
-            <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Ejecutivo</th>
-            <th className="p-4"></th>
-          </tr>
-        </thead>
-        <tbody className="block md:table-row-group">
-          {clients.length > 0 ? (
-            clients.map(client => {
-              const isExpanded = expandedRows[client.id!];
-              return (
-                <tr key={client.id} className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px block md:table-row mb-4 md:mb-0">
-                  <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none md:rounded-l-lg">
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Cliente</span>
-                      <p className="font-semibold text-gray-900">{client.nombre} {client.apellido}</p>
-                    </div>
-                  </td>
-                  <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Empresa</span>
-                      <p className="text-gray-700">{client.company?.nombre || client.empresa || '-'}</p>
-                    </div>
-                  </td>
-                  <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Correo</span>
-                      <p className="text-gray-700">{client.correo}</p>
-                    </div>
-                  </td>
-                  <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none">
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Teléfono</span>
-                      <p className="text-gray-700">{client.telefono}</p>
-                    </div>
-                  </td>
-                  <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Categoría</span>
-                      <p className="text-gray-700">{client.category ?? 'N/A'}</p>
-                    </div>
-                  </td>
-                  <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Estado</span>
-                      <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${client.estatus ? 'text-green-900' : 'text-red-900'} max-w-fit`}>
-                        <span aria-hidden className={`absolute inset-0 ${client.estatus ? 'bg-green-200' : 'bg-red-200'} opacity-50 rounded-full`}></span>
-                        <span className="relative">{client.estatus ? 'Activo' : 'Inactivo'}</span>
-                      </span>
-                    </div>
-                  </td>
-                  <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Puesto</span>
-                      <p className="text-gray-700">{client.puesto}</p>
-                    </div>
-                  </td>
-                  <td className={`p-4 border-b border-gray-100 md:border-none ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
-                    <div className="flex flex-col md:block">
-                      <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Ejecutivo</span>
-                      <p className="text-gray-700">{client.ejecutivo?.username ?? 'N/A'}</p>
-                    </div>
-                  </td>
-                  <td className="p-4 block md:table-cell md:rounded-r-lg">
-                    <div className="flex justify-between md:justify-end items-center mt-2 md:mt-0">
-                      <button 
-                        onClick={() => toggleRow(client.id!)} 
-                        className="md:hidden text-blue-600 font-medium text-sm flex items-center hover:bg-blue-50 px-2 py-1 rounded"
-                      >
-                        {isExpanded ? <ChevronUp size={16} className="mr-1"/> : <ChevronDown size={16} className="mr-1"/>}
-                        {isExpanded ? 'Menos' : 'Más'} detalles
-                      </button>
-                      <div className="flex space-x-1">
-                        <button
-                          onClick={() => onEdit(client)}
-                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full"
-                          title="Editar"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        {isAdmin && (
-                          <button
-                            onClick={() => onUpdateStatus(client)}
-                            className={`p-2 text-gray-500 rounded-full ${client.estatus ? 'hover:text-yellow-600 hover:bg-yellow-100' : 'hover:text-green-600 hover:bg-green-100'}`}
-                            title={client.estatus ? 'Desactivar' : 'Reactivar'}
-                          >
-                            {client.estatus ? <UserX size={18} /> : <UserCheck size={18} />}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })
-          ) : (
-            <tr className="block md:table-row w-full">
-              <td colSpan={9} className="text-center py-16 block md:table-cell w-full">
-                <div className="flex flex-col items-center justify-center text-center text-gray-500 w-full mx-auto">
-                  <Inbox size={48} className="mb-4 mx-auto" />
-                  <h3 className="text-xl font-semibold text-center w-full">No se encontraron clientes</h3>
-                  <p className="text-sm text-center w-full mt-1">Intenta ajustar los filtros o crear un nuevo cliente.</p>
-                </div>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center mt-6 p-4">
-          <div className="flex space-x-2">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Button
-                key={i + 1}
-                variant={currentPage === i + 1 ? 'primary' : 'secondary'}
-                onClick={() => onPageChange(i + 1)}
-                className="px-4 py-2 text-sm min-w-[38px]"
-              >
-                {i + 1}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    <Table
+      data={clients}
+      columns={columns}
+      variant="cards"
+      loading={loading}
+      emptyTitle="No se encontraron clientes"
+      emptyMessage="Intenta ajustar los filtros o crear un nuevo cliente."
+      enablePagination={!isExternalPagination}
+      initialPageSize={10}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      maxHeight={maxHeight}
+    />
   );
 };
 
