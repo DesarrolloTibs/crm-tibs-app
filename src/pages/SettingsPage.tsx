@@ -34,14 +34,7 @@ const SettingsPage: React.FC = () => {
     if (params.get('meta_oauth') || params.get('tab') === 'channels' || params.get('tab') === 'ai-agent-settings') {
       return 'ai-agent-settings';
     }
-    const saved = sessionStorage.getItem('settingsActiveTab') as SettingTab;
-    if (saved) {
-      if (!isAdmin && saved !== 'my-calendar') {
-        return 'my-calendar';
-      }
-      return saved;
-    }
-    return isAdmin ? 'my-company' : 'my-calendar';
+    return (sessionStorage.getItem('settingsActiveTab') as SettingTab) || 'my-calendar';
   });
 
   const [activeCatalogSubTab, setActiveCatalogSubTabState] = useState<'business-lines' | 'delivery-types' | 'licensings'>(
@@ -54,6 +47,24 @@ const SettingsPage: React.FC = () => {
     sessionStorage.setItem('settingsActiveTab', tab);
     window.dispatchEvent(new CustomEvent('settingsTabChanged', { detail: tab }));
   };
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    let safeTab = activeTab;
+
+    if (!isAdmin && safeTab !== 'my-calendar') {
+      safeTab = 'my-calendar';
+    } else if (!isSuperAdmin && ['superadmin-tenants', 'superadmin-plans', 'superadmin-ai-credentials'].includes(safeTab)) {
+      safeTab = 'my-company';
+    } else if (isAdmin && !sessionStorage.getItem('settingsActiveTab') && safeTab === 'my-calendar') {
+      safeTab = 'my-company';
+    }
+
+    if (safeTab !== activeTab) {
+      setActiveTab(safeTab);
+    }
+  }, [authLoading, isAdmin, isSuperAdmin, activeTab]);
 
   const setActiveCatalogSubTab = (subTab: 'business-lines' | 'delivery-types' | 'licensings') => {
     setActiveCatalogSubTabState(subTab);
