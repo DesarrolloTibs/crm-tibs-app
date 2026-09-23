@@ -1,6 +1,5 @@
 import type { Table as TanStackTable } from '@tanstack/react-table';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Button from '../Button';
 
 interface TablePaginationProps<T> {
   table: TanStackTable<T>;
@@ -27,128 +26,143 @@ export function TablePagination<T>({
   filteredCount,
   useInternalPagination,
 }: TablePaginationProps<T>) {
-  // 1. External controlled pagination
-  if (isExternalPagination && totalPages && totalPages > 1 && onPageChange) {
-    return (
-      <div className="flex flex-col sm:flex-row justify-between items-center mt-4 p-3 gap-4 select-none shrink-0">
-        {typeof pageSize !== 'undefined' && typeof onPageSizeChange === 'function' && (
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <span>Mostrar</span>
-            <input
-              type="number"
-              min="0"
-              value={pageSize === 0 ? '' : pageSize}
-              onChange={(e) => {
-                const val = e.target.value;
-                onPageSizeChange(val === '' ? 0 : Math.max(0, parseInt(val, 10)));
-              }}
-              placeholder="Todos"
-              className="w-16 text-center border border-slate-300 rounded-lg py-1.5 px-2 text-slate-800 font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white outline-none"
-            />
-            {typeof filteredCount !== 'undefined' && typeof totalCount !== 'undefined' ? (
-              <span>registros de {filteredCount} (total: {totalCount})</span>
-            ) : (
-              <span>por página</span>
-            )}
-          </div>
-        )}
-
-        <div className="flex justify-center items-center space-x-2 mx-auto">
-          {currentPage && currentPage > 1 && (
-            <Button
-              variant="secondary"
-              onClick={() => onPageChange?.(currentPage - 1)}
-              className="px-3 py-2 text-sm min-w-[38px] flex items-center justify-center !rounded-lg"
-              title="Página anterior"
-            >
-              <ChevronLeft size={16} />
-            </Button>
-          )}
-
-          {Array.from({ length: totalPages }, (_, i) => {
-            const pageNum = i + 1;
-            if (
-              totalPages <= 7 ||
-              pageNum === 1 ||
-              pageNum === totalPages ||
-              (currentPage && Math.abs(pageNum - currentPage) <= 1)
-            ) {
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? 'primary' : 'secondary'}
-                  onClick={() => onPageChange?.(pageNum)}
-                  className="px-4 py-2 text-sm min-w-[38px] !rounded-lg"
-                >
-                  {pageNum}
-                </Button>
-              );
-            }
-            if (
-              currentPage &&
-              (pageNum === currentPage - 2 || pageNum === currentPage + 2)
-            ) {
-              return <span key={pageNum} className="px-1 text-slate-400">...</span>;
-            }
-            return null;
-          })}
-
-          {currentPage && currentPage < totalPages && (
-            <Button
-              variant="secondary"
-              onClick={() => onPageChange?.(currentPage + 1)}
-              className="px-3 py-2 text-sm min-w-[38px] flex items-center justify-center !rounded-lg"
-              title="Página siguiente"
-            >
-              <ChevronRight size={16} />
-            </Button>
-          )}
-        </div>
-      </div>
-    );
+  // Determine if pagination is enabled at all
+  if (!isExternalPagination && !useInternalPagination) {
+    return null;
   }
 
-  // 2. Internal TanStack pagination
-  if (useInternalPagination && table.getPageCount() > 1) {
-    const pageIndex = table.getState().pagination.pageIndex;
-    const count = table.getPageCount();
-    const currentPageNum = pageIndex + 1;
+  // Active values depending on mode (External vs Internal TanStack)
+  const activePage = isExternalPagination
+    ? currentPage || 1
+    : table.getState().pagination.pageIndex + 1;
 
-    return (
-      <div className="flex justify-center items-center mt-4 p-3 select-none shrink-0">
-        <div className="flex space-x-2 items-center">
-          <Button
-            variant="secondary"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="px-3 py-2 text-sm min-w-[38px] flex items-center justify-center !rounded-lg"
+  const totalPagesCount = isExternalPagination
+    ? totalPages || 1
+    : table.getPageCount();
+
+  const activePageSize = isExternalPagination
+    ? pageSize
+    : table.getState().pagination.pageSize;
+
+  const activeFilteredCount = isExternalPagination
+    ? filteredCount ?? totalCount
+    : table.getFilteredRowModel().rows.length;
+
+  const activeTotalCount = isExternalPagination
+    ? totalCount ?? filteredCount
+    : table.getCoreRowModel().rows.length;
+
+  const hasPageSizeHandler = isExternalPagination
+    ? typeof onPageSizeChange === 'function'
+    : true;
+
+  const handlePageSizeChange = (size: number) => {
+    if (isExternalPagination) {
+      onPageSizeChange?.(size);
+    } else {
+      // 0 means "show all" in the input convention
+      table.setPageSize(size === 0 ? 100000 : size);
+    }
+  };
+
+  const goToPage = (page: number) => {
+    if (isExternalPagination) {
+      onPageChange?.(page);
+    } else {
+      table.setPageIndex(page - 1);
+    }
+  };
+
+  // If there are no records, hide pagination
+  if (typeof activeTotalCount === 'number' && activeTotalCount === 0) {
+    return null;
+  }
+
+  // If there's only 1 page and no page-size control, also hide
+  const showPageSizeControl = typeof activePageSize !== 'undefined' && hasPageSizeHandler;
+  if (totalPagesCount <= 1 && !showPageSizeControl) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col sm:flex-row justify-between items-center mt-4 p-4 gap-4 bg-slate-50/50 rounded-xl border border-slate-100/60 print:hidden select-none shrink-0">
+      {/* Left Side: pageSize input and record details */}
+      {showPageSizeControl ? (
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 select-none">
+          <span>Mostrar</span>
+          <input
+            type="number"
+            min="0"
+            value={activePageSize === 0 ? '' : activePageSize}
+            onChange={(e) => {
+              const val = e.target.value;
+              handlePageSizeChange(val === '' ? 0 : Math.max(0, parseInt(val, 10)));
+            }}
+            placeholder="Todos"
+            className="w-16 text-center border border-slate-300 rounded-lg py-1.5 px-2 text-slate-800 font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white outline-none"
+          />
+          {typeof activeFilteredCount !== 'undefined' && typeof activeTotalCount !== 'undefined' ? (
+            <span>
+              registros de {activeFilteredCount} (total: {activeTotalCount})
+            </span>
+          ) : (
+            <span>por página</span>
+          )}
+        </div>
+      ) : (
+        <div className="text-xs font-semibold text-slate-500 select-none">
+          {typeof activeFilteredCount !== 'undefined' && typeof activeTotalCount !== 'undefined' ? (
+            <span>
+              Mostrando {activeFilteredCount} de {activeTotalCount} registros
+            </span>
+          ) : (
+            <span />
+          )}
+        </div>
+      )}
+
+      {/* Right Side: Page navigation buttons */}
+      {totalPagesCount > 1 && (
+        <div className="flex items-center space-x-1.5">
+          {/* Previous Page Button */}
+          <button
+            type="button"
+            disabled={activePage <= 1}
+            onClick={() => goToPage(activePage - 1)}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border border-slate-200 bg-white text-slate-600 hover:text-slate-800 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none select-none cursor-pointer flex items-center justify-center min-w-[32px] h-[32px]"
             title="Página anterior"
           >
-            <ChevronLeft size={16} />
-          </Button>
+            <ChevronLeft size={14} />
+          </button>
 
-          {Array.from({ length: count }, (_, i) => {
+          {/* Page Number Buttons with Smart Ellipsis Windowing */}
+          {Array.from({ length: totalPagesCount }, (_, i) => {
             const pageNum = i + 1;
             if (
-              count <= 7 ||
+              totalPagesCount <= 7 ||
               pageNum === 1 ||
-              pageNum === count ||
-              Math.abs(pageNum - currentPageNum) <= 1
+              pageNum === totalPagesCount ||
+              Math.abs(pageNum - activePage) <= 1
             ) {
+              const isActive = activePage === pageNum;
               return (
-                <Button
+                <button
                   key={pageNum}
-                  variant={pageIndex === i ? 'primary' : 'secondary'}
-                  onClick={() => table.setPageIndex(i)}
-                  className="px-4 py-2 text-sm min-w-[38px] !rounded-lg"
+                  type="button"
+                  onClick={() => goToPage(pageNum)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border select-none cursor-pointer min-w-[32px] h-[32px] flex items-center justify-center ${
+                    isActive
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/10'
+                      : 'bg-white border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+                  }`}
                 >
                   {pageNum}
-                </Button>
+                </button>
               );
             }
-            if (pageNum === currentPageNum - 2 || pageNum === currentPageNum + 2) {
+            if (pageNum === activePage - 2 || pageNum === activePage + 2) {
               return (
-                <span key={pageNum} className="px-1 text-slate-400">
+                <span key={pageNum} className="px-1 text-slate-400 text-xs">
                   ...
                 </span>
               );
@@ -156,21 +170,20 @@ export function TablePagination<T>({
             return null;
           })}
 
-          <Button
-            variant="secondary"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="px-3 py-2 text-sm min-w-[38px] flex items-center justify-center !rounded-lg"
+          {/* Next Page Button */}
+          <button
+            type="button"
+            disabled={activePage >= totalPagesCount}
+            onClick={() => goToPage(activePage + 1)}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border border-slate-200 bg-white text-slate-600 hover:text-slate-800 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none select-none cursor-pointer flex items-center justify-center min-w-[32px] h-[32px]"
             title="Página siguiente"
           >
-            <ChevronRight size={16} />
-          </Button>
+            <ChevronRight size={14} />
+          </button>
         </div>
-      </div>
-    );
-  }
-
-  return null;
+      )}
+    </div>
+  );
 }
 
 export default TablePagination;
