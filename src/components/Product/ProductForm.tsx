@@ -77,7 +77,7 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     }
     setStagedCoverFile(null);
     setStagedSpecs([]);
-  }, [initialData]);
+  }, [initialData, baseUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
