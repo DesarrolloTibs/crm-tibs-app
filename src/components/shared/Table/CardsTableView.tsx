@@ -54,7 +54,7 @@ export function CardsTableView<T>({
                 <th
                   key={header.id}
                   onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                  className={`sticky top-0 z-30 bg-slate-50 p-4 text-sm font-semibold text-gray-500 uppercase tracking-wider border-b border-slate-200/90 shadow-xs ${
+                  className={`sticky top-0 z-10 bg-slate-50 p-4 text-sm font-semibold text-gray-500 uppercase tracking-wider border-b border-slate-200/90 shadow-xs ${
                     isFirst ? 'rounded-l-lg' : ''
                   } ${isLast ? 'rounded-r-lg' : ''} ${
                     canSort ? 'cursor-pointer select-none group hover:text-slate-900 hover:bg-slate-100 transition-colors' : ''

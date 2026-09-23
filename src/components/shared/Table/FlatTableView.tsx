@@ -45,7 +45,7 @@ export function FlatTableView<T>({
                 <th
                   key={header.id}
                   onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                  className={`sticky top-0 z-30 bg-slate-50 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap border-b border-slate-200 shadow-xs ${
+                  className={`sticky top-0 z-10 bg-slate-50 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap border-b border-slate-200 shadow-xs ${
                     canSort ? 'cursor-pointer select-none group hover:text-slate-800' : ''
                   } ${meta?.headerClassName || ''}`}
                 >
