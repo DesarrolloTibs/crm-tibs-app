@@ -53,10 +53,10 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleRoleSelectChange = (option: any) => {
+    const handleRoleSelectChange = (option: { value: string; label: string } | null) => {
         setForm(prev => ({
             ...prev,
-            role: option ? option.value : 'executive'
+            role: (option ? option.value : 'executive') as User['role']
         }));
     };
 

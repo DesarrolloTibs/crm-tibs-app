@@ -1,95 +1,185 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getUsers, createUser, updateUser, updateUserStatus } from '../services/usersService';
 import type { User } from '../core/models/User';
 import { useAuth } from './useAuth';
+import { useConfigStore } from '../store/useConfigStore';
+import useDebounce from './useDebounce';
+import useNotification from './useNotification';
+import type { UserFiltersState } from '../components/User/UserFiltersBar';
 
-const PAGE_SIZE = 10;
-type NotifType = 'success' | 'error' | 'warning' | 'confirmation';
-interface Notif { show: boolean; type: NotifType; title: string; message: string; onConfirm: () => void; onCancel: () => void; }
-const NOTIF_OFF: Notif = { show: false, type: 'success', title: '', message: '', onConfirm: () => {}, onCancel: () => {} };
+const INITIAL_FILTERS: UserFiltersState = {
+  username: '',
+  email: '',
+  role: null,
+};
 
 export function useUsers() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin } = useAuth();
+  const { selectedTenant } = useConfigStore();
+  const schemaName = selectedTenant?.schema_name;
+
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [uploadingUser, setUploadingUser] = useState<User | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filterUsername, setFilterUsername] = useState('');
-  const [filterEmail, setFilterEmail] = useState('');
-  const [filterRole, setFilterRole] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [notification, setNotification] = useState<Notif>(NOTIF_OFF);
-  const searchDropdownRef = useRef<HTMLDivElement>(null);
 
-  const hideNotification = () => setNotification(prev => ({ ...prev, show: false }));
-  const showSuccess = (msg: string) => setNotification({ show: true, type: 'success', title: '¡Éxito!', message: msg, onConfirm: hideNotification, onCancel: hideNotification });
-  const showError = (msg: string) => setNotification({ show: true, type: 'error', title: 'Error', message: msg, onConfirm: hideNotification, onCancel: hideNotification });
+  // Grouped filters state
+  const [filters, setFilters] = useState<UserFiltersState>(INITIAL_FILTERS);
 
-  useEffect(() => {
-    const h = (e: MouseEvent) => { if (searchDropdownRef.current && !searchDropdownRef.current.contains(e.target as Node)) setShowFilters(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
+  // Debounced text inputs for smooth typing
+  const debouncedUsername = useDebounce(filters.username, 250);
+  const debouncedEmail = useDebounce(filters.email, 250);
 
-  useEffect(() => { setCurrentPage(1); }, [filterUsername, filterEmail, filterRole]);
+  // Standard notification & confirmation modal hook
+  const { notification, showSuccess, showError, showConfirmation } = useNotification();
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async (force = false) => {
     setLoading(true);
     try {
-      const res = await getUsers();
-      setUsers(Array.isArray(res) ? res : (res as any)?.data || []);
+      const res = await getUsers(force);
+      setUsers(Array.isArray(res) ? res : []);
+    } catch {
+      showError('No se pudieron cargar los usuarios');
+    } finally {
+      setLoading(false);
     }
-    catch { showError('No se pudieron cargar los usuarios'); }
-    finally { setLoading(false); }
-  };
+  }, [showError]);
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers, schemaName]);
 
   const handleCreate = async (user: User) => {
     setLoading(true);
-    try { await createUser(user); setModalOpen(false); showSuccess('Usuario creado correctamente'); fetchUsers(); }
-    catch { showError('No se pudo crear el usuario'); }
-    finally { setLoading(false); }
+    try {
+      const userData = { ...user };
+      delete userData.id;
+      await createUser(userData);
+      setModalOpen(false);
+      showSuccess('Usuario creado correctamente');
+      fetchUsers(true);
+    } catch {
+      showError('No se pudo crear el usuario');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpdate = async (user: User) => {
     if (!user.id) return;
     setLoading(true);
-    try { const { id, ...d } = user; await updateUser(id, d); setEditing(null); setModalOpen(false); showSuccess('Usuario actualizado correctamente'); fetchUsers(); }
-    catch { showError('No se pudo actualizar el usuario'); }
-    finally { setLoading(false); }
+    try {
+      const { id, ...userData } = user;
+      await updateUser(id, userData);
+      setEditing(null);
+      setModalOpen(false);
+      showSuccess('Usuario actualizado correctamente');
+      fetchUsers(true);
+    } catch {
+      showError('No se pudo actualizar el usuario');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdateStatus = async (user: User) => {
+  const handleUpdateStatus = useCallback((user: User) => {
     if (!user.id) return;
     const isActivating = !user.isActive;
-    setNotification({ show: true, type: 'confirmation', title: `¿${isActivating?'Reactivar':'Desactivar'} este usuario?`, message: isActivating?'El usuario podrá iniciar sesión.':'El usuario no podrá iniciar sesión.',
-      onConfirm: async () => { hideNotification(); try { await updateUserStatus(user.id!, isActivating); showSuccess(`Usuario ${isActivating?'reactivado':'desactivado'} correctamente.`); fetchUsers(); } catch { showError(`No se pudo ${isActivating?'reactivar':'desactivar'} el usuario.`); } },
-      onCancel: hideNotification });
+    showConfirmation({
+      title: `¿${isActivating ? 'Reactivar' : 'Desactivar'} este usuario?`,
+      message: isActivating
+        ? 'El usuario podrá iniciar sesión.'
+        : 'El usuario no podrá iniciar sesión.',
+      onConfirm: async () => {
+        try {
+          await updateUserStatus(user.id!, isActivating);
+          showSuccess(`Usuario ${isActivating ? 'reactivado' : 'desactivado'} correctamente.`);
+          fetchUsers(true);
+        } catch {
+          showError(`No se pudo ${isActivating ? 'reactivar' : 'desactivar'} el usuario.`);
+        }
+      },
+    });
+  }, [showConfirmation, showSuccess, showError, fetchUsers]);
+
+  const handleFilterChange = useCallback(
+    <K extends keyof UserFiltersState>(key: K, value: UserFiltersState[K]) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setFilters(INITIAL_FILTERS);
+  }, []);
+
+  const openCreateModal = () => {
+    setEditing(null);
+    setModalOpen(true);
   };
 
-  const openCreateModal = () => { setEditing(null); setModalOpen(true); };
-  const openEditModal = (u: User) => { setEditing(u); setModalOpen(true); };
+  const openEditModal = (u: User) => {
+    setEditing(u);
+    setModalOpen(true);
+  };
+
   const openUploadModal = (u: User) => setUploadingUser(u);
   const closeUploadModal = () => setUploadingUser(null);
-  const handleUploadSuccess = () => { closeUploadModal(); fetchUsers(); };
+  const handleUploadSuccess = () => {
+    closeUploadModal();
+    fetchUsers(true);
+  };
 
-  const safeUsers = Array.isArray(users) ? users : [];
-  const filteredUsers = useMemo(() => safeUsers.filter(u => (u.username || '').toLowerCase().includes(filterUsername.toLowerCase()) && (u.email || '').toLowerCase().includes(filterEmail.toLowerCase()) && (filterRole ? u.role === filterRole : true)), [safeUsers, filterUsername, filterEmail, filterRole]);
-  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
-  const paginatedUsers = useMemo(() => filteredUsers.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE), [filteredUsers, currentPage]);
+  const roleOptions = useMemo(() => {
+    if (isSuperAdmin && !selectedTenant) {
+      return [
+        { value: 'superadmin', label: 'SuperAdministrador' },
+        { value: 'admin', label: 'Administrador' },
+        { value: 'executive', label: 'Ejecutivo' },
+      ];
+    }
+    return [
+      { value: 'admin', label: 'Administrador' },
+      { value: 'executive', label: 'Ejecutivo' },
+    ];
+  }, [isSuperAdmin, selectedTenant]);
 
-  const handleClearFilters = () => { setFilterUsername(''); setFilterEmail(''); setFilterRole(''); };
-  const roleOptions = useMemo(() => [{ value: '', label: 'Todos los Roles' },{ value: 'admin', label: 'Admin' },{ value: 'executive', label: 'Executive' }], []);
+  const filteredUsers = useMemo(() => {
+    const uName = debouncedUsername.trim().toLowerCase();
+    const uEmail = debouncedEmail.trim().toLowerCase();
+
+    return users.filter((u) => {
+      const matchesName = !uName || (u.username || '').toLowerCase().includes(uName);
+      const matchesEmail = !uEmail || (u.email || '').toLowerCase().includes(uEmail);
+      const matchesRole = !filters.role || u.role === filters.role;
+
+      return matchesName && matchesEmail && matchesRole;
+    });
+  }, [users, debouncedUsername, debouncedEmail, filters.role]);
 
   return {
-    isAdmin, users, editing, uploadingUser, modalOpen, setModalOpen, loading, showFilters, setShowFilters,
-    filterUsername, setFilterUsername, filterEmail, setFilterEmail, filterRole, setFilterRole,
-    currentPage, setCurrentPage, notification, searchDropdownRef,
-    filteredUsers, paginatedUsers, totalPages, roleOptions,
-    handleCreate, handleUpdate, handleUpdateStatus,
-    openCreateModal, openEditModal, openUploadModal, closeUploadModal, handleUploadSuccess, handleClearFilters,
+    isAdmin,
+    users: filteredUsers,
+    loading,
+    editing,
+    uploadingUser,
+    modalOpen,
+    setModalOpen,
+    filters,
+    roleOptions,
+    notification,
+    handleFilterChange,
+    handleClearFilters,
+    handleCreate,
+    handleUpdate,
+    handleUpdateStatus,
+    openCreateModal,
+    openEditModal,
+    openUploadModal,
+    closeUploadModal,
+    handleUploadSuccess,
   };
 }
+
+export default useUsers;

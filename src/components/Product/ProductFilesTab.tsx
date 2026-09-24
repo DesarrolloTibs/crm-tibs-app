@@ -75,7 +75,7 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
     return () => {
       active = false;
     };
-  }, [product.id]);
+  }, [product.id, onUploadSuccess]);
 
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase() || '';

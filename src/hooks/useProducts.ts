@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getProducts,
   createProduct,
@@ -10,33 +10,32 @@ import {
 } from '../services/productsService';
 import type { Product } from '../core/models/Product';
 import { useConfigStore } from '../store/useConfigStore';
+import useDebounce from './useDebounce';
+import useNotification from './useNotification';
+import type { ProductFiltersState } from '../components/Product/ProductFiltersBar';
 
-const PAGE_SIZE = 10;
+const INITIAL_FILTERS: ProductFiltersState = {
+  nombre: '',
+  status: 'all',
+};
 
 export function useProducts() {
   const { selectedTenant } = useConfigStore();
   const schemaName = selectedTenant?.schema_name;
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filterNombre, setFilterNombre] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [notification, setNotification] = useState({
-    show: false,
-    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
-    title: '',
-    message: '',
-    onConfirm: () => {},
-    onCancel: () => {},
-  });
 
-  const hideNotification = useCallback(
-    () => setNotification((prev) => ({ ...prev, show: false })),
-    []
-  );
+  // Grouped filters state
+  const [filters, setFilters] = useState<ProductFiltersState>(INITIAL_FILTERS);
+
+  // Debounced search for smooth typing
+  const debouncedNombre = useDebounce(filters.nombre, 250);
+
+  // Reusable notification hook
+  const { notification, showSuccess, showError, showConfirmation } = useNotification();
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -44,14 +43,15 @@ export function useProducts() {
       const data = await getProducts();
       setProducts(data);
     } catch {
-      setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudieron cargar los productos del catálogo', onConfirm: hideNotification, onCancel: hideNotification });
+      showError('No se pudieron cargar los productos del catálogo');
     } finally {
       setLoading(false);
     }
-  }, [hideNotification]);
+  }, [showError]);
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts, schemaName]);
-  useEffect(() => { setCurrentPage(1); }, [filterNombre, filterStatus]);
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts, schemaName]);
 
   const handleCreate = async (
     productData: Partial<Product>,
@@ -61,119 +61,155 @@ export function useProducts() {
     setLoading(true);
     try {
       const newProduct = await createProduct(productData);
-      if (stagedCoverFile && newProduct.id) await uploadProductCoverImage(newProduct.id, stagedCoverFile);
+      if (stagedCoverFile && newProduct.id) {
+        await uploadProductCoverImage(newProduct.id, stagedCoverFile);
+      }
       if (stagedSpecs.length > 0 && newProduct.id) {
-        for (const sf of stagedSpecs) await uploadProductFile(newProduct.id, sf.file, sf.title);
+        for (const sf of stagedSpecs) {
+          await uploadProductFile(newProduct.id, sf.file, sf.title);
+        }
       }
       setIsFormModalOpen(false);
-      setNotification({ show: true, type: 'success', title: '¡Éxito!', message: 'Producto creado correctamente en el catálogo.', onConfirm: hideNotification, onCancel: hideNotification });
+      showSuccess('Producto creado correctamente en el catálogo.');
       fetchProducts();
     } catch {
-      setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo crear el producto.', onConfirm: hideNotification, onCancel: hideNotification });
-    } finally { setLoading(false); }
+      showError('No se pudo crear el producto.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdate = async (productData: Partial<Product>, stagedCoverFile: File | null) => {
+  const handleUpdate = async (
+    productData: Partial<Product>,
+    stagedCoverFile: File | null
+  ) => {
     if (!editingProduct?.id) return;
     setLoading(true);
     try {
       await updateProduct(editingProduct.id, productData);
-      if (stagedCoverFile) await uploadProductCoverImage(editingProduct.id, stagedCoverFile);
+      if (stagedCoverFile) {
+        await uploadProductCoverImage(editingProduct.id, stagedCoverFile);
+      }
       setEditingProduct(null);
       setIsFormModalOpen(false);
-      setNotification({ show: true, type: 'success', title: '¡Éxito!', message: 'Producto actualizado correctamente.', onConfirm: hideNotification, onCancel: hideNotification });
+      showSuccess('Producto actualizado correctamente.');
       fetchProducts();
     } catch {
-      setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo actualizar el producto.', onConfirm: hideNotification, onCancel: hideNotification });
-    } finally { setLoading(false); }
+      showError('No se pudo actualizar el producto.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdateStatus = async (product: Product) => {
-    if (!product.id) return;
-    const isActivating = !product.status;
-    setNotification({
-      show: true,
-      type: 'confirmation',
-      title: `¿Deseas ${isActivating ? 'activar' : 'desactivar'} el producto?`,
-      message: isActivating ? 'El producto volverá a estar disponible.' : 'El producto no se podrá seleccionar para nuevas oportunidades.',
-      onConfirm: async () => {
-        hideNotification();
-        try {
-          await updateProductStatus(product.id!, isActivating);
-          setNotification({ show: true, type: 'success', title: '¡Éxito!', message: `Producto ${isActivating ? 'activado' : 'desactivado'} correctamente.`, onConfirm: hideNotification, onCancel: hideNotification });
-          fetchProducts();
-        } catch {
-          setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo cambiar el estado del producto.', onConfirm: hideNotification, onCancel: hideNotification });
-        }
-      },
-      onCancel: hideNotification,
-    });
+  const handleUpdateStatus = useCallback(
+    (product: Product) => {
+      if (!product.id) return;
+      const isActivating = !product.status;
+      showConfirmation({
+        title: `¿Deseas ${isActivating ? 'activar' : 'desactivar'} el producto?`,
+        message: isActivating
+          ? 'El producto volverá a estar disponible.'
+          : 'El producto no se podrá seleccionar para nuevas oportunidades.',
+        onConfirm: async () => {
+          try {
+            await updateProductStatus(product.id!, isActivating);
+            showSuccess(
+              `Producto ${isActivating ? 'activado' : 'desactivado'} correctamente.`
+            );
+            fetchProducts();
+          } catch {
+            showError('No se pudo cambiar el estado del producto.');
+          }
+        },
+      });
+    },
+    [showConfirmation, showSuccess, showError, fetchProducts]
+  );
+
+  const handleDeleteConfirm = useCallback(
+    (product: Product) => {
+      showConfirmation({
+        title: '¿Eliminar producto del catálogo?',
+        message: `¿Estás seguro de eliminar "${product.nombre}"? Esto eliminará todos sus archivos y lo desasociará de oportunidades existentes.`,
+        onConfirm: async () => {
+          if (!product.id) return;
+          setLoading(true);
+          try {
+            await deleteProduct(product.id);
+            showSuccess('El producto se ha eliminado correctamente.');
+            fetchProducts();
+          } catch {
+            showError('No se pudo eliminar el producto.');
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
+    },
+    [showConfirmation, showSuccess, showError, fetchProducts]
+  );
+
+  const handleFilterChange = useCallback(
+    <K extends keyof ProductFiltersState>(key: K, value: ProductFiltersState[K]) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setFilters(INITIAL_FILTERS);
+  }, []);
+
+  const openCreateModal = () => {
+    setEditingProduct(null);
+    setIsFormModalOpen(true);
   };
 
-  const handleDeleteConfirm = (product: Product) => {
-    setNotification({
-      show: true,
-      type: 'confirmation',
-      title: '¿Eliminar producto del catálogo?',
-      message: `¿Estás seguro de eliminar "${product.nombre}"? Esto eliminará todos sus archivos y lo desasociará de oportunidades existentes.`,
-      onConfirm: async () => {
-        hideNotification();
-        if (!product.id) return;
-        setLoading(true);
-        try {
-          await deleteProduct(product.id);
-          setNotification({ show: true, type: 'success', title: '¡Eliminado!', message: 'El producto se ha eliminado correctamente.', onConfirm: hideNotification, onCancel: hideNotification });
-          fetchProducts();
-        } catch {
-          setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo eliminar el producto.', onConfirm: hideNotification, onCancel: hideNotification });
-        } finally { setLoading(false); }
-      },
-      onCancel: hideNotification,
-    });
-  };
-
-  const openCreateModal = () => { setEditingProduct(null); setIsFormModalOpen(true); };
-  const openEditModal = (product: Product) => { setEditingProduct(product); setIsFormModalOpen(true); };
-  const clearFilters = () => { setFilterNombre(''); setFilterStatus('all'); };
-  const updateEditingProduct = (product: Product) => {
+  const openEditModal = (product: Product) => {
     setEditingProduct(product);
-    setProducts((prev) => prev.map((p) => (p.id === product.id ? product : p)));
+    setIsFormModalOpen(true);
   };
 
-  const filteredProducts = products.filter((p) => {
-    const matchesNombre = p.nombre.toLowerCase().includes(filterNombre.toLowerCase()) ||
-      (p.descripcion || '').toLowerCase().includes(filterNombre.toLowerCase());
-    const matchesStatus = filterStatus === 'all' ? true : filterStatus === 'active' ? p.status === true : p.status === false;
-    return matchesNombre && matchesStatus;
-  });
+  const updateEditingProduct = useCallback((product: Product) => {
+    setEditingProduct(product);
+    setProducts((prev) => (prev.map((p) => (p.id === product.id ? product : p))));
+  }, []);
 
-  const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
-  const paginatedProducts = filteredProducts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const filteredProducts = useMemo(() => {
+    const q = debouncedNombre.trim().toLowerCase();
+    return products.filter((p) => {
+      const matchesNombre =
+        !q ||
+        p.nombre.toLowerCase().includes(q) ||
+        (p.descripcion || '').toLowerCase().includes(q);
+      const matchesStatus =
+        filters.status === 'all'
+          ? true
+          : filters.status === 'active'
+          ? p.status === true
+          : p.status === false;
+      return matchesNombre && matchesStatus;
+    });
+  }, [products, debouncedNombre, filters.status]);
 
   return {
-    products: paginatedProducts,
+    products: filteredProducts,
     loading,
     editingProduct,
     isFormModalOpen,
     setIsFormModalOpen,
-    showFilters,
-    setShowFilters,
-    filterNombre,
-    setFilterNombre,
-    filterStatus,
-    setFilterStatus,
-    currentPage,
-    setCurrentPage,
-    totalPages,
+    filters,
     notification,
-    hideNotification,
+    handleFilterChange,
+    handleClearFilters,
     handleCreate,
     handleUpdate,
     handleUpdateStatus,
     handleDeleteConfirm,
     openCreateModal,
     openEditModal,
-    clearFilters,
     updateEditingProduct,
   };
 }
+
+export default useProducts;

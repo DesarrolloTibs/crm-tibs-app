@@ -1,49 +1,49 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getCompanies, createCompany, updateCompany, updateCompanyStatus } from '../services/companiesService';
 import { getActiveUsers } from '../services/usersService';
 import type { Company } from '../core/models/Company';
 import { useConfigStore } from '../store/useConfigStore';
+import useDebounce from './useDebounce';
+import useNotification from './useNotification';
+import type { CompanyFiltersState } from '../components/Company/CompanyFiltersBar';
 
-const PAGE_SIZE = 10;
+const INITIAL_FILTERS: CompanyFiltersState = {
+  nombre: '',
+  correo: '',
+  ejecutivoId: null,
+};
 
 export function useCompanies() {
   const { selectedTenant } = useConfigStore();
   const schemaName = selectedTenant?.schema_name;
-  const [companies, setCompanies] = useState<Company[]>([]);
+
+  const [rawCompanies, setRawCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<Company | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filterNombre, setFilterNombre] = useState('');
-  const [filterCorreo, setFilterCorreo] = useState('');
-  const [filterEjecutivoId, setFilterEjecutivoId] = useState<string | null>(null);
   const [executives, setExecutives] = useState<{ value: string; label: string }[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [notification, setNotification] = useState({
-    show: false,
-    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
-    title: '',
-    message: '',
-    onConfirm: () => {},
-    onCancel: () => {},
-  });
 
-  const hideNotification = useCallback(
-    () => setNotification((prev) => ({ ...prev, show: false })),
-    []
-  );
+  // Grouped filters state
+  const [filters, setFilters] = useState<CompanyFiltersState>(INITIAL_FILTERS);
+
+  // Reusable notification hook
+  const { notification, showSuccess, showError, showConfirmation } = useNotification();
+
+  // Debounced text inputs for smooth typing
+  const debouncedNombre = useDebounce(filters.nombre, 250);
+  const debouncedCorreo = useDebounce(filters.correo, 250);
 
   const fetchCompanies = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getCompanies();
-      setCompanies(data);
+      setRawCompanies(data);
     } catch {
-      setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudieron cargar las empresas', onConfirm: hideNotification, onCancel: hideNotification });
+      showError('No se pudieron cargar las empresas');
     } finally {
       setLoading(false);
     }
-  }, [hideNotification]);
+  }, [showError]);
 
   useEffect(() => {
     fetchCompanies();
@@ -54,97 +54,119 @@ export function useCompanies() {
       .catch(console.error);
   }, [fetchCompanies, schemaName]);
 
-  useEffect(() => { setCurrentPage(1); }, [filterNombre, filterCorreo, filterEjecutivoId]);
-
   const handleCreate = async (company: Company) => {
     setLoading(true);
     try {
-      const { ejecutivo, contacts, ...companyData } = company as any;
-      await createCompany(companyData);
+      const d: Company = { ...company };
+      delete d.ejecutivo;
+      delete d.contacts;
+      await createCompany(d);
       setModalOpen(false);
-      setNotification({ show: true, type: 'success', title: '¡Éxito!', message: 'Empresa creada correctamente', onConfirm: hideNotification, onCancel: hideNotification });
+      showSuccess('Empresa creada correctamente');
       fetchCompanies();
     } catch {
-      setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo crear la empresa', onConfirm: hideNotification, onCancel: hideNotification });
-    } finally { setLoading(false); }
+      showError('No se pudo crear la empresa');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpdate = async (company: Company) => {
     if (!company.id) return;
     setLoading(true);
     try {
-      const { id, ejecutivo, contacts, ...updateData } = company as any;
-      await updateCompany(id, updateData);
+      const d: Company = { ...company };
+      delete d.ejecutivo;
+      delete d.contacts;
+      await updateCompany(company.id, d);
       setEditing(null);
       setModalOpen(false);
-      setNotification({ show: true, type: 'success', title: '¡Éxito!', message: 'Empresa actualizada correctamente', onConfirm: hideNotification, onCancel: hideNotification });
+      showSuccess('Empresa actualizada correctamente');
       fetchCompanies();
     } catch {
-      setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo actualizar la empresa', onConfirm: hideNotification, onCancel: hideNotification });
-    } finally { setLoading(false); }
+      showError('No se pudo actualizar la empresa');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpdateStatus = async (company: Company) => {
     if (!company.id) return;
-    const companyId = company.id;
     const isActivating = !company.estatus;
-    setNotification({
-      show: true,
-      type: 'confirmation',
+    showConfirmation({
       title: `¿Deseas ${isActivating ? 'reactivar' : 'desactivar'} esta empresa?`,
-      message: isActivating ? 'La empresa volverá a estar activa.' : 'La empresa se marcará como inactiva.',
+      message: isActivating
+        ? 'La empresa volverá a estar activa.'
+        : 'La empresa se marcará como inactiva.',
       onConfirm: async () => {
-        hideNotification();
         try {
-          await updateCompanyStatus(companyId, isActivating);
-          setNotification({ show: true, type: 'success', title: '¡Éxito!', message: `Empresa ${isActivating ? 'reactivada' : 'desactivada'} correctamente.`, onConfirm: hideNotification, onCancel: hideNotification });
+          await updateCompanyStatus(company.id!, isActivating);
+          showSuccess(`Empresa ${isActivating ? 'reactivada' : 'desactivada'} correctamente.`);
           fetchCompanies();
         } catch {
-          setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo cambiar el estado.', onConfirm: hideNotification, onCancel: hideNotification });
+          showError('No se pudo cambiar el estado de la empresa.');
         }
       },
-      onCancel: hideNotification,
     });
   };
 
-  const openCreateModal = () => { setEditing(null); setModalOpen(true); };
-  const openEditModal = (company: Company) => { setEditing(company); setModalOpen(true); };
-  const clearFilters = () => { setFilterNombre(''); setFilterCorreo(''); setFilterEjecutivoId(null); };
+  const openCreateModal = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
 
-  const filteredCompanies = companies.filter((c) =>
-    c.nombre.toLowerCase().includes(filterNombre.toLowerCase()) &&
-    (c.correo || '').toLowerCase().includes(filterCorreo.toLowerCase()) &&
-    (!filterEjecutivoId || c.ejecutivo_id === filterEjecutivoId)
-  );
+  const openEditModal = (company: Company) => {
+    setEditing(company);
+    setModalOpen(true);
+  };
 
-  const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
-  const paginatedCompanies = filteredCompanies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const handleFilterChange = <K extends keyof CompanyFiltersState>(
+    key: K,
+    value: CompanyFiltersState[K]
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters(INITIAL_FILTERS);
+  };
+
+  // Filtered companies memoized with debounce
+  const filteredCompanies = useMemo(() => {
+    const qNombre = debouncedNombre.trim().toLowerCase();
+    const qCorreo = debouncedCorreo.trim().toLowerCase();
+
+    return rawCompanies.filter((c) => {
+      if (qNombre && !c.nombre.toLowerCase().includes(qNombre)) {
+        return false;
+      }
+      if (qCorreo && !(c.correo || '').toLowerCase().includes(qCorreo)) {
+        return false;
+      }
+      if (filters.ejecutivoId && c.ejecutivo_id !== filters.ejecutivoId) {
+        return false;
+      }
+      return true;
+    });
+  }, [rawCompanies, debouncedNombre, debouncedCorreo, filters.ejecutivoId]);
 
   return {
-    companies: paginatedCompanies,
+    companies: filteredCompanies,
     loading,
     editing,
     modalOpen,
     setModalOpen,
-    showFilters,
-    setShowFilters,
-    filterNombre,
-    setFilterNombre,
-    filterCorreo,
-    setFilterCorreo,
-    filterEjecutivoId,
-    setFilterEjecutivoId,
-    executives,
-    currentPage,
-    setCurrentPage,
-    totalPages,
     notification,
-    hideNotification,
+    executives,
+    filters,
+    handleFilterChange,
+    handleClearFilters,
     handleCreate,
     handleUpdate,
     handleUpdateStatus,
     openCreateModal,
     openEditModal,
-    clearFilters,
   };
 }
+
+export default useCompanies;
