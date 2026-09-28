@@ -136,8 +136,29 @@ sequenceDiagram
 
 ---
 
+## 📦 4. Librerías de Componentes y Utilidades Clave
+
+| Librería | Versión | Uso Concreto |
+| :--- | :--- | :--- |
+| `@tanstack/react-table` | 8.21.3 | Motor headless para tablas complejas con paginación client-side, ordenamiento multi-columna, filtros, modo tarjetas (cards) y fila sticky de totales de recursos. El componente `Table` en `src/components/shared/Table/` encapsula la integración. |
+| `yup` | 1.7.1 | Validación declarativa de esquemas de formularios. Se usa para verificar integridad de datos antes de enviarlos al backend (e.g., cotizaciones, configuración de canales). |
+| `react-select` | 5.10.2 | Selects ricos con búsqueda asistida, multi-valor y temas personalizados. Usado extensivamente en filtros de Pipeline, formularios de CRM y panel de configuración. |
+| `jwt-decode` | 4.0.0 | Decodificación client-side del payload del JWT de sesión para extraer `userId`, `tenantId`, `role` y `exp` sin roundtrip al servidor. Consume en `useAuth.ts`. |
+| `xlsx` | 0.18.5 | Generación de archivos `.xlsx` para exportación de historial de interacciones, reporte de cortesías, pipeline y otras tablas de datos. Complementario a jsPDF para flujos con preferencia a hoja de cálculo. |
+| `react-confetti-boom` | 2.0.1 | Efecto de confeti celebratorio ante eventos positivos de negocio (e.g., cierre de trato, primera venta del mes). |
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Multi-Tenancy, Axios & Interceptores]] — Capa HTTP y propagación del esquema.
 * [[CRM TIBS - Autenticacion, JWT & Protected Routes]] — Seguridad y guardias de navegación.
 * [[Catalogo de Componentes y Vistas]] — Inventario de componentes y páginas.
+
+## 📦 4. Librerías de Componentes y Utilidades Clave
+
+| Librería | Versión | Uso Concreto |
+| :--- | :--- | :--- |
+| `@tanstack/react-table` | 8.21.3 | Motor headless para tablas complejas con paginación client-side, ordenamiento multi-columna, filtros, modo tarjetas (cards) y fila sticky de totales de recursos. El componente `Table` en `src/components/shared/Table/` encapsula la integración. |
+| `yup` | 1.7.1 | Validación declarativa de esquemas de formularios. Se usa para verificar integridad de datos antes de enviarlos al backend (e.g., cotizaciones, configuración de canales). |
+| `react-select` | 5.10.2 | Selects ricos con búsqueda asistida, multi-valor y temas personalizados. Usado extensivamente en filtros de Pipeline, formularios de CRM y panel de configuración. |
+| `jwt-decode` | 4.0.0 | Decodificación client-side del payload del JWT de sesión para extraer `userId`, `tenantId`, `role` y `exp` sin roundtrip al servidor. Consumido en `useAuth.ts`. |
+| `xlsx` | 0.18.5 | Generación de archivos `.xlsx` para exportación de historial de interacciones, reporte de cortesías, pipeline y otras tablas de datos. Complementario a jsPDF. |
+| `react-confetti-boom` | 2.0.1 | Efecto de confeti celebratorio ante eventos positivos de negocio (e.g., cierre de trato, primera venta del mes). |

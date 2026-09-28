@@ -40,7 +40,7 @@ graph TD
     end
 
     subgraph AmbitoPersonal ["👤 Ámbito Ejecutivo / Usuario"]
-        MyCal["📅 Mi Calendario (`CalendarIntegrationSettings`)<br/>- Vinculación OAuth con Google, Outlook e iCloud"]
+        MyCal["📅 Mi Calendario (`src/pages/Settings/MyCalendar/`)<br/>- Orquestador modular `MyCalendarPage`<br/>- Vinculación OAuth2 con Google y Outlook"]
     end
 
     AmbitoSuperAdmin --> AmbitoAdmin
@@ -127,13 +127,42 @@ Para resolver saturaciones en el pool de sockets TCP del navegador (límite de 6
 
 * **Buscador Reactivo Multi-Criterio:** Normaliza acentos y evalúa coincidencias simultáneas en:
   - **Fecha y Hora:** Formatos numéricos (`DD/MM/YYYY`, `HH:mm`) y legibles.
-  - **Canal:** `webchat_interno`, `whatsapp`, `rag`, `messenger`, `instagram`.
-  - **Origen / Contacto:** Asesores de equipo (`Equipo: [Nombre]`), contactos (`Cliente: [Nombre]`) y referencias de conversación.
+  - **Canal:** `webchat_interno`, `whatsapp`, `rag`, `messenger`, `instagram`.\n  - **Origen / Contacto:** Asesores de equipo (`Equipo: [Nombre]`), contactos (`Cliente: [Nombre]`) y referencias de conversación.
   - **Acción Realizada:** Identificadores y etiquetas amigables (`Atención Inicial`, `Asesor Comercial`, `Derivación`).
 * **Exportación Exclusiva a Excel (`.xlsx`) y PDF (Landscape):**
   - Enfocada estrictamente en las interacciones auditadas (sin mezclar la tendencia diaria).
   - Omite deliberadamente identificadores técnicos internos (`id`).
   - Encabezada con identidad corporativa **Billy Sales & Services** y hojas de resumen ejecutivo.
+
+---
+
+## 📅 4. Arquitectura Modular de "Mi Calendario" (`src/pages/Settings/MyCalendar/`)
+
+Siguiendo el mismo patrón arquitectónico de desacoplamiento introducido en **Mi Empresa**, la sección de **Mi Calendario** ha sido modularizada para gestionar las integraciones de agenda con Google Calendar y Microsoft Outlook:
+
+```
+src/pages/Settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── MyCalendar/                    # Módulo desacoplado de Mi Calendario
+    ├── MyCalendarPage.tsx         # Orquestador principal de la vista con SettingsContainer
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── CalendarSyncStatusBanner.tsx   # Banner dinámico de estado activo / conectado vs sugerencia
+    │   ├── CalendarProvidersGrid.tsx      # Cuadrícula responsiva de proveedores (Google y Outlook)
+    │   └── CalendarProviderCard.tsx       # Tarjeta individual por proveedor con bloqueo y acciones
+    ├── schemas/                   # Contratos de datos, tipos y estados
+    │   └── myCalendar.schema.ts           # Interfaces de integración, proveedores y notificaciones
+    └── utils/                     # Helpers puros, catálogo y validadores
+        └── myCalendar.helpers.tsx         # Catálogo de proveedores e iconos SVG oficiales (Google, Outlook)
+```
+
+### 4.1. Características Técnicas del Módulo
+* **Contenedor Institucional (`SettingsContainer`):** Estandariza la cabecera, descripción e icono de la vista integrando el botón de comprobación en tiempo real en `rightAction`.
+* **Desacoplamiento de Proveedores (`CalendarProvidersGrid` & `CalendarProviderCard`):**
+  - **Google Calendar:** Flujo OAuth2 automático con redirección consentida y lectura de `calendar_sync` en callback.
+  - **Microsoft Outlook:** Flujo OAuth2 para cuentas corporativas Microsoft 365 y personales Outlook/Live.
+* **Gestión de Exclusividad de Conexión:** Si el usuario tiene un proveedor activo, la otra tarjeta se bloquea de manera informativa indicando el estado de bloqueo para evitar inconsistencias en la agenda.
+* **Diseño Minimalista y Directo:** Enfocado exclusivamente en el estado de vinculación y las tarjetas de acción de los proveedores compatibles.
 
 ---
 

@@ -16,7 +16,8 @@ import PlansSection from '../../components/Settings/PlansSection';
 import GlobalAiCredentialsSettings from '../../components/Settings/GlobalAiCredentialsSettings';
 import SettingsSidebar from '../../components/Settings/SettingsSidebar';
 import CatalogSubTabsPanel from '../../components/Settings/CatalogSubTabsPanel';
-import CalendarIntegrationSettings from '../../components/Settings/CalendarIntegrationSettings';
+// Módulo modular de Mi Calendario (integración Google, Outlook, iCloud)
+import MyCalendarPage from './MyCalendar/MyCalendarPage';
 
 // Módulo unificado y refactorizado de Mi Empresa (incluye Consumo de IA & Suscripción)
 import MyCompanyPage from './MyCompany/MyCompanyPage';
@@ -161,7 +162,7 @@ export const SettingsPage: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'my-calendar': return <CalendarIntegrationSettings />;
+      case 'my-calendar': return <MyCalendarPage />;
       case 'my-company':
       case 'ai-consumption':
         return <MyCompanyPage />;
