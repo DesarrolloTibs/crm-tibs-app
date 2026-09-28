@@ -89,6 +89,8 @@ Este documento compendia la totalidad de vistas y componentes modulares que conf
 
 - [`AiConsumptionSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiConsumptionSection.tsx) — Panel de supervisión de consumo de recursos y suscripción SaaS. Integra suite completa de componentes compartidos (`SettingsContainer`, `Tabs`, `Table`, `Badge`, `Button`, `EmptyState`, `Loader`, `Modal`, `Notification`, `SkeletonLoader`) con enfoque 100% de negocio (sin jerga técnica de modelos ni embeddings).
 
+* [`OpportunityLabelsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Settings/OpportunityLabels/OpportunityLabelsPage.tsx) — Módulo modular de etiquetas de oportunidad: arquitectura desacoplada (`components/`, `schemas/`, `utils/`), asistente interactivo de 2 pasos con selector de campos, simulador de formulario en tiempo real y validación estricta con Yup contra duplicados.
+
 ## 🛠️ 3. Componentes Compartidos del Sistema (`src/components/shared/` & Utilerías)
 
 | Componente / Utilidad | Propósito Técnico |

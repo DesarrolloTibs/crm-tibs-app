@@ -8,7 +8,8 @@ import {
 
 // Módulo modular de Tipos de Actividad
 import ActivityTypesPage from './ActivityTypes/ActivityTypesPage';
-import OpportunityLabelsSettings from '../../components/OpportunityLabel/OpportunityLabelsSettings';
+// Módulo modular de Etiquetas de Catálogos (Oportunidades)
+import OpportunityLabelsPage from './OpportunityLabels/OpportunityLabelsPage';
 import HelpdeskCronSettings from '../../components/Helpdesk/HelpdeskCronSettings';
 import { DashboardSettings } from '../../components/Dashboard/DashboardSettings';
 import AiAgentSettings from '../../components/Settings/AiAgentSettings';
@@ -168,7 +169,7 @@ export const SettingsPage: React.FC = () => {
       case 'ai-consumption':
         return <MyCompanyPage />;
       case 'activity-types': return <ActivityTypesPage />;
-      case 'opportunity-labels': return <OpportunityLabelsSettings onLabelsUpdated={fetchLabels} />;
+      case 'opportunity-labels': return <OpportunityLabelsPage onLabelsUpdated={fetchLabels} />;
       case 'helpdesk-cron': return <HelpdeskCronSettings />;
       case 'dashboard-settings': return <DashboardSettings />;
       case 'ai-agent-settings': return <AiAgentSettings />;

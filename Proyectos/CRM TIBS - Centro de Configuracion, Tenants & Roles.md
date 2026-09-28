@@ -213,6 +213,42 @@ src/pages/settings/
 
 ---
 
+## 🏷️ 6. Arquitectura Modular de "Etiquetas de Oportunidad" (`src/pages/Settings/OpportunityLabels/`)
+
+Siguiendo el mismo estándar de desacoplamiento modular de componentes, esquemas Yup y utilerías, la sección de **Etiquetas de Oportunidad** ha sido modularizada preservando la experiencia visual del asistente interactivo de 2 pasos con simulador en tiempo real:
+
+```
+src/pages/Settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── OpportunityLabels/             # Módulo modular de Etiquetas de Oportunidad
+    ├── OpportunityLabelsPage.tsx  # Orquestador principal con SettingsContainer y gestión de estado
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── OpportunityLabelsStepper.tsx   # Indicador visual del asistente (Paso 1 y Paso 2)
+    │   ├── OpportunityFieldsSelector.tsx  # Paso 1: Alerta informativa y tarjetas interactivas de campos
+    │   ├── OpportunityLabelEditForm.tsx   # Paso 2: Formulario con Yup, anti-duplicados y botones de acción
+    │   └── OpportunityFormMockup.tsx      # Columna derecha: Simulador interactivo del formulario con selección al vuelo
+    ├── schemas/                   # Contratos de datos, tipos y esquemas de validación
+    │   └── opportunityLabels.schema.ts    # Esquema Yup dinámico (createOpportunityLabelValidationSchema) y tipos
+    └── utils/                     # Helpers puros, metadatos y validadores
+        └── opportunityLabels.helpers.ts   # Metadatos de campos, descripciones, categorías y validador Yup
+```
+
+### 6.1. Características Técnicas del Módulo
+* **Asistente Guiado de 2 Pasos (`OpportunityLabelsStepper`):**
+  - **Paso 1 (Seleccionar Campo):** Tarjetas interactivas con badges de categoría (`Clasificación`, `Servicios y Montos`, `Licencias y Montos`), clave interna (`field_key`), descripción funcional del impacto en el CRM y valor activo.
+  - **Paso 2 (Modificar Etiqueta):** Interfaz enfocada con botón de retorno, campo de texto con validación reactiva, prevención de duplicidad y confirmación de guardado.
+* **Simulador Interactivo de Formulario en Vivo (`OpportunityFormMockup`):**
+  - Réplica visual fidedigna de las secciones del formulario de oportunidades (Datos del Proyecto, Detalles Financieros y Clasificación).
+  - En el **Paso 1**, despliega las insignias interactivas `👆 Clic` sobre bordes punteados; al hacer clic en cualquier campo del simulador, el asistente transiciona directamente al Paso 2 con ese campo seleccionado.
+  - En el **Paso 2**, resalta el campo activo con borde sólido índigo y badge `✎ Editando`, reflejando las ediciones de texto en tiempo real conforme el usuario escribe.
+* **Validación Declarativa con Yup:**
+  - Esquema dinámico `createOpportunityLabelValidationSchema` que audita requerimiento, longitud y chequeo estricto de duplicidad mediante regla `.test('unique-name')` contra los otros campos del catálogo.
+* **Componentes Compartidos y Tipografía Homologada:**
+  - Emplea la tipografía corporativa `Open Sans` con pesos estándar (`font-bold`, `font-semibold`), integrando `SettingsContainer`, `Notification`, `Button` y `FormField`.
+
+---
+
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Calendario FullCalendar & Actividades]] — Sincronización y uso operativo de tipos de actividad en agenda.
