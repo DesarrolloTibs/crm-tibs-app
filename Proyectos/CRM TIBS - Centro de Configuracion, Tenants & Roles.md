@@ -36,7 +36,7 @@ graph TD
         Company["🏷️ Mi Empresa & Consumo de IA (`src/pages/settings/MyCompany/`)<br/>- Perfil Corporativo, Logotipo y Esquema Multitenant<br/>- Selector de Períodos de Facturación (UnifiedSearchBar & Sugerencias)<br/>- Cuota de Tokens Plan Base con Gradientes<br/>- Switch de Consumo Extra (Hard Cap 100%)<br/>- Desglose por Canal, Top Usuarios/Clientes<br/>- Actividad Diaria Interactiva con Filtrado Bidireccional de Interacciones<br/>- Tendencia Diaria y Auditoría de Peticiones con Exportación Excel/PDF"]
         ActivityTypes["📋 Tipos de Actividad (`src/pages/settings/ActivityTypes/`)<br/>- Arquitectura modular (components, schemas, utils)<br/>- TanStack Table con paginación, filtros y responsive<br/>- Validación Yup y preview cromático armónico de agenda<br/>- KPIs superiores y buscador unificado"]
         Users["👥 Gestión de Usuarios (`UsersPage`)<br/>- Alta de Ejecutivos, Roles y Avatares"]
-        Catalogs["📑 Catálogos Dinámicos (`CatalogSubTabsPanel`)<br/>- Líneas de Negocio, Entregas y Licencias"]
+        Catalogs["📑 Catálogos Dinámicos (`OpportunityCatalogs`)<br/>- Líneas de Negocio, Entregas y Licencias"]
         CronSLA["⏰ Cron de Mesa de Ayuda (`HelpdeskCronSettings`)"]
         BotConfig["🤖 Canales y Agente IA (`AiAgentSettings`)<br/>- WhatsApp Cloud API & Plantilla Base<br/>- Vinculación Meta OAuth2 (Facebook e Instagram)<br/>- Parámetros del Bot y Sub-Agentes"]
     end
@@ -249,9 +249,53 @@ src/pages/Settings/
 
 ---
 
+## 📑 7. Arquitectura Modular de "Valores de Catálogos" (`src/pages/settings/OpportunityCatalogs/`)
+
+Siguiendo el estándar de diseño y desacoplamiento modular por capas aplicado a **Tipos de Actividad** y **Mi Empresa**, la sección de **Valores de Catálogos** (Línea de Negocio, Tipo de Entrega y Licenciamiento) ha sido refactorizada hacia una arquitectura modular desacoplada:
+
+```
+src/pages/settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── OpportunityCatalogs/           # Módulo desacoplado de Valores de Catálogos
+    ├── OpportunityCatalogsPage.tsx# Orquestador principal con SettingsContainer, selector de catálogos y KPIs
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── CatalogSubTabsNav.tsx          # Navegación interactiva de sub-pestañas con títulos dinámicos e iconos
+    │   ├── OpportunityCatalogsStatsBanner.tsx # Indicadores métricos KPI (Total, Activas, En Uso, Inactivas)
+    │   ├── OpportunityCatalogsTable.tsx   # Tabla TanStack Table con buscador, filtro de estado y filtro de uso
+    │   ├── CatalogOptionModal.tsx         # Modal contenedor responsive para alta y edición
+    │   ├── CatalogOptionForm.tsx          # Formulario con validación Yup, FormField y toggle de estado
+    │   └── RelatedOpportunitiesModal.tsx  # Modal interactivo con listado de oportunidades y enlace al Pipeline
+    ├── schemas/                   # Contratos de datos, tipos y esquemas de validación
+    │   └── opportunityCatalogs.schema.ts  # Esquema Yup (catalogOptionValidationSchema), tipos y filtros
+    └── utils/                     # Helpers puros, columnas TanStack Table y validadores
+        ├── opportunityCatalogs.columns.tsx# Definición ColumnDef con badges, toggle interactivo y acciones
+        └── opportunityCatalogs.helpers.ts # Filtros normalizados, cálculo de KPIs y runner de validación Yup
+```
+
+### 7.1. Características Técnicas del Módulo
+* **TanStack Table (`@tanstack/react-table`):**
+  - Utiliza el componente compartido `Table<OpportunityCatalogOption>` (`src/components/shared/Table`).
+  - Columnas estructuradas con `ColumnDef`: Identificación cromática y etiqueta, botón interactivo de inspección de uso en oportunidades (`Ver Oportunidades (X)`), switch toggle en vivo de disponibilidad y acciones (editar/eliminar).
+  - Bloqueo de eliminación con tooltip informativo si el valor está en uso por alguna oportunidad comercial en el sistema.
+  - Paginación interna de 8 elementos, ordenamiento reactivo y soporte responsive móvil con `mobileLabel`.
+* **Validación Declarativa con Yup & FormField:**
+  - Esquema estricto `catalogOptionValidationSchema` que verifica obligatoriedad, longitud mínima (2 caracteres) y límite superior (100 caracteres).
+  - Validación anti-duplicados a nivel de catálogo para evitar colisiones de nombres.
+  - Integración reactiva con `FormField`, informando errores en tiempo real y al desenfocar (`onBlur`).
+* **Sub-pestañas de Catálogos Dinámicas (`CatalogSubTabsNav`):**
+  - Muestra los 3 catálogos comerciales (Línea de Negocio, Tipo de Entrega, Licenciamiento) sincronizados con las etiquetas personalizadas provistas por `getOpportunityLabels`.
+* **Modal de Oportunidades Relacionadas (`RelatedOpportunitiesModal`):**
+  - Permite auditar en detalle qué oportunidades del CRM utilizan una opción determinada, proporcionando accesos directos clicables hacia el Pipeline comercial.
+* **Componentes Compartidos Utilizados:**
+  - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `FormField`.
+
+---
+
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Calendario FullCalendar & Actividades]] — Sincronización y uso operativo de tipos de actividad en agenda.
 * [[CRM TIBS - Multi-Tenancy, Axios & Interceptores]] — Inyección del esquema tenant en peticiones.
 * [[CRM TIBS - Autenticacion, JWT & Protected Routes]] — Seguridad basada en roles.
 * [[CRM TIBS - Chat Omnicanal, WebSockets & Agente IA]] — Configuración de bots y sub-agentes.
+

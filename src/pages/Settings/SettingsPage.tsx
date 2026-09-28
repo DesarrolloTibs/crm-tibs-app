@@ -17,7 +17,9 @@ import TenantsSection from '../../components/Settings/TenantsSection';
 import PlansSection from '../../components/Settings/PlansSection';
 import GlobalAiCredentialsSettings from '../../components/Settings/GlobalAiCredentialsSettings';
 import SettingsSidebar from '../../components/Settings/SettingsSidebar';
-import CatalogSubTabsPanel from '../../components/Settings/CatalogSubTabsPanel';
+// Módulo modular de Valores de Catálogos (Línea de Negocio, Tipo de Entrega, Licenciamiento)
+import OpportunityCatalogsPage from './OpportunityCatalogs/OpportunityCatalogsPage';
+
 // Módulo modular de Mi Calendario (integración Google, Outlook, iCloud)
 import MyCalendarPage from './MyCalendar/MyCalendarPage';
 
@@ -177,7 +179,7 @@ export const SettingsPage: React.FC = () => {
       case 'superadmin-plans': return <PlansSection />;
       case 'superadmin-ai-credentials': return <GlobalAiCredentialsSettings />;
       case 'opportunity-catalogs': return (
-        <CatalogSubTabsPanel
+        <OpportunityCatalogsPage
           activeSubTab={activeCatalogSubTab}
           onSubTabChange={setActiveCatalogSubTab}
           getLabelName={getLabelName}
