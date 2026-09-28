@@ -10,13 +10,14 @@ tags:
   - "#consumo-ia"
   - "#analitica-ia"
   - "#my-company"
-date: 2026-09-25
+  - "#activity-types"
+date: 2026-09-28
 status: produccion
 ---
 
 # ⚙️ Billy Sales & Services — Centro de Configuración, Tenants & Roles
 
-Este documento describe la arquitectura del panel de administración central ([`SettingsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Settings/SettingsPage.tsx)), la gestión de inquilinos (**Tenants**) y planes de suscripción SaaS, la sección unificada y refactorizada de **Mi Empresa** ([`MyCompanyPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Settings/MyCompany/MyCompanyPage.tsx)) que incorpora íntegramente la gestión de **Consumo de IA & Suscripción** bajo una arquitectura modular limpia (`components/`, `schemas/`, `utils/`), la configuración de canales de comunicación omnicanal, las credenciales de Inteligencia Artificial y la gobernanza de usuarios mediante **Control de Acceso Basado en Roles (RBAC)**.
+Este documento describe la arquitectura del panel de administración central ([`SettingsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/settings/SettingsPage.tsx)), la gestión de inquilinos (**Tenants**) y planes de suscripción SaaS, la sección unificada y refactorizada de **Mi Empresa** ([`MyCompanyPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/settings/MyCompany/MyCompanyPage.tsx)) que incorpora íntegramente la gestión de **Consumo de IA & Suscripción**, el módulo desacoplado de **Mi Calendario** ([`MyCalendarPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/settings/MyCalendar/MyCalendarPage.tsx)), la nueva arquitectura modular de **Tipos de Actividad** ([`ActivityTypesPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/settings/ActivityTypes/ActivityTypesPage.tsx)), la configuración de canales de comunicación omnicanal, las credenciales de Inteligencia Artificial y la gobernanza de usuarios mediante **Control de Acceso Basado en Roles (RBAC)**.
 
 ---
 
@@ -32,7 +33,8 @@ graph TD
     end
 
     subgraph AmbitoAdmin ["🏢 Ámbito Admin de Tenant (Organización)"]
-        Company["🏷️ Mi Empresa & Consumo de IA (`src/pages/Settings/MyCompany/`)<br/>- Perfil Corporativo, Logotipo y Esquema Multitenant<br/>- Selector de Períodos de Facturación (UnifiedSearchBar & Sugerencias)<br/>- Cuota de Tokens Plan Base con Gradientes<br/>- Switch de Consumo Extra (Hard Cap 100%)<br/>- Desglose por Canal, Top Usuarios/Clientes<br/>- Actividad Diaria Interactiva con Filtrado Bidireccional de Interacciones<br/>- Tendencia Diaria y Auditoría de Peticiones con Exportación Excel/PDF"]
+        Company["🏷️ Mi Empresa & Consumo de IA (`src/pages/settings/MyCompany/`)<br/>- Perfil Corporativo, Logotipo y Esquema Multitenant<br/>- Selector de Períodos de Facturación (UnifiedSearchBar & Sugerencias)<br/>- Cuota de Tokens Plan Base con Gradientes<br/>- Switch de Consumo Extra (Hard Cap 100%)<br/>- Desglose por Canal, Top Usuarios/Clientes<br/>- Actividad Diaria Interactiva con Filtrado Bidireccional de Interacciones<br/>- Tendencia Diaria y Auditoría de Peticiones con Exportación Excel/PDF"]
+        ActivityTypes["📋 Tipos de Actividad (`src/pages/settings/ActivityTypes/`)<br/>- Arquitectura modular (components, schemas, utils)<br/>- TanStack Table con paginación, filtros y responsive<br/>- Validación Yup y preview cromático armónico de agenda<br/>- KPIs superiores y buscador unificado"]
         Users["👥 Gestión de Usuarios (`UsersPage`)<br/>- Alta de Ejecutivos, Roles y Avatares"]
         Catalogs["📑 Catálogos Dinámicos (`CatalogSubTabsPanel`)<br/>- Líneas de Negocio, Entregas y Licencias"]
         CronSLA["⏰ Cron de Mesa de Ayuda (`HelpdeskCronSettings`)"]
@@ -40,7 +42,7 @@ graph TD
     end
 
     subgraph AmbitoPersonal ["👤 Ámbito Ejecutivo / Usuario"]
-        MyCal["📅 Mi Calendario (`src/pages/Settings/MyCalendar/`)<br/>- Orquestador modular `MyCalendarPage`<br/>- Vinculación OAuth2 con Google y Outlook"]
+        MyCal["📅 Mi Calendario (`src/pages/settings/MyCalendar/`)<br/>- Orquestador modular `MyCalendarPage`<br/>- Vinculación OAuth2 con Google y Outlook"]
     end
 
     AmbitoSuperAdmin --> AmbitoAdmin
@@ -51,18 +53,18 @@ graph TD
     classDef usr fill:#0f766e,stroke:#2dd4bf,color:#fff;
 
     class Tenants,Plans,AICreds,GlobalAudit sa;
-    class Company,Users,Catalogs,CronSLA,BotConfig adm;
+    class Company,Users,Catalogs,CronSLA,BotConfig,ActivityTypes adm;
     class MyCal usr;
 ```
 
 ---
 
-## 🏢 1. Arquitectura Modular de "Mi Empresa" (`src/pages/Settings/MyCompany/`)
+## 🏢 1. Arquitectura Modular de "Mi Empresa" (`src/pages/settings/MyCompany/`)
 
 Para optimizar la mantenibilidad, escalabilidad y evitar monolitos de código, la sección **Mi Empresa** unifica el perfil corporativo y toda la analítica de consumo/suscripción en una estructura modular:
 
 ```
-src/pages/Settings/
+src/pages/settings/
 ├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
 └── MyCompany/                     # Módulo desacoplado de Mi Empresa
     ├── MyCompanyPage.tsx          # Orquestador principal de la vista con Tabs compartidas
@@ -127,7 +129,8 @@ Para resolver saturaciones en el pool de sockets TCP del navegador (límite de 6
 
 * **Buscador Reactivo Multi-Criterio:** Normaliza acentos y evalúa coincidencias simultáneas en:
   - **Fecha y Hora:** Formatos numéricos (`DD/MM/YYYY`, `HH:mm`) y legibles.
-  - **Canal:** `webchat_interno`, `whatsapp`, `rag`, `messenger`, `instagram`.\n  - **Origen / Contacto:** Asesores de equipo (`Equipo: [Nombre]`), contactos (`Cliente: [Nombre]`) y referencias de conversación.
+  - **Canal:** `webchat_interno`, `whatsapp`, `rag`, `messenger`, `instagram`.
+  - **Origen / Contacto:** Asesores de equipo (`Equipo: [Nombre]`), contactos (`Cliente: [Nombre]`) y referencias de conversación.
   - **Acción Realizada:** Identificadores y etiquetas amigables (`Atención Inicial`, `Asesor Comercial`, `Derivación`).
 * **Exportación Exclusiva a Excel (`.xlsx`) y PDF (Landscape):**
   - Enfocada estrictamente en las interacciones auditadas (sin mezclar la tendencia diaria).
@@ -136,12 +139,12 @@ Para resolver saturaciones en el pool de sockets TCP del navegador (límite de 6
 
 ---
 
-## 📅 4. Arquitectura Modular de "Mi Calendario" (`src/pages/Settings/MyCalendar/`)
+## 📅 4. Arquitectura Modular de "Mi Calendario" (`src/pages/settings/MyCalendar/`)
 
 Siguiendo el mismo patrón arquitectónico de desacoplamiento introducido en **Mi Empresa**, la sección de **Mi Calendario** ha sido modularizada para gestionar las integraciones de agenda con Google Calendar y Microsoft Outlook:
 
 ```
-src/pages/Settings/
+src/pages/settings/
 ├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
 └── MyCalendar/                    # Módulo desacoplado de Mi Calendario
     ├── MyCalendarPage.tsx         # Orquestador principal de la vista con SettingsContainer
@@ -166,8 +169,53 @@ src/pages/Settings/
 
 ---
 
+## 📋 5. Arquitectura Modular de "Tipos de Actividad" (`src/pages/settings/ActivityTypes/`)
+
+Siguiendo la misma directiva de modularidad aplicada a **Mi Empresa** y **Mi Calendario**, la sección de **Tipos de Actividad** ha sido migrada desde `src/components/ActivityType/` hacia una estructura modular desacoplada en `src/pages/settings/ActivityTypes/`:
+
+```
+src/pages/settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── ActivityTypes/                 # Módulo desacoplado de Tipos de Actividad
+    ├── ActivityTypesPage.tsx      # Orquestador principal de la vista con SettingsContainer y KPIs
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── ActivityTypesStatsBanner.tsx # Indicadores métricos superiores (total, activos, inactivos)
+    │   ├── ActivityTypesTable.tsx       # Tabla TanStack Table con columnas, footer reactivo y estado vacío
+    │   ├── ActivityTypeModal.tsx        # Modal contenedor de alta/edición responsive
+    │   └── ActivityTypeForm.tsx         # Formulario con validación Yup, preview cromático y switch de estado
+    ├── schemas/                   # Contratos de datos, tipos y esquemas de validación
+    │   └── activityTypes.schema.ts      # Esquema Yup (activityTypeValidationSchema), TypeActivity y tipos
+    └── utils/                     # Helpers puros, columnas y validadores
+        ├── activityTypes.columns.tsx    # ColumnDef TanStack Table con badges, paleta de agenda y acciones
+        └── activityTypes.helpers.ts     # Filtros normalizados, cálculo de KPIs y runner de validación Yup
+```
+
+### 5.1. Características Técnicas del Módulo
+* **TanStack Table (`@tanstack/react-table`):**
+  - Utiliza el componente compartido unificado `Table<TypeActivity>` (`src/components/shared/Table`).
+  - Columnas estructuradas con `ColumnDef`: identificación cromática sincronizada con el calendario, badge de estado y acciones (editar/eliminar).
+  - Paginación interna de 8 elementos por página, ordenamiento por columnas y soporte responsivo móvil con `mobileLabel`.
+  - Fila de pie de tabla (`footerRow`) que informa la proporción de tipos visibles versus el total y enlace para limpiar filtros.
+* **Validación de Datos con Yup:**
+  - Esquema estricto `activityTypeValidationSchema` que audita requerimiento, longitud mínima (2 caracteres) y límite superior (50 caracteres).
+  - Integración reactiva con `FormField` e `Input`, informando errores de validación en tiempo real al tipear y al desenfocar (`onBlur`).
+* **Sincronización Cromática con FullCalendar:**
+  - Emplea directamente la función `getActivityColor` (`src/components/Activity/activityColors.ts`).
+  - Incluye vista previa interactiva en vivo dentro del formulario y en la tabla, permitiendo ver el matiz cromático exacto antes de guardar.
+* **Búsqueda y Filtros Unificados (`UnifiedSearchBar`):**
+  - Filtrado en vivo por texto en el nombre del tipo.
+  - Menú desplegable para filtrar por disponibilidad (`Activos`, `Inactivos`, `Todos`) con generación de `SearchBadge` removibles.
+* **Componentes Compartidos Utilizados:**
+  - `SettingsContainer`: Encabezado institucional con botón de actualización en tiempo real y alta de nuevo tipo.
+  - `ConfirmModal`: Confirmación destructiva antes de eliminar tipologías con mensaje explicativo sobre el tipo de respaldo predeterminado.
+  - `Notification`: Sistema estandarizado de alertas para éxito y manejo de errores HTTP.
+
+---
+
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
+* [[CRM TIBS - Calendario FullCalendar & Actividades]] — Sincronización y uso operativo de tipos de actividad en agenda.
 * [[CRM TIBS - Multi-Tenancy, Axios & Interceptores]] — Inyección del esquema tenant en peticiones.
 * [[CRM TIBS - Autenticacion, JWT & Protected Routes]] — Seguridad basada en roles.
 * [[CRM TIBS - Chat Omnicanal, WebSockets & Agente IA]] — Configuración de bots y sub-agentes.

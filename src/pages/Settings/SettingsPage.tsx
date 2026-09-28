@@ -6,7 +6,8 @@ import {
   LayoutDashboard, Brain, Building2, Layers, KeyRound, Calendar
 } from 'lucide-react';
 
-import ActivityTypesSettings from '../../components/ActivityType/ActivityTypesSettings';
+// Módulo modular de Tipos de Actividad
+import ActivityTypesPage from './ActivityTypes/ActivityTypesPage';
 import OpportunityLabelsSettings from '../../components/OpportunityLabel/OpportunityLabelsSettings';
 import HelpdeskCronSettings from '../../components/Helpdesk/HelpdeskCronSettings';
 import { DashboardSettings } from '../../components/Dashboard/DashboardSettings';
@@ -166,7 +167,7 @@ export const SettingsPage: React.FC = () => {
       case 'my-company':
       case 'ai-consumption':
         return <MyCompanyPage />;
-      case 'activity-types': return <ActivityTypesSettings />;
+      case 'activity-types': return <ActivityTypesPage />;
       case 'opportunity-labels': return <OpportunityLabelsSettings onLabelsUpdated={fetchLabels} />;
       case 'helpdesk-cron': return <HelpdeskCronSettings />;
       case 'dashboard-settings': return <DashboardSettings />;
