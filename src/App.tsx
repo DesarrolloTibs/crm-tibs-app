@@ -12,7 +12,7 @@ import ExpensesPage from './pages/ExpensesPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import CompaniesPage from './pages/CompaniesPage';
-import SettingsPage from './pages/SettingsPage';
+import SettingsPage from './pages/Settings/SettingsPage';
 import ProductsPage from './pages/ProductsPage';
 import HelpdeskPage from './pages/HelpdeskPage';
 import SupportTicketPage from './pages/SupportTicketPage';

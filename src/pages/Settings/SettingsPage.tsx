@@ -1,31 +1,36 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import Select from '../components/shared/Select';
-import { useAuth } from '../hooks/useAuth';
-import { ClipboardList, Settings, Sliders, Database, Bell, LayoutDashboard, Brain, Building2, Layers, KeyRound, Calendar } from 'lucide-react';
+import Select from '../../components/shared/Select';
+import { useAuth } from '../../hooks/useAuth';
+import {
+  ClipboardList, Settings, Sliders, Database, Bell,
+  LayoutDashboard, Brain, Building2, Layers, KeyRound, Calendar
+} from 'lucide-react';
 
-import ActivityTypesSettings from '../components/ActivityType/ActivityTypesSettings';
-import OpportunityLabelsSettings from '../components/OpportunityLabel/OpportunityLabelsSettings';
-import HelpdeskCronSettings from '../components/Helpdesk/HelpdeskCronSettings';
-import { DashboardSettings } from '../components/Dashboard/DashboardSettings';
-import AiAgentSettings from '../components/Settings/AiAgentSettings';
-import TenantsSection from '../components/Settings/TenantsSection';
-import PlansSection from '../components/Settings/PlansSection';
-import GlobalAiCredentialsSettings from '../components/Settings/GlobalAiCredentialsSettings';
-import MyCompanySection from '../components/Settings/MyCompanySection';
-import SettingsSidebar from '../components/Settings/SettingsSidebar';
-import CatalogSubTabsPanel from '../components/Settings/CatalogSubTabsPanel';
-import CalendarIntegrationSettings from '../components/Settings/CalendarIntegrationSettings';
+import ActivityTypesSettings from '../../components/ActivityType/ActivityTypesSettings';
+import OpportunityLabelsSettings from '../../components/OpportunityLabel/OpportunityLabelsSettings';
+import HelpdeskCronSettings from '../../components/Helpdesk/HelpdeskCronSettings';
+import { DashboardSettings } from '../../components/Dashboard/DashboardSettings';
+import AiAgentSettings from '../../components/Settings/AiAgentSettings';
+import TenantsSection from '../../components/Settings/TenantsSection';
+import PlansSection from '../../components/Settings/PlansSection';
+import GlobalAiCredentialsSettings from '../../components/Settings/GlobalAiCredentialsSettings';
+import SettingsSidebar from '../../components/Settings/SettingsSidebar';
+import CatalogSubTabsPanel from '../../components/Settings/CatalogSubTabsPanel';
+import CalendarIntegrationSettings from '../../components/Settings/CalendarIntegrationSettings';
 
-import { useConfigStore } from '../store/useConfigStore';
-import { getOpportunityLabels } from '../services/opportunityLabelsService';
-import type { OpportunityLabel } from '../core/models/OpportunityLabel';
+// Módulo unificado y refactorizado de Mi Empresa (incluye Consumo de IA & Suscripción)
+import MyCompanyPage from './MyCompany/MyCompanyPage';
 
-type SettingTab =
-  | 'my-calendar' | 'my-company' | 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs'
+import { useConfigStore } from '../../store/useConfigStore';
+import { getOpportunityLabels } from '../../services/opportunityLabelsService';
+import type { OpportunityLabel } from '../../core/models/OpportunityLabel';
+
+export type SettingTab =
+  | 'my-calendar' | 'my-company' | 'ai-consumption' | 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs'
   | 'helpdesk-cron' | 'dashboard-settings' | 'ai-agent-settings'
   | 'superadmin-tenants' | 'superadmin-plans' | 'superadmin-ai-credentials';
 
-const SettingsPage: React.FC = () => {
+export const SettingsPage: React.FC = () => {
   const { isAdmin, isSuperAdmin, loading: authLoading } = useAuth();
   const { selectedTenant } = useConfigStore();
 
@@ -34,7 +39,14 @@ const SettingsPage: React.FC = () => {
     if (params.get('meta_oauth') || params.get('tab') === 'channels' || params.get('tab') === 'ai-agent-settings') {
       return 'ai-agent-settings';
     }
-    return (sessionStorage.getItem('settingsActiveTab') as SettingTab) || 'my-calendar';
+    if (params.get('tab') === 'ai-consumption' || params.get('tab') === 'consumption' || params.get('tab') === 'subscription') {
+      return 'my-company';
+    }
+    const storedTab = sessionStorage.getItem('settingsActiveTab') as SettingTab;
+    if (storedTab === 'ai-consumption') {
+      return 'my-company';
+    }
+    return storedTab || 'my-calendar';
   });
 
   const [activeCatalogSubTab, setActiveCatalogSubTabState] = useState<'business-lines' | 'delivery-types' | 'licensings'>(
@@ -43,9 +55,10 @@ const SettingsPage: React.FC = () => {
   const [labels, setLabels] = useState<OpportunityLabel[]>([]);
 
   const setActiveTab = (tab: SettingTab) => {
-    setActiveTabState(tab);
-    sessionStorage.setItem('settingsActiveTab', tab);
-    window.dispatchEvent(new CustomEvent('settingsTabChanged', { detail: tab }));
+    const finalTab = tab === 'ai-consumption' ? 'my-company' : tab;
+    setActiveTabState(finalTab);
+    sessionStorage.setItem('settingsActiveTab', finalTab);
+    window.dispatchEvent(new CustomEvent('settingsTabChanged', { detail: finalTab }));
   };
 
   useEffect(() => {
@@ -116,7 +129,12 @@ const SettingsPage: React.FC = () => {
     ];
     if (isAdmin) {
       list.push(
-        { title: 'Organización', options: [{ id: 'my-company', label: 'Mi empresa', icon: <Building2 size={16} /> }] },
+        {
+          title: 'Organización',
+          options: [
+            { id: 'my-company', label: 'Mi empresa', icon: <Building2 size={16} /> },
+          ]
+        },
         { title: 'Actividades', options: [{ id: 'activity-types', label: 'Tipos de Actividad', icon: <ClipboardList size={16} /> }] },
         {
           title: 'Oportunidades', options: [
@@ -144,7 +162,9 @@ const SettingsPage: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'my-calendar': return <CalendarIntegrationSettings />;
-      case 'my-company': return <MyCompanySection />;
+      case 'my-company':
+      case 'ai-consumption':
+        return <MyCompanyPage />;
       case 'activity-types': return <ActivityTypesSettings />;
       case 'opportunity-labels': return <OpportunityLabelsSettings onLabelsUpdated={fetchLabels} />;
       case 'helpdesk-cron': return <HelpdeskCronSettings />;

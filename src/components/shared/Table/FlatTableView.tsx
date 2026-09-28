@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { flexRender, type Table as TanStackTable, type ColumnDef } from '@tanstack/react-table';
 import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import TableEmpty from './TableEmpty';
@@ -10,6 +11,7 @@ interface FlatTableViewProps<T> {
   rowClassName?: (row: T, index: number) => string;
   emptyTitle: string;
   emptyMessage: string;
+  footerRow?: ReactNode | ((info: { table: TanStackTable<T>; visibleData: T[] }) => ReactNode);
 }
 
 export function FlatTableView<T>({
@@ -20,6 +22,7 @@ export function FlatTableView<T>({
   rowClassName,
   emptyTitle,
   emptyMessage,
+  footerRow,
 }: FlatTableViewProps<T>) {
   const rows = table.getRowModel().rows;
 
@@ -110,6 +113,49 @@ export function FlatTableView<T>({
           </tr>
         )}
       </tbody>
+
+      {rows.length > 0 && (Boolean(footerRow) || table.getFooterGroups().some(fg => fg.headers.some(h => !h.isPlaceholder))) && (
+        <tfoot className="sticky bottom-0 z-10 bg-slate-50/95 backdrop-blur-xs border-t-2 border-slate-300 shadow-xs">
+          {footerRow ? (
+            typeof footerRow === 'function' ? (
+              footerRow({
+                table,
+                visibleData: rows.map(r => r.original),
+              })
+            ) : (
+              footerRow
+            )
+          ) : (
+            table.getFooterGroups().map((footerGroup) => (
+              <tr key={footerGroup.id}>
+                {footerGroup.headers.map((header) => {
+                  const meta = header.column.columnDef.meta;
+                  const align = meta?.align ?? 'left';
+                  const alignClass =
+                    align === 'right'
+                      ? 'text-right justify-end'
+                      : align === 'center'
+                      ? 'text-center justify-center'
+                      : 'text-left justify-start';
+
+                  return (
+                    <td
+                      key={header.id}
+                      className={`px-4 py-3 text-xs font-bold text-slate-800 ${meta?.cellClassName || ''}`}
+                    >
+                      <div className={`flex items-center gap-1.5 ${alignClass}`}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.footer, header.getContext())}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))
+          )}
+        </tfoot>
+      )}
     </table>
   );
 }

@@ -34,6 +34,136 @@ export interface TenantConsumptionData {
   next_renewal_date: string | null;
   plan_name: string;
   price: number;
+  tokens_extra_limit?: number;
+  total_tokens_limit?: number;
+  total_tokens_consumed?: number;
+  tokens_overage_absorbed?: number;
+  has_courtesy_overage?: boolean;
+  extra_percentage_used?: number;
+}
+
+export interface CourtesyOverageTenantReport {
+  tenant_id: number;
+  tenant_name: string;
+  schema_name: string;
+  plan_name: string;
+  allow_extra: boolean;
+  tokens_limit: number;
+  tokens_used: number;
+  tokens_extra_used: number;
+  tokens_overage_absorbed: number;
+  has_courtesy_overage: boolean;
+  total_tokens_consumed: number;
+  next_renewal_date: string | null;
+}
+
+export interface CourtesyOveragesReportResponse {
+  total_tenants: number;
+  tenants_with_courtesy_overage: number;
+  total_tokens_absorbed: number;
+  report: CourtesyOverageTenantReport[];
+}
+
+export interface ChannelConsumption {
+  channel: 'whatsapp' | 'webchat_interno' | 'messenger' | 'instagram' | 'rag' | 'otro';
+  total_tokens: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  request_count: number;
+}
+
+export interface TopUserConsumption {
+  user_id: number;
+  user_name: string;
+  total_tokens: number;
+  request_count: number;
+}
+
+export interface TopClientConsumption {
+  client_id: number;
+  client_name: string;
+  channel: string;
+  total_tokens: number;
+  request_count: number;
+}
+
+export interface ModelConsumption {
+  model_name: string;
+  total_tokens: number;
+  request_count: number;
+}
+
+export interface DailyTimelineConsumption {
+  date: string;
+  total_tokens: number;
+  request_count: number;
+}
+
+export interface RecentTransaction {
+  id: number;
+  fecha_procesamiento: string;
+  accion: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  is_extra: boolean;
+  user_id: number | null;
+  user_name: string | null;
+  client_id: number | null;
+  client_name: string | null;
+  conversation_id: string | null;
+  channel: string;
+  model_name: string | null;
+  metadata: Record<string, any> | null;
+}
+
+export interface ConsumptionBreakdownResponse {
+  schema_name: string;
+  cycle_id?: number | null;
+  cycle_info?: {
+    id: number;
+    plan_name: string;
+    status: 'active' | 'closed' | 'superseded';
+    tokens_limit: number;
+    price: number;
+    start_date: string;
+    end_date: string;
+    closed_at: string | null;
+    close_reason: string | null;
+    allow_extra: boolean;
+  } | null;
+  period: {
+    start: string | null;
+    end: string | null;
+  };
+  summary: TenantConsumptionData;
+  by_channel: ChannelConsumption[];
+  top_users: TopUserConsumption[];
+  top_clients: TopClientConsumption[];
+  by_model: ModelConsumption[];
+  daily_timeline: DailyTimelineConsumption[];
+  recent_transactions: RecentTransaction[];
+}
+
+export interface TenantBillingCycle {
+  id: number;
+  tenant_id: string | number;
+  plan_id: number;
+  plan_name: string;
+  tokens_limit: number;
+  price: number;
+  billing_period_months: number;
+  start_date: string;
+  end_date: string;
+  closed_at: string | null;
+  status: 'active' | 'closed' | 'superseded';
+  close_reason: string | null;
+  allow_extra: boolean;
+  tokens_used: number;
+  tokens_extra_used: number;
+  tokens_courtesy_used: number;
+  total_tokens_consumed: number;
+  created_at: string;
 }
 
 export interface RenewalQueueItem {
@@ -157,8 +287,21 @@ export const clearTenantConsumptionCache = (schemaName?: string) => {
   delete consumptionCache[key];
 };
 
-export const getTenantConsumption = async (schemaName?: string, forceRefresh = false): Promise<TenantConsumptionData> => {
-  const key = schemaName || 'default';
+export interface GetConsumptionOptions {
+  schemaName?: string;
+  tenantId?: number;
+  throwOnError?: boolean;
+}
+
+export const getTenantConsumption = async (
+  options?: string | GetConsumptionOptions,
+  forceRefresh = false
+): Promise<TenantConsumptionData> => {
+  const schemaName = typeof options === 'string' ? options : options?.schemaName;
+  const tenantId = typeof options === 'object' ? options?.tenantId : undefined;
+  const throwOnError = typeof options === 'object' ? options?.throwOnError : false;
+
+  const key = tenantId ? `id_${tenantId}` : (schemaName || 'default');
   const now = Date.now();
 
   if (!forceRefresh && consumptionCache[key] && now - consumptionCache[key].timestamp < 5000) {
@@ -171,9 +314,11 @@ export const getTenantConsumption = async (schemaName?: string, forceRefresh = f
 
   const promise = (async () => {
     try {
-      const response = await axiosInstance.get(`${TENANTS.TENANTS}/consumption`, {
-        params: schemaName ? { schemaName } : {},
-      });
+      const params: Record<string, any> = {};
+      if (schemaName) params.schemaName = schemaName;
+      if (tenantId) params.tenantId = tenantId;
+
+      const response = await axiosInstance.get(`${TENANTS.TENANTS}/consumption`, { params });
       const raw = (response.data as any)?.data ?? response.data;
       const data = raw as TenantConsumptionData;
       consumptionCache[key] = { data, timestamp: Date.now() };
@@ -182,8 +327,11 @@ export const getTenantConsumption = async (schemaName?: string, forceRefresh = f
       if (consumptionCache[key]) {
         return consumptionCache[key].data;
       }
+      if (throwOnError) {
+        throw error;
+      }
       return {
-        tenant_id: null,
+        tenant_id: tenantId ?? null,
         tenant_name: '',
         schema_name: schemaName || 'public',
         is_active: true,
@@ -282,14 +430,88 @@ export const clearRenewalQueue = async (tenantId: number): Promise<{ message: st
   return raw;
 };
 
+let breakdownCache: Record<string, { data: ConsumptionBreakdownResponse; timestamp: number }> = {};
+let pendingBreakdownPromises: Record<string, Promise<ConsumptionBreakdownResponse>> = {};
+
+export const clearConsumptionBreakdownCache = (key?: string) => {
+  if (key) delete breakdownCache[key];
+  else breakdownCache = {};
+};
+
+export interface ConsumptionBreakdownParams {
+  schemaName?: string;
+  tenantId?: number;
+  cycleId?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export const getConsumptionBreakdown = async (
+  params?: ConsumptionBreakdownParams,
+  forceRefresh = false
+): Promise<ConsumptionBreakdownResponse> => {
+  const key = `${params?.tenantId ? `id_${params.tenantId}` : (params?.schemaName || 'default')}_c${params?.cycleId || 'act'}_s${params?.startDate || 'none'}_e${params?.endDate || 'none'}`;
+  const now = Date.now();
+
+  if (!forceRefresh && breakdownCache[key] && now - breakdownCache[key].timestamp < 5000) {
+    return breakdownCache[key].data;
+  }
+
+  if (key in pendingBreakdownPromises) {
+    return pendingBreakdownPromises[key];
+  }
+
+  const promise = (async () => {
+    try {
+      const queryParams: Record<string, any> = {};
+      if (params?.schemaName) queryParams.schemaName = params.schemaName;
+      if (params?.tenantId) queryParams.tenantId = params.tenantId;
+      if (params?.cycleId) queryParams.cycleId = params.cycleId;
+      if (params?.startDate) queryParams.startDate = params.startDate;
+      if (params?.endDate) queryParams.endDate = params.endDate;
+
+      const response = await axiosInstance.get(TENANTS.CONSUMPTION_BREAKDOWN, { params: queryParams });
+      const raw = (response.data as any)?.data ?? response.data;
+      const data = raw as ConsumptionBreakdownResponse;
+      breakdownCache[key] = { data, timestamp: Date.now() };
+      return data;
+    } finally {
+      delete pendingBreakdownPromises[key];
+    }
+  })();
+
+  pendingBreakdownPromises[key] = promise;
+  return promise;
+};
+
+export const getBillingCycles = async (
+  params?: { tenantId?: number; schemaName?: string }
+): Promise<TenantBillingCycle[]> => {
+  const queryParams: Record<string, any> = {};
+  if (params?.tenantId) queryParams.tenantId = params.tenantId;
+  if (params?.schemaName) queryParams.schemaName = params.schemaName;
+
+  const response = await axiosInstance.get(TENANTS.BILLING_CYCLES, { params: queryParams });
+  const raw = (response.data as any)?.data ?? response.data;
+  return Array.isArray(raw) ? raw : [];
+};
+
 export const updateAllowExtra = async (
   tenantId: number,
   allowExtra: boolean
 ): Promise<TenantPlanInfo> => {
   const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}/allow-extra`, { allowExtra });
   clearTenantsCache();
+  consumptionCache = {};
+  breakdownCache = {};
   const raw = (response.data as any)?.data ?? response.data;
   return raw;
+};
+
+export const getCourtesyOveragesReport = async (): Promise<CourtesyOveragesReportResponse> => {
+  const response = await axiosInstance.get(TENANTS.COURTESY_OVERAGES);
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw as CourtesyOveragesReportResponse;
 };
 
 export const updateTenant = async (

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { flexRender, type Table as TanStackTable, type ColumnDef } from '@tanstack/react-table';
 import { ArrowUp, ArrowDown, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 import TableEmpty from './TableEmpty';
@@ -13,6 +14,7 @@ interface CardsTableViewProps<T> {
   rowClassName?: (row: T, index: number) => string;
   emptyTitle: string;
   emptyMessage: string;
+  footerRow?: ReactNode | ((info: { table: TanStackTable<T>; visibleData: T[] }) => ReactNode);
 }
 
 export function CardsTableView<T>({
@@ -26,6 +28,7 @@ export function CardsTableView<T>({
   rowClassName,
   emptyTitle,
   emptyMessage,
+  footerRow,
 }: CardsTableViewProps<T>) {
   const rows = table.getRowModel().rows;
 
@@ -172,6 +175,19 @@ export function CardsTableView<T>({
           />
         )}
       </tbody>
+
+      {rows.length > 0 && footerRow && (
+        <tfoot className="table-footer-group md:table-footer-group">
+          {typeof footerRow === 'function' ? (
+            footerRow({
+              table,
+              visibleData: rows.map(r => r.original),
+            })
+          ) : (
+            footerRow
+          )}
+        </tfoot>
+      )}
     </table>
   );
 }

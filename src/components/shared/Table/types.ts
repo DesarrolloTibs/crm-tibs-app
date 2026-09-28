@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
 import type {
   ColumnDef,
   SortingState,
   OnChangeFn,
   RowSelectionState,
   RowData,
+  Table as TanStackTable,
 } from '@tanstack/react-table';
 
 // ── Extend TanStack ColumnMeta for custom styling and mobile responsive settings ──
@@ -68,4 +70,8 @@ export interface TableProps<T> {
   enableRowSelection?: boolean;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+
+  // ── Footer / Fila Fija al Pie (Sticky Table Footer) ──
+  /** Fila fija o contenido al pie de la tabla (tfoot sticky). Recibe la instancia de la tabla y los datos visibles actuales */
+  footerRow?: ReactNode | ((info: { table: TanStackTable<T>; visibleData: T[] }) => ReactNode);
 }

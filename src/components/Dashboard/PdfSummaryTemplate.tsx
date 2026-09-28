@@ -45,7 +45,7 @@ const PdfSummaryTemplate: React.FC<PdfSummaryTemplateProps> = (props) => {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'2px solid #e2e8f0', paddingBottom:'16px' }}>
           <div>
             <h1 style={{ fontSize:'22px', fontWeight:900, color:'#1e293b', margin:0 }}>REPORTE EJECUTIVO DE DESEMPEÑO</h1>
-            <p style={{ fontSize:'11px', color:'#64748b', margin:'4px 0 0 0', fontWeight:'bold' }}>CRM Tibs - Reportes Consolidados</p>
+            <p style={{ fontSize:'11px', color:'#64748b', margin:'4px 0 0 0', fontWeight:'bold' }}>Billy Sales & Services - Reportes Consolidados</p>
           </div>
           <div style={{ textAlign:'right', fontSize:'10px', color:'#64748b', lineHeight:'1.4' }}>
             <div><strong>Generado:</strong> {new Date().toLocaleDateString('es-MX')}</div>

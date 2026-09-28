@@ -52,6 +52,9 @@ export function Table<T>({
   enableRowSelection = false,
   rowSelection: controlledRowSelection,
   onRowSelectionChange: setControlledRowSelection,
+
+  // Footer / Fila Fija
+  footerRow,
 }: TableProps<T>) {
   // Local sorting state if not controlled
   const [internalSorting, setInternalSorting] = useState<SortingState>([]);
@@ -137,6 +140,7 @@ export function Table<T>({
             rowClassName={rowClassName}
             emptyTitle={emptyTitle}
             emptyMessage={emptyMessage}
+            footerRow={footerRow}
           />
         </div>
 
@@ -171,6 +175,7 @@ export function Table<T>({
           rowClassName={rowClassName}
           emptyTitle={emptyTitle}
           emptyMessage={emptyMessage}
+          footerRow={footerRow}
         />
       </div>
 

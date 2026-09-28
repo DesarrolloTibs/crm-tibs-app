@@ -33,7 +33,7 @@ Este documento compendia la totalidad de vistas y componentes modulares que conf
 | [`ActivitiesPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/ActivitiesPage.tsx) | `/activities` | Protegido | Calendario operativo con FullCalendar (`@fullcalendar/react`), tipos cromáticos y tabla de citas. |
 | [`ExpensesPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/ExpensesPage.tsx) | `/expenses` | Protegido | Registro y control de gastos corporativos, subida y descarga de comprobantes / facturas. |
 | [`UsersPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/UsersPage.tsx) | `/users` | Protegido (Admin) | Administración de usuarios, asignación de roles RBAC, activación/desactivación y avatar. |
-| [`SettingsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/SettingsPage.tsx) | `/settings` | Protegido | Centro global de configuración: empresa, canales, calendarios externos, catálogos, credenciales IA y tenants. |
+| [`SettingsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Settings/SettingsPage.tsx) | `/settings` | Protegido | Centro global de configuración: empresa, canales, calendarios externos, catálogos, credenciales IA y tenants. |
 
 ---
 
@@ -85,6 +85,8 @@ Este documento compendia la totalidad de vistas y componentes modulares que conf
 * [`GlobalAiCredentialsSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/GlobalAiCredentialsSettings.tsx) — Configuración de llaves de API (OpenAI, Anthropic, Gemini) a nivel de plataforma.
 * [`TenantsSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/TenantsSection.tsx) — Aprovisionamiento de inquilinos, monitoreo de cuotas y asignación de esquemas DB.
 * [`PlansSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/PlansSection.tsx) — Catálogo de planes SaaS, límites de tokens y precios de suscripción.
+
+- [`AiConsumptionSection.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiConsumptionSection.tsx) — Panel de supervisión de consumo de recursos y suscripción SaaS. Integra suite completa de componentes compartidos (`SettingsContainer`, `Tabs`, `Table`, `Badge`, `Button`, `EmptyState`, `Loader`, `Modal`, `Notification`, `SkeletonLoader`) con enfoque 100% de negocio (sin jerga técnica de modelos ni embeddings).
 
 ## 🛠️ 3. Componentes Compartidos del Sistema (`src/components/shared/` & Utilerías)
 
