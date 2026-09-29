@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Calendar, RefreshCw, AlertCircle, CheckCircle2, X } from 'lucide-react';
 
@@ -60,8 +60,14 @@ export const MyCalendarPage: React.FC = () => {
     });
   };
 
+  // Guard ref para evitar peticiones duplicadas simultáneas (StrictMode o cambios de searchParams)
+  const isFetchingRef = useRef<boolean>(false);
+
   // Cargar estado de la integración
   const fetchStatus = useCallback(async (isManual = false) => {
+    if (isFetchingRef.current && !isManual) return;
+    isFetchingRef.current = true;
+
     try {
       if (isManual) setLoading(true);
       const data = await getCalendarIntegrationStatus();
@@ -75,14 +81,17 @@ export const MyCalendarPage: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 
-  // Inicialización y escucha de retornos OAuth
+  // Inicialización de datos al montar
   useEffect(() => {
     fetchStatus();
+  }, [fetchStatus]);
 
-    // Validar parámetros de redirección URL (callback de OAuth de Google o Outlook)
+  // Validar parámetros de redirección URL (callback de OAuth de Google o Outlook)
+  useEffect(() => {
     const syncResult = searchParams.get('calendar_sync');
     if (syncResult === 'success') {
       setBannerAlert({
@@ -90,16 +99,17 @@ export const MyCalendarPage: React.FC = () => {
         message: '¡Tu calendario externo se ha vinculado y sincronizado exitosamente!',
       });
       searchParams.delete('calendar_sync');
-      setSearchParams(searchParams);
+      setSearchParams(searchParams, { replace: true });
+      fetchStatus(true);
     } else if (syncResult === 'error') {
       setBannerAlert({
         type: 'error',
         message: 'Hubo un error al intentar vincular tu calendario de forma externa. Por favor, reintenta.',
       });
       searchParams.delete('calendar_sync');
-      setSearchParams(searchParams);
+      setSearchParams(searchParams, { replace: true });
     }
-  }, [fetchStatus, searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, fetchStatus]);
 
   // Manejo de conexión OAuth (Google / Outlook)
   const handleConnectOAuth = async (provider: 'google' | 'outlook') => {

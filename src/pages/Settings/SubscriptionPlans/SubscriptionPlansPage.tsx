@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { ClipboardList, Plus, RefreshCw } from 'lucide-react';
+import { Layers, Plus, RefreshCw } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
 import SettingsContainer from '../../../components/shared/SettingsContainer';
@@ -7,49 +7,49 @@ import Button from '../../../components/shared/Button';
 import ConfirmModal from '../../../components/shared/ConfirmModal';
 import Notification from '../../../components/shared/Notification';
 
-// Subcomponentes Modulares de Tipos de Actividad
-import { ActivityTypesStatsBanner } from './components/ActivityTypesStatsBanner';
-import { ActivityTypesTable } from './components/ActivityTypesTable';
-import { ActivityTypeModal } from './components/ActivityTypeModal';
+// Subcomponentes Modulares de Planes de Suscripción
+import { SubscriptionPlansStatsBanner } from './components/SubscriptionPlansStatsBanner';
+import { SubscriptionPlansTable } from './components/SubscriptionPlansTable';
+import { SubscriptionPlanModal } from './components/SubscriptionPlanModal';
 
 // Esquemas y Tipos
 import type {
-  TypeActivity,
-  ActivityTypeFormData,
-  ActivityTypeFilterState,
+  Plan,
+  SubscriptionPlanFormData,
+  SubscriptionPlanFilterState,
   NotificationState,
-} from './schemas/activityTypes.schema';
+} from './schemas/subscriptionPlans.schema';
 
 // Utilidades y Helpers
 import {
-  filterActivityTypes,
-  calculateActivityTypeStats,
-} from './utils/activityTypes.helpers';
+  filterSubscriptionPlans,
+  calculateSubscriptionPlanStats,
+} from './utils/subscriptionPlans.helpers';
 
 // Servicios API
 import {
-  getActivityTypes,
-  createActivityType,
-  updateActivityType,
-  deleteActivityType,
-} from '../../../services/activitiesService';
+  getPlans,
+  createPlan,
+  updatePlan,
+  deletePlan,
+} from '../../../services/plansService';
 
-export const ActivityTypesPage: React.FC = () => {
+export const SubscriptionPlansPage: React.FC = () => {
   // Estado de datos
-  const [types, setTypes] = useState<TypeActivity[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   // Filtros y Búsqueda
-  const [filters, setFilters] = useState<ActivityTypeFilterState>({
+  const [filters, setFilters] = useState<SubscriptionPlanFilterState>({
     search: '',
     status: 'all',
   });
 
   // Estados de Modales
   const [modalOpen, setModalOpen] = useState<boolean>(false);
-  const [editingType, setEditingType] = useState<TypeActivity | null>(null);
-  const [deletingType, setDeletingType] = useState<TypeActivity | null>(null);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
 
   // Notificación compartida
   const [notification, setNotification] = useState<NotificationState>({
@@ -81,21 +81,21 @@ export const ActivityTypesPage: React.FC = () => {
   // Guard ref para evitar peticiones duplicadas simultáneas (StrictMode o remount)
   const isFetchingRef = useRef<boolean>(false);
 
-  // Cargar tipos de actividad desde la API
-  const fetchTypes = useCallback(async (isManual = false) => {
+  // Cargar planes de suscripción desde la API
+  const fetchPlans = useCallback(async (isManual = false) => {
     if (isFetchingRef.current && !isManual) return;
     isFetchingRef.current = true;
 
     try {
       if (isManual) setLoading(true);
-      const data = await getActivityTypes();
-      setTypes(Array.isArray(data) ? data : []);
+      const data = await getPlans();
+      setPlans(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Error al cargar tipos de actividad:', err);
+      console.error('Error al cargar planes de suscripción:', err);
       notify({
         type: 'error',
         title: 'Error de Carga',
-        message: 'No fue posible obtener los tipos de actividad desde el servidor. Por favor, reintenta.',
+        message: 'No fue posible obtener el catálogo de planes desde el servidor. Por favor, reintenta.',
       });
     } finally {
       setLoading(false);
@@ -104,44 +104,56 @@ export const ActivityTypesPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchTypes();
-  }, [fetchTypes]);
+    fetchPlans();
+  }, [fetchPlans]);
 
   // Manejo de creación y edición
   const handleOpenCreate = () => {
-    setEditingType(null);
+    setEditingPlan(null);
     setModalOpen(true);
   };
 
-  const handleOpenEdit = (type: TypeActivity) => {
-    setEditingType(type);
+  const handleOpenEdit = (plan: Plan) => {
+    setEditingPlan(plan);
     setModalOpen(true);
   };
 
-  const handleFormSubmit = async (formData: ActivityTypeFormData) => {
+  const handleFormSubmit = async (formData: SubscriptionPlanFormData) => {
     setSubmitting(true);
     try {
-      if (editingType?.id) {
-        await updateActivityType(editingType.id, formData);
+      if (editingPlan?.plan_id) {
+        await updatePlan(editingPlan.plan_id, {
+          plan_name: formData.plan_name,
+          price: formData.price,
+          tokens_limit: formData.tokens_limit,
+          billing_period_months: formData.billing_period_months,
+          blnstatus: formData.blnstatus,
+        });
         notify({
           type: 'success',
-          title: '¡Tipo Actualizado!',
-          message: `El tipo de actividad "${formData.strname}" se ha modificado exitosamente.`,
+          title: '¡Plan Actualizado!',
+          message: `El plan "${formData.plan_name}" se ha modificado exitosamente.`,
         });
       } else {
-        await createActivityType(formData);
+        await createPlan({
+          plan_name: formData.plan_name,
+          price: formData.price,
+          tokens_limit: formData.tokens_limit,
+          billing_period_months: formData.billing_period_months,
+          blnstatus: formData.blnstatus,
+        });
         notify({
           type: 'success',
-          title: '¡Tipo Registrado!',
-          message: `El nuevo tipo de actividad "${formData.strname}" fue creado y está listo para usarse.`,
+          title: '¡Plan Registrado!',
+          message: `El nuevo plan "${formData.plan_name}" fue registrado y está listo para ser asignado.`,
         });
       }
 
       setModalOpen(false);
-      setEditingType(null);
-      await fetchTypes();
+      setEditingPlan(null);
+      await fetchPlans();
     } catch (err: any) {
-      console.error('Error al guardar tipo de actividad:', err);
+      console.error('Error al guardar plan de suscripción:', err);
       const errorMsg =
         err.response?.data?.message ||
         'Ocurrió un error inesperado al procesar la solicitud.';
@@ -155,33 +167,33 @@ export const ActivityTypesPage: React.FC = () => {
     }
   };
 
-  // Manejo de eliminación
-  const handleOpenDelete = (type: TypeActivity) => {
-    setDeletingType(type);
+  // Manejo de eliminación / desactivación
+  const handleOpenDelete = (plan: Plan) => {
+    setDeletingPlan(plan);
   };
 
   const handleConfirmDelete = async () => {
-    if (!deletingType?.id) return;
-    const typeToDelete = deletingType;
-    setDeletingType(null);
+    if (!deletingPlan?.plan_id) return;
+    const planToDelete = deletingPlan;
+    setDeletingPlan(null);
 
     try {
       setLoading(true);
-      await deleteActivityType(typeToDelete.id);
+      await deletePlan(planToDelete.plan_id);
       notify({
         type: 'success',
-        title: 'Tipo Eliminado',
-        message: `El tipo "${typeToDelete.strname}" se eliminó correctamente.`,
+        title: 'Plan Desactivado',
+        message: `El plan "${planToDelete.plan_name}" fue desactivado del catálogo correctamente.`,
       });
-      await fetchTypes();
+      await fetchPlans();
     } catch (err: any) {
-      console.error('Error al eliminar tipo de actividad:', err);
+      console.error('Error al desactivar plan de suscripción:', err);
       const errorMsg =
         err.response?.data?.message ||
-        'No se pudo eliminar el tipo de actividad seleccionado.';
+        'No se pudo desactivar el plan de suscripción seleccionado.';
       notify({
         type: 'error',
-        title: 'Error al Eliminar',
+        title: 'Error al Desactivar',
         message: Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg,
       });
     } finally {
@@ -190,25 +202,25 @@ export const ActivityTypesPage: React.FC = () => {
   };
 
   // Filtrado y estadísticas calculadas
-  const filteredTypes = useMemo(
-    () => filterActivityTypes(types, filters),
-    [types, filters]
+  const filteredPlans = useMemo(
+    () => filterSubscriptionPlans(plans, filters),
+    [plans, filters]
   );
 
-  const stats = useMemo(() => calculateActivityTypeStats(types), [types]);
+  const stats = useMemo(() => calculateSubscriptionPlanStats(plans), [plans]);
 
   return (
     <SettingsContainer
-      title="Tipos de Actividad"
-      description="Crea, personaliza y organiza las categorías de citas, llamadas y tareas comerciales de tu equipo con identificación cromática en tiempo real."
-      icon={<ClipboardList size={20} />}
+      title="Planes de Suscripción"
+      description="Define el precio, límite estricto de consumo de tokens y periodicidad de facturación de cada nivel de servicio SaaS de la plataforma."
+      icon={<Layers size={20} />}
       rightAction={
         <div className="flex items-center gap-2">
           <Button
             variant="secondary"
-            onClick={() => fetchTypes(true)}
+            onClick={() => fetchPlans(true)}
             disabled={loading}
-            title="Recargar tipos de actividad"
+            title="Recargar planes de suscripción"
             className="!py-2 !px-3 !text-xs !normal-case !tracking-normal gap-1.5 shadow-2xs"
           >
             <RefreshCw
@@ -219,24 +231,24 @@ export const ActivityTypesPage: React.FC = () => {
           </Button>
 
           <Button
-            variant="success"
+            variant="indigo"
             onClick={handleOpenCreate}
             className="!py-2 !px-3.5 !text-xs !normal-case !tracking-normal gap-1.5 shadow-xs font-bold"
           >
             <Plus size={15} />
-            <span>Nuevo Tipo</span>
+            <span>Nuevo Plan</span>
           </Button>
         </div>
       }
     >
       <div className="space-y-6 pt-1">
         {/* Banner de Estadísticas Rápidas */}
-        <ActivityTypesStatsBanner stats={stats} />
+        <SubscriptionPlansStatsBanner stats={stats} />
 
-        {/* Tabla Compartida basada en el patrón de Mi Empresa */}
-        <ActivityTypesTable
-          types={filteredTypes}
-          totalCount={types.length}
+        {/* Tabla Compartida TanStack Table */}
+        <SubscriptionPlansTable
+          plans={filteredPlans}
+          totalCount={plans.length}
           loading={loading}
           onEdit={handleOpenEdit}
           onDelete={handleOpenDelete}
@@ -248,24 +260,24 @@ export const ActivityTypesPage: React.FC = () => {
       </div>
 
       {/* MODAL DE CREACIÓN / EDICIÓN */}
-      <ActivityTypeModal
+      <SubscriptionPlanModal
         open={modalOpen}
-        editingType={editingType}
+        editingPlan={editingPlan}
         onClose={() => {
           setModalOpen(false);
-          setEditingType(null);
+          setEditingPlan(null);
         }}
         onSubmit={handleFormSubmit}
         submitting={submitting}
       />
 
-      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN / DESACTIVACIÓN */}
       <ConfirmModal
-        open={!!deletingType}
-        onClose={() => setDeletingType(null)}
+        open={!!deletingPlan}
+        onClose={() => setDeletingPlan(null)}
         onConfirm={handleConfirmDelete}
-        message={`¿Estás seguro de que deseas eliminar el tipo de actividad "${deletingType?.strname}"? Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar Tipo"
+        message={`¿Estás seguro de que deseas desactivar el plan "${deletingPlan?.plan_name}"? Pasará a estado inactivo y no podrá ser asignado a nuevas organizaciones.`}
+        confirmLabel="Desactivar Plan"
         cancelLabel="Cancelar"
         variant="danger"
       />
@@ -283,4 +295,4 @@ export const ActivityTypesPage: React.FC = () => {
   );
 };
 
-export default ActivityTypesPage;
+export default SubscriptionPlansPage;

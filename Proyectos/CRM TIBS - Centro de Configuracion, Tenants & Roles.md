@@ -26,8 +26,8 @@ Este documento describe la arquitectura del panel de administración central ([`
 ```mermaid
 graph TD
     subgraph AmbitoSuperAdmin ["👑 Ámbito SuperAdmin (Plataforma Global)"]
-        Tenants["🏢 Gestión de Tenants (`TenantsSection`)<br/>- Aprovisionamiento de Esquemas PostgreSQL<br/>- Asignación Flexible de Planes (Inmediato vs Próximo Período)<br/>- Gestor Visual de Colas de Renovación Proyectadas<br/>- Monitoreo de Consumo de Tokens<br/>- Tolerancia de Sobregiro (allow_extra)"]
-        Plans["💳 Catálogo de Planes SaaS (`PlansSection`)<br/>- Límite de Tokens, Precio y Facturación"]
+        Tenants["🏢 Gestión de Tenants (`TenantsSection` / `TenantsPage`)<br/>- Aprovisionamiento de Esquemas PostgreSQL<br/>- Asignación Flexible de Planes (Inmediato vs Próximo Período)<br/>- Gestor Visual de Colas de Renovación Proyectadas<br/>- Monitoreo de Consumo de Tokens<br/>- Tolerancia de Sobregiro (allow_extra)"]
+        Plans["💳 Catálogo de Planes SaaS (`SubscriptionPlansPage`)<br/>- Arquitectura modular (components, schemas, utils)<br/>- TanStack Table con paginación, filtros y responsive<br/>- Validación Yup y FormField para tarifas y cuotas<br/>- KPIs superiores de planes y capacidad global"]
         AICreds["🔑 Credenciales Globales IA (`GlobalAiCredentialsSettings`)<br/>- API Keys de OpenAI, Gemini y Anthropic"]
         GlobalAudit["📊 Auditoría Global de Cortesías (`CourtesyOveragesModal`)<br/>- Fiscalización de desbordes absorbidos SaaS con exportación Excel/PDF"]
     end
@@ -450,6 +450,45 @@ src/pages/settings/
   - **Cola de Renovación:** Métricas de cobertura proyectada, historial de ciclos prepagados con cancelación individual y generador de lotes prepagados (1, 2, 3, 6, 12 períodos o manual).
 * **Componentes Compartidos Utilizados:**
   - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `FormField`, `Select`.
+
+---
+
+### 💳 12. Arquitectura Modular de "Planes de Suscripción" (`src/pages/settings/SubscriptionPlans/`)
+
+Siguiendo el estándar de arquitectura modular desacoplada por capas aplicado a **Tipos de Actividad**, **Valores de Catálogos** y **Gestión de Organizaciones**, la sección de **Planes de Suscripción** ha sido migrada desde el componente monolítico `src/components/Settings/PlansSection.tsx` hacia una arquitectura modular desacoplada en `src/pages/settings/SubscriptionPlans/`:
+
+```
+src/pages/settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── SubscriptionPlans/             # Módulo desacoplado de Planes de Suscripción
+    ├── SubscriptionPlansPage.tsx  # Orquestador principal con SettingsContainer, KPIs y modal
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── SubscriptionPlansStatsBanner.tsx # Indicadores métricos KPI (Total, Activos, Inactivos)
+    │   ├── SubscriptionPlansTable.tsx       # Tabla TanStack Table con buscador reactivo, filtros y responsive
+    │   ├── SubscriptionPlanModal.tsx        # Modal contenedor responsive para alta y edición
+    │   └── SubscriptionPlanForm.tsx         # Formulario con validación Yup, FormField, períodos y switch
+    ├── schemas/                   # Contratos de datos, tipos y esquemas de validación
+    │   └── subscriptionPlans.schema.ts      # Esquema Yup (subscriptionPlanValidationSchema) y tipos
+    └── utils/                     # Helpers puros, columnas TanStack Table y formateadores
+        ├── subscriptionPlans.columns.tsx    # Definición ColumnDef con badges, precios, tokens y acciones
+        └── subscriptionPlans.helpers.ts     # Filtros normalizados, cálculo de KPIs y runner de validación Yup
+```
+
+#### 12.1. Características Técnicas del Módulo
+* **TanStack Table (`@tanstack/react-table`):**
+  - Emplea el componente compartido `Table<Plan>` (`src/components/shared/Table`).
+  - Columnas estructuradas con `ColumnDef`: Identificación del plan con insignia cromática de servicio e ID, precio formateado en divisa USD (`$XX.XX USD`), cuota de tokens con tipografía mono y badge de IA (`100,000 tokens`), periodicidad con etiqueta descriptiva (Mensual, Trimestral, Semestral, Anual), insignia de estado activo/inactivo con `Badge` (`dot`) y acciones unificadas (Editar / Desactivar).
+  - Paginación interna de 8 elementos por página, ordenamiento por columnas y soporte responsivo móvil con `mobileLabel`.
+* **Validación Declarativa con Yup & FormField:**
+  - Esquema estricto `subscriptionPlanValidationSchema` que audita obligatoriedad y límites del nombre (2 a 60 caracteres), precio numérico mayor o igual a cero, límite de tokens entero no negativo y período de facturación en meses enteros (1 a 60).
+  - Ejecución reactiva mediante el runner asíncrono `validateSubscriptionPlanForm`, informando errores en tiempo real y al desenfocar (`onBlur`).
+* **Sugerencias Rápidas de Período y Switch de Disponibilidad:**
+  - `SubscriptionPlanForm` provee atajos en 1 clic para períodos comunes (1 mes Mensual, 3 meses Trimestral, 6 meses Semestral, 12 meses Anual) además de entrada numérica libre.
+  - Switch interactivo para alternar entre estado Activo (disponible en selector de tenants) e Inactivo (restringido de nuevas asignaciones).
+* **Componentes Compartidos Utilizados:**
+  - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `FormField`.
+
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Calendario FullCalendar & Actividades]] — Sincronización y uso operativo de tipos de actividad en agenda.

@@ -10,6 +10,7 @@ import type {
 
 export type {
   TenantPlanInfo,
+  TenantPlanInfo as Tenant,
   Plan,
   ProvisionTenantPayload,
   RenewalQueueResponse,

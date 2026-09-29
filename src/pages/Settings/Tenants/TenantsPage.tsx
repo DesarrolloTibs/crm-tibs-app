@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Building2, Plus, RefreshCw } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
@@ -104,8 +104,14 @@ export const TenantsPage: React.FC = () => {
     });
   };
 
+  // Guard ref para evitar peticiones duplicadas simultáneas (StrictMode o remount)
+  const isFetchingRef = useRef<boolean>(false);
+
   // Carga inicial y refresco de datos
   const loadData = useCallback(async (isManual = false) => {
+    if (isFetchingRef.current && !isManual) return;
+    isFetchingRef.current = true;
+
     try {
       if (isManual) setLoading(true);
       const [tenantsData, plansData] = await Promise.all([getTenants(true), getPlans()]);
@@ -115,21 +121,17 @@ export const TenantsPage: React.FC = () => {
       setTenants(validTenants);
       setPlans(validPlans);
 
-      // Consulta en paralelo para badges y métricas de cola
+      // Poblar métricas de cola directamente con los datos consolidados de GET /api/tenants (sin peticiones N+1)
+      const directSummaries: Record<number, { total: number; coverageUntil: string | null }> = {};
       validTenants.forEach((t) => {
         if (t.id) {
-          getTenantRenewalQueue(t.id)
-            .then((res) => {
-              if (res) {
-                setQueueSummaries((prev) => ({
-                  ...prev,
-                  [t.id]: { total: res.total_queued_periods, coverageUntil: res.coverage_until },
-                }));
-              }
-            })
-            .catch(() => {});
+          directSummaries[t.id] = {
+            total: Number(t.total_queued_periods) || 0,
+            coverageUntil: t.coverage_until ?? null,
+          };
         }
       });
+      setQueueSummaries(directSummaries);
     } catch (err) {
       console.error('Error al cargar organizaciones o planes:', err);
       notify({
@@ -139,6 +141,7 @@ export const TenantsPage: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, [setTenants]);
 

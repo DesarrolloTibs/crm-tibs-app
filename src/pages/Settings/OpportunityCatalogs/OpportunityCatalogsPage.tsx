@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Database, Plus, RefreshCw } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
@@ -153,9 +153,19 @@ export const OpportunityCatalogsPage: React.FC<OpportunityCatalogsPageProps> = (
     });
   };
 
+  // Guard ref para evitar peticiones duplicadas simultáneas o por cambio de título
+  const isFetchingRef = useRef<string | null>(null);
+  const currentCatalogTitleRef = useRef(currentCatalogTitle);
+  useEffect(() => {
+    currentCatalogTitleRef.current = currentCatalogTitle;
+  }, [currentCatalogTitle]);
+
   // Cargar opciones desde la API
   const fetchOptions = useCallback(
-    async (showLoading = true) => {
+    async (showLoading = true, isManual = false) => {
+      if (isFetchingRef.current === activeSubTab && !isManual) return;
+      isFetchingRef.current = activeSubTab;
+
       try {
         if (showLoading) setLoading(true);
         const data = await getCatalogOptions(activeSubTab);
@@ -165,13 +175,14 @@ export const OpportunityCatalogsPage: React.FC<OpportunityCatalogsPageProps> = (
         notify({
           type: 'error',
           title: 'Error de Carga',
-          message: `No fue posible obtener los valores del catálogo "${currentCatalogTitle}". Por favor, reintenta.`,
+          message: `No fue posible obtener los valores del catálogo "${currentCatalogTitleRef.current}". Por favor, reintenta.`,
         });
       } finally {
         setLoading(false);
+        isFetchingRef.current = null;
       }
     },
-    [activeSubTab, currentCatalogTitle]
+    [activeSubTab]
   );
 
   useEffect(() => {
@@ -312,7 +323,7 @@ export const OpportunityCatalogsPage: React.FC<OpportunityCatalogsPageProps> = (
         <div className="flex items-center gap-2">
           <Button
             variant="secondary"
-            onClick={() => fetchOptions(true)}
+            onClick={() => fetchOptions(true, true)}
             disabled={loading}
             title="Recargar valores de catálogo"
             className="!py-2 !px-3 !text-xs !normal-case !tracking-normal gap-1.5 shadow-2xs"

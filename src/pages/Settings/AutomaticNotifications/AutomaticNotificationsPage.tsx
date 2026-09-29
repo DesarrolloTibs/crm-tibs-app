@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Save, Bell } from 'lucide-react';
 
 // Servicios API
@@ -36,9 +36,14 @@ export const AutomaticNotificationsPage: React.FC = () => {
   const [fixedTime, setFixedTime] = useState('08:00');
   const [intervalHours, setIntervalHours] = useState(2);
   const [intervalMinutes, setIntervalMinutes] = useState(0);
+  // Guard ref para evitar peticiones duplicadas simultáneas (StrictMode o remount)
+  const isFetchingRef = useRef<boolean>(false);
 
   // Cargar configuración actual
   useEffect(() => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     const fetchConfig = async () => {
       setLoading(true);
       try {
@@ -55,6 +60,7 @@ export const AutomaticNotificationsPage: React.FC = () => {
         setIntervalMinutes(0);
       } finally {
         setLoading(false);
+        isFetchingRef.current = false;
       }
     };
     fetchConfig();

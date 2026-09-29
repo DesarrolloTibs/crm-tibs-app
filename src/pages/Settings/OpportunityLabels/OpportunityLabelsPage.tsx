@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Sliders } from 'lucide-react';
 
 // Componentes Compartidos
@@ -61,8 +61,14 @@ export const OpportunityLabelsPage: React.FC<OpportunityLabelsPageProps> = ({
     });
   };
 
+  // Guard ref para evitar peticiones duplicadas simultáneas
+  const isFetchingRef = useRef<boolean>(false);
+
   // Cargar etiquetas desde el backend
   const fetchLabels = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     setLoading(true);
     try {
       const data = await getOpportunityLabels();
@@ -76,6 +82,7 @@ export const OpportunityLabelsPage: React.FC<OpportunityLabelsPageProps> = ({
       });
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 

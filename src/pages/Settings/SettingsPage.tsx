@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import Select from '../../components/shared/Select';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -18,7 +18,8 @@ import DashboardIndicatorsPage from './DashboardIndicators/DashboardIndicatorsPa
 import AiAgentChannelsPage from './AiAgentChannels/AiAgentChannelsPage';
 // Módulo modular de Gestión de Organizaciones (Tenants & Multi-Tenancy)
 import TenantsPage from './Tenants/TenantsPage';
-import PlansSection from '../../components/Settings/PlansSection';
+// Módulo modular de Planes de Suscripción SaaS
+import SubscriptionPlansPage from './SubscriptionPlans/SubscriptionPlansPage';
 import GlobalAiCredentialsSettings from '../../components/Settings/GlobalAiCredentialsSettings';
 import SettingsSidebar from './SettingsSidebar';
 // Módulo modular de Valores de Catálogos (Línea de Negocio, Tipo de Entrega, Licenciamiento)
@@ -97,13 +98,22 @@ export const SettingsPage: React.FC = () => {
     window.dispatchEvent(new CustomEvent('settingsTabChanged', { detail: activeTab }));
   }, [activeTab]);
 
+  const isFetchingLabelsRef = useRef<boolean>(false);
+
   const fetchLabels = async () => {
-    try { setLabels(await getOpportunityLabels()); }
-    catch (err) { console.error('Error al cargar etiquetas en Configuración:', err); }
+    if (isFetchingLabelsRef.current) return;
+    isFetchingLabelsRef.current = true;
+    try {
+      setLabels(await getOpportunityLabels());
+    } catch (err) {
+      console.error('Error al cargar etiquetas en Configuración:', err);
+    } finally {
+      isFetchingLabelsRef.current = false;
+    }
   };
 
   useEffect(() => {
-    if (activeTab === 'opportunity-labels' || activeTab === 'opportunity-catalogs') {
+    if (activeTab === 'opportunity-catalogs') {
       fetchLabels();
     }
   }, [activeTab]);
@@ -184,7 +194,7 @@ export const SettingsPage: React.FC = () => {
       case 'dashboard-settings': return <DashboardIndicatorsPage />;
       case 'ai-agent-settings': return <AiAgentChannelsPage />;
       case 'superadmin-tenants': return <TenantsPage />;
-      case 'superadmin-plans': return <PlansSection />;
+      case 'superadmin-plans': return <SubscriptionPlansPage />;
       case 'superadmin-ai-credentials': return <GlobalAiCredentialsSettings />;
       case 'opportunity-catalogs': return (
         <OpportunityCatalogsPage

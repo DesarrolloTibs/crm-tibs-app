@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   LayoutDashboard,
   BarChart3,
@@ -119,8 +119,14 @@ export const DashboardIndicatorsPage: React.FC = () => {
     return [];
   };
 
+  // Guard ref para evitar peticiones duplicadas simultáneas (StrictMode o remount)
+  const isFetchingRef = useRef<boolean>(false);
+
   // Carga de datos unificada
   const loadData = useCallback(async (isManual = false) => {
+    if (isFetchingRef.current && !isManual) return;
+    isFetchingRef.current = true;
+
     try {
       if (isManual) setLoading(true);
       const [allIndicatorsRes, allPipelinesRes, allHelpdesksRes] = await Promise.all([
@@ -156,6 +162,7 @@ export const DashboardIndicatorsPage: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 

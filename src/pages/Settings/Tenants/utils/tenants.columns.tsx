@@ -93,8 +93,9 @@ export const getTenantsColumns = ({
     header: 'Próxima Renovación',
     cell: ({ row }) => {
       const t = row.original;
-      const queuedSummary = queueSummaries[t.id];
-      const queuedCount = t.total_queued_periods ?? queuedSummary?.total ?? 0;
+      const queuedSummary = queueSummaries?.[t.id];
+      const queuedCount = Number(t.total_queued_periods ?? queuedSummary?.total ?? 0);
+      const coverageUntil = t.coverage_until ?? queuedSummary?.coverageUntil ?? t.next_renewal_date;
 
       if (!t.next_renewal_date) {
         return <span className="text-xs text-slate-400">N/A</span>;
@@ -107,18 +108,25 @@ export const getTenantsColumns = ({
             <span>{new Date(t.next_renewal_date).toLocaleDateString()}</span>
           </div>
           {queuedCount > 0 && (
-            <Button
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenQueue(t);
-              }}
-              title={`Ver cola de renovación: ${queuedCount} período(s) respaldados.`}
-              className="inline-flex items-center gap-1 !text-[11px] !font-semibold text-indigo-700 bg-indigo-50 hover:!bg-indigo-100 border border-indigo-200/80 !px-2 !py-0.5 !rounded-full transition-colors"
-            >
-              <Clock size={11} className="text-indigo-500" />
-              <span>+{queuedCount} en cola</span>
-            </Button>
+            <div className="flex flex-col gap-0.5">
+              <Button
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenQueue(t);
+                }}
+                title={coverageUntil ? `Ver cola de renovación: ${queuedCount} período(s) respaldados. Cobertura proyectada hasta ${new Date(coverageUntil).toLocaleDateString()}` : `Ver cola de renovación: ${queuedCount} período(s) respaldados.`}
+                className="inline-flex items-center gap-1 !text-[11px] !font-semibold text-indigo-700 bg-indigo-50 hover:!bg-indigo-100 border border-indigo-200/80 !px-2 !py-0.5 !rounded-full transition-colors w-fit"
+              >
+                <Clock size={11} className="text-indigo-500" />
+                <span>+{queuedCount} en cola</span>
+              </Button>
+              {coverageUntil && coverageUntil !== t.next_renewal_date && (
+                <span className="text-[10px] text-slate-400 font-mono pl-0.5" title={`Cobertura proyectada: ${new Date(coverageUntil).toLocaleDateString()}`}>
+                  Hasta {new Date(coverageUntil).toLocaleDateString()}
+                </span>
+              )}
+            </div>
           )}
         </div>
       );

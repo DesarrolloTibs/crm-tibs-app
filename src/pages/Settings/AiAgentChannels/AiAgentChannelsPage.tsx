@@ -157,8 +157,14 @@ export const AiAgentChannelsPage: React.FC = () => {
     };
   }, []);
 
+  // Guard ref para evitar peticiones duplicadas simultáneas (StrictMode o remount)
+  const isFetchingRef = useRef<boolean>(false);
+
   // Cargar configuraciones del sistema
   const loadAllSettings = useCallback(async (isManual = false) => {
+    if (isFetchingRef.current && !isManual) return;
+    isFetchingRef.current = true;
+
     try {
       if (isManual) setLoading(true);
       const [config, allUsers, configsList, subAgentsList] = await Promise.all([
@@ -203,6 +209,7 @@ export const AiAgentChannelsPage: React.FC = () => {
     } finally {
       setLoading(false);
       setIsLoadingChannels(false);
+      isFetchingRef.current = false;
     }
   }, []);
 
