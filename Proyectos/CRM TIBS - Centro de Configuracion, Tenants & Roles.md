@@ -410,6 +410,46 @@ src/pages/settings/
   - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `Input`, `TextArea`, `Select`, `Loader`.
 
 ---
+### 🏢 11. Arquitectura Modular de "Gestión de Organizaciones" (`src/pages/settings/Tenants/`)
+
+Siguiendo el estándar de arquitectura modular desacoplada por capas aplicado a **Tipos de Actividad** y **Mi Empresa**, la sección de **Gestión de Organizaciones (Tenants)** ha sido migrada desde el monolito `src/components/Settings/TenantsSection.tsx` (~1224 líneas) hacia una arquitectura modular desacoplada en `src/pages/settings/Tenants/`:
+
+```
+src/pages/settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── Tenants/                       # Módulo desacoplado de Gestión de Organizaciones
+    ├── TenantsPage.tsx            # Orquestador principal de la vista con SettingsContainer y KPIs
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── TenantsStatsBanner.tsx # Indicadores métricos KPI (Total, Activas, Inactivas, Con Cola, Excedente)
+    │   ├── TenantsTable.tsx       # Tabla TanStack Table con buscador reactivo, filtros y responsive
+    │   ├── TenantProvisionModal.tsx # Modal de provisión de organización con Yup y Select
+    │   ├── TenantManageModal.tsx  # Modal unificado de gestión de organización (Tabs)
+    │   ├── TenantGeneralTab.tsx   # Pestaña 1: Datos generales, esquema inmutable y switches
+    │   ├── TenantPlanTab.tsx      # Pestaña 2: Asignación de plan, modos inmediato vs diferido
+    │   └── TenantRenewalQueueTab.tsx # Pestaña 3: Métricas de cola, secuencia y encolado
+    ├── schemas/                   # Contratos de datos, tipos y esquemas de validación
+    │   └── tenants.schema.ts      # Esquemas Yup (provision, general, plan, queue), tipos y filtros
+    └── utils/                     # Helpers puros, columnas TanStack Table y validadores
+        ├── tenants.columns.tsx    # Definición ColumnDef con badges, switch de sobreconsumo y acciones
+        └── tenants.helpers.ts     # Filtros normalizados, cálculo de KPIs y runners de validación Yup
+```
+
+#### 11.1. Características Técnicas del Módulo
+* **TanStack Table (`@tanstack/react-table`):**
+  - Emplea el componente compartido `Table<TenantPlanInfo>` (`src/components/shared/Table`).
+  - Columnas estructuradas con `ColumnDef`: Identificación de organización con esquema PostgreSQL en formato mono, plan y cuotas vigentes, próxima renovación con acceso directo interactivo a la cola (`+{count} en cola`), botón interactivo de tolerancia de sobregiro (`allow_extra`), insignia de estado activo/inactivo y acciones unificadas (Editar/Eliminar).
+  - Paginación interna de 8 elementos por página, ordenamiento por columnas y soporte responsivo móvil con `mobileLabel`.
+* **Validación Declarativa con Yup & FormField:**
+  - `provisionTenantValidationSchema`: Valida requerimientos de nombre de empresa, nombre de usuario administrador (alfanumérico y sin caracteres inválidos), correo electrónico válido y plan inicial.
+  - `tenantGeneralValidationSchema`: Audita cambios al nombre y control de acceso.
+  - `tenantPlanValidationSchema` & `tenantEnqueueValidationSchema`: Valida las directivas de duración, lotes de períodos y políticas de corte.
+* **Modal Unificado de Gestión en 3 Pestañas (`TenantManageModal`):**
+  - **General:** Actualización de razón social, auditoría de esquema de base de datos y switches de activación/sobregiro.
+  - **Plan & Suscripción:** Asignación reactiva de nuevos planes con tres políticas claras (Upgrade inmediato manteniendo fecha de corte, Reinicio de ciclo desde hoy, o Programación para el próximo ciclo al vencimiento).
+  - **Cola de Renovación:** Métricas de cobertura proyectada, historial de ciclos prepagados con cancelación individual y generador de lotes prepagados (1, 2, 3, 6, 12 períodos o manual).
+* **Componentes Compartidos Utilizados:**
+  - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `FormField`, `Select`.
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Calendario FullCalendar & Actividades]] — Sincronización y uso operativo de tipos de actividad en agenda.

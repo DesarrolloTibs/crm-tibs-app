@@ -16,7 +16,8 @@ import AutomaticNotificationsPage from './AutomaticNotifications/AutomaticNotifi
 import DashboardIndicatorsPage from './DashboardIndicators/DashboardIndicatorsPage';
 // Módulo modular de Agente IA & Canales
 import AiAgentChannelsPage from './AiAgentChannels/AiAgentChannelsPage';
-import TenantsSection from '../../components/Settings/TenantsSection';
+// Módulo modular de Gestión de Organizaciones (Tenants & Multi-Tenancy)
+import TenantsPage from './Tenants/TenantsPage';
 import PlansSection from '../../components/Settings/PlansSection';
 import GlobalAiCredentialsSettings from '../../components/Settings/GlobalAiCredentialsSettings';
 import SettingsSidebar from '../../components/Settings/SettingsSidebar';
@@ -182,7 +183,7 @@ export const SettingsPage: React.FC = () => {
       case 'helpdesk-cron': return <AutomaticNotificationsPage />;
       case 'dashboard-settings': return <DashboardIndicatorsPage />;
       case 'ai-agent-settings': return <AiAgentChannelsPage />;
-      case 'superadmin-tenants': return <TenantsSection />;
+      case 'superadmin-tenants': return <TenantsPage />;
       case 'superadmin-plans': return <PlansSection />;
       case 'superadmin-ai-credentials': return <GlobalAiCredentialsSettings />;
       case 'opportunity-catalogs': return (
