@@ -20,7 +20,8 @@ import AiAgentChannelsPage from './AiAgentChannels/AiAgentChannelsPage';
 import TenantsPage from './Tenants/TenantsPage';
 // Módulo modular de Planes de Suscripción SaaS
 import SubscriptionPlansPage from './SubscriptionPlans/SubscriptionPlansPage';
-import GlobalAiCredentialsSettings from '../../components/Settings/GlobalAiCredentialsSettings';
+// Módulo modular de Credenciales & LLM Global
+import GlobalAiCredentialsPage from './GlobalAiCredentials/GlobalAiCredentialsPage';
 import SettingsSidebar from './SettingsSidebar';
 // Módulo modular de Valores de Catálogos (Línea de Negocio, Tipo de Entrega, Licenciamiento)
 import OpportunityCatalogsPage from './OpportunityCatalogs/OpportunityCatalogsPage';
@@ -195,7 +196,7 @@ export const SettingsPage: React.FC = () => {
       case 'ai-agent-settings': return <AiAgentChannelsPage />;
       case 'superadmin-tenants': return <TenantsPage />;
       case 'superadmin-plans': return <SubscriptionPlansPage />;
-      case 'superadmin-ai-credentials': return <GlobalAiCredentialsSettings />;
+      case 'superadmin-ai-credentials': return <GlobalAiCredentialsPage />;
       case 'opportunity-catalogs': return (
         <OpportunityCatalogsPage
           activeSubTab={activeCatalogSubTab}

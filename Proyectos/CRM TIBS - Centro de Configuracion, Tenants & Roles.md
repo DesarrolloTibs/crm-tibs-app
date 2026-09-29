@@ -28,7 +28,7 @@ graph TD
     subgraph AmbitoSuperAdmin ["👑 Ámbito SuperAdmin (Plataforma Global)"]
         Tenants["🏢 Gestión de Tenants (`TenantsSection` / `TenantsPage`)<br/>- Aprovisionamiento de Esquemas PostgreSQL<br/>- Asignación Flexible de Planes (Inmediato vs Próximo Período)<br/>- Gestor Visual de Colas de Renovación Proyectadas<br/>- Monitoreo de Consumo de Tokens<br/>- Tolerancia de Sobregiro (allow_extra)"]
         Plans["💳 Catálogo de Planes SaaS (`SubscriptionPlansPage`)<br/>- Arquitectura modular (components, schemas, utils)<br/>- TanStack Table con paginación, filtros y responsive<br/>- Validación Yup y FormField para tarifas y cuotas<br/>- KPIs superiores de planes y capacidad global"]
-        AICreds["🔑 Credenciales Globales IA (`GlobalAiCredentialsSettings`)<br/>- API Keys de OpenAI, Gemini y Anthropic"]
+        AICreds["🔑 Credenciales Globales IA (`GlobalAiCredentialsPage`)<br/>- Arquitectura modular con TanStack Table, Yup y toggle seguro de llaves de API"]
         GlobalAudit["📊 Auditoría Global de Cortesías (`CourtesyOveragesModal`)<br/>- Fiscalización de desbordes absorbidos SaaS con exportación Excel/PDF"]
     end
 
@@ -489,6 +489,43 @@ src/pages/settings/
 * **Componentes Compartidos Utilizados:**
   - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `FormField`.
 
+#### 🔑 13. Arquitectura Modular de "Credenciales & LLM Global" (`src/pages/settings/GlobalAiCredentials/`)
+
+Siguiendo el estándar de arquitectura modular desacoplada por capas aplicado a **Tipos de Actividad**, **Valores de Catálogos**, **Gestión de Organizaciones** y **Planes de Suscripción**, la sección de **Credenciales & LLM Global** ha sido migrada desde el monolito `GlobalAiCredentialsSettings.tsx` hacia una arquitectura modular desacoplada en `src/pages/settings/GlobalAiCredentials/`:
+
+```
+src/pages/settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── GlobalAiCredentials/           # Módulo desacoplado de Credenciales & LLM Global
+    ├── GlobalAiCredentialsPage.tsx# Orquestador principal con SettingsContainer, banner institucional y KPIs
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── GlobalAiStatsBanner.tsx        # Indicadores métricos KPI (Motor activo, credenciales listas, max tokens, ámbito)
+    │   ├── GlobalAiParametersCard.tsx     # Tarjeta de parámetros rápidos de inferencia (modelo, proveedor, tokens)
+    │   ├── GlobalAiCredentialsTable.tsx   # Tabla TanStack Table con buscador, filtros y responsive
+    │   ├── GlobalAiCredentialModal.tsx    # Modal contenedor responsive para alta y edición de credenciales
+    │   └── GlobalAiCredentialForm.tsx     # Formulario con validación Yup, FormField y toggle de show/hide keys
+    ├── schemas/                   # Contratos de datos, tipos y esquemas de validación
+    │   └── globalAiCredentials.schema.ts  # Esquemas Yup (globalAiCredentialsValidationSchema, parameters), tipos y filtros
+    └── utils/                     # Helpers puros, columnas TanStack Table y catálogo
+        ├── globalAiCredentials.columns.tsx# Definición ColumnDef con badges, marcas, embeddings y acciones
+        └── globalAiCredentials.helpers.ts # Catálogo PROVIDER_CATALOG, transformador de filas, cálculo de KPIs y runner Yup
+```
+
+##### 13.1. Características Técnicas del Módulo
+* **TanStack Table (`@tanstack/react-table`):**
+  - Emplea el componente compartido `Table<LlmProviderItem>` (`src/components/shared/Table`).
+  - Columnas estructuradas con `ColumnDef`: Identificación del motor y proveedor con icono de marca y vendor, modelo de inferencia en formato mono con indicador pulsante si está activo, estado de credenciales con badge dinámico y enmascaramiento seguro (`••••••••${last4}`), rol en plataforma (badge índigo activo vs botón de activación rápida al vuelo), vectorización/embeddings y botón de acción modal "Configurar".
+* **Validación Declarativa con Yup & FormField:**
+  - Esquema dinámico `globalAiCredentialsValidationSchema` que audita requerimientos condicionales según el proveedor (Google Gemini, OpenAI / Azure, IBM WatsonX), validación estricta de formato URL para endpoints Azure, IDs de proyecto y regiones.
+  - Esquema `globalAiParametersValidationSchema` para calibrar de forma segura los tokens de salida (100 a 32,768 tokens) y modelo de respuesta.
+* **Seguridad y Enmascaramiento:**
+  - `GlobalAiCredentialForm` integra alternador de visibilidad de contraseñas (`Eye` / `EyeOff`) para inspeccionar o resguardar las llaves durante la configuración.
+  - Banner corporativo con insignia de SuperAdministrador recordando la gobernanza global y aislamiento de datos respecto a los administradores de inquilino.
+* **Componentes Compartidos Utilizados:**
+  - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `FormField`, `Select`, `Loader`.
+
+---
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Calendario FullCalendar & Actividades]] — Sincronización y uso operativo de tipos de actividad en agenda.
