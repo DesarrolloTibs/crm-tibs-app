@@ -18,21 +18,21 @@ import type {
   WhatsAppBaseTemplate,
   UpsertBaseTemplateDto,
   ChannelConfig,
-} from '../../core/models/Conversation';
+} from '../../../../core/models/Conversation';
 import {
   getChannelBaseTemplate,
   saveChannelBaseTemplate,
-} from '../../services/conversationsService';
-import Loader from '../shared/Loader';
-import Button from '../shared/Button';
-import Badge from '../shared/Badge';
-import { useFormValidation } from '../shared/useFormValidation';
+} from '../../../../services/conversationsService';
+import Loader from '../../../../components/shared/Loader';
+import Button from '../../../../components/shared/Button';
+import Badge from '../../../../components/shared/Badge';
+import { useFormValidation } from '../../../../components/shared/useFormValidation';
 import {
   whatsappBaseTemplateSchema,
   whatsappBodySchema,
-} from '../../utils/whatsappTemplateSchema';
+} from '../../../../utils/whatsappTemplateSchema';
 
-interface WhatsAppBaseTemplateSettingsProps {
+export interface WhatsAppBaseTemplateSettingsProps {
   channelConfig: ChannelConfig | {
     id: string;
     name?: string | null;
@@ -622,7 +622,7 @@ export const WhatsAppBaseTemplateSettings: React.FC<WhatsAppBaseTemplateSettings
                   Impacto Directo en Meta:
                 </p>
                 <p className="mt-0.5">
-                  Al guardar, el backend creará o actualizará la plantilla en Meta Business API
+                  Al guardar, se creará o actualizará la plantilla en Meta Business API
                   registrando automáticamente los ejemplos requeridos para cada variable
                   configurada.
                 </p>

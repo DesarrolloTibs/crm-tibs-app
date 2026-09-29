@@ -18,7 +18,7 @@ import HelpdeskPage from './pages/HelpdeskPage';
 import SupportTicketPage from './pages/SupportTicketPage';
 import DashboardPage from './pages/DashboardPage';
 import ConversationsPage from './pages/ConversationsPage';
-import OAuthCallbackPopup from './components/Settings/OAuthCallbackPopup';
+import OAuthCallbackPopup from './pages/Settings/AiAgentChannels/components/OAuthCallbackPopup';
 
 const isOAuthPopup = typeof window !== 'undefined' && (
     window.location.search.includes('meta_oauth') ||

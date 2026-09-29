@@ -80,10 +80,10 @@ export const OAuthCallbackPopup: React.FC = () => {
         )}
 
         <div>
-          <h2 className="text-base font-bold text-gray-800">
+          <h2 className="text-base font-bold text-slate-800">
             {isError ? 'Error en la conexión' : '¡Conexión Exitosa!'}
           </h2>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {isError ? errorMessage : 'Tu cuenta ha sido vinculada correctamente. Cerrando ventana...'}
           </p>
         </div>

@@ -38,7 +38,7 @@ graph TD
         Users["👥 Gestión de Usuarios (`UsersPage`)<br/>- Alta de Ejecutivos, Roles y Avatares"]
         Catalogs["📑 Catálogos Dinámicos (`OpportunityCatalogs`)<br/>- Líneas de Negocio, Entregas y Licencias"]
         CronSLA["⏰ Notificaciones Automáticas & Cron (`AutomaticNotificationsPage`)"]
-        BotConfig["🤖 Canales y Agente IA (`AiAgentSettings`)<br/>- WhatsApp Cloud API & Plantilla Base<br/>- Vinculación Meta OAuth2 (Facebook e Instagram)<br/>- Parámetros del Bot y Sub-Agentes"]
+        BotConfig["🤖 Canales y Agente IA (`src/pages/settings/AiAgentChannels/`)<br/>- Arquitectura modular (components, schemas, utils)<br/>- Lienzo visual del orquestador y tabla TanStack<br/>- WhatsApp Cloud API & Plantilla Base<br/>- Vinculación Meta OAuth2 (Facebook e Instagram)<br/>- Parámetros del Bot y Sub-Agentes con Yup"]
     end
 
     subgraph AmbitoPersonal ["👤 Ámbito Ejecutivo / Usuario"]
@@ -367,6 +367,48 @@ src/pages/settings/
 * **Componentes Compartidos Utilizados:**
   - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `FormField`, `Select`, `Loader`.
 
+### 🤖 10. Arquitectura Modular de "Agente IA & Canales" (`src/pages/settings/AiAgentChannels/`)
+
+Siguiendo el estándar de arquitectura modular desacoplada por capas aplicado a **Tipos de Actividad**, **Valores de Catálogos** e **Indicadores de Dashboard**, la sección de **Agente IA y Canales** ha sido refactorizada desde el monolito `AiAgentSettings.tsx` (~2025 líneas) hacia una arquitectura modular desacoplada en `src/pages/settings/AiAgentChannels/`:
+
+```
+src/pages/settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── AiAgentChannels/               # Módulo desacoplado de Agente IA & Canales
+    ├── AiAgentChannelsPage.tsx    # Orquestador principal de la vista con SettingsContainer, KPIs y pestañas
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── AiAgentStatsBanner.tsx # Indicadores métricos KPI (Estado Agente, Sub-Agentes activos, Canales Meta, Inferencia)
+    │   ├── AiAgentTabsNav.tsx     # Barra de pestañas (General & Orquestador vs Canales de Comunicación) con badges
+    │   ├── AiGeneralTab.tsx       # Switch de respuesta automática, selector de vista (Lienzo vs Tabla), parámetros y asignaciones
+    │   ├── AiOrchestratorCanvas.tsx# Lienzo interactivo del grafo de orquestador (Router + Subagentes, SVG Bézier, glow, pan y drag)
+    │   ├── AiSubAgentsTable.tsx   # Tabla TanStack Table (@tanstack/react-table) con buscador reactivo y filtro de estado
+    │   ├── AiChannelsTab.tsx      # Tarjetas comerciales Meta (WhatsApp Cloud API, Facebook Messenger, Instagram Direct)
+    │   ├── AiRouterModal.tsx      # Modal para configurar el Prompt de Directivas del Enrutador Principal con validación Yup
+    │   ├── AiSubAgentModal.tsx    # Modal de alta/edición de sub-agentes con slider de temperatura y panel Drag & Drop de herramientas
+    │   └── AiWhatsAppChannelModal.tsx # Modal de credenciales de WhatsApp Cloud API con validación Yup y pestaña de Plantilla Base
+    ├── schemas/                   # Contratos de datos, tipos y esquemas de validación
+    │   └── aiAgent.schema.ts      # Esquemas Yup (subAgentValidationSchema, routerPromptValidationSchema, etc.) y tipos
+    └── utils/                     # Helpers puros, columnas TanStack Table y validadores
+        ├── aiAgent.helpers.ts     # Cálculo de KPIs (calculateAiAgentStats), layout inicial de nodos y runner de filtros
+        └── subAgents.columns.tsx  # Definición ColumnDef con badges cromáticos, temperatura, herramientas y acciones
+```
+
+#### 10.1. Características Técnicas del Módulo
+* **Doble Modo de Vista para Sub-Agentes (Lienzo Gráfico vs Tabla TanStack):**
+  - **Lienzo Visual Interactivo (`AiOrchestratorCanvas`):** Grafo con renderizado SVG, curvas Bézier, efectos de brillo (`glow-indigo`), drag and drop de nodos con límites elásticos, panning interactivo con fondo de matriz de puntos y maximizado a pantalla completa.
+  - **Tabla TanStack Table (`@tanstack/react-table` en `AiSubAgentsTable`):** Visualización densa y tabular para administración rápida con paginación, filtros de estado (`Todos`, `Activos`, `Inactivos`), búsqueda reactiva y badges de herramientas (`AVAILABLE_TOOLS`).
+* **Validación Declarativa con Yup & `useFormValidation`:**
+  - Esquema `subAgentValidationSchema` para clave única (`slug`), nombre, descripción para el enrutador, directivas de prompt y temperatura calibrada (0.0 a 1.0).
+  - Esquema `routerPromptValidationSchema` para las directivas globales del Agente Principal.
+  - Esquema `whatsappChannelValidationSchema` para App ID, WABA ID, Phone ID, Access Token y Verify Token del webhook.
+* **Canales de Comunicación Meta (OAuth2 en 1 Clic & Webhook):**
+  - Conexión desatendida mediante popup con comunicación inter-proceso (IPC) resiliente vía `BroadcastChannel('meta_oauth_channel')`, `window.postMessage` y `localStorage`.
+  - Recarga en caliente en tiempo real y sincronización directa con Meta Graph API.
+  - Integración nativa con `WhatsAppBaseTemplateSettings` para la gestión de la plantilla oficial de inicio de conversación (`crm_inicio_conversacion`).
+* **Componentes Compartidos Utilizados:**
+  - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `Input`, `TextArea`, `Select`, `Loader`.
+
 ---
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
@@ -374,5 +416,3 @@ src/pages/settings/
 * [[CRM TIBS - Multi-Tenancy, Axios & Interceptores]] — Inyección del esquema tenant en peticiones.
 * [[CRM TIBS - Autenticacion, JWT & Protected Routes]] — Seguridad basada en roles.
 * [[CRM TIBS - Chat Omnicanal, WebSockets & Agente IA]] — Configuración de bots y sub-agentes.
-
-

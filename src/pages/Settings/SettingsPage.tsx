@@ -14,7 +14,8 @@ import OpportunityLabelsPage from './OpportunityLabels/OpportunityLabelsPage';
 import AutomaticNotificationsPage from './AutomaticNotifications/AutomaticNotificationsPage';
 // Módulo modular de Indicadores de Dashboard (KPIs y Gráficos)
 import DashboardIndicatorsPage from './DashboardIndicators/DashboardIndicatorsPage';
-import AiAgentSettings from '../../components/Settings/AiAgentSettings';
+// Módulo modular de Agente IA & Canales
+import AiAgentChannelsPage from './AiAgentChannels/AiAgentChannelsPage';
 import TenantsSection from '../../components/Settings/TenantsSection';
 import PlansSection from '../../components/Settings/PlansSection';
 import GlobalAiCredentialsSettings from '../../components/Settings/GlobalAiCredentialsSettings';
@@ -100,7 +101,11 @@ export const SettingsPage: React.FC = () => {
     catch (err) { console.error('Error al cargar etiquetas en Configuración:', err); }
   };
 
-  useEffect(() => { fetchLabels(); }, [activeTab]);
+  useEffect(() => {
+    if (activeTab === 'opportunity-labels' || activeTab === 'opportunity-catalogs') {
+      fetchLabels();
+    }
+  }, [activeTab]);
 
   const getLabelName = (key: 'linea_negocio' | 'tipo_entrega' | 'licenciamiento', defaultName: string) => {
     const label = labels.find(l => l.field_key === key);
@@ -176,7 +181,7 @@ export const SettingsPage: React.FC = () => {
       case 'opportunity-labels': return <OpportunityLabelsPage onLabelsUpdated={fetchLabels} />;
       case 'helpdesk-cron': return <AutomaticNotificationsPage />;
       case 'dashboard-settings': return <DashboardIndicatorsPage />;
-      case 'ai-agent-settings': return <AiAgentSettings />;
+      case 'ai-agent-settings': return <AiAgentChannelsPage />;
       case 'superadmin-tenants': return <TenantsSection />;
       case 'superadmin-plans': return <PlansSection />;
       case 'superadmin-ai-credentials': return <GlobalAiCredentialsSettings />;

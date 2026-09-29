@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { LayoutDashboard, Search, X, Plus } from 'lucide-react';
+import { LayoutDashboard, Search, X } from 'lucide-react';
 import Table from '../../../../components/shared/Table';
 import Button from '../../../../components/shared/Button';
 import type { DashboardIndicator, IndicatorTypeFilter } from '../schemas/dashboardIndicators.schema';
@@ -20,7 +20,6 @@ interface DashboardIndicatorsTableProps {
   setColorFilter: (filter: 'all' | string) => void;
   stages: Array<{ id: string; strname: string }>;
   activeModule: 'commercial' | 'support';
-  onAddIndicator: () => void;
 }
 
 export const DashboardIndicatorsTable: React.FC<DashboardIndicatorsTableProps> = ({
@@ -37,7 +36,6 @@ export const DashboardIndicatorsTable: React.FC<DashboardIndicatorsTableProps> =
   setColorFilter,
   stages,
   activeModule,
-  onAddIndicator,
 }) => {
   const columns = useMemo(
     () =>

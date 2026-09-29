@@ -350,7 +350,7 @@ export const DashboardIndicatorsPage: React.FC = () => {
 
     try {
       setLoading(true);
-      await deleteIndicator(indToDelete.id);
+      await deleteIndicator(indToDelete.id!);
       notify({
         type: 'success',
         title: 'Indicador Eliminado',
@@ -476,7 +476,6 @@ export const DashboardIndicatorsPage: React.FC = () => {
           setColorFilter={(color) => setFilters((prev) => ({ ...prev, color }))}
           stages={activeStages}
           activeModule={activeModule}
-          onAddIndicator={handleOpenCreate}
         />
 
         {/* Configuración Modular de Etapas para Gráficos Analíticos */}
