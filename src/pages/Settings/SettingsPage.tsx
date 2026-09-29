@@ -20,7 +20,7 @@ import AiAgentChannelsPage from './AiAgentChannels/AiAgentChannelsPage';
 import TenantsPage from './Tenants/TenantsPage';
 import PlansSection from '../../components/Settings/PlansSection';
 import GlobalAiCredentialsSettings from '../../components/Settings/GlobalAiCredentialsSettings';
-import SettingsSidebar from '../../components/Settings/SettingsSidebar';
+import SettingsSidebar from './SettingsSidebar';
 // Módulo modular de Valores de Catálogos (Línea de Negocio, Tipo de Entrega, Licenciamiento)
 import OpportunityCatalogsPage from './OpportunityCatalogs/OpportunityCatalogsPage';
 

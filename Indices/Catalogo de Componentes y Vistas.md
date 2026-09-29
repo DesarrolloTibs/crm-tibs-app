@@ -75,7 +75,7 @@ Este documento compendia la totalidad de vistas y componentes modulares que conf
 * [`WebChat.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/WebChat.tsx) — Widget flotante de asistencia inteligente en el sistema para consultas en lenguaje natural.
 
 ### 2.5 Centro de Configuración (`src/components/Settings/`)
-* [`SettingsSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/SettingsSidebar.tsx) — Menú de navegación vertical de opciones del tenant y del sistema.
+* [`SettingsSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/settings/SettingsSidebar.tsx) — Menú de navegación vertical de opciones del tenant y del sistema.
 * [`MyCompanyPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/settings/MyCompany/MyCompanyPage.tsx) — Módulo desacoplado de la organización: identidad, suscripción contratada, consumo de IA, actividad diaria interactiva y auditoría exportable.
 * [`MyCalendarPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/settings/MyCalendar/MyCalendarPage.tsx) — Módulo modular de agenda y calendarios externos: vinculación OAuth2 con Google Calendar y Microsoft Outlook, sincronización en tiempo real y bloqueo por proveedor activo.
 * [`ActivityTypesPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/settings/ActivityTypes/ActivityTypesPage.tsx) — Módulo modular de tipos de actividad del CRM: arquitectura desacoplada (`components/`, `schemas/`, `utils/`), TanStack Table (`@tanstack/react-table`), validación de formularios con Yup, vista previa cromática armónica de agenda y búsqueda unificada con SearchBadges.

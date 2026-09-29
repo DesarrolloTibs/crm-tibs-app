@@ -4,7 +4,7 @@ import { useConfigStore } from '../../store/useConfigStore';
 import { Menu, X } from 'lucide-react';
 import SeasonalContainer from './Season/SeasonalContainer';
 import NotificationBell from './NotificationBell';
-import TenantSelector from '../Settings/TenantSelector';
+import TenantSelector from './TenantSelector';
 import ConsumptionInfoPopover from './ConsumptionInfoPopover';
 import { getTenantConsumption } from '../../services/tenantsService';
 
