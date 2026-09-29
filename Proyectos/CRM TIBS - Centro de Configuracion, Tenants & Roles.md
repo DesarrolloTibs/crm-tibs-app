@@ -329,6 +329,45 @@ src/pages/settings/
 
 ---
 
+### 📊 9. Arquitectura Modular de "Indicadores de Dashboard" (`src/pages/settings/DashboardIndicators/`)
+
+Siguiendo el estándar de arquitectura modular desacoplada por capas aplicado a **Tipos de Actividad** y **Valores de Catálogos**, la sección de **Indicadores de Dashboard** ha sido refactorizada desde el monolito `DashboardSettings.tsx` hacia una arquitectura modular desacoplada en `src/pages/settings/DashboardIndicators/`:
+
+```
+src/pages/settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── DashboardIndicators/           # Módulo desacoplado de Indicadores de Dashboard
+    ├── DashboardIndicatorsPage.tsx# Orquestador principal con SettingsContainer, selector de flujos y switch
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── DashboardIndicatorsStatsBanner.tsx # Indicadores métricos KPI (Total, Conteo, Monto $, Etapas)
+    │   ├── DashboardIndicatorsTable.tsx       # Tabla TanStack Table con buscador, filtros y responsive
+    │   ├── DashboardIndicatorModal.tsx        # Modal contenedor responsive para alta y edición
+    │   ├── DashboardIndicatorForm.tsx         # Formulario con validación Yup, paleta de colores y etapas
+    │   └── DashboardChartStagesConfig.tsx     # Panel dedicado de configuración de etapas para gráficos
+    ├── schemas/                   # Contratos de datos, tipos y esquemas de validación
+    │   └── dashboardIndicators.schema.ts      # Esquema Yup (dashboardIndicatorValidationSchema) y tipos
+    └── utils/                     # Helpers puros, columnas TanStack Table y validadores
+        ├── dashboardIndicators.columns.tsx    # Definición ColumnDef con badges, paleta y acciones
+        └── dashboardIndicators.helpers.ts     # Filtros normalizados, cálculo de KPIs y runner Yup
+```
+
+#### 9.1. Características Técnicas del Módulo
+* **TanStack Table (`@tanstack/react-table`):**
+  - Utiliza el componente compartido `Table<DashboardIndicator>` (`src/components/shared/Table`).
+  - Columnas estructuradas con `ColumnDef`: Identificación cromática con anillo y badge, tipo de métrica (`$ Suma de Montos` o `Conteo (Registros)`), insignias de etapas vinculadas y botones de acción (editar/eliminar).
+  - Paginación interna de 8 elementos, ordenamiento reactivo y soporte responsive móvil con `mobileLabel`.
+* **Validación Declarativa con Yup & FormField:**
+  - Esquema estricto `dashboardIndicatorValidationSchema` que audita requerimiento de título, longitud mínima (2 caracteres) y límite superior (60 caracteres), validando además el tipo ('count' | 'sum') y color.
+  - Ejecución reactiva mediante el runner asíncrono `validateIndicatorForm`.
+* **Conmutador de Contexto Operativo (Pipeline vs Mesa de Ayuda):**
+  - Permite alternar fluidamente entre el flujo de Pipeline Comercial y Mesa de Ayuda, adaptando selectores, etapas activas e indicadores en tiempo real.
+* **Configuración Desacoplada de Gráficos Analíticos (`DashboardChartStagesConfig`):**
+  - Panel independiente para mapear qué etapas del flujo alimentan las tendencias gráficas (Oportunidades Abiertas, Ventas, Tickets Abiertos, Cerrados y Cancelados) con selector múltiple y guardado asíncrono.
+* **Componentes Compartidos Utilizados:**
+  - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `FormField`, `Select`, `Loader`.
+
+---
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Calendario FullCalendar & Actividades]] — Sincronización y uso operativo de tipos de actividad en agenda.

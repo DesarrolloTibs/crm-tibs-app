@@ -12,7 +12,8 @@ import ActivityTypesPage from './ActivityTypes/ActivityTypesPage';
 import OpportunityLabelsPage from './OpportunityLabels/OpportunityLabelsPage';
 // Módulo modular de Notificaciones Automáticas (Daemon Cron & Reglas)
 import AutomaticNotificationsPage from './AutomaticNotifications/AutomaticNotificationsPage';
-import { DashboardSettings } from '../../components/Dashboard/DashboardSettings';
+// Módulo modular de Indicadores de Dashboard (KPIs y Gráficos)
+import DashboardIndicatorsPage from './DashboardIndicators/DashboardIndicatorsPage';
 import AiAgentSettings from '../../components/Settings/AiAgentSettings';
 import TenantsSection from '../../components/Settings/TenantsSection';
 import PlansSection from '../../components/Settings/PlansSection';
@@ -174,7 +175,7 @@ export const SettingsPage: React.FC = () => {
       case 'activity-types': return <ActivityTypesPage />;
       case 'opportunity-labels': return <OpportunityLabelsPage onLabelsUpdated={fetchLabels} />;
       case 'helpdesk-cron': return <AutomaticNotificationsPage />;
-      case 'dashboard-settings': return <DashboardSettings />;
+      case 'dashboard-settings': return <DashboardIndicatorsPage />;
       case 'ai-agent-settings': return <AiAgentSettings />;
       case 'superadmin-tenants': return <TenantsSection />;
       case 'superadmin-plans': return <PlansSection />;
