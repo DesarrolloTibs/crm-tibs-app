@@ -37,7 +37,7 @@ graph TD
         ActivityTypes["📋 Tipos de Actividad (`src/pages/settings/ActivityTypes/`)<br/>- Arquitectura modular (components, schemas, utils)<br/>- TanStack Table con paginación, filtros y responsive<br/>- Validación Yup y preview cromático armónico de agenda<br/>- KPIs superiores y buscador unificado"]
         Users["👥 Gestión de Usuarios (`UsersPage`)<br/>- Alta de Ejecutivos, Roles y Avatares"]
         Catalogs["📑 Catálogos Dinámicos (`OpportunityCatalogs`)<br/>- Líneas de Negocio, Entregas y Licencias"]
-        CronSLA["⏰ Cron de Mesa de Ayuda (`HelpdeskCronSettings`)"]
+        CronSLA["⏰ Notificaciones Automáticas & Cron (`AutomaticNotificationsPage`)"]
         BotConfig["🤖 Canales y Agente IA (`AiAgentSettings`)<br/>- WhatsApp Cloud API & Plantilla Base<br/>- Vinculación Meta OAuth2 (Facebook e Instagram)<br/>- Parámetros del Bot y Sub-Agentes"]
     end
 
@@ -292,10 +292,48 @@ src/pages/settings/
 
 ---
 
+## ⏰ 8. Arquitectura Modular de "Notificaciones Automáticas" (`src/pages/settings/AutomaticNotifications/`)
+
+Siguiendo el estándar de arquitectura modular desacoplada por capas aplicado a **Tipos de Actividad** y **Valores de Catálogos**, la sección de **Notificaciones Automáticas** ha sido migrada desde el monolito legacy `HelpdeskCronSettings.tsx` hacia una arquitectura modular en `src/pages/settings/AutomaticNotifications/`:
+
+```
+src/pages/settings/
+├── SettingsPage.tsx               # Orquestador del centro de ajustes con barra lateral
+└── AutomaticNotifications/        # Módulo desacoplado de Notificaciones Automáticas
+    ├── AutomaticNotificationsPage.tsx # Orquestador principal con SettingsContainer y botón guardar
+    ├── index.ts                   # Exportador barril
+    ├── components/                # Sub-componentes visuales reutilizables
+    │   ├── CronModeSelector.tsx   # Tarjetas interactivas de modo (Hora fija vs Intervalo)
+    │   ├── CronModeInputs.tsx     # Inputs según modo (Time picker y horas/minutos numéricos)
+    │   ├── CronPreviewBanner.tsx  # Banner dinámico en lenguaje natural con icono de reloj
+    │   └── CronFeedbackAlert.tsx  # Feedback reactivo de guardado exitoso o errores
+    ├── schemas/                   # Contratos de datos, tipos y esquemas de validación
+    │   └── automaticNotifications.schema.ts # Esquema Yup (cronConfigValidationSchema) y tipos
+    └── utils/                     # Helpers puros y validadores
+        └── automaticNotifications.helpers.ts # getPreviewText, isValidInterval y runner Yup
+```
+
+### 8.1. Características Técnicas del Módulo
+* **Fidelidad Visual Estricta:**
+  - Preserva al 100% el diseño visual, espaciados, colores y disposición original del sistema (tarjetas de modo con bordes índigo, selector horario y banner descriptivo de alerta).
+* **Validación Declarativa con Yup:**
+  - Esquema estricto `cronConfigValidationSchema` que audita el modo (`fixed` vs `interval`), formato de hora 24h (`HH:MM`), límites de horas (0-23) y minutos (0-59), exigiendo una duración mínima acumulada de al menos 1 minuto.
+  - Ejecución reactiva mediante el runner asíncrono `validateCronConfigForm`.
+* **Desacoplamiento en Subcomponentes:**
+  - `CronModeSelector`: Renderiza las tarjetas de modo con iconos de `Clock` y `RefreshCw` e insignias activas.
+  - `CronModeInputs`: Encapsula los campos de entrada de hora o intervalo con `Input`.
+  - `CronPreviewBanner`: Calcula e imprime el texto comprensible para el usuario en tiempo real.
+  - `CronFeedbackAlert`: Notificaciones inline limpias con `CheckCircle` y `AlertCircle`.
+* **Componentes Compartidos Utilizados:**
+  - `SettingsContainer`, `Button`, `Input`.
+
+---
+
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Calendario FullCalendar & Actividades]] — Sincronización y uso operativo de tipos de actividad en agenda.
 * [[CRM TIBS - Multi-Tenancy, Axios & Interceptores]] — Inyección del esquema tenant en peticiones.
 * [[CRM TIBS - Autenticacion, JWT & Protected Routes]] — Seguridad basada en roles.
 * [[CRM TIBS - Chat Omnicanal, WebSockets & Agente IA]] — Configuración de bots y sub-agentes.
+
 

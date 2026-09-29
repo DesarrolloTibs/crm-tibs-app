@@ -10,7 +10,8 @@ import {
 import ActivityTypesPage from './ActivityTypes/ActivityTypesPage';
 // Módulo modular de Etiquetas de Catálogos (Oportunidades)
 import OpportunityLabelsPage from './OpportunityLabels/OpportunityLabelsPage';
-import HelpdeskCronSettings from '../../components/Helpdesk/HelpdeskCronSettings';
+// Módulo modular de Notificaciones Automáticas (Daemon Cron & Reglas)
+import AutomaticNotificationsPage from './AutomaticNotifications/AutomaticNotificationsPage';
 import { DashboardSettings } from '../../components/Dashboard/DashboardSettings';
 import AiAgentSettings from '../../components/Settings/AiAgentSettings';
 import TenantsSection from '../../components/Settings/TenantsSection';
@@ -55,7 +56,7 @@ export const SettingsPage: React.FC = () => {
   });
 
   const [activeCatalogSubTab, setActiveCatalogSubTabState] = useState<'business-lines' | 'delivery-types' | 'licensings'>(
-    () => (sessionStorage.getItem('settingsActiveCatalogSubTab') as any) || 'business-lines'
+    () => (sessionStorage.getItem('settingsActiveCatalogSubTab') as ('business-lines' | 'delivery-types' | 'licensings')) || 'business-lines'
   );
   const [labels, setLabels] = useState<OpportunityLabel[]>([]);
 
@@ -172,7 +173,7 @@ export const SettingsPage: React.FC = () => {
         return <MyCompanyPage />;
       case 'activity-types': return <ActivityTypesPage />;
       case 'opportunity-labels': return <OpportunityLabelsPage onLabelsUpdated={fetchLabels} />;
-      case 'helpdesk-cron': return <HelpdeskCronSettings />;
+      case 'helpdesk-cron': return <AutomaticNotificationsPage />;
       case 'dashboard-settings': return <DashboardSettings />;
       case 'ai-agent-settings': return <AiAgentSettings />;
       case 'superadmin-tenants': return <TenantsSection />;
