@@ -704,7 +704,12 @@ export const MyCompanyPage: React.FC = () => {
     {
       label: `Canales de Atención${(breakdown?.by_channel?.length || 0) > 0 ? ` (${breakdown?.by_channel?.length})` : ''}`,
       icon: <Smartphone size={15} />,
-      content: <ChannelsConsumptionGrid channels={breakdown?.by_channel} />,
+      content: (
+        <ChannelsConsumptionGrid
+          channels={breakdown?.by_channel}
+          billableTokens={(breakdown?.summary?.tokens_used || 0) + (breakdown?.summary?.tokens_extra_used || 0)}
+        />
+      ),
     },
     {
       label: `Top Usuarios y Clientes${((breakdown?.top_users?.length || 0) + (breakdown?.top_clients?.length || 0)) > 0 ? ` (${(breakdown?.top_users?.length || 0) + (breakdown?.top_clients?.length || 0)})` : ''}`,

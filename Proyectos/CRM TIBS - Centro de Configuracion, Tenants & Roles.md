@@ -91,7 +91,7 @@ src/pages/settings/
 ### 1.1. Sub-pestañas Integradas (Tabs Compartidas)
 1. **Perfil & Datos Generales:** Identidad de la organización, razón social, esquema activo, carga de logo y diagnóstico.
 2. **Plan & Suscripción:** Cuota contratada, barra de progreso con gradiente reactivo, margen de sobregiro del 100% con toggle `allow_extra` y auditoría de cortesías.
-3. **Canales de Atención:** Distribución gráfica y métricas de consumo por canal de comunicación.
+3. **Canales de Atención:** Distribución gráfica y métricas de consumo facturable por canal de comunicación (Plan Base + Margen Extra). Se excluyen estrictamente los tokens de cortesía técnica absorbidos por la plataforma para reflejar con fidelidad lo contratado y pagado por el cliente.
 4. **Top Usuarios y Clientes:** Rankings de ejecutivos de ventas y clientes que más interactúan con el asistente.
 5. **Tendencia & Historial:**
    * **Actividad Diaria Interactiva (`DailyTimelineChart`):** Cada tarjeta diaria es interactiva (`role="button"`, con teclado accesible y cursor puntero). Al hacer clic en un día (e.g. *Mié 26 De Ago*), se resalta con anillo índigo, badge `✓ Filtro` y eleva sutilmente su tarjeta.
