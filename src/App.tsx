@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import ClientsPage from './pages/ClientsPage';
+import ClientsPage from './pages/Clients';
 import PipelinePage from './pages/PipelinePage';
 import UsersPage from './pages/UsersPage';
 import ProtectedRoute from './core/guards/ProtectedRoute';
@@ -11,7 +11,6 @@ import ActivitiesPage from './pages/ActivitiesPage';
 import ExpensesPage from './pages/ExpensesPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import CompaniesPage from './pages/CompaniesPage';
 import SettingsPage from './pages/Settings/SettingsPage';
 import ProductsPage from './pages/ProductsPage';
 import HelpdeskPage from './pages/HelpdeskPage';
@@ -55,7 +54,7 @@ const App: React.FC = () => {
                 element={
                     <ProtectedRoute>
                         <Layout>
-                            <CompaniesPage />
+                            <ClientsPage defaultTab="companies" />
                         </Layout>
                     </ProtectedRoute>
                 }

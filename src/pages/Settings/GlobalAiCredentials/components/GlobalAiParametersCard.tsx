@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sliders, Save, Sparkles, AlertCircle } from 'lucide-react';
+import { Sliders, Save, Sparkles } from 'lucide-react';
 import Button from '../../../../components/shared/Button';
 import FormField from '../../../../components/shared/FormField';
 import Select from '../../../../components/shared/Select';

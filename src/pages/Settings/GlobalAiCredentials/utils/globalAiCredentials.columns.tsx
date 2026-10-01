@@ -1,5 +1,4 @@
-import React from 'react';
-import { Settings, Sparkles, Cpu, Server, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import { Settings, Sparkles, Cpu, Server, ArrowRight } from 'lucide-react';
 import type { ColumnDef } from '../../../../components/shared/Table';
 import Button from '../../../../components/shared/Button';
 import Badge from '../../../../components/shared/Badge';

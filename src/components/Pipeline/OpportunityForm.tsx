@@ -11,7 +11,7 @@ import { getClients, createClient } from '../../services/clientsService';
 import { getUsers } from '../../services/usersService';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../core/models/User';
-import ClientForm from '../Client/ClientForm';
+import { ContactModal } from '../../pages/Clients/contacts/components/ContactModal';
 import { getCompanies } from '../../services/companiesService';
 import type { Company } from '../../core/models/Company';
 import type { Product } from '../../core/models/Product';
@@ -23,7 +23,6 @@ import TextArea from '../shared/TextArea';
 import Select from '../shared/Select';
 import Button from '../shared/Button';
 import StageStepper from '../shared/StageStepper';
-import Modal from '../shared/Modal';
 
 interface Props {
   initialData?: Opportunity;
@@ -1009,19 +1008,15 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         </div>
       </form>
 
-      <Modal
+      <ContactModal
         open={isClientModalOpen}
+        executives={executives.filter((u) => u.id).map((u) => ({ value: u.id!, label: u.username }))}
+        companies={companies.filter((c) => c.id).map((c) => ({ value: c.id!, label: c.nombre }))}
         onClose={() => setIsClientModalOpen(false)}
-        maxWidth="max-w-2xl"
-        height="h-auto"
-        padding="p-6"
-        hideCloseButton={true}
-      >
-        <ClientForm 
-          onSubmit={handleCreateClient}
-          onCancel={() => setIsClientModalOpen(false)}
-        />
-      </Modal>
+        onSubmit={async (data) => {
+          await handleCreateClient(data as Client);
+        }}
+      />
     </>
   );
 };

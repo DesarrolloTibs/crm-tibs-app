@@ -18,7 +18,6 @@ import { GlobalAiCredentialModal } from './components/GlobalAiCredentialModal';
 import type {
   GlobalAiConfig,
   LlmProviderItem,
-  LlmProviderId,
   GlobalAiFilterState,
   GlobalAiCredentialsFormData,
   GlobalAiParametersFormData,

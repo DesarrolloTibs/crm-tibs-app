@@ -8,7 +8,6 @@ import {
   Check,
   ExternalLink,
   Shield,
-  KeyRound,
 } from 'lucide-react';
 import Button from '../../../../components/shared/Button';
 import FormField from '../../../../components/shared/FormField';
