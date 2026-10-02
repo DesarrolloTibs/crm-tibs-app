@@ -78,13 +78,11 @@ Cada etapa (`Stage`) posee un atributo semántico que define su comportamiento e
 
 El hook proporciona soporte nativo para dos perspectivas visuales gobernadas por el usuario:
 * **Vista Kanban (`viewMode === 'kanban'`):** Columnas paralelas con scroll horizontal, totales de cartera por etapa y colapso visual de columnas poco transitadas (`foldedStageIds`).
-* **Vista Tabla / Lista (`viewMode === 'list'`):** Listado denso con paginación de servidor, ordenación por fecha de cierre y acceso rápido a edición.
+* **Vista Tabla / Lista (`viewMode === 'list'`):** Vista tabular homologada construida sobre el componente compartido `Table` (`@tanstack/react-table` con variante `cards`). Ofrece filas con diseño de tarjeta, ordenamiento nativo por columnas (proyecto, cliente/empresa, monto, moneda, ejecutivo, etapa y estado), acordeón responsive en móvil (`hideOnMobile`) para desplegar detalles secundarios, badges de etapa con íconos de resolución (`Check` para ganada, `X` para perdida) y paginación desacoplada y centralizada.
 
 Ambas preferencias se sincronizan automáticamente en el navegador:
 * `localStorage.setItem('pipeline_view_mode', viewMode)`
 * `localStorage.setItem('pipeline_folded_stages', JSON.stringify(foldedStageIds))`
-
----
 
 ## 📄 4. Motor de Filtros y Exportación a PDF
 

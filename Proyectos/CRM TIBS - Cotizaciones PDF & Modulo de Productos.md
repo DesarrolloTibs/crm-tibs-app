@@ -44,7 +44,7 @@ sequenceDiagram
 
 ## 🏷️ 1. Módulo de Productos y Notas para el Agente de IA
 
-En [`src/components/Product/ProductForm.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Product/ProductForm.tsx), cada producto o servicio registra:
+El catálogo comercial opera a través del formulario reactivo [`ProductForm.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Product/ProductForm.tsx) y la vista tabular homologada [`ProductsTable.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Product/ProductsTable.tsx) sobre el componente compartido `Table` (variante `cards`), integrando ordenamiento por código, precio o nombre, previsualización de imágenes de portada y control de estado (activo/inactivo). Cada producto o servicio registra:
 * **Datos Comerciales:** Nombre, código SKU, precio base, moneda (MXN/USD) y descripción detallada.
 * **Archivos Adjuntos (`ProductFilesTab.tsx`):** Fichas técnicas, catálogos en PDF y hojas de especificaciones.
 * **Notas Libres para el Agente de IA:** Campo de texto libre donde los administradores definen reglas de negociación (e.g. *"Si el cliente solicita más de 10 unidades, ofrecer 10% de descuento; tiempo de entrega 3 días hábiles"*). El bot de IA lee estas notas al vuelo durante las conversaciones en vivo.
@@ -75,7 +75,28 @@ El frontend utiliza [`jspdf`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/
 * **Pipeline Comercial ([`usePipeline.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/usePipeline.ts)):** Exportación tabular de acuerdos, importes, probabilidades de cierre y ejecutivos a cargo.
 * **Actividades ([`useActivities.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useActivities.ts)):** Resumen cronológico de reuniones y llamadas realizadas por el equipo.
 * **Tickets de Soporte ([`useHelpdesk.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useHelpdesk.ts)):** Reporte de incidencias por prioridad y días en etapa.
-* **Dashboard ([`useDashboard.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useDashboard.ts)):** Resumen ejecutivo con métricas de ventas y soporte.
+* **Dashboard ([`useDashboard.ts`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/hooks/useDashboard.ts)):** Resumen ejecutivo con métricas de ventas y soporte.
+
+---
+
+## 💸 4. Control de Gastos Corporativos (`src/pages/ExpensesPage.tsx` y `src/components/Expense/`)
+
+El módulo de egresos y fiscalización de gastos operativos permite registrar, categorizar y auditar desembolsos corporativos:
+
+* **Orquestador Principal ([`ExpensesPage.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/pages/ExpensesPage.tsx)):**
+  - Integra la carga de gastos mediante `expensesService.ts`, barra de filtros superiores y modales interactivos.
+* **Tabla Homologada TanStack ([`ExpensesTable.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/Expense/ExpensesTable.tsx)):**
+  - Implementada sobre el componente compartido `Table` (`src/components/shared/Table`) con variante `cards`.
+  - Columnas estructuradas con `ColumnDef<Expense>`:
+    - **Concepto / Descripción:** Detalle del gasto con categoría asociada.
+    - **Importe Monetario:** Formateo en divisa con identificador de moneda (`MXN` / `USD`).
+    - **Fecha:** Fecha del gasto formateada con soporte de ordenamiento interactivo.
+    - **Responsable:** Usuario o ejecutivo que reportó el desembolso.
+    - **Comprobante:** Icono y enlace interactivo para visualizar o descargar la factura / recibo adjunto ([`ReceiptUploadModal.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/Expense/ReceiptUploadModal.tsx)).
+    - **Acciones:** Menú contextual para edición y confirmación de eliminación segura.
+* **Filtros y Formularios:**
+  - [`ExpenseFiltersBar.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/Expense/ExpenseFiltersBar.tsx): Filtrado por categoría, rango de fechas y buscador reactivo.
+  - [`ExpenseForm.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/Expense/ExpenseForm.tsx): Formulario reactivo para alta y actualización de gastos.
 
 ---
 
@@ -83,4 +104,4 @@ El frontend utiliza [`jspdf`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Chat Omnicanal, WebSockets & Agente IA]] — Feed donde se muestran las cotizaciones.
 * [[CRM TIBS - Tablero Kanban & Pipeline Comercial]] — Oportunidades asociadas a cotizaciones.
-* [[CRM TIBS - Dashboard, Analitica & Reportes]] — Ventas acumuladas de productos.
+* [[CRM TIBS - Dashboard, Analitica & Reportes]] — Ventas acumuladas de productos y egresos.

@@ -75,7 +75,7 @@ En [`src/components/Activity/ActivitiesCalendar.tsx`](file:///c:/Users/sopor/Pro
 
 ## 🎨 2. Renderizado Personalizado de Eventos y Recordatorios
 
-FullCalendar delega el renderizado visual de cada bloque horario a componentes React específicos:
+FullCalendar delega el renderizado visual de cada bloque horario a componentes React específicos, complementado por la vista tabular [`ActivitiesTable.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivitiesTable.tsx):
 
 1. **Tarjetas de Cita Estándar ([`ActivityEventCard.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivityEventCard.tsx)):**
    * Asigna colores dinámicos basados en [`activityColors.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/activityColors.ts) según la categoría (llamada en azul, reunión presencial en verde, demo técnica en púrpura).
@@ -83,8 +83,11 @@ FullCalendar delega el renderizado visual de cada bloque horario a componentes R
 2. **Chips de Recordatorio (`ReminderEventCard`):**
    * Destacados con borde ámbar y fondo amarillo suave (`#fef3c7`).
    * Renderiza el icono `Bell` de [`lucide-react`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/package.json) para advertir al usuario sobre compromisos críticos inmediatos.
-
----
+3. **Vista Tabular Homologada ([`ActivitiesTable.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivitiesTable.tsx)):**
+   * Integrada sobre el componente compartido `Table` (`@tanstack/react-table` variante `cards`).
+   * Incluye insignias de sincronización externa (Google, Outlook, iCloud) junto al título.
+   * Cuenta con celda interactiva de recordatorio (`ActivityReminderCell`): animación de campana y popover flotante en desktop, y bloque informativo inline en móvil.
+   * Soporta ordenamiento multivariable, acordeón responsive (`hideOnMobile`) y paginación centralizada.
 
 ## 🔍 3. Popovers Contextuales vs Modales de Edición
 

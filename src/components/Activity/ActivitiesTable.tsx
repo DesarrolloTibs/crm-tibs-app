@@ -1,273 +1,316 @@
-import React, { useState } from 'react';
-import { Edit, Inbox, Trash2, ChevronDown, ChevronUp, Bell } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Edit, Trash2, Bell } from 'lucide-react';
 import type { Activity } from '../../core/models/Activity';
+import Table, { type ColumnDef } from '../shared/Table';
 
 interface Props {
-    activities: Activity[];
-    onEdit: (activity: Activity) => void;
-    onDelete: (activity: Activity) => void;
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
-    pageSize: number;
-    onPageSizeChange: (size: number) => void;
-    totalCount: number;
-    filteredCount: number;
+  activities: Activity[];
+  onEdit: (activity: Activity) => void;
+  onDelete: (activity: Activity) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  pageSize: number;
+  onPageSizeChange: (size: number) => void;
+  totalCount: number;
+  filteredCount: number;
+  maxHeight?: string;
+  loading?: boolean;
 }
 
-const ActivitiesTable: React.FC<Props> = ({ 
-    activities, 
-    onEdit, 
-    onDelete, 
-    currentPage, 
-    totalPages, 
-    onPageChange,
-    pageSize,
-    onPageSizeChange,
-    totalCount,
-    filteredCount
-}) => {
-    const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-    const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
-
-    const toggleRow = (id: string) => {
-        setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
-    };
-
+/* ── Badge de Proveedor Externo ── */
+const ExternalProviderBadge: React.FC<{ provider?: string }> = ({ provider }) => {
+  if (!provider) return null;
+  if (provider === 'google') {
     return (
-        <div className="overflow-x-auto pb-8"> {/* Añadido padding bottom para evitar corte de tooltip */}
-            <table className="min-w-full border-separate block md:table" style={{ borderSpacing: '0 0.75rem' }}>
-                <thead className="hidden md:table-header-group">
-                    <tr>
-                        <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Actividad</th>
-                        <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                        <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
-                        <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>
-                        <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Relación</th>
-                        <th className="p-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">Oportunidad</th>
-                        <th className="p-4 w-12">{/* Nueva columna vacía para campanita (sin header) */}</th>
-                        <th className="p-4 text-right text-sm font-semibold text-gray-500 uppercase tracking-wider print:hidden">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody className="block md:table-row-group">
-                    {activities.length > 0 ? (
-                        activities.map(activity => {
-                            const isExpanded = expandedRows[activity.id!];
-                            return (
-                                <React.Fragment key={activity.id}>
-                                    {/* ── Fila de la Actividad ── */}
-                                    <tr className="bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px block md:table-row mb-1 md:mb-0">
-                                        <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none md:rounded-l-lg font-medium text-gray-900">
-                                            <div className="flex flex-col md:block">
-                                                <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Actividad</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="flex-1">{activity.activity}</span>
-                                                    {activity.externalProvider === 'google' && (
-                                                        <span className="shrink-0 flex" title="Sincronizado con Google Calendar">
-                                                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                                                              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                                                              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22c-.47-.47-.83-1.03-1.03-1.63z" fill="#FBBC05" />
-                                                              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335" />
-                                                            </svg>
-                                                        </span>
-                                                    )}
-                                                    {activity.externalProvider === 'outlook' && (
-                                                        <span className="shrink-0 flex" title="Sincronizado con Outlook">
-                                                            <svg className="w-3.5 h-3.5" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                              <rect x="0" y="0" width="10.5" height="10.5" fill="#F25022"/>
-                                                              <rect x="12.5" y="0" width="10.5" height="10.5" fill="#7FBA00"/>
-                                                              <rect x="0" y="12.5" width="10.5" height="10.5" fill="#00A4EF"/>
-                                                              <rect x="12.5" y="12.5" width="10.5" height="10.5" fill="#FFB900"/>
-                                                            </svg>
-                                                        </span>
-                                                    )}
-                                                    {activity.externalProvider === 'icloud' && (
-                                                        <span className="shrink-0 flex" title="Sincronizado con iCloud">
-                                                            <svg className="w-3.5 h-3.5 text-sky-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                              <path d="M17.5 19A5.5 5.5 0 0 0 19 8.2c-.3 0-.6 0-.9.1A8 8 0 0 0 3 11.5c0 .3 0 .6.1.9A6 6 0 0 0 5.5 24H17.5z" fill="#0EA5E9" opacity="0.1" />
-                                                              <path d="M17.5 19A5.5 5.5 0 0 0 19 8.2c-.3 0-.6 0-.9.1A8 8 0 0 0 3 11.5c0 .3 0 .6.1.9A6 6 0 0 0 5.5 24H17.5z" stroke="#0EA5E9" strokeWidth="2" strokeLinejoin="round" />
-                                                            </svg>
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none text-gray-600">
-                                            <div className="flex flex-col md:block">
-                                                <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Tipo</span>
-                                                <p>{activity.typeActivity?.strname || 'N/A'}</p>
-                                            </div>
-                                        </td>
-                                        <td className="p-4 block md:table-cell border-b border-gray-100 md:border-none text-gray-600">
-                                            <div className="flex flex-col md:block">
-                                                <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Fecha</span>
-                                                <p>{new Date(activity.date).toLocaleString()}</p>
-                                            </div>
-                                        </td>
-                                        <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
-                                            <div className="flex flex-col md:block">
-                                                <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Usuario</span>
-                                                <p>{activity.user?.username}</p>
-                                            </div>
-                                        </td>
-                                        <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
-                                            <div className="flex flex-col md:block">
-                                                <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Relación</span>
-                                                {activity.company ? (
-                                                    <p className="font-semibold text-gray-800">Empresa: {activity.company.nombre}</p>
-                                                ) : activity.client ? (
-                                                    <p>Contacto: {activity.client.nombre} {activity.client.apellido}</p>
-                                                ) : (
-                                                    <p></p>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
-                                            <div className="flex flex-col md:block">
-                                                <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mb-1">Oportunidad</span>
-                                                <p>{activity.opportunity?.nombre_proyecto || ''}</p>
-                                            </div>
-                                        </td>
-
-                                        <td className={`p-4 border-b border-gray-100 md:border-none text-gray-600 ${isExpanded ? 'block md:table-cell' : 'hidden md:table-cell'}`}>
-                                            {/* Columna de Recordatorio (Campanita) */}
-                                            {activity.reminder ? (
-                                                <div 
-                                                    className="relative group flex flex-col md:flex-row md:items-center md:justify-center cursor-pointer select-none w-full md:w-auto"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        // Solo activar tooltip en desktop
-                                                        if (window.innerWidth >= 768) {
-                                                            setActiveTooltip(activeTooltip === activity.id ? null : activity.id!);
-                                                        }
-                                                    }}
-                                                    onMouseLeave={() => setActiveTooltip(null)}
-                                                >
-                                                    <div className="flex items-center">
-                                                        <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mr-2">Recordatorio: </span>
-                                                        <div className="p-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-full transition-all duration-200 shadow-sm flex items-center justify-center hover:scale-105 active:scale-95 w-fit">
-                                                            <Bell size={15} className="text-amber-600 md:animate-[swing_1s_ease-in-out_infinite] md:origin-top" />
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Vista inline exclusiva para móvil */}
-                                                    <div className="md:hidden mt-2 bg-amber-50/70 border border-amber-200/50 rounded-xl p-3 text-xs text-amber-900 w-full max-w-xs shadow-sm flex flex-col gap-1.5">
-                                                        <div className="font-bold text-amber-800 uppercase tracking-wider text-[9px] flex items-center gap-1.5">
-                                                            <Bell size={10} className="text-amber-600" />
-                                                            Recordatorio Activo
-                                                        </div>
-                                                        <div className="font-semibold text-amber-950 break-words whitespace-normal leading-snug">{activity.reminder.title}</div>
-                                                        <div className="text-[10px] text-amber-700 font-medium">
-                                                            {new Date(activity.reminder.date).toLocaleString('es-MX', {
-                                                                weekday: 'short',
-                                                                day: 'numeric',
-                                                                month: 'short',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit',
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {/* Tooltip con información del recordatorio (exclusivo para desktop) */}
-                                                    <div className={`hidden md:flex absolute bottom-full mb-2 ${activeTooltip === activity.id ? 'md:flex' : 'md:hidden'} group-hover:md:flex flex-col bg-slate-900 text-white text-xs rounded-lg py-2.5 px-3 shadow-xl z-50 w-72 pointer-events-none right-[-20px] border border-slate-700/50`}>
-                                                        <div className="font-bold text-amber-400 border-b border-slate-700 pb-1 mb-1.5 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
-                                                            <Bell size={10} className="text-amber-400" />
-                                                            Recordatorio Activo
-                                                        </div>
-                                                        <div className="font-semibold text-slate-100 break-words whitespace-normal leading-snug">{activity.reminder.title}</div>
-                                                        <div className="text-[10px] text-slate-400 mt-1.5 font-medium">
-                                                            {new Date(activity.reminder.date).toLocaleString('es-MX', {
-                                                                weekday: 'short',
-                                                                day: 'numeric',
-                                                                month: 'short',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit',
-                                                            })}
-                                                        </div>
-                                                        <div className="absolute top-full right-[32px] border-4 border-transparent border-t-slate-900"></div>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="hidden md:block w-full h-full min-h-[18px]"></div>
-                                            )}
-                                        </td>
-
-                                        <td className="p-4 block md:table-cell md:rounded-r-lg text-right print:hidden">
-                                            <div className="flex justify-between md:justify-end items-center mt-2 md:mt-0">
-                                                <button
-                                                    onClick={() => toggleRow(activity.id!)}
-                                                    className="md:hidden text-blue-600 font-medium text-sm flex items-center hover:bg-blue-50 px-2 py-1 rounded"
-                                                >
-                                                    {isExpanded ? <ChevronUp size={16} className="mr-1"/> : <ChevronDown size={16} className="mr-1"/>}
-                                                    {isExpanded ? 'Menos' : 'Más'} detalles
-                                                </button>
-                                                <div className="flex space-x-1">
-                                                    <button onClick={() => onEdit(activity)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full" title="Editar">
-                                                        <Edit size={18} />
-                                                    </button>
-                                                    <button onClick={() => onDelete(activity)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full" title="Eliminar">
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </React.Fragment>
-                            );
-                        })
-                    ) : (
-                        <tr className="block md:table-row w-full">
-                            <td colSpan={8} className="text-center py-16 block md:table-cell w-full">
-                                <div className="flex flex-col items-center justify-center text-center text-gray-500 w-full mx-auto">
-                                    <Inbox size={48} className="mb-4 mx-auto" />
-                                    <h3 className="text-xl font-semibold text-center w-full">No se encontraron actividades</h3>
-                                    <p className="text-sm text-center w-full mt-1">Intenta ajustar los filtros o crear una nueva actividad.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 p-4 gap-4 bg-slate-50/50 rounded-xl border border-slate-100/60 print:hidden">
-                {/* Left Side: pageSize input and record details */}
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 select-none">
-                    <span>Mostrar</span>
-                    <input
-                        type="number"
-                        min="0"
-                        value={pageSize === 0 ? '' : pageSize}
-                        onChange={(e) => {
-                            const val = e.target.value;
-                            onPageSizeChange(val === '' ? 0 : Math.max(0, parseInt(val, 10)));
-                        }}
-                        placeholder="Todos"
-                        className="w-16 text-center border border-slate-300 rounded-lg py-1.5 px-2 text-slate-800 font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white outline-none"
-                    />
-                    <span>registros de {filteredCount} (total: {totalCount})</span>
-                </div>
-
-                {/* Right Side: Page navigation buttons */}
-                {totalPages > 1 && (
-                    <div className="flex space-x-1.5">
-                        {Array.from({ length: totalPages }, (_, i) => (
-                            <button
-                                key={i + 1}
-                                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border select-none cursor-pointer ${
-                                    currentPage === i + 1 
-                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/10' 
-                                        : 'bg-white border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-                                }`}
-                                onClick={() => onPageChange(i + 1)}
-                            >
-                                {i + 1}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
+      <span className="shrink-0 flex" title="Sincronizado con Google Calendar">
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22c-.47-.47-.83-1.03-1.03-1.63z" fill="#FBBC05" />
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335" />
+        </svg>
+      </span>
     );
+  }
+  if (provider === 'outlook') {
+    return (
+      <span className="shrink-0 flex" title="Sincronizado con Outlook">
+        <svg className="w-3.5 h-3.5" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="10.5" height="10.5" fill="#F25022"/>
+          <rect x="12.5" y="0" width="10.5" height="10.5" fill="#7FBA00"/>
+          <rect x="0" y="12.5" width="10.5" height="10.5" fill="#00A4EF"/>
+          <rect x="12.5" y="12.5" width="10.5" height="10.5" fill="#FFB900"/>
+        </svg>
+      </span>
+    );
+  }
+  if (provider === 'icloud') {
+    return (
+      <span className="shrink-0 flex" title="Sincronizado con iCloud">
+        <svg className="w-3.5 h-3.5 text-sky-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.5 19A5.5 5.5 0 0 0 19 8.2c-.3 0-.6 0-.9.1A8 8 0 0 0 3 11.5c0 .3 0 .6.1.9A6 6 0 0 0 5.5 24H17.5z" fill="#0EA5E9" opacity="0.1" />
+          <path d="M17.5 19A5.5 5.5 0 0 0 19 8.2c-.3 0-.6 0-.9.1A8 8 0 0 0 3 11.5c0 .3 0 .6.1.9A6 6 0 0 0 5.5 24H17.5z" stroke="#0EA5E9" strokeWidth="2" strokeLinejoin="round" />
+        </svg>
+      </span>
+    );
+  }
+  return null;
+};
+
+/* ── Celda Interactiva de Recordatorio con Campanita y Tooltip ── */
+const ActivityReminderCell: React.FC<{ reminder?: Activity['reminder'] }> = ({ reminder }) => {
+  const [activeTooltip, setActiveTooltip] = useState(false);
+
+  if (!reminder) {
+    return <div className="hidden md:block w-full h-full min-h-[18px]" />;
+  }
+
+  return (
+    <div
+      className="relative group flex flex-col md:flex-row md:items-center md:justify-center cursor-pointer select-none w-full md:w-auto"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (window.innerWidth >= 768) {
+          setActiveTooltip((prev) => !prev);
+        }
+      }}
+      onMouseLeave={() => setActiveTooltip(false)}
+    >
+      <div className="flex items-center">
+        <span className="md:hidden font-semibold text-xs text-gray-500 uppercase tracking-wider mr-2">
+          Recordatorio:
+        </span>
+        <div className="p-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-full transition-all duration-200 shadow-xs flex items-center justify-center hover:scale-105 active:scale-95 w-fit">
+          <Bell
+            size={15}
+            className="text-amber-600 md:animate-[swing_1s_ease-in-out_infinite] md:origin-top"
+          />
+        </div>
+      </div>
+
+      {/* Vista inline exclusiva para móvil */}
+      <div className="md:hidden mt-2 bg-amber-50/70 border border-amber-200/50 rounded-xl p-3 text-xs text-amber-900 w-full max-w-xs shadow-xs flex flex-col gap-1.5">
+        <div className="font-bold text-amber-800 uppercase tracking-wider text-[9px] flex items-center gap-1.5">
+          <Bell size={10} className="text-amber-600" />
+          Recordatorio Activo
+        </div>
+        <div className="font-semibold text-amber-950 break-words whitespace-normal leading-snug">
+          {reminder.title}
+        </div>
+        <div className="text-[10px] text-amber-700 font-medium">
+          {new Date(reminder.date).toLocaleString('es-MX', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </div>
+      </div>
+
+      {/* Tooltip con información del recordatorio (exclusivo para desktop) */}
+      <div
+        className={`hidden md:flex absolute bottom-full mb-2 ${
+          activeTooltip ? 'md:flex' : 'md:hidden'
+        } group-hover:md:flex flex-col bg-slate-900 text-white text-xs rounded-lg py-2.5 px-3 shadow-xl z-50 w-72 pointer-events-none right-[-20px] border border-slate-700/50`}
+      >
+        <div className="font-bold text-amber-400 border-b border-slate-700 pb-1 mb-1.5 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+          <Bell size={10} className="text-amber-400" />
+          Recordatorio Activo
+        </div>
+        <div className="font-semibold text-slate-100 break-words whitespace-normal leading-snug">
+          {reminder.title}
+        </div>
+        <div className="text-[10px] text-slate-400 mt-1.5 font-medium">
+          {new Date(reminder.date).toLocaleString('es-MX', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </div>
+        <div className="absolute top-full right-[32px] border-4 border-transparent border-t-slate-900" />
+      </div>
+    </div>
+  );
+};
+
+const ActivitiesTable: React.FC<Props> = ({
+  activities,
+  onEdit,
+  onDelete,
+  currentPage,
+  totalPages,
+  onPageChange,
+  pageSize,
+  onPageSizeChange,
+  totalCount,
+  filteredCount,
+  maxHeight,
+  loading = false,
+}) => {
+  const columns = useMemo<ColumnDef<Activity>[]>(
+    () => [
+      {
+        id: 'activity',
+        accessorKey: 'activity',
+        header: 'Actividad',
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <span className="flex-1 font-medium text-gray-900">{row.original.activity}</span>
+            <ExternalProviderBadge provider={row.original.externalProvider} />
+          </div>
+        ),
+        meta: {
+          mobileLabel: 'Actividad',
+        },
+      },
+      {
+        id: 'tipo',
+        header: 'Tipo',
+        accessorFn: (act) => act.typeActivity?.strname || 'N/A',
+        cell: ({ row }) => (
+          <p className="text-gray-600">{row.original.typeActivity?.strname || 'N/A'}</p>
+        ),
+        meta: {
+          mobileLabel: 'Tipo',
+        },
+      },
+      {
+        id: 'fecha',
+        accessorKey: 'date',
+        header: 'Fecha',
+        cell: ({ row }) => (
+          <p className="text-gray-600">{new Date(row.original.date).toLocaleString()}</p>
+        ),
+        meta: {
+          mobileLabel: 'Fecha',
+        },
+      },
+      {
+        id: 'usuario',
+        header: 'Usuario',
+        accessorFn: (act) => act.user?.username || '',
+        cell: ({ row }) => (
+          <p className="text-gray-600">{row.original.user?.username || 'Sin asignar'}</p>
+        ),
+        meta: {
+          mobileLabel: 'Usuario',
+          hideOnMobile: true,
+        },
+      },
+      {
+        id: 'relacion',
+        header: 'Relación',
+        accessorFn: (act) =>
+          act.company?.nombre || (act.client ? `${act.client.nombre} ${act.client.apellido}` : ''),
+        cell: ({ row }) => {
+          const act = row.original;
+          if (act.company) {
+            return <p className="font-semibold text-gray-800">Empresa: {act.company.nombre}</p>;
+          }
+          if (act.client) {
+            return (
+              <p className="text-gray-600">
+                Contacto: {act.client.nombre} {act.client.apellido}
+              </p>
+            );
+          }
+          return <span className="text-gray-400 italic">-</span>;
+        },
+        meta: {
+          mobileLabel: 'Relación',
+          hideOnMobile: true,
+        },
+      },
+      {
+        id: 'oportunidad',
+        header: 'Oportunidad',
+        accessorFn: (act) => act.opportunity?.nombre_proyecto || '',
+        cell: ({ row }) => (
+          <p className="text-gray-600">{row.original.opportunity?.nombre_proyecto || '-'}</p>
+        ),
+        meta: {
+          mobileLabel: 'Oportunidad',
+          hideOnMobile: true,
+        },
+      },
+      {
+        id: 'reminder',
+        header: '',
+        enableSorting: false,
+        cell: ({ row }) => <ActivityReminderCell reminder={row.original.reminder} />,
+        meta: {
+          mobileLabel: 'Recordatorio',
+          hideOnMobile: true,
+          align: 'center',
+          headerClassName: 'w-12',
+        },
+      },
+      {
+        id: 'actions',
+        header: 'Acciones',
+        enableSorting: false,
+        cell: ({ row }) => {
+          const act = row.original;
+          return (
+            <div className="flex space-x-1 justify-end">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(act);
+                }}
+                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full transition-colors cursor-pointer"
+                title="Editar"
+              >
+                <Edit size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(act);
+                }}
+                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
+                title="Eliminar"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          );
+        },
+        meta: {
+          align: 'right',
+          headerClassName: 'text-right',
+        },
+      },
+    ],
+    [onEdit, onDelete]
+  );
+
+  return (
+    <Table
+      data={activities}
+      columns={columns}
+      variant="cards"
+      loading={loading}
+      keyExtractor={(act) => act.id!}
+      emptyTitle="No se encontraron actividades"
+      emptyMessage="Intenta ajustar los filtros o crear una nueva actividad."
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      pageSize={pageSize}
+      onPageSizeChange={onPageSizeChange}
+      totalCount={totalCount}
+      filteredCount={filteredCount}
+      maxHeight={maxHeight}
+      containerClassName="pb-8"
+    />
+  );
 };
 
 export default ActivitiesTable;

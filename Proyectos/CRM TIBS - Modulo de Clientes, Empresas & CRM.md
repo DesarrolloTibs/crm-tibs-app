@@ -119,17 +119,18 @@ El catálogo de personas individuales y tomadores de decisiones opera a través 
   - **Contactos Activos:** Disponibles para citas, tareas y asignación comercial.
   - **Vinculados a Empresa:** Contactos agrupados bajo una cuenta B2B matriz.
   - **Independientes:** Contactos sin cuenta empresarial asociada.
-* **Tabla TanStack (`ContactsTable.tsx` & `contacts.columns.tsx`):**
+* **Tabla Homologada TanStack (`ContactsTable.tsx` & `contacts.columns.tsx`):**
+  - Integra el componente compartido `Table` (`src/components/shared/Table`) en variante `cards`.
   - Avatar generado dinámicamente con las iniciales del contacto y diseño cromático según estado.
   - Insignia de categoría (`Badge`) con variaciones cromáticas (`success` para Cliente, `warning` para Lead, `info` para Contacto).
-  - Paginación interna integrada, sticky headers, buscador libre y filtros de categoría y estado activo/inactivo.
+  - Paginación desacoplada integrada (`TablePagination`), sticky headers, buscador libre y filtros de categoría y estado activo/inactivo.
   - Inyección de dependencias de catálogo (`companies` y `executives`) pasadas limpiamente por props desde el orquestador, evitando consultas de red redundantes.
 
 ---
 
 ## 🏢 2. Submódulo de Cuentas B2B / Empresas (`src/pages/Clients/companies/`)
 
-El catálogo de organizaciones corporativas opera a través de [`companiesService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/companiesService.ts):
+El catálogo de organizaciones corporativas opera a través de [`companiesService.ts`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/services/companiesService.ts):
 
 * **Validación Declarativa con Yup (`companies.schema.ts`):**
   - Esquema estricto `companyValidationSchema` que audita razón social o nombre comercial (2 a 120 caracteres), correo general válido, formato de conmutador telefónico, longitud de sitio web y dirección fiscal.
@@ -139,11 +140,12 @@ El catálogo de organizaciones corporativas opera a través de [`companiesServic
   - **Cuentas Activas:** Empresas habilitadas para cotizaciones y pipeline.
   - **Con Contactos:** Cuentas con nómina de asesores o interlocutores asignados.
   - **Suspendidas / Inactivas:** Cuentas temporalmente deshabilitadas.
-* **Tabla TanStack (`CompaniesTable.tsx` & `companies.columns.tsx`):**
+* **Tabla Homologada TanStack (`CompaniesTable.tsx` & `companies.columns.tsx`):**
+  - Integra el componente compartido `Table` (`src/components/shared/Table`) en variante `cards`.
   - Identificación con icono corporativo violeta y desglose de dirección fiscal.
   - Contador reactivo de contactos asociados (`X contactos`).
   - Enlace externo interactivo para navegación inmediata hacia el sitio web oficial.
-  - Conmutador reactivo de estado activo/suspendido con modal de confirmación ([`ConfirmModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/ConfirmModal.tsx)).
+  - Conmutador reactivo de estado activo/suspendido con modal de confirmación ([`ConfirmModal.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/shared/ConfirmModal.tsx)).
 
 ---
 

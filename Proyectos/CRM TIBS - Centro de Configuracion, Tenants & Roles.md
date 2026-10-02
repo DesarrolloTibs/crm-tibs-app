@@ -526,6 +526,28 @@ src/pages/settings/
   - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `FormField`, `Select`, `Loader`.
 
 ---
+
+### 👥 14. Administración de Usuarios & RBAC (`src/pages/UsersPage.tsx` y `src/components/User/`)
+
+La gestión de cuentas de usuario, ejecutivos comerciales y asignación de privilegios de acceso opera bajo control de acceso basado en roles (**RBAC**):
+
+* **Orquestador Principal (`UsersPage.tsx`):**
+  - Vista protegida reservada para usuarios con privilegios administrativos (`role === 'Admin'`).
+  - Coordina la carga de usuarios del tenant activo vía `usersService.ts`, modales de alta/edición y estado reactivo.
+* **Tabla Homologada TanStack (`UsersTable.tsx`):**
+  - Implementada sobre la suite modular compartida `Table` (`src/components/shared/Table`) con variante `cards`.
+  - Columnas estructuradas con `ColumnDef<User>`:
+    - **Usuario / Identidad:** Avatar visual con iniciales del usuario o imagen personalizada, nombre completo y correo corporativo.
+    - **Rol RBAC:** Insignia cromática [`Badge.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/shared/Badge.tsx) con colores distintivos según perfil (`danger` para Admin, `primary` para Sales/Ventas, `info` para Support/Soporte).
+    - **Estado Activo:** Conmutador reactivo tipo toggle/switch para habilitar o revocar inmediatamente el acceso del usuario al sistema.
+    - **Acciones:** Botón de edición para abrir el formulario modal y confirmación de eliminación con [`ConfirmModal.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/shared/ConfirmModal.tsx).
+* **Formularios y Utilerías:**
+  - [`UserFiltersBar.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/User/UserFiltersBar.tsx): Búsqueda en tiempo real por nombre/correo y selector por rol de acceso.
+  - [`UserForm.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/User/UserForm.tsx): Formulario reactivo para alta y modificación de cuentas con validación de contraseña y confirmación.
+  - [`ProfileImageUploadModal.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/User/ProfileImageUploadModal.tsx): Modal con zona de arrastre para actualización de avatar de perfil.
+
+---
+
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Calendario FullCalendar & Actividades]] — Sincronización y uso operativo de tipos de actividad en agenda.
