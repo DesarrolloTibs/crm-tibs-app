@@ -153,11 +153,19 @@ export function useHelpdesk() {
 
   // ── Socket.io ──
   useEffect(() => {
-    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
     const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
     const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket = io(`${originUrl}/tickets`, { path: socketPath });
+    const socket = io(`${originUrl}/tickets`, {
+      path: socketPath,
+      auth: (cb: (data: object) => void) => {
+        cb({ token: localStorage.getItem('token') });
+      },
+    });
     socket.on('connect', () => console.log('Connected to WebSocket server'));
+    socket.on('connect_error', (err) => {
+      console.warn('Error de conexión en Tickets WebSocket:', err.message);
+    });
     socket.on('ticketCreated', (newTicket: Ticket) => {
       setTickets(prev => prev.some(t => t.id === newTicket.id) ? prev : [newTicket, ...prev]);
     });

@@ -185,12 +185,20 @@ export function usePipeline() {
 
   // ── Socket.io ──
   useEffect(() => {
-    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
     const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
     const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket = io(`${originUrl}/pipelines`, { path: socketPath });
+    const socket = io(`${originUrl}/pipelines`, {
+      path: socketPath,
+      auth: (cb: (data: object) => void) => {
+        cb({ token: localStorage.getItem('token') });
+      },
+    });
 
     socket.on('connect', () => console.log('Connected to Pipelines WebSocket server'));
+    socket.on('connect_error', (err) => {
+      console.warn('Error de conexión en Pipelines WebSocket:', err.message);
+    });
 
     socket.on('opportunityCreated', (newOpp: Opportunity) => {
       setOpportunities((prev) =>

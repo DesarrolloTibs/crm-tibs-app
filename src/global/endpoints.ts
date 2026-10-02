@@ -1,7 +1,8 @@
-const urlBase = import.meta.env.VITE_BASE_URL + '/api/';
+const urlBase = (import.meta.env.VITE_BASE_URL || 'http://localhost:3091').replace(/\/$/, '') + '/api/';
 
 export const auth = {
     LOGIN: urlBase + 'auth/login',
+    REFRESH: urlBase + 'auth/refresh',
     FORGOT_PASSWORD: urlBase + 'auth/forgot-password',
     RESET_PASSWORD: urlBase + 'auth/reset-password',
 };

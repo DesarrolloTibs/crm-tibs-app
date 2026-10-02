@@ -28,11 +28,16 @@ const ConsumptionInfoPopover: React.FC = () => {
 
     if (!schemaName) return;
 
-    // Conectar al socket usando la ruta del backend igual que Nodo
+    // Conectar al namespace /conversations que emite tenant_consumption_updated
     const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
     const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
     const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket = io(originUrl, { path: socketPath });
+    const socket = io(`${originUrl}/conversations`, {
+      path: socketPath,
+      auth: (cb: (data: object) => void) => {
+        cb({ token: localStorage.getItem('token') });
+      },
+    });
 
     socket.on('tenant_consumption_updated', (data: { schemaName?: string }) => {
       if (!data?.schemaName || data.schemaName === schemaName) {

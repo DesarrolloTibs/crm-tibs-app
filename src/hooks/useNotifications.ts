@@ -36,10 +36,17 @@ export const useNotifications = () => {
     const socket: Socket = io(`${originUrl}/notifications`, {
       path: socketPath,
       query: { userId },
+      auth: (cb: (data: object) => void) => {
+        cb({ token: localStorage.getItem('token') });
+      },
     });
 
     socket.on('connect', () => {
       socket.emit('register', { userId });
+    });
+
+    socket.on('connect_error', (err) => {
+      console.warn('Error de conexión en Notifications WebSocket:', err.message);
     });
 
     socket.on('notification_received', (newNotification: NotificationItem) => {

@@ -1,6 +1,24 @@
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import Swal from 'sweetalert2';
 import { configStore } from '../../store/useConfigStore';
+import { refreshToken, logout } from '../../services/authService';
+
+let isRefreshing = false;
+let failedQueue: Array<{
+    resolve: (token: string) => void;
+    reject: (error: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else if (token) {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
 
 export function setupInterceptors(axiosInstance: AxiosInstance) {
     axiosInstance.interceptors.request.use(
@@ -30,11 +48,56 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
             }
             return response;
         },
-        error => {
+        async error => {
+            const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean });
+
             if (error.response?.status === 401) {
-                localStorage.removeItem('token');
-                if (window.location.pathname !== '/login') {
-                    window.location.href = '/login';
+                const requestUrl = originalRequest?.url || '';
+                const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/refresh');
+                const hasRefreshToken = !!localStorage.getItem('refresh_token');
+
+                // Si falló el login, el propio endpoint de refresh, no hay refresh_token o ya se reintentó: cerrar sesión
+                if (isAuthEndpoint || !hasRefreshToken || originalRequest?._retry) {
+                    logout();
+                    return Promise.reject(error);
+                }
+
+                if (isRefreshing) {
+                    // Si ya hay un refresco en curso, encolar esta petición hasta que termine
+                    return new Promise((resolve, reject) => {
+                        failedQueue.push({ resolve, reject });
+                    })
+                        .then(token => {
+                            if (originalRequest.headers) {
+                                originalRequest.headers['Authorization'] = `Bearer ${token}`;
+                            }
+                            return axiosInstance(originalRequest);
+                        })
+                        .catch(err => Promise.reject(err));
+                }
+
+                originalRequest._retry = true;
+                isRefreshing = true;
+
+                try {
+                    const newToken = await refreshToken();
+                    if (!newToken) {
+                        processQueue(new Error('Fallo al refrescar token'), null);
+                        logout();
+                        return Promise.reject(error);
+                    }
+
+                    processQueue(null, newToken);
+                    if (originalRequest.headers) {
+                        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                    }
+                    return axiosInstance(originalRequest);
+                } catch (refreshErr) {
+                    processQueue(refreshErr, null);
+                    logout();
+                    return Promise.reject(refreshErr);
+                } finally {
+                    isRefreshing = false;
                 }
             } else if (error.response?.status === 402) {
                 const detail = error.response?.data || {};

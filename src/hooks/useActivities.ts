@@ -83,12 +83,20 @@ export function useActivities() {
 
   // ── Socket.io ──
   useEffect(() => {
-    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
     const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
     const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket = io(`${originUrl}/activities`, { path: socketPath });
+    const socket = io(`${originUrl}/activities`, {
+      path: socketPath,
+      auth: (cb: (data: object) => void) => {
+        cb({ token: localStorage.getItem('token') });
+      },
+    });
 
     socket.on('connect', () => console.log('Connected to Activities WebSocket server'));
+    socket.on('connect_error', (err) => {
+      console.warn('Error de conexión en Activities WebSocket:', err.message);
+    });
 
     socket.on('activityCreated', (newActivity: Activity) => {
       setActivities((prev) =>

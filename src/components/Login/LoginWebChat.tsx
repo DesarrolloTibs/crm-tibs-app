@@ -147,7 +147,7 @@ export const LoginWebChat: React.FC = () => {
     conversationIdRef.current = conversationId;
   }, [conversationId]);
 
-  const rawBaseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3090';
+  const rawBaseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
   const apiUrl = `${rawBaseUrl.replace(/\/$/, '')}/api`;
   const socketUrl = rawBaseUrl.replace(/\/$/, '');
 
@@ -228,6 +228,10 @@ export const LoginWebChat: React.FC = () => {
       path: socketPath,
       transports: ['websocket', 'polling'],
       withCredentials: true,
+    });
+
+    socket.on('connect_error', (err) => {
+      console.warn('Error de conexión en WebChat WebSocket:', err.message);
     });
 
     socket.on('message_received', (incomingMessage: any) => {

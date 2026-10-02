@@ -59,7 +59,14 @@ const originUrl = rawUrl.replace(/\/backend\/?$/, '');
 
 const socket = io(`${originUrl}/conversations`, {
   path: socketPath,
-  query: { userId: currentUserId }
+  query: { userId: currentUserId },
+  auth: (cb) => {
+    cb({ token: localStorage.getItem('token') });
+  },
+});
+
+socket.on('connect_error', (err) => {
+  console.warn('Error de conexión en Conversations WebSocket:', err.message);
 });
 ```
 

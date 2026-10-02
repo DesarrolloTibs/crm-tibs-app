@@ -157,11 +157,21 @@ export function useConversationsSocket() {
     const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
     const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
     const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket = io(`${originUrl}/conversations`, { path: socketPath, query: { userId: currentUserId } });
+    const socket = io(`${originUrl}/conversations`, {
+      path: socketPath,
+      query: { userId: currentUserId },
+      auth: (cb: (data: object) => void) => {
+        cb({ token: localStorage.getItem('token') });
+      },
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {
       console.log('Conectado a Websockets de Conversaciones');
+    });
+
+    socket.on('connect_error', (err) => {
+      console.warn('Error de conexión en Conversations WebSocket:', err.message);
     });
 
     // 1. Mensaje recibido (entrante de cliente o emitido por usuario/bot)
