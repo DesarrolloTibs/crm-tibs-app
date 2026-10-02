@@ -19,7 +19,7 @@ interface Props {
 }
 
 /* ── Badge de Proveedor Externo ── */
-const ExternalProviderBadge: React.FC<{ provider?: string }> = ({ provider }) => {
+const ExternalProviderBadge: React.FC<{ provider?: string | null }> = ({ provider }) => {
   if (!provider) return null;
   if (provider === 'google') {
     return (

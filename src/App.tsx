@@ -18,6 +18,7 @@ import SupportTicketPage from './pages/SupportTicketPage';
 import DashboardPage from './pages/DashboardPage';
 import ConversationsPage from './pages/ConversationsPage';
 import OAuthCallbackPopup from './pages/Settings/AiAgentChannels/components/OAuthCallbackPopup';
+import PwaUpdateNotification from './components/shared/PwaUpdateNotification';
 
 const isOAuthPopup = typeof window !== 'undefined' && (
     window.location.search.includes('meta_oauth') ||
@@ -153,6 +154,7 @@ const App: React.FC = () => {
             />
             <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
+        <PwaUpdateNotification />
     </BrowserRouter>
     );
 };

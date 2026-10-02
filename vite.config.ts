@@ -11,13 +11,13 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       devOptions: {
         enabled: true
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        navigateFallbackDenylist: [/^\/backend/],
+        navigateFallbackDenylist: [/^\/api/, /^\/backend/, /^\/uploads/, /^\/socket\.io/],
       },
       manifest: {
         name: 'Billy Sales & Services',
@@ -35,12 +35,14 @@ export default defineConfig(({ mode }) => {
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }

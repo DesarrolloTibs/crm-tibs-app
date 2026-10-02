@@ -103,9 +103,10 @@ La aplicación está diseñada bajo el principio de separación de responsabilid
 * **Hot Module Replacement:** Tiempos de recarga en caliente inferiores a 50ms durante desarrollo.
 * **Proxy Transparente:** Redirección de `/api`, `/socket.io` y `/uploads` al backend para evitar problemas de CORS en local.
 * **Soporte PWA Integral (`vite-plugin-pwa`):**
-  * `registerType: 'autoUpdate'`: Actualización automática del service worker ante despliegues de nuevas versiones.
+  * `registerType: 'prompt'`: Actualización interactiva controlada del service worker. Cuando se detecta una nueva compilación, se mantiene en espera sin interrumpir al usuario y se despliega la notificación interactiva [`PwaUpdateNotification`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/PwaUpdateNotification.tsx) para recargar a demanda sin pérdida de datos.
   * Manifiesto PWA completo con iconos `180x180`, `192x192` y `512x512`.
   * Caché de Workbox con límite de tamaño de hasta 5 MB (`maximumFileSizeToCacheInBytes: 5 * 1024 * 1024`).
+  * Verificación periódica (cada 30 minutos) y proactiva ante reactivación de app (`visibilitychange` / `window.focus`).
 
 ---
 

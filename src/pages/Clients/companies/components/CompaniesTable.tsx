@@ -127,7 +127,7 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
           <Button
             variant="success"
             onClick={onCreateNew}
-            className="gap-2 text-xs !py-1.5 !bg-violet-600 hover:!bg-violet-700 border-none"
+            className="gap-2 text-xs !py-1.5"
           >
             <Plus size={15} />
             Nueva Empresa
