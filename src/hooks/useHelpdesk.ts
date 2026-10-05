@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
-import { createAppSocket } from '../core/socket/socketClient';
+import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
 import { useAuth } from './useAuth';
 import { useConfigStore } from '../store/useConfigStore';
 import {
@@ -192,7 +192,7 @@ export function useHelpdesk() {
     socket.on('ticketDeleted', (id: string) => {
       setTickets(prev => prev.filter(t => t.id !== id));
     });
-    return () => { socket.disconnect(); };
+    return () => { safeDisconnect(socket); };
   }, [schemaName]);
 
   // ── URL ticketId deep-link ──

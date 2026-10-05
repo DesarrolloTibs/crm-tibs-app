@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Info, Box, Database, Zap } from 'lucide-react';
-import { createAppSocket } from '../../core/socket/socketClient';
+import { createAppSocket, safeDisconnect } from '../../core/socket/socketClient';
 import { useConfigStore } from '../../store/useConfigStore';
 import { getTenantConsumption } from '../../services/tenantsService';
 import type { TenantConsumptionData } from '../../services/tenantsService';
@@ -33,8 +33,13 @@ const ConsumptionInfoPopover: React.FC = () => {
       namespace: 'conversations',
     });
 
+    let isInitialConnect = true;
     socket.on('connect', () => {
-      fetchConsumption(true);
+      if (!isInitialConnect) {
+        fetchConsumption(true);
+      } else {
+        isInitialConnect = false;
+      }
     });
 
     socket.on('tenant_consumption_updated', (data: { schemaName?: string }) => {
@@ -48,7 +53,7 @@ const ConsumptionInfoPopover: React.FC = () => {
     });
 
     return () => {
-      socket.disconnect();
+      safeDisconnect(socket);
     };
   }, [schemaName]);
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { createAppSocket } from '../core/socket/socketClient';
+import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
 import type { NotificationItem } from '../core/models/Notification';
 import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../services/notificationsService';
 import { useAuth } from './useAuth';
@@ -66,7 +66,7 @@ export const useNotifications = () => {
     });
 
     return () => {
-      socket.disconnect();
+      safeDisconnect(socket);
     };
   }, [user?.id, user?.sub]);
 

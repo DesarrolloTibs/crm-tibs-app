@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
-import { createAppSocket } from '../core/socket/socketClient';
+import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
 import { useAuth } from './useAuth';
 import { useConfigStore } from '../store/useConfigStore';
 import { getUsers } from '../services/usersService';
@@ -378,7 +378,7 @@ export function useConversationsSocket() {
       if (loadConversationsListRef.current) loadConversationsListRef.current();
     });
 
-    return () => { socket.disconnect(); };
+    return () => { safeDisconnect(socket); };
   }, [currentUserId, schemaName]);
 
   // ── Actions ──

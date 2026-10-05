@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { type SingleValue } from 'react-select';
-import { createAppSocket } from '../core/socket/socketClient';
+import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
 import { getActivities, createActivity, updateActivity, deleteActivity, getActivityTypes } from '../services/activitiesService';
 import { getUsers } from '../services/usersService';
 import { useAuth } from './useAuth';
@@ -151,7 +151,7 @@ export function useActivities() {
     });
 
     return () => {
-      socket.disconnect();
+      safeDisconnect(socket);
     };
   }, [schemaName]);
 

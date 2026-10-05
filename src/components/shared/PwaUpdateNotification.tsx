@@ -7,9 +7,10 @@ import Badge from './Badge';
 export const PwaUpdateNotification: React.FC = () => {
   const registrationRef = useRef<ServiceWorkerRegistration | undefined>(undefined);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   const {
-    needRefresh: [needRefresh],
+    needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(registration) {
@@ -71,31 +72,38 @@ export const PwaUpdateNotification: React.FC = () => {
     (window.location.href.includes('testPwa=true') ||
      new URLSearchParams(window.location.search).get('testPwa') === 'true');
 
-  const shouldShow = needRefresh || isPreviewMode;
+  const shouldShow = !dismissed && (needRefresh || isPreviewMode);
 
   const handleUpdate = async () => {
     try {
       setIsUpdating(true);
+      setDismissed(true);
+      setNeedRefresh(false);
 
       if (isPreviewMode && !needRefresh) {
-        setTimeout(() => {
-          const cleanUrl = window.location.href
-            .replace(/[?&]testPwa=true/g, '')
-            .replace(/\?testPwa=true/g, '');
-          window.location.href = cleanUrl;
-        }, 700);
+        const cleanUrl = window.location.href
+          .replace(/[?&]testPwa=true/g, '')
+          .replace(/\?testPwa=true/g, '');
+        window.location.href = cleanUrl;
         return;
+      }
+
+      // Notificar directamente al worker en espera si existe
+      const reg = registrationRef.current || (await navigator.serviceWorker?.getRegistration());
+      if (reg?.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
       }
 
       await updateServiceWorker(true);
 
-      // Respaldo de seguridad: si el navegador no recarga tras 2.5s, forzar recarga
+      // Forzar recarga tras breve retroalimentación visual
       setTimeout(() => {
         window.location.reload();
-      }, 2500);
+      }, 400);
     } catch (err) {
       console.error('[PWA] Error al forzar actualización del Service Worker:', err);
       setIsUpdating(false);
+      window.location.reload();
     }
   };
 

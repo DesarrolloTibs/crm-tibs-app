@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
-import { createAppSocket } from '../core/socket/socketClient';
+import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
 import type { Opportunity, Stage } from '../core/models/Opportunity';
 import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity, archiveOpportunity } from '../services/opportunitiesService';
 import { getActiveCatalogOptions } from '../services/opportunityCatalogsService';
@@ -241,7 +241,7 @@ export function usePipeline() {
     });
 
     return () => {
-      socket.disconnect();
+      safeDisconnect(socket);
     };
   }, [schemaName]);
 

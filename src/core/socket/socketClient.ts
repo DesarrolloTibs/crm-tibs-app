@@ -66,3 +66,35 @@ export function createAppSocket(options: CreateSocketOptions): Socket {
     }),
   });
 }
+
+/**
+ * Desconecta un socket de forma segura evitando la advertencia de React StrictMode
+ * ("WebSocket is closed before the connection is established") cuando el componente
+ * se desmonta de inmediato en desarrollo mientras el handshake está en vuelo.
+ */
+export function safeDisconnect(socket: Socket | null | undefined) {
+  if (!socket) return;
+  socket.removeAllListeners();
+  if (socket.connected) {
+    socket.disconnect();
+  } else {
+    const closeWhenSettled = () => {
+      try {
+        socket.disconnect();
+      } catch {
+        // Ignorar si ya estaba desconectado
+      }
+    };
+    socket.once('connect', closeWhenSettled);
+    socket.once('connect_error', closeWhenSettled);
+    setTimeout(() => {
+      if (!socket.disconnected) {
+        try {
+          socket.disconnect();
+        } catch {
+          // Ignorar
+        }
+      }
+    }, 2000);
+  }
+}
