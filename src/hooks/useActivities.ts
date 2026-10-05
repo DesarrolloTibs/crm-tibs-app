@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { type SingleValue } from 'react-select';
-import { io } from 'socket.io-client';
+import { createAppSocket } from '../core/socket/socketClient';
 import { getActivities, createActivity, updateActivity, deleteActivity, getActivityTypes } from '../services/activitiesService';
 import { getUsers } from '../services/usersService';
 import { useAuth } from './useAuth';
@@ -79,22 +79,40 @@ export function useActivities() {
     catch { console.error('Failed to fetch activity types'); }
   }, []);
 
+  const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
+  const fetchActivitiesRef = useRef(fetchActivities);
+  fetchActivitiesRef.current = fetchActivities;
+  const fetchActivityTypesRef = useRef(fetchActivityTypes);
+  fetchActivityTypesRef.current = fetchActivityTypes;
+  const isInitialConnectRef = useRef<boolean>(true);
+
   useEffect(() => { fetchActivities(); fetchActivityTypes(); }, [fetchActivities, fetchActivityTypes, schemaName]);
 
   // ── Socket.io ──
   useEffect(() => {
-    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
-    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket = io(`${originUrl}/activities`, {
-      path: socketPath,
-      auth: (cb: (data: object) => void) => {
-        cb({ token: localStorage.getItem('token') });
-      },
+    const socket = createAppSocket({
+      namespace: 'activities',
     });
 
-    socket.on('connect', () => console.log('Connected to Activities WebSocket server'));
+    socket.on('connect', () => {
+      setIsWsConnected(true);
+      if (!isInitialConnectRef.current) {
+        console.log('[Activities WS] Reconectado. Re-sincronizando actividades vía REST...');
+        fetchActivitiesRef.current();
+        fetchActivityTypesRef.current();
+      } else {
+        isInitialConnectRef.current = false;
+        console.log('Connected to Activities WebSocket server');
+      }
+    });
+
+    socket.on('disconnect', (reason) => {
+      setIsWsConnected(false);
+      console.warn('Desconexión en Activities WebSocket:', reason);
+    });
+
     socket.on('connect_error', (err) => {
+      setIsWsConnected(false);
       console.warn('Error de conexión en Activities WebSocket:', err.message);
     });
 
@@ -135,7 +153,7 @@ export function useActivities() {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [schemaName]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -266,5 +284,6 @@ export function useActivities() {
     openCreateModal, openCreateModalWithDate, openEditModal,
     handleClearFilters, formatDateBadge, hasReminders,
     handleExportPDF, handleExportCSV,
+    isWsConnected, isConnected: isWsConnected,
   };
 }

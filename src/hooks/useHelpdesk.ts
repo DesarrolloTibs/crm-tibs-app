@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
-import { io } from 'socket.io-client';
+import { createAppSocket } from '../core/socket/socketClient';
 import { useAuth } from './useAuth';
 import { useConfigStore } from '../store/useConfigStore';
 import {
@@ -149,23 +149,40 @@ export function useHelpdesk() {
     }
   };
 
+  const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
+  const loadDataRef = useRef(loadData);
+  loadDataRef.current = loadData;
+  const isInitialConnectRef = useRef<boolean>(true);
+
   useEffect(() => { loadData(); }, [archivedFilter, schemaName]);
 
   // ── Socket.io ──
   useEffect(() => {
-    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
-    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket = io(`${originUrl}/tickets`, {
-      path: socketPath,
-      auth: (cb: (data: object) => void) => {
-        cb({ token: localStorage.getItem('token') });
-      },
+    const socket = createAppSocket({
+      namespace: 'tickets',
     });
-    socket.on('connect', () => console.log('Connected to WebSocket server'));
+
+    socket.on('connect', () => {
+      setIsWsConnected(true);
+      if (!isInitialConnectRef.current) {
+        console.log('[Tickets WS] Reconectado. Re-sincronizando tickets y etapas vía REST...');
+        loadDataRef.current();
+      } else {
+        isInitialConnectRef.current = false;
+        console.log('Connected to WebSocket server');
+      }
+    });
+
+    socket.on('disconnect', (reason) => {
+      setIsWsConnected(false);
+      console.warn('Desconexión en Tickets WebSocket:', reason);
+    });
+
     socket.on('connect_error', (err) => {
+      setIsWsConnected(false);
       console.warn('Error de conexión en Tickets WebSocket:', err.message);
     });
+
     socket.on('ticketCreated', (newTicket: Ticket) => {
       setTickets(prev => prev.some(t => t.id === newTicket.id) ? prev : [newTicket, ...prev]);
     });
@@ -176,7 +193,7 @@ export function useHelpdesk() {
       setTickets(prev => prev.filter(t => t.id !== id));
     });
     return () => { socket.disconnect(); };
-  }, []);
+  }, [schemaName]);
 
   // ── URL ticketId deep-link ──
   useEffect(() => {
@@ -501,6 +518,7 @@ export function useHelpdesk() {
     handleResolutionSubmit, handleResolutionCancel,
     handleDragStart, handleDragEnd, handleStageVisibilityChange,
     handleExportPDF, handleExportCSV,
+    isWsConnected, isConnected: isWsConnected,
     // auth
     isAdmin,
   };

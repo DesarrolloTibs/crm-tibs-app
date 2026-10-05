@@ -27,6 +27,8 @@ const ConversationsPage: React.FC = () => {
         selectedConv={cv.selectedConv}
         searchQuery={cv.searchQuery}
         selectedChannelFilter={cv.selectedChannelFilter}
+        unreadMap={cv.unreadMap}
+        isWsConnected={cv.isWsConnected}
         onSearchChange={cv.setSearchQuery}
         onChannelChange={cv.setSelectedChannelFilter}
         onSelectConv={cv.setSelectedConv}

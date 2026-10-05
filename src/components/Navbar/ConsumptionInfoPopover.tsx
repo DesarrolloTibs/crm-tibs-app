@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Info, Box, Database, Zap } from 'lucide-react';
-import { io } from 'socket.io-client';
+import { createAppSocket } from '../../core/socket/socketClient';
 import { useConfigStore } from '../../store/useConfigStore';
 import { getTenantConsumption } from '../../services/tenantsService';
 import type { TenantConsumptionData } from '../../services/tenantsService';
@@ -29,14 +29,12 @@ const ConsumptionInfoPopover: React.FC = () => {
     if (!schemaName) return;
 
     // Conectar al namespace /conversations que emite tenant_consumption_updated
-    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
-    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket = io(`${originUrl}/conversations`, {
-      path: socketPath,
-      auth: (cb: (data: object) => void) => {
-        cb({ token: localStorage.getItem('token') });
-      },
+    const socket = createAppSocket({
+      namespace: 'conversations',
+    });
+
+    socket.on('connect', () => {
+      fetchConsumption(true);
     });
 
     socket.on('tenant_consumption_updated', (data: { schemaName?: string }) => {
@@ -45,12 +43,12 @@ const ConsumptionInfoPopover: React.FC = () => {
       }
     });
 
+    socket.on('connect_error', (err) => {
+      console.warn('Error de conexión en socket de consumo:', err.message);
+    });
+
     return () => {
-      if (socket.connected) {
-        socket.disconnect();
-      } else {
-        socket.once('connect', () => socket.disconnect());
-      }
+      socket.disconnect();
     };
   }, [schemaName]);
 

@@ -48,27 +48,47 @@ sequenceDiagram
 
 ---
 
-## 🔌 1. Conexión WebSocket y Prevención de Stale Closures
+## 🔌 1. Conexión WebSocket Resiliente y Prevención de Stale Closures
 
-En [`src/hooks/useConversationsSocket.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useConversationsSocket.ts), se establece el enlace persistente sobre el namespace `/conversations`:
+Toda la comunicación en tiempo real del CRM se encuentra centralizada en la factoría [`src/core/socket/socketClient.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/core/socket/socketClient.ts) mediante `createAppSocket()`, implementada en [`src/hooks/useConversationsSocket.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useConversationsSocket.ts) y los demás módulos:
 
 ```typescript
-const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
-const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-
-const socket = io(`${originUrl}/conversations`, {
-  path: socketPath,
+const socket = createAppSocket({
+  namespace: 'conversations',
   query: { userId: currentUserId },
-  auth: (cb) => {
-    cb({ token: localStorage.getItem('token') });
-  },
+});
+
+socket.on('connect', () => {
+  setIsWsConnected(true);
+  if (!isInitialConnectRef.current) {
+    // Sincronización REST post-reconexión (descarga de novedades ocurridas durante microcorte)
+    loadConversationsListRef.current();
+    if (selectedConvRef.current) {
+      getConversationMessages(selectedConvRef.current.id).then(setMessages);
+    }
+  } else {
+    isInitialConnectRef.current = false;
+  }
+});
+
+socket.on('disconnect', (reason) => {
+  setIsWsConnected(false);
+  console.warn('Desconexión en Conversations WebSocket:', reason);
 });
 
 socket.on('connect_error', (err) => {
+  setIsWsConnected(false);
   console.warn('Error de conexión en Conversations WebSocket:', err.message);
 });
 ```
+
+### Directivas de Resiliencia ante Fallos de Red:
+1. **Transporte Híbrido (`transports: ['websocket', 'polling']`):** Conexión primaria por WebSockets puros con fallback inmediato a Long-Polling HTTP si firewalls o proxies corporativos bloquean WS.
+2. **Reconexión Automática Infinita (`reconnection: true`, `reconnectionAttempts: Infinity`):** El cliente reintenta de forma continua e indefinida sin abandonar el intento de reconexión.
+3. **Backoff Exponencial Controlado (`reconnectionDelay: 1000`, `reconnectionDelayMax: 5000`):** Evita la saturación del servidor (*thundering herd*) tras caídas masivas de red, espaciando los reintentos entre 1s y 5s con factor de aleatoriedad.
+4. **Re-fetch Automático al Reconectar (`Re-connect REST Sync`):** Ante el evento `connect` posterior al montaje inicial (`!isInitialConnectRef.current`), el frontend re-ejecuta automáticamente las peticiones REST (`loadConversationsList()` y `getConversationMessages()`) para descargar cualquier mensaje o cambio ocurrido durante el periodo desconectado.
+5. **Manejo No Bloqueante de Errores:** Los eventos `connect_error` y `disconnect` no lanzan excepciones ni congelan la interfaz; el usuario puede seguir enviando mensajes y gestionando chats mediante REST.
+6. **Indicador Visual de Estado (`ConnectionStatusBadge`):** Expone `isWsConnected` en la barra lateral con un punto verde pulsante ("En vivo") o ámbar ("Reconectando...").
 
 ### Prevención de Estados Obsoletos (*Stale Closures*):
 Debido a que los listeners de Socket.IO se registran una sola vez en un `useEffect`, el hook utiliza referencias mutables sincronizadas para consultar el estado en caliente sin recrear sockets:
@@ -83,7 +103,7 @@ Debido a que los listeners de Socket.IO se registran una sola vez en un `useEffe
 | Evento Socket | Payload | Efecto en la Interfaz |
 | :--- | :--- | :--- |
 | **`connect`** | Vacío | Confirma conexión activa e imprime en consola del navegador. |
-| **`message_received`** | `Message` | Actualiza la lista lateral de conversaciones. Si coincide con la conversación activa, anexa el mensaje al feed sin duplicados y ejecuta scroll al final (`scrollToBottom`). Si proviene del cliente (`sender === 'contact'`), reactiva `is24HourWindowActive = true` y desbloquea el input inmediatamente. |
+| **`message_received`** | `Message` | Actualiza la lista lateral de conversaciones en tiempo real posicionando el chat activo inmediatamente en la cima (índice 0) con reordenamiento cronológico dinámico en `filteredConversations`. Si el mensaje proviene del cliente (`sender === 'contact'`) y el chat no está abierto, incrementa el contador del badge de mensajes no leídos (`unreadMap`). Si coincide con la conversación activa, anexa el mensaje al feed sin duplicados, ejecuta scroll al final (`scrollToBottom`), reactiva `is24HourWindowActive = true` y desbloquea el input inmediatamente. Si es un lead/chat nuevo no existente en memoria, dispara recarga de lista desde el backend. |
 | **`message_status_updated`** | `MessageStatusUpdatedEvent` | Actualiza en tiempo real el estado de entrega (`pending`, `sent`, `delivered`, `read`, `failed`), el `externalMessageId` y el `errorMessage` tanto en el feed activo como en el último mensaje de la barra lateral. |
 | **`bot_status_changed`** | `{ conversationId, botActive }` | Conmuta el switch visual de IA en la cabecera [`ChatWindowHeader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatWindowHeader.tsx) y en la tarjeta de chat lateral. |
 | **`conversation_assigned`** | `{ conversationId, assignedUserId }` | Actualiza el avatar y nombre del ejecutivo asignado a la conversación en tiempo real. |

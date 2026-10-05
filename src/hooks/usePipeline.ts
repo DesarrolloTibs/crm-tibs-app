@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
-import { io } from 'socket.io-client';
+import { createAppSocket } from '../core/socket/socketClient';
 import type { Opportunity, Stage } from '../core/models/Opportunity';
 import { getOpportunities, createOpportunity, updateOpportunity, deleteOpportunity, archiveOpportunity } from '../services/opportunitiesService';
 import { getActiveCatalogOptions } from '../services/opportunityCatalogsService';
@@ -181,22 +181,37 @@ export function usePipeline() {
     finally { setLoading(false); }
   };
 
+  const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
+  const fetchPipelineRef = useRef(fetchPipelineAndOpportunities);
+  fetchPipelineRef.current = fetchPipelineAndOpportunities;
+  const isInitialConnectRef = useRef<boolean>(true);
+
   useEffect(() => { fetchPipelineAndOpportunities(); }, [archivedFilter, schemaName, startDate, endDate]);
 
   // ── Socket.io ──
   useEffect(() => {
-    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
-    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket = io(`${originUrl}/pipelines`, {
-      path: socketPath,
-      auth: (cb: (data: object) => void) => {
-        cb({ token: localStorage.getItem('token') });
-      },
+    const socket = createAppSocket({
+      namespace: 'pipelines',
     });
 
-    socket.on('connect', () => console.log('Connected to Pipelines WebSocket server'));
+    socket.on('connect', () => {
+      setIsWsConnected(true);
+      if (!isInitialConnectRef.current) {
+        console.log('[Pipelines WS] Reconectado. Re-sincronizando oportunidades y etapas vía REST...');
+        fetchPipelineRef.current();
+      } else {
+        isInitialConnectRef.current = false;
+        console.log('Connected to Pipelines WebSocket server');
+      }
+    });
+
+    socket.on('disconnect', (reason) => {
+      setIsWsConnected(false);
+      console.warn('Desconexión en Pipelines WebSocket:', reason);
+    });
+
     socket.on('connect_error', (err) => {
+      setIsWsConnected(false);
       console.warn('Error de conexión en Pipelines WebSocket:', err.message);
     });
 
@@ -228,7 +243,7 @@ export function usePipeline() {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [schemaName]);
 
   useEffect(() => {
     if (!loading && opportunities.length > 0) {
@@ -591,5 +606,6 @@ export function usePipeline() {
     handleClearFilters, handleApplyCustomFilter,
     getOperatorsForField, handleRuleFieldChange, handleRuleChange,
     handleExportPDF, handleExportCSV,
+    isWsConnected, isConnected: isWsConnected,
   };
 }

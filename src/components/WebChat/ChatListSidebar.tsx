@@ -22,12 +22,15 @@ import {
   getWhatsAppWindowStatus,
   renderDeliveryStatusIcon,
 } from '../../utils/messageUtils';
+import ConnectionStatusBadge from '../shared/ConnectionStatusBadge';
 
 interface ChatListSidebarProps {
   conversations: Conversation[];
   selectedConv: Conversation | null;
   searchQuery: string;
   selectedChannelFilter: ChannelFilter;
+  unreadMap?: Record<string, number>;
+  isWsConnected?: boolean;
   onSearchChange: (v: string) => void;
   onChannelChange: (v: ChannelFilter) => void;
   onSelectConv: (conv: Conversation) => void;
@@ -55,7 +58,7 @@ export const getChannelIcon = (channel: string) => {
 export const getInitials = (name: string) => name.slice(0, 2).toUpperCase();
 
 const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
-  conversations, selectedConv, searchQuery, selectedChannelFilter,
+  conversations, selectedConv, searchQuery, selectedChannelFilter, unreadMap, isWsConnected,
   onSearchChange, onChannelChange, onSelectConv, onRefresh,
 }) => (
   <aside className={`w-full md:w-80 border-r border-gray-150 bg-slate-50/50 shrink-0 ${selectedConv ? 'hidden md:flex flex-col' : 'flex flex-col'}`}>
@@ -64,7 +67,10 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
       <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
         <MessageSquare size={20} className="text-blue-700" /> Mensajería
       </h2>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
+        {typeof isWsConnected === 'boolean' && (
+          <ConnectionStatusBadge isConnected={isWsConnected} />
+        )}
         <button onClick={onRefresh} className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Actualizar chats">
           <RefreshCw size={16} />
         </button>
@@ -109,6 +115,7 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
             const windowStatus = getWhatsAppWindowStatus(conv);
             const lastMsg = conv.lastMessage;
             const isOutgoingLastMsg = lastMsg && lastMsg.sender !== 'contact' && lastMsg.sender !== 'system';
+            const unreadCount = isSelected ? 0 : (unreadMap?.[conv.id] || 0);
 
             return (
               <li
@@ -123,22 +130,31 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
                 </div>
                 <div className="flex-grow min-w-0">
                   <div className="flex justify-between items-center gap-1">
-                    <span className="font-bold text-gray-800 text-sm truncate">{conv.clientName}</span>
-                    <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
+                    <span className={`text-sm truncate ${unreadCount > 0 ? 'font-extrabold text-gray-900' : 'font-bold text-gray-800'}`}>
+                      {conv.clientName}
+                    </span>
+                    <span className={`text-[10px] whitespace-nowrap ${unreadCount > 0 ? 'text-blue-600 font-bold' : 'text-gray-400 font-medium'}`}>
                       {lastMsg ? formatSidebarDate(lastMsg.createdAt) : ''}
                     </span>
                   </div>
 
-                  {/* Mensaje + tick de entrega si es saliente */}
-                  <div className="flex items-center gap-1 text-xs text-gray-500 font-medium mt-1">
-                    {isOutgoingLastMsg && (
-                      <span className="shrink-0 flex items-center">
-                        {renderDeliveryStatusIcon(lastMsg?.status, lastMsg?.errorMessage)}
+                  {/* Mensaje + tick de entrega si es saliente + Badge No Leídos */}
+                  <div className="flex items-center justify-between gap-1 text-xs mt-1">
+                    <div className={`flex items-center gap-1 min-w-0 truncate font-medium ${unreadCount > 0 ? 'text-gray-800 font-bold' : 'text-gray-500'}`}>
+                      {isOutgoingLastMsg && (
+                        <span className="shrink-0 flex items-center">
+                          {renderDeliveryStatusIcon(lastMsg?.status, lastMsg?.errorMessage)}
+                        </span>
+                      )}
+                      <span className="truncate">
+                        {lastMsg ? lastMsg.content : 'Sin mensajes'}
+                      </span>
+                    </div>
+                    {unreadCount > 0 && (
+                      <span className="shrink-0 min-w-4.5 h-4.5 px-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
+                        {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
-                    <span className="truncate">
-                      {lastMsg ? lastMsg.content : 'Sin mensajes'}
-                    </span>
                   </div>
 
                   {/* Badge de Ventana de 23h para WhatsApp */}

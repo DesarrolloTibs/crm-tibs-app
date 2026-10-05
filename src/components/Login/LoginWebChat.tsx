@@ -224,10 +224,24 @@ export const LoginWebChat: React.FC = () => {
     // Conexión Socket.io al namespace /conversations para escuchar respuestas de ejecutivos e IA en tiempo real
     const socketPath = socketUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
     const originUrl = socketUrl.replace(/\/backend\/?$/, '');
+    let isInitialConnect = true;
     const socket: Socket = io(`${originUrl}/conversations`, {
       path: socketPath,
       transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
       withCredentials: true,
+    });
+
+    socket.on('connect', () => {
+      if (!isInitialConnect) {
+        console.log('[WebChat WS] Reconectado. Re-sincronizando historial...');
+        fetchHistory();
+      } else {
+        isInitialConnect = false;
+      }
     });
 
     socket.on('connect_error', (err) => {
