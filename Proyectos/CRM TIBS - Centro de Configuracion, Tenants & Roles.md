@@ -201,7 +201,7 @@ src/pages/settings/
   - Esquema estricto `activityTypeValidationSchema` que audita requerimiento, longitud mínima (2 caracteres) y límite superior (50 caracteres).
   - Integración reactiva con `FormField` e `Input`, informando errores de validación en tiempo real al tipear y al desenfocar (`onBlur`).
 * **Sincronización Cromática con FullCalendar:**
-  - Emplea directamente la función `getActivityColor` (`src/components/Activity/activityColors.ts`).
+  - Emplea directamente la función `getActivityColor` (`src/utils/activityColors.ts`).
   - Incluye vista previa interactiva en vivo dentro del formulario y en la tabla, permitiendo ver el matiz cromático exacto antes de guardar.
 * **Búsqueda y Filtros Unificados (`UnifiedSearchBar`):**
   - Filtrado en vivo por texto en el nombre del tipo.

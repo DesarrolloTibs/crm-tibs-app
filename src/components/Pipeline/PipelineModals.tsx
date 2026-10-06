@@ -9,7 +9,7 @@ import OpportunityForm from './OpportunityForm';
 import PipelineStagesSettings from './PipelineStagesSettings';
 import InteractionsTab from '../Interaction/InteractionsTab';
 import FilesTab from '../Files/FilesTab';
-import ActivitiesTab from '../Activity/ActivitiesTab';
+import ActivitiesTab from '../../pages/Activities/components/ActivitiesTab';
 import type { Stage, Opportunity } from '../../core/models/Opportunity';
 
 interface Props {

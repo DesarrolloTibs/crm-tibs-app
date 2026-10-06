@@ -100,7 +100,7 @@ export function CardsTableView<T>({
               <tr
                 key={rowId}
                 onClick={onRowClick ? () => onRowClick(original) : undefined}
-                className={`bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px block md:table-row mb-4 md:mb-0 ${
+                className={`bg-white shadow-sm rounded-lg transition-all hover:shadow-md hover:-translate-y-px relative hover:z-20 block md:table-row mb-4 md:mb-0 ${
                   onRowClick ? 'cursor-pointer' : ''
                 } ${rowClassName ? rowClassName(original, rIdx) : ''}`}
               >

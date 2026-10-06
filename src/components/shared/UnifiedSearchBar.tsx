@@ -68,20 +68,20 @@ export const UnifiedSearchBar = React.forwardRef<HTMLDivElement, UnifiedSearchBa
     return (
       <div className={className || "relative w-full sm:w-auto"} ref={containerRef}>
         <div
-          className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 shadow-sm hover:border-gray-400 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 min-h-[38px] cursor-text transition-all w-full sm:min-w-[280px]"
+          className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 shadow-sm hover:border-gray-400 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 h-[38px] cursor-text transition-all w-full sm:min-w-[280px]"
           onClick={handleContainerClick}
         >
           <Search size={16} className="text-gray-400 shrink-0" />
 
-          {/* Badges de filtros activos e input de búsqueda */}
-          <div className="flex flex-wrap gap-1 items-center flex-1 min-w-0">
+          {/* Badges de filtros activos e input de búsqueda en una sola fila */}
+          <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
             {badges.map((badge) => (
               <span
                 key={badge.id}
-                className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0"
+                className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 font-bold shrink-0"
               >
                 {badge.icon && <span className="shrink-0">{badge.icon}</span>}
-                <span className="max-w-[100px] truncate shrink-0">{badge.label}</span>
+                <span className="max-w-[110px] truncate shrink-0">{badge.label}</span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -101,7 +101,7 @@ export const UnifiedSearchBar = React.forwardRef<HTMLDivElement, UnifiedSearchBa
               placeholder={hasBadges ? '' : placeholder}
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="border-none outline-none focus:ring-0 p-0 text-xs sm:text-sm bg-transparent placeholder-gray-400 min-w-[60px] flex-grow focus:outline-none"
+              className="border-none outline-none focus:ring-0 p-0 text-xs sm:text-sm bg-transparent placeholder-gray-400 min-w-[30px] flex-1 focus:outline-none"
             />
           </div>
 

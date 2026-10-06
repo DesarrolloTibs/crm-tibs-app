@@ -7,14 +7,39 @@ tags:
   - "#agenda"
   - "#google-calendar"
   - "#outlook"
-  - "#icloud"
-date: 2026-09-08
+  - "#arquitectura-modular"
+date: 2026-10-06
 status: produccion
 ---
 
 # 📅 CRM TIBS — Calendario FullCalendar & Actividades
 
-Este documento detalla la integración del motor interactivo de agenda con **FullCalendar** ([`@fullcalendar/react`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/package.json)), el hook de gestión operativa [`useActivities.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useActivities.ts), el sistema cromático de tipos de cita y la coordinación de sincronización bidireccional con **Google Calendar, Microsoft Outlook y Apple iCloud**.
+Este documento detalla la gestión integral de citas, reuniones, demos y bitácora de seguimiento comercial de **CRM TIBS App**, su **Arquitectura Modular por Capas** homologada bajo el estándar de diseño limpio, la integración con **FullCalendar** ([`@fullcalendar/react`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/package.json)), validación declarativa con **Yup**, sincronización en vivo vía **WebSockets** (`/activities`) y la interoperabilidad con **Google Calendar y Microsoft Outlook**.
+
+---
+
+## 🏗️ Arquitectura Modular de la Agenda Comercial (`src/pages/Activities/`)
+
+Siguiendo el estándar desacoplado implementado en el CRM, el módulo de actividades opera bajo una arquitectura modular limpia por responsabilidades:
+
+```
+src/pages/Activities/
+├── ActivitiesPage.tsx                   # Orquestador del módulo con control de sub-vistas (Calendario vs Listado), guards y WebSockets
+├── index.ts                           # Exportador barril principal
+│
+├── components/                        # Componentes autónomos del módulo
+│   ├── ActivitiesNavTabs.tsx          # Conmutador visual estilizado ("Calendario" vs "Listado") con contadores
+│   ├── ActivitiesTable.tsx            # Tabla TanStack Table (@tanstack/react-table) con buscador libre, filtros de usuario/tipo/fecha y exportaciones
+│   ├── ActivityModal.tsx              # Modal contenedor responsive con cabecera de icono y descripción
+│   └── ActivityForm.tsx               # Formulario reactivo con Yup (activityValidationSchema), FormField, Select y sección de alertas
+│
+├── schemas/
+│   └── activities.schema.ts           # Esquema Yup (activityValidationSchema), ActivityFormData y Filtros
+│
+└── utils/
+    ├── activities.columns.tsx         # ColumnDef<Activity> con badges de proveedores (Google/Outlook), tipo, recordatorio y acciones
+    └── activities.helpers.ts          # validateActivityForm (Yup async runner), filterActivities, exports PDF/CSV
+```
 
 ---
 
@@ -22,15 +47,20 @@ Este documento detalla la integración del motor interactivo de agenda con **Ful
 
 ```mermaid
 flowchart TD
-    subgraph UI ["🖥️ Interfaz de Usuario"]
+    subgraph UI ["🖥️ Interfaz de Usuario Modular (`src/pages/Activities/`)"]
+        NavTabs["🔀 ActivitiesNavTabs (Calendario vs Listado)"]
         CalView["📅 Calendario FullCalendar (`dayGrid`, `timeGrid`, `list`)"]
-        ClickSlot["🖱️ Clic en horario libre -> Modal con fecha preseleccionada"]
-        ClickEvent["🔍 Clic en evento -> Popover rápido de detalles"]
-        Form["📝 Formulario de Actividad (Reunión, Llamada, Demo)"]
+        TableView["📋 Tabla TanStack (`ActivitiesTable` con filtros y PDF/CSV)"]
+        Modal["🖼️ ActivityModal (Contenedor accesible)"]
+        Form["📝 ActivityForm (Validado con Yup & FormField)"]
     end
 
-    subgraph HookService ["🎣 Capa Reactiva & Servicio"]
-        Hook["useActivities Hook (`src/hooks/useActivities.ts`)"]
+    subgraph ReactiveWS ["⚡ Capa Reactiva & Socket.IO"]
+        WS["WebSocket Namespace (`/activities`)"]
+        Badges["🟢 ConnectionStatusBadge (En vivo / Reconectando)"]
+    end
+
+    subgraph Services ["📡 Servicios REST & Sincronización"]
         ActService["activitiesService (`/api/activities`)"]
         SyncService["calendarIntegrationsService (`/api/calendar-integrations/*`)"]
     end
@@ -38,33 +68,59 @@ flowchart TD
     subgraph ProveedoresExternos ["☁️ Proveedores de Calendario"]
         Google["Google Calendar (OAuth2)"]
         Outlook["Microsoft 365 / Outlook (OAuth2)"]
-        iCloud["Apple iCloud (CalDAV App-Password)"]
     end
 
-    CalView --> ClickSlot
-    CalView --> ClickEvent
-    ClickSlot --> Form
-    Form --> Hook
-    Hook --> ActService
-
+    NavTabs --> CalView
+    NavTabs --> TableView
+    CalView --> Modal
+    TableView --> Modal
+    Modal --> Form
+    Form --> ActService
+    WS --> Badges
+    ActService --> SyncService
     SyncService --> Google
     SyncService --> Outlook
-    SyncService --> iCloud
 
     classDef ui fill:#1e40af,stroke:#60a5fa,color:#fff;
-    classDef hook fill:#0f766e,stroke:#2dd4bf,color:#fff;
+    classDef ws fill:#0f766e,stroke:#2dd4bf,color:#fff;
     classDef cloud fill:#701a75,stroke:#d946ef,color:#fff;
 
-    class CalView,ClickSlot,ClickEvent,Form ui;
-    class Hook,ActService,SyncService hook;
-    class Google,Outlook,iCloud cloud;
+    class NavTabs,CalView,TableView,Modal,Form ui;
+    class WS,Badges,ActService,SyncService ws;
+    class Google,Outlook cloud;
 ```
 
 ---
 
-## ⚙️ 1. Configuración y Plugins de FullCalendar
+## ✅ 1. Validación Declarativa con Yup & Formulario Reactivo (`ActivityForm.tsx`)
 
-En [`src/components/Activity/ActivitiesCalendar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivitiesCalendar.tsx), se ensambla el componente utilizando cuatro plugins oficiales:
+En [`activities.schema.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Activities/schemas/activities.schema.ts), se define el esquema de integridad:
+* **`activityValidationSchema`:**
+  - Audita longitud de descripción (mínimo 3, máximo 300 caracteres).
+  - Obligatoriedad de tipo de actividad (`typeActivityId`) y fecha de ejecución (`date`).
+  - Validación condicional del recordatorio: si `reminderEnabled` está activo, exige título descriptivo (máximo 100 caracteres) y fecha/hora de disparo de la notificación.
+* **`ActivityForm.tsx`:**
+  - Organizado en tres secciones con encabezados estilizados:
+    1. *Detalles de la Cita o Actividad:* Tipo de actividad, fecha y hora (`datetime-local`) y descripción en `TextArea`.
+    2. *Vinculación Comercial & Contactos:* Selector de cuenta empresarial (con multiselección de contactos convocados) o contacto individual independiente, junto con la oportunidad comercial del embudo.
+    3. *Alerta de Recordatorio:* Interruptor con animación interactiva (`Bell`) para habilitar o deshabilitar notificaciones previas.
+  - Gestión rigurosa de estados `touched`, `errors` y ejecución asíncrona mediante `validateActivityForm`.
+
+---
+
+## 📋 2. Tabla Homologada TanStack (`ActivitiesTable.tsx` & `activities.columns.tsx`)
+
+* Construida sobre el componente base compartido `Table` en variante `cards`.
+* **Insignias de Sincronización Externa:** Iconos SVG vectoriales de Google Calendar y Microsoft Outlook para identificar el origen del evento.
+* **Celda Dinámica de Recordatorio (`ActivityReminderCell`):** Campanita interactiva dorada con animación oscilante (`swing`), popover flotante en escritorio y bloque descriptivo inline en vista móvil.
+* **Herramientas de Exportación:** Generación instantánea de reportes en PDF apaisado (`exportActivitiesToPDF`) y hojas de cálculo CSV (`exportActivitiesToCSV`).
+* **Filtros Integrados:** Búsqueda libre, filtrado por ejecutivo asignado, tipo de actividad y selector de fecha.
+
+---
+
+## ⚙️ 3. Configuración y Plugins de FullCalendar (`ActivitiesCalendar.tsx`)
+
+En [`src/components/Activity/ActivitiesCalendar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivitiesCalendar.tsx), se ensambla el motor de agenda utilizando cuatro plugins oficiales:
 * **`dayGridPlugin`:** Vista mensual de cuadrícula (`dayGridMonth`).
 * **`timeGridPlugin`:** Vista semanal y diaria con franjas horarias configurables (`timeGridWeek`, `timeGridDay`).
 * **`interactionPlugin`:** Detección de selección de rangos de fechas (`dateClick`, `select`).
@@ -73,43 +129,18 @@ En [`src/components/Activity/ActivitiesCalendar.tsx`](file:///c:/Users/sopor/Pro
 
 ---
 
-## 🎨 2. Renderizado Personalizado de Eventos y Recordatorios
+## 🔄 4. Orquestador y Ciclo de Vida (`ActivitiesPage.tsx`)
 
-FullCalendar delega el renderizado visual de cada bloque horario a componentes React específicos, complementado por la vista tabular [`ActivitiesTable.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivitiesTable.tsx):
-
-1. **Tarjetas de Cita Estándar ([`ActivityEventCard.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivityEventCard.tsx)):**
-   * Asigna colores dinámicos basados en [`activityColors.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/activityColors.ts) según la categoría (llamada en azul, reunión presencial en verde, demo técnica en púrpura).
-   * Muestra la hora de inicio, el nombre del contacto o empresa asociada y el ejecutivo responsable.
-2. **Chips de Recordatorio (`ReminderEventCard`):**
-   * Destacados con borde ámbar y fondo amarillo suave (`#fef3c7`).
-   * Renderiza el icono `Bell` de [`lucide-react`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/package.json) para advertir al usuario sobre compromisos críticos inmediatos.
-3. **Vista Tabular Homologada ([`ActivitiesTable.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivitiesTable.tsx)):**
-   * Integrada sobre el componente compartido `Table` (`@tanstack/react-table` variante `cards`).
-   * Incluye insignias de sincronización externa (Google, Outlook, iCloud) junto al título.
-   * Cuenta con celda interactiva de recordatorio (`ActivityReminderCell`): animación de campana y popover flotante en desktop, y bloque informativo inline en móvil.
-   * Soporta ordenamiento multivariable, acordeón responsive (`hideOnMobile`) y paginación centralizada.
-
-## 🔍 3. Popovers Contextuales vs Modales de Edición
-
-Para maximizar la agilidad del ejecutivo:
-* **Clic Simple:** Despliega [`ActivityPopover.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivityPopover.tsx) posicionado matemáticamente junto al cursor, mostrando notas rápidas, empresa, teléfono y botones de acción rápida.
-* **Editar / Crear:** Abre el modal modalizado [`ActivityForm.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Activity/ActivityForm.tsx) con autocompletado de clientes, oportunidades relacionadas y validación de horarios con la función auxiliar `toLocalDateTimeString`.
-
----
-
-## ☁️ 4. Sincronización con Calendarios Externos
-
-En [`src/services/calendarIntegrationsService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/calendarIntegrationsService.ts), se manejan las integraciones de agenda corporativa:
-1. **Google & Outlook (Flujo OAuth2):**
-   * El usuario solicita la URL de autorización vía `getCalendarAuthUrl('google' | 'outlook')`.
-   * Es redirigido al consentimiento del proveedor y, tras autorizar los scopes de lectura/escritura de calendarios, el backend vincula los tokens de refresco.
-2. **Apple iCloud (Protocolo CalDAV):**
-   * Mediante `connectICloudCalendar(email, appPassword)`, se registra una contraseña de aplicación específica de iCloud, permitiendo sincronizar citas de iPhones y Macs directamente con el CRM.
+* **Guards de Red (`isFetchingRef`):** Previene peticiones simultáneas provocadas por el montaje dual en React 19 y StrictMode.
+* **Persistencia de URL:** Sincroniza el parámetro `?view=calendar` o `?view=table` para mantener el estado de la vista al recargar o compartir enlaces.
+* **Tiempo Real:** Conexión nativa con Socket.IO sobre el namespace `/activities` para reflejar altas, modificaciones y bajas en tiempo real con indicador [`ConnectionStatusBadge.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/ConnectionStatusBadge.tsx).
+* **Retrocompatibilidad:** La ruta original en [`ActivitiesPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/ActivitiesPage.tsx) delega directamente en el orquestador modular de [`src/pages/Activities/`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Activities/index.ts).
 
 ---
 
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
+* [[CRM TIBS - Modulo de Clientes, Empresas & CRM]] — Módulo de clientes y empresas B2B.
 * [[CRM TIBS - Tablero Kanban & Pipeline Comercial]] — Actividades vinculadas a acuerdos de venta.
-* [[CRM TIBS - Modulo de Clientes, Empresas & CRM]] — Contactos convocados a reuniones.
 * [[CRM TIBS - Centro de Configuracion, Tenants & Roles]] — Panel de vinculación de calendarios en `SettingsPage`.
+* [[Catalogo de Componentes y Vistas]] — Vistas y componentes del frontend.

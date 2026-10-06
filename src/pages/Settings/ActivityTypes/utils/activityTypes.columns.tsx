@@ -3,7 +3,7 @@ import type { ColumnDef } from '../../../../components/shared/Table';
 import Button from '../../../../components/shared/Button';
 import Badge from '../../../../components/shared/Badge';
 import type { TypeActivity } from '../schemas/activityTypes.schema';
-import { getActivityColor } from '../../../../components/Activity/activityColors';
+import { getActivityColor } from '../../../../utils/activityColors';
 
 interface ActivityTypesColumnsCallbacks {
   onEdit: (type: TypeActivity) => void;

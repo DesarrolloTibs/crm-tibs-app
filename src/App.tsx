@@ -6,8 +6,8 @@ import PipelinePage from './pages/PipelinePage';
 import UsersPage from './pages/UsersPage';
 import ProtectedRoute from './core/guards/ProtectedRoute';
 import Layout from './components/Layout/Layout'; // Importar el Layout
-import '../src/components/Sidebar/animations.css' // Importar los estilos globales
-import ActivitiesPage from './pages/ActivitiesPage';
+import './components/Sidebar/animations.css'; // Importar los estilos globales
+import ActivitiesPage from './pages/Activities';
 import ExpensesPage from './pages/ExpensesPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';

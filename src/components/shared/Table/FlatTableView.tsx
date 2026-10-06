@@ -87,7 +87,7 @@ export function FlatTableView<T>({
               <tr
                 key={rowId}
                 onClick={onRowClick ? () => onRowClick(original) : undefined}
-                className={`transition-colors ${
+                className={`transition-colors relative hover:z-20 ${
                   onRowClick ? 'cursor-pointer hover:bg-slate-50' : 'hover:bg-slate-50/50'
                 } ${rowClassName ? rowClassName(original, rIdx) : ''}`}
               >
