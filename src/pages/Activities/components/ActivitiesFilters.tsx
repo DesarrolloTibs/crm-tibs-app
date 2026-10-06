@@ -63,7 +63,7 @@ export const ActivitiesFilters: React.FC<ActivitiesFiltersProps> = ({
     if (currentUserId && !list.some((o) => o.value === currentUserId)) {
       list.push({
         value: currentUserId,
-        label: currentUserName ? `${currentUserName} (Yo)` : 'Mi Usuario',
+        label: currentUserName ? `${currentUserName}` : 'Mi Usuario',
       });
     }
     return list;

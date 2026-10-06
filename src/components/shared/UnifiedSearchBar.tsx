@@ -49,9 +49,24 @@ export const UnifiedSearchBar = React.forwardRef<HTMLDivElement, UnifiedSearchBa
       if (!showFilters) return;
 
       const handlePointerDown = (e: PointerEvent) => {
-        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-          setShowFilters(false);
+        const target = e.target as HTMLElement | null;
+        if (!target) return;
+
+        // Si el click fue dentro del contenedor del buscador, no cerrar
+        if (containerRef.current?.contains(target)) {
+          return;
         }
+
+        // Si el click fue dentro de un menú desplegable de react-select (por si está en portal o body)
+        if (
+          target.closest?.(
+            '[class*="-menu"], [id*="react-select"], [class*="menu-portal"], .react-select__menu, .react-select__option'
+          )
+        ) {
+          return;
+        }
+
+        setShowFilters(false);
       };
 
       document.addEventListener('pointerdown', handlePointerDown);

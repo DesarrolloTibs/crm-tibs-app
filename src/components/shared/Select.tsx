@@ -105,8 +105,6 @@ export const Select: React.FC<CustomSelectProps> = ({
                 placeholder="Seleccione una opción..."
                 isSearchable={false}
                 className="w-full text-sm font-medium text-slate-900"
-                menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
-                menuPosition="fixed"
                 {...props}
                 styles={{
                     ...getSelectStyles(error),
