@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { Opportunity } from '../../core/models/Opportunity';
 import { Edit, Trash2, Archive, ArchiveRestore, Check, X } from 'lucide-react';
 import Table, { type ColumnDef } from '../shared/Table';
+import { formatNumber } from '../../utils/formatters';
 
 interface Props {
   opportunities: Opportunity[];
@@ -19,10 +20,6 @@ interface Props {
   maxHeight?: string;
   loading?: boolean;
 }
-
-const formatNumber = (amount: number) => {
-  return new Intl.NumberFormat('es-MX', { minimumFractionDigits: 0 }).format(amount || 0);
-};
 
 const OpportunityHistoryTable: React.FC<Props> = ({
   opportunities,

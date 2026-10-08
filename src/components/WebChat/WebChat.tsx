@@ -10,6 +10,7 @@ import {
   Maximize2,
   Minimize2,
 } from 'lucide-react';
+import { formatCurrency } from '../../utils/formatters';
 import './WebChat.css';
 
 interface ChatMessage {
@@ -255,24 +256,6 @@ const WebChat: React.FC = () => {
       );
     };
 
-    // Formateador de moneda
-    const formatCurrency = (val: any, currency: string = 'MXN'): string => {
-      const curr = currency?.toUpperCase() === 'USD' ? 'USD' : 'MXN';
-      if (val === null || val === undefined || val === '') return `$0.00 ${curr}`;
-      if (typeof val === 'string' && (val.startsWith('$') || val.includes('MXN') || val.includes('USD'))) {
-        return val;
-      }
-      const num = typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.-]/g, ''));
-      if (isNaN(num)) return `$0.00 ${curr}`;
-
-      const formattedNumber = new Intl.NumberFormat('es-MX', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(num);
-
-      return `$${formattedNumber} ${curr}`;
-    };
-
     // Formateador de celda con soporte para badges de stage_type, moneda y números
     const renderCellValue = (header: string, val: any, row: Record<string, any>) => {
       const lower = header.toLowerCase();
@@ -303,7 +286,7 @@ const WebChat: React.FC = () => {
         const isMxn = lower.includes('mxn');
         const isUsd = lower.includes('usd');
         const rowCurrency = isMxn ? 'MXN' : isUsd ? 'USD' : (row['Oportunidades.moneda'] || row['moneda'] || row['Moneda'] || 'MXN');
-        return formatCurrency(val, rowCurrency);
+        return formatCurrency(val, rowCurrency, { decimals: 2, showCode: true });
       }
 
       if (lower === 'description' || lower === 'descripcion') {

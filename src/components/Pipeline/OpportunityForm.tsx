@@ -23,6 +23,7 @@ import TextArea from '../shared/TextArea';
 import Select from '../shared/Select';
 import Button from '../shared/Button';
 import StageStepper from '../shared/StageStepper';
+import { formatCurrency, formatNumber } from '../../utils/formatters';
 
 interface Props {
   initialData?: Opportunity;
@@ -245,12 +246,8 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     setOpportunity(o => ({ ...o, monto_total: total }));
   }, [opportunity.monto_licenciamiento, opportunity.monto_servicios, convertedProductsPrice]);
 
-  const formatCurrency = (value: number | undefined | string) => {
-    if (value === undefined || value === null || value === '') return '';
-    const numberValue = Number(value);
-    if (isNaN(numberValue)) return '';
-    return new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numberValue);
-  };
+  const formatCurrencyInput = (value: number | undefined | string) =>
+    formatNumber(value, { decimals: 2, emptyIfNull: true });
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setEditingField(e.target.name);
@@ -378,7 +375,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const productOptions = useMemo(() => products.map(product => ({
     value: product.id!,
-    label: `${product.nombre} (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(product.precioBase || 0))} / ${product.unidadMedida || 'Pieza'})`,
+    label: `${product.nombre} (${formatCurrency(product.precioBase, 'MXN', { decimals: 2 })} / ${product.unidadMedida || 'Pieza'})`,
   })), [products]);
 
   const selectedProductsValue = productOptions.filter(option =>
@@ -695,7 +692,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               type="text"
               name="monto_licenciamiento"
               inputPrefix="$"
-              value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrency(opportunity.monto_licenciamiento)}
+              value={editingField === 'monto_licenciamiento' ? opportunity.monto_licenciamiento || '' : formatCurrencyInput(opportunity.monto_licenciamiento)}
               onFocus={handleFocus}
               onBlur={handleBlur}
               onChange={handleCurrencyChange}
@@ -708,7 +705,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               type="text"
               name="monto_servicios"
               inputPrefix="$"
-              value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrency(opportunity.monto_servicios)}
+              value={editingField === 'monto_servicios' ? opportunity.monto_servicios || '' : formatCurrencyInput(opportunity.monto_servicios)}
               onFocus={handleFocus}
               onBlur={handleBlur}
               onChange={handleCurrencyChange}
@@ -721,14 +718,14 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                 label={`Total de Productos ${opportunity.moneda === 'USD' ? '(USD convertido)' : '(MXN)'}`}
                 type="text"
                 inputPrefix="$"
-                value={formatCurrency(convertedProductsPrice)}
+                value={formatCurrencyInput(convertedProductsPrice)}
                 readOnly
                 disabled
                 className="bg-slate-50/50 text-slate-500 text-right cursor-not-allowed font-medium"
               />
               {opportunity.moneda === 'USD' && (
                 <span className="text-[10px] text-slate-400 mt-1 ml-1 block font-bold uppercase tracking-wider">
-                  Original: {formatCurrency(productsPriceSum)} MXN
+                  Original: {formatCurrencyInput(productsPriceSum)} MXN
                 </span>
               )}
             </div>
@@ -760,7 +757,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                 type="text"
                 name="tipoCambio"
                 inputPrefix="$"
-                value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrency(opportunity.tipoCambio)}
+                value={editingField === 'tipoCambio' ? opportunity.tipoCambio || '' : formatCurrencyInput(opportunity.tipoCambio)}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 onChange={handleCurrencyChange}
@@ -775,7 +772,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                 label="Monto Total de la Oportunidad"
                 type="text"
                 inputPrefix="$"
-                value={formatCurrency(opportunity.monto_total || 0)}
+                value={formatCurrencyInput(opportunity.monto_total || 0)}
                 readOnly
                 disabled
                 className="bg-indigo-50 border-indigo-200 text-indigo-700 text-right cursor-not-allowed font-bold"
@@ -903,7 +900,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                                         </p>
                                       )}
                                       <p className="text-xs font-semibold text-indigo-600 mt-1">
-                                        Precio Base: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(unitPrice)} / {p.unidadMedida || 'Pieza'}
+                                        Precio Base: {formatCurrency(unitPrice, 'MXN', { decimals: 2 })} / {p.unidadMedida || 'Pieza'}
                                       </p>
                                     </div>
                                   </div>
@@ -928,7 +925,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                                     <div className="text-right">
                                       <span className="text-[10px] uppercase font-bold text-slate-400 block">Subtotal</span>
                                       <span className="text-xs font-black text-indigo-700">
-                                        {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(subtotal)}
+                                        {formatCurrency(subtotal, 'MXN', { decimals: 2 })}
                                       </span>
                                     </div>
                                   </div>

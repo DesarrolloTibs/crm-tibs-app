@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { Product } from '../../core/models/Product';
 import { Edit, Trash2, UserCheck, UserX, Package } from 'lucide-react';
 import Table, { type ColumnDef } from '../shared/Table';
+import { formatCurrency } from '../../utils/formatters';
 
 interface Props {
   products: Product[];
@@ -89,10 +90,7 @@ const ProductsTable: React.FC<Props> = ({
         accessorFn: (row) => row.precioBase,
         cell: ({ row }) => {
           const price = Number(row.original.precioBase || 0);
-          const formatted = new Intl.NumberFormat('es-MX', {
-            style: 'currency',
-            currency: 'MXN',
-          }).format(price);
+          const formatted = formatCurrency(price, 'MXN', { decimals: 2 });
           return (
             <p className="font-medium text-gray-900">
               {formatted}

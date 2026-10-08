@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { Expense } from '../../core/models/Expense';
 import { Edit, Trash2, Inbox, Calendar, Briefcase } from 'lucide-react';
 import Table, { type ColumnDef } from '../shared/Table';
+import { formatCurrency } from '../../utils/formatters';
 
 interface Props {
   expenses: Expense[];
@@ -73,10 +74,7 @@ const ExpensesTable: React.FC<Props> = ({
           const amount = Number(getValue<number>() || 0);
           return (
             <div className="flex items-center font-medium text-emerald-600">
-              {new Intl.NumberFormat('es-MX', {
-                style: 'currency',
-                currency: 'MXN',
-              }).format(amount)}
+              {formatCurrency(amount, 'MXN', { decimals: 2 })}
             </div>
           );
         },

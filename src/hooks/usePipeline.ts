@@ -12,6 +12,7 @@ import { useAuth } from './useAuth';
 import { useConfigStore } from '../store/useConfigStore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatCurrency } from '../utils/formatters';
 
 export interface FilterRule { field: string; operator: string; value: string; }
 
@@ -542,7 +543,7 @@ export function usePipeline() {
 
   const buildExportRows = () => filteredOpportunities.map(opp => {
     const clienteName = opp.company ? ((opp as any).contacts?.map((c: any) => `${c.nombre} ${c.apellido}`).join(', ') || 'Sin contactos') : (opp.cliente ? `${opp.cliente.nombre} ${opp.cliente.apellido}` : '-');
-    return [opp.nombre_proyecto||'', clienteName, opp.company?opp.company.nombre:(opp.empresa||'-'), opp.ejecutivo?.username||'No asignado', opp.stage?.strname||'Sin etapa', `$${new Intl.NumberFormat('es-MX',{minimumFractionDigits:0}).format(Number(opp.monto_total)||0)}`, opp.moneda||'MXN', opp.archived?'Archivado':'Activo'];
+    return [opp.nombre_proyecto||'', clienteName, opp.company?opp.company.nombre:(opp.empresa||'-'), opp.ejecutivo?.username||'No asignado', opp.stage?.strname||'Sin etapa', formatCurrency(opp.monto_total, opp.moneda), opp.moneda||'MXN', opp.archived?'Archivado':'Activo'];
   });
 
   const handleExportPDF = () => {
