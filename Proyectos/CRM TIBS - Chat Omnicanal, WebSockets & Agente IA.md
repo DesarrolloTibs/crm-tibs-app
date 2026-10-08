@@ -18,6 +18,44 @@ Este documento detalla la arquitectura de comunicación en tiempo real de **CRM 
 
 ---
 
+## 🏗️ Arquitectura Modular del Módulo de Conversaciones (`src/pages/Conversations/`)
+
+Siguiendo el estándar de arquitectura modular implementado en el módulo de clientes (`src/pages/Clients/`) y actividades (`src/pages/Activities/`), el módulo de mensajería omnicanal ha sido desacoplado bajo un directorio unificado especializado en flujos de chat interactivo en tiempo real (diseño centrado exclusivamente en experiencia de mensajería fluida a pantalla completa, sin tablas, sin indicadores KPI y sin simuladores):
+
+```
+src/pages/Conversations/
+├── ConversationsPage.tsx             # Orquestador del módulo con control de WebSockets, selección en vivo y guards de ciclo de vida
+├── index.ts                          # Exportador barril principal retrocompatible
+│
+├── components/                       # Componentes modulares del flujo de chat
+│   ├── ChatListSidebar.tsx           # Barra lateral interactiva con filtros de canal, búsqueda y badges de no leídos
+│   ├── ChatWindowHeader.tsx          # Cabecera con datos del cliente, canal, switch de Bot IA, asesor asignado y ventana 23h
+│   ├── MessageFeed.tsx               # Feed cronológico de mensajes en tiempo real con receipts de entrega y auto-scroll
+│   ├── MessageInputBar.tsx           # Barra de texto con hover preview de plantillas WhatsApp oficial y envío en 1 clic
+│   └── WhatsAppTemplateSelectorModal.tsx # Selector modal de plantillas oficiales de Meta
+│
+├── hooks/                            # Hooks desacoplados del ciclo de vida y sockets
+│   └── useConversationsSocket.ts     # Orquestador del socket, eventos en tiempo real, mutable refs y sincronización REST
+│
+├── schemas/
+│   └── conversations.schema.ts       # Esquemas Yup (messageValidationSchema), tipos y filtros
+│
+└── utils/
+    ├── conversations.helpers.ts      # Funciones puras: filterConversations, getInitials, INITIAL_CONVERSATION_FILTERS
+    └── conversations.messages.tsx     # Formateo de fechas, ventana Meta 23h, receipts y descarga de cotizaciones PDF
+```
+
+###### Principios y Herramientas del Módulo:
+1. **Validación Declarativa con Yup (`conversations.schema.ts`):** Validación tipada de mensajes de texto previo a su despacho.
+2. **Interfaz Limpia y Focalizada:** Ausencia intencional de tablas, tarjetas KPI o simuladores que resten espacio visual al espacio de conversación y lectura de mensajes.
+3. **Selección y Visualización de Mensajes en Vivo:** Al seleccionar una conversación, se enlaza la referencia mutable `selectedConvRef.current`, se limpian los no leídos y cualquier mensaje recibido por WebSocket (`message_received`) se renderiza inmediatamente en el feed y posiciona la conversación en la cima (índice 0).
+4. **Resiliencia de Conexión en Segundo Plano:** Integra la factoría unificada `createAppSocket` con `safeDisconnect`, control de reconexión `isInitialConnectRef` y resincronización REST defensiva en segundo plano sin insignias invasivas de estado.
+
+* **Selector de Canales Compacto 100% Width (`ChatListSidebar.tsx`):**
+  - Barra segmentada en cuadrícula de 5 columnas (`grid grid-cols-5`) que aprovecha exactamente el 100% del ancho del panel sin cortes horizontales ni barras de scroll ocultas.
+  - Distribución equitativa para los 5 canales de comunicación: **Todos**, **WhatsApp**, **Facebook Messenger**, **Instagram Direct** y **WebChat**.
+  - Cada pestaña incorpora su icono oficial, nombre compacto, tooltip nativo descriptivo con desglose de no leídos y badge de notificaciones (`chUnread`) en la esquina superior.
+  - Paleta cromática oficial activa: Azul para Todos, Esmeralda para WhatsApp, Azul Meta para Messenger, Gradiente Sunset para Instagram y Púrpura para WebChat.
 ## ⚡ Secuencia de Mensajería en Tiempo Real y Alternancia IA / Humano
 
 ```mermaid
@@ -98,6 +136,12 @@ Debido a que los listeners de Socket.IO se registran una sola vez en un `useEffe
 
 ---
 
+##### Aislamiento Multi-Tenant de Salas WebSocket (`tenant:${schema_name}`)
+Para garantizar la entrega en tiempo real sin fugas de datos entre inquilinos ni pérdidas de mensajes para roles de administración global:
+1. **Inyección Dinámica de Esquema en Handshake (`createAppSocket`):** La factoría extrae automáticamente el esquema activo desde `localStorage.getItem('selected_tenant')` e inyecta `tenantSchema` tanto en el objeto `auth` como en `query` del socket (`/conversations`).
+2. **Conmutación Reactiva de Sala (`set_tenant` y `join_tenant`):** Cuando el usuario conmuta de tenant en la cabecera, `ConversationsPage` y el Gateway renegocian la suscripción a la sala `tenant:${tenantSchema}`, abandonando la sala previa.
+3. **Compatibilidad con SuperAdmin y Esquema Public:** El Gateway backend (`ConversationsGateway`) evalúa `client.handshake.auth?.tenantSchema || client.handshake.query?.tenantSchema`. Si el token pertenece al esquema `public` o el usuario es `superadmin`, el socket se suscribe dinámicamente a la sala del tenant seleccionado además de la sala base, asegurando la recepción inmediata de eventos `message_received` originados por webhooks de Meta en ese esquema.
+
 ## 📡 2. Catálogo de Eventos WebSocket Escuchados
 
 | Evento Socket | Payload | Efecto en la Interfaz |
@@ -105,15 +149,20 @@ Debido a que los listeners de Socket.IO se registran una sola vez en un `useEffe
 | **`connect`** | Vacío | Confirma conexión activa e imprime en consola del navegador. |
 | **`message_received`** | `Message` | Actualiza la lista lateral de conversaciones en tiempo real posicionando el chat activo inmediatamente en la cima (índice 0) con reordenamiento cronológico dinámico en `filteredConversations`. Si el mensaje proviene del cliente (`sender === 'contact'`) y el chat no está abierto, incrementa el contador del badge de mensajes no leídos (`unreadMap`). Si coincide con la conversación activa, anexa el mensaje al feed sin duplicados, ejecuta scroll al final (`scrollToBottom`), reactiva `is24HourWindowActive = true` y desbloquea el input inmediatamente. Si es un lead/chat nuevo no existente en memoria, dispara recarga de lista desde el backend. |
 | **`message_status_updated`** | `MessageStatusUpdatedEvent` | Actualiza en tiempo real el estado de entrega (`pending`, `sent`, `delivered`, `read`, `failed`), el `externalMessageId` y el `errorMessage` tanto en el feed activo como en el último mensaje de la barra lateral. |
-| **`bot_status_changed`** | `{ conversationId, botActive }` | Conmuta el switch visual de IA en la cabecera [`ChatWindowHeader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatWindowHeader.tsx) y en la tarjeta de chat lateral. |
+| **`bot_status_changed`** | `{ conversationId, botActive }` | Conmuta el switch visual de IA en la cabecera [`ChatWindowHeader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/ChatWindowHeader.tsx) y en la tarjeta de chat lateral. |
 | **`conversation_assigned`** | `{ conversationId, assignedUserId }` | Actualiza el avatar y nombre del ejecutivo asignado a la conversación en tiempo real. |
 
 ---
 
+* **Visibilidad de Mensajes No Leídos (`unreadMap`):**
+  - **Cabecera Global:** Badge pulsante rojo (`bg-rose-600`) junto al título \"Bandeja de Chats\" con el conteo acumulado de pendientes.
+  - **Pestañas de Canales:** Cada filtro de canal (Todos, WhatsApp, Messenger, etc.) despliega su propio contador en tiempo real.
+  - **Tarjeta de Conversación:** Badge de contraste alto (`bg-blue-600`, texto blanco negrita, anillo protector `ring-2 ring-white`) ubicado en la esquina superior derecha bajo el timestamp, punto de notificación sobre el avatar y realce con borde azul en la tarjeta.
+
 ## 🟢 3. Política de Ventana de 24h y Margen Preventivo de 23 Horas en WhatsApp
 
 * **Regla de Meta y Margen de Seguridad:** Meta aplica una ventana estricta de atención al cliente de 24 horas a partir de `lastCustomerMessageAt`. El CRM aplica un corte preventivo a las **23 horas** (`safetyWindowExpiresAt`) para prevenir desincronizaciones de reloj y mensajes perdidos.
-* **Bloqueo Inteligente de Entrada ([`MessageInputBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/MessageInputBar.tsx)):**
+* **Bloqueo Inteligente de Entrada ([`MessageInputBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/MessageInputBar.tsx)):**
   * Cuando `conversation.channel === 'whatsapp'` y `!conversation.is24HourWindowActive` (o han transcurrido $\ge$ 23h):
     * Se oculta la barra de texto libre y botón de envío regular.
     * Se despliega un banner de alerta informativa: *"Ventana de Atención de WhatsApp Expirada (Margen de 23h)"*.
@@ -121,11 +170,11 @@ Debido a que los listeners de Socket.IO se registran una sola vez en un `useEffe
       * Un único botón prioritario **`[ ⚡ Enviar Plantilla ]`** en la barra inferior.
       * **Live Hover Preview:** Al pasar el cursor sobre el botón, se despliega una tarjeta flotante estilizada como burbuja de WhatsApp sobre fondo texturizado oficial (`#efeae2`), renderizando el encabezado, el cuerpo con las variables del contacto pre-sustituidas con chips dinámicos, pie de página, hora y doble check azul ✓✓. Al dar clic, se despacha directamente a Meta sin modales de confirmación intermedios.
 * **Indicadores Visuales Reactivos:**
-  * **Lista lateral ([`ChatListSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatListSidebar.tsx)):** Badges dinámicos que se recalculan cada 60 segundos:
+  * **Lista lateral ([`ChatListSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/ChatListSidebar.tsx)):** Badges dinámicos que se recalculan cada 60 segundos:
     * Verde discreto: `"21h restantes"` ($> 2$ horas restantes).
     * Ámbar/naranja con pulso: `"Expira en 1h 15m"` ($< 2$ horas restantes).
     * Rojo/gris: `"Ventana cerrada (23h) • Usar plantilla"`.
-  * **Cabecera ([`ChatWindowHeader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatWindowHeader.tsx)):** Pill interactivo con tooltip que detalla la fecha y hora de expiración, con navegación directa al catálogo de plantillas al hacer clic.
+  * **Cabecera ([`ChatWindowHeader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/ChatWindowHeader.tsx)):** Pill interactivo con tooltip que detalla la fecha y hora de expiración, con navegación directa al catálogo de plantillas al hacer clic.
 * **Intercepción Defensiva:** Si se intenta enviar un mensaje de texto libre y el backend retorna HTTP 400 por expiración de ventana, [`useConversationsSocket.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useConversationsSocket.ts) marca la ventana como inactiva localmente, notifica al usuario y abre automáticamente el selector.
 
 ---
@@ -135,7 +184,7 @@ Debido a que los listeners de Socket.IO se registran una sola vez en un `useEffe
 La Plantilla Base (`crm_inicio_conversacion`) resuelve la fricción de contactar a un cliente por primera vez o reanudar una conversación tras la expiración de la ventana de 23 horas.
 
 ### 4.1 Configuración de Canal y Sincronización Directa con Meta
-Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/WhatsAppBaseTemplateSettings.tsx), integrado en el modal de ajustes de canales en [`AiAgentSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/AiAgentSettings.tsx):
+Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Settings/AiAgentChannels/components/WhatsAppBaseTemplateSettings.tsx), integrado en el modal de ajustes de canales en [`AiAgentChannelsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Settings/AiAgentChannels/AiAgentChannelsPage.tsx):
 
 * **Diseño Minimalista y Abstracción Total de Metadatos de Meta:**
   * **Sin Campos Técnicos Visibles:** En la interfaz **NO se muestra el nombre técnico de la plantilla (`crm_inicio_conversacion`) ni selectores/campos de categoría (`UTILITY`) ni idioma (`es`)**. Toda la configuración técnica es gestionada de manera transparente por el backend.
@@ -152,7 +201,7 @@ Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proy
     3. **Pie de Mensaje (`footerText`):** Opcional, texto de hasta 60 caracteres con contador en vivo `X / 60`.
     4. **Botón de Acción:** **`GUARDAR Y SINCRONIZAR CON META`**.
 
-* **Validaciones Yup Estándar del Sistema ([`whatsappTemplateSchema.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/utils/whatsappTemplateSchema.ts)):**
+* **Validaciones Yup Estándar del Sistema ([`whatsappTemplate.schema.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Settings/AiAgentChannels/schemas/whatsappTemplate.schema.ts)):**
   El formulario utiliza el hook estándar [`useFormValidation.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/useFormValidation.ts) del sistema y esquemas Yup puros:
   1. **Validación Exclusiva del Cuerpo (`whatsappBodySchema`):**
      * **Ratio Variable-to-Text (Prevención Error Meta #2388293):** Cuando el mensaje contiene variables (`{{1}}`), Meta exige al menos **6 a 10 palabras fijas** y **mínimo 35 caracteres** de texto real. Si no se cumple, Yup genera de inmediato el mensaje de error estándar inline debajo del textarea.
@@ -185,7 +234,7 @@ Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proy
   * Precarga el nombre del contacto (`conversation.clientName` o `client.nombre`) en la variable `{{1}}`, la **empresa vinculada al contacto** (`client.company.nombre` o `client.empresa`) en `{{2}}` (o vacío si el contacto no tiene empresa asignada) y el asesor en `{{3}}`.
 * **Hover Preview Inteligente y Despacho en 1 Clic Sin Modales:**
   * **Sin Modales Innecesarios:** Se eliminó el modal intermedio de confirmación. Al existir ya una previsualización completa en la burbuja emergente (*Hover Preview*), el mensaje se despacha directamente a Meta en cuanto el usuario hace clic en *"Enviar Plantilla"* o en el footer del popover *"Clic para enviar"*.
-  * **Previsualización Flotante ([`MessageInputBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/MessageInputBar.tsx)):**
+  * **Previsualización Flotante ([`MessageInputBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/MessageInputBar.tsx)):**
     * `{{1}}` (Esmeralda): Nombre del Cliente / Contacto (`resolvedVariables[1]` o `conversation.clientName`).
     * `{{2}}` (Cielo): Empresa o Negocio del contacto (`resolvedVariables[2]` o `conversation.client.company.nombre` / `conversation.client.empresa`). Si no existe relación con empresa, se renderiza limpio y sin chip simulado.
     * `{{3}}` (Índigo): Asesor asignado (`resolvedVariables[3]` o `conversation.assignedUser.username` / usuario en sesión).
@@ -193,10 +242,10 @@ Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proy
   * **Acceso Alternativo al Catálogo:** Si el usuario desea enviar una plantilla diferente a la base, dispone del enlace *"Ver catálogo completo"* en el banner de ventana cerrada o haciendo clic en el badge superior de la ventana.
 * **Estandarización Total con Componentes Compartidos (`src/components/shared/`):**
   * Toda la suite de mensajería utiliza exclusivamente los componentes base del CRM:
-    * [`Modal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Modal.tsx): Base estructural de [`WhatsAppTemplateSelectorModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/WhatsAppTemplateSelectorModal.tsx).
-    * [`Badge.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Badge.tsx): Etiquetas cromáticas en [`ChatListSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatListSidebar.tsx) (Bot/Humano), en la vista previa y en la lista de plantillas (`Meta Verified`, `UTILITY`, `MARKETING`, `Aprobada`).
-    * [`Button.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Button.tsx): Envío directo en [`MessageInputBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/MessageInputBar.tsx), reintentos y acciones en [`WhatsAppTemplateSelectorModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/WhatsAppTemplateSelectorModal.tsx) y despacho en [`SimulatorPanel.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/SimulatorPanel.tsx).
-    * [`EmptyState.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/EmptyState.tsx): Pantalla de inicio sin chat activo en [`ConversationsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/ConversationsPage.tsx), bandeja vacía en [`ChatListSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/ChatListSidebar.tsx) y filtros sin resultados en [`WhatsAppTemplateSelectorModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/WhatsAppTemplateSelectorModal.tsx).
+    * [`Modal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Modal.tsx): Base estructural de [`WhatsAppTemplateSelectorModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/WhatsAppTemplateSelectorModal.tsx).
+    * [`Badge.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Badge.tsx): Etiquetas cromáticas en [`ChatListSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/ChatListSidebar.tsx) (Bot/Humano), en la vista previa y en la lista de plantillas (`Meta Verified`, `UTILITY`, `MARKETING`, `Aprobada`).
+    * [`Button.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Button.tsx): Envío directo en [`MessageInputBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/MessageInputBar.tsx), reintentos y acciones en [`WhatsAppTemplateSelectorModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/WhatsAppTemplateSelectorModal.tsx) y despacho en [`SimulatorPanel.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/SimulatorPanel.tsx).
+    * [`EmptyState.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/EmptyState.tsx): Pantalla de inicio sin chat activo en [`ConversationsPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/ConversationsPage.tsx), bandeja vacía en [`ChatListSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/ChatListSidebar.tsx) y filtros sin resultados en [`WhatsAppTemplateSelectorModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/WhatsAppTemplateSelectorModal.tsx).
     * [`Input.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Input.tsx) y [`TextArea.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/TextArea.tsx): Captura de parámetros dinámicos de plantillas y entradas del panel simulador.
     * [`Loader.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Loader.tsx) y [`Notification.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/Notification.tsx): Cargas y avisos globales del sistema.
 
@@ -205,23 +254,13 @@ Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proy
 ## 📬 5. Rastreo de Estados de Entrega (Delivery Receipts)
 
 * **Estados soportados:** `'pending' | 'sent' | 'delivered' | 'read' | 'failed'`.
-* **Iconografía en Mensajes Salientes ([`MessageFeed.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/WebChat/MessageFeed.tsx)):**
+* **Iconografía en Mensajes Salientes ([`MessageFeed.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/MessageFeed.tsx)):**
   * `pending`: Reloj gris 🕒 (`Clock`).
   * `sent`: Un check gris ✓ (`Check`).
   * `delivered`: Doble check gris ✓✓ (`CheckCheck`).
   * `read`: Doble check azul ✓✓ (`CheckCheck` en azul Meta).
   * `failed`: Icono de advertencia rojo ⚠️ (`AlertCircle`) con animación y Tooltip que muestra `errorMessage || 'Fallo en la entrega de Meta'`.
 * **Mensajes de Plantilla:** Se renderizan con gradiente esmeralda, borde y badge identificador *"Plantilla de WhatsApp"*.
-
----
-
-## 🧪 6. Panel Simulador de Mensajería (`SimulatorPanel.tsx`)
-
-Para pruebas y demostraciones en desarrollo, el hook integra la acción `handleSimulate`:
-* Permite inyectar mensajes sintéticos simulando cualquiera de los canales soportados:
-  * **WhatsApp:** Requiere teléfono de remitente (e.g. `+525551234567`).
-  * **Messenger / Instagram / WebChat:** Requiere ID de perfil social y apodo.
-* Invoca [`simulateIncomingMessage`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/conversationsService.ts), permitiendo comprobar cómo reacciona el Agente de IA sin necesidad de enviar mensajes reales por las APIs de Meta.
 
 ---
 
@@ -306,6 +345,15 @@ sequenceDiagram
 * **Carga Defensiva:** Resuelve automáticamente el nombre del canal activo incluso ante recargas o navegación directa por parámetro URL.
 
 ---
+
+##### 8.6 Regla de Unicidad Multi-Tenant de Activos Externos (1:1)
+Para evitar conflictos de enrutamiento de webhooks, colisiones del Agente IA o fugas de datos entre empresas cliente:
+* **Cardinalidad Estricta:** Un activo externo (Page ID de Facebook, Instagram Account ID o WABA Phone Number ID de WhatsApp) solo puede pertenecer y estar activo en un único tenant a la vez.
+* **Validación en Backend (`checkAssetConflictInOtherTenants`):**
+  - Implementada en [`meta-oauth.service.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-api/src/conversations/meta-oauth.service.ts) y [`conversations.service.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-api/src/conversations/conversations.service.ts).
+  - Al intentar vincular o activar un canal mediante OAuth o formulario REST, se consulta `public.tenants` verificando si el activo ya existe con `"isActive" = true` en otro esquema activo.
+  - Si existe un conflicto, la vinculación OAuth aborta retornando un error claro y el endpoint REST lanza `ConflictException` (HTTP 409), bloqueando la duplicidad y notificando el nombre del inquilino donde el canal se encuentra actualmente en uso.
+* **Transferencia de Activos:** Si una organización transfiere un activo a otra empresa, basta con desactivar (`isActive = false`) o eliminar el canal en la organización de origen para desbloquear su registro en el nuevo tenant.
 
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.

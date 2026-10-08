@@ -19,14 +19,14 @@ import type {
   WhatsAppTemplate,
   SendTemplatePayload,
   Message,
-} from '../../core/models/Conversation';
-import { getWhatsAppTemplates, sendWhatsAppTemplate } from '../../services/conversationsService';
-import Loader from '../shared/Loader';
-import Modal from '../shared/Modal';
-import Badge from '../shared/Badge';
-import Button from '../shared/Button';
-import EmptyState from '../shared/EmptyState';
-import Input from '../shared/Input';
+} from '../schemas/conversations.schema';
+import { getWhatsAppTemplates, sendWhatsAppTemplate } from '../../../services/conversationsService';
+import Loader from '../../../components/shared/Loader';
+import Modal from '../../../components/shared/Modal';
+import Badge from '../../../components/shared/Badge';
+import Button from '../../../components/shared/Button';
+import EmptyState from '../../../components/shared/EmptyState';
+import Input from '../../../components/shared/Input';
 
 interface WhatsAppTemplateSelectorModalProps {
   open: boolean;
@@ -322,7 +322,7 @@ export const WhatsAppTemplateSelectorModal: React.FC<WhatsAppTemplateSelectorMod
             {/* Left Column: List & Filters */}
             <div className="w-full md:w-5/12 border-r border-gray-150 flex flex-col bg-white overflow-hidden">
               {/* Filter Tabs */}
-              <div className="p-3 border-b border-gray-100 flex gap-1 overflow-x-auto no-scrollbar bg-slate-50/40">
+              <div className="p-3 border-b border-gray-100 flex gap-1 overflow-x-auto hide-scrollbar no-scrollbar bg-slate-50/40">
                 {CATEGORY_TABS.map((tab) => (
                   <button
                     key={tab.id}
@@ -353,7 +353,7 @@ export const WhatsAppTemplateSelectorModal: React.FC<WhatsAppTemplateSelectorMod
               </div>
 
               {/* Templates List */}
-              <div className="flex-grow overflow-y-auto divide-y divide-gray-100 no-scrollbar">
+              <div className="flex-grow overflow-y-auto divide-y divide-gray-100 hide-scrollbar no-scrollbar">
                 {filteredTemplates.length === 0 ? (
                   <EmptyState
                     title="No se encontraron plantillas"
@@ -413,7 +413,7 @@ export const WhatsAppTemplateSelectorModal: React.FC<WhatsAppTemplateSelectorMod
             <div className="w-full md:w-7/12 flex flex-col bg-slate-50/50 overflow-hidden">
               {selectedTemplate ? (
                 <div className="flex-grow flex flex-col overflow-hidden">
-                  <div className="flex-grow p-4 sm:p-6 overflow-y-auto space-y-5">
+                  <div className="flex-grow p-4 sm:p-6 overflow-y-auto space-y-5 hide-scrollbar no-scrollbar">
                     {/* Send Error Alert */}
                     {sendError && (
                       <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-semibold flex items-start gap-2 animate-fade-in">

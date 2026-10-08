@@ -101,6 +101,11 @@ src/pages/settings/
 
 ---
 
+> [!TIP]
+> **Consolidación de Rankings de Consumo (`top_users` y `top_clients`):**
+> * **Top Usuarios:** Se filtran estrictamente por uso interno del Webchat CRM (`channel = 'webchat_interno' OR client_id IS NULL`), resolviendo el identificador del usuario contra `users` del tenant y `public.users` (superadmin). Esto previene que mensajes automáticos omnicanal asignados al asesor inflen el ranking y evita registros huérfanos con UUIDs.
+> * **Top Clientes:** Se agrupa por `client_id` y `channel` vinculando con `clients` para consolidar clientes cuyo nombre cambió o fue actualizado en el ciclo de vida del chat.
+
 ### 1.2. Coordinación de Ciclo de Vida y Prevención de Duplicidad de Peticiones (Guard Refs)
 Para resolver saturaciones en el pool de sockets TCP del navegador (límite de 6 conexiones concurrentes y estados *Stalled* ~970ms), `MyCompanyPage.tsx` implementa un flujo orquestado estricto sin caché:
 * **Guards de Estado en Vuelo (`useRef`):**

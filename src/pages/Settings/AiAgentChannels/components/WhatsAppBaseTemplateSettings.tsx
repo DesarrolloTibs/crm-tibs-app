@@ -30,7 +30,7 @@ import { useFormValidation } from '../../../../components/shared/useFormValidati
 import {
   whatsappBaseTemplateSchema,
   whatsappBodySchema,
-} from '../../../../utils/whatsappTemplateSchema';
+} from '../schemas/whatsappTemplate.schema';
 
 export interface WhatsAppBaseTemplateSettingsProps {
   channelConfig: ChannelConfig | {

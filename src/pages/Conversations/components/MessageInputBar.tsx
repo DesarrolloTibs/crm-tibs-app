@@ -14,16 +14,16 @@ import type {
   WhatsAppBaseTemplate,
   Message,
   SendTemplatePayload,
-} from '../../core/models/Conversation';
+} from '../schemas/conversations.schema';
 import {
   getConversationBaseTemplate,
   getWhatsAppTemplates,
   sendWhatsAppTemplate,
-} from '../../services/conversationsService';
-import Badge from '../shared/Badge';
-import Loader from '../shared/Loader';
-import Button from '../shared/Button';
-import { useAuth } from '../../hooks/useAuth';
+} from '../../../services/conversationsService';
+import Badge from '../../../components/shared/Badge';
+import Loader from '../../../components/shared/Loader';
+import Button from '../../../components/shared/Button';
+import { useAuth } from '../../../hooks/useAuth';
 
 interface MessageInputBarProps {
   botActive: boolean;
@@ -37,7 +37,7 @@ interface MessageInputBarProps {
   onShowNotification?: (type: 'success' | 'error' | 'warning' | 'confirmation', title: string, message: string) => void;
 }
 
-const MessageInputBar: React.FC<MessageInputBarProps> = ({
+export const MessageInputBar: React.FC<MessageInputBarProps> = ({
   botActive,
   inputText,
   sending,
@@ -62,7 +62,6 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
 
     let isMounted = true;
     setLoadingTemplate(true);
-    // Priorizar endpoint de plantilla base de la conversación (trae variables de contacto resueltas)
     getConversationBaseTemplate(conversation.id)
       .then((data) => {
         if (isMounted && data) {
@@ -114,7 +113,6 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
     conversation?.clientName?.trim() ||
     'Cliente';
 
-  // Variable {{2}}: Nombre de la empresa asociada al contacto (no el tenant)
   const companyName =
     baseTemplate?.resolvedVariables?.[2] ||
     baseTemplate?.contact?.company ||
@@ -122,7 +120,6 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
     conversation?.client?.empresa ||
     '';
 
-  // Variable {{3}}: Asesor asignado
   const agentName =
     baseTemplate?.resolvedVariables?.[3] ||
     baseTemplate?.contact?.agent ||
@@ -130,7 +127,6 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
     user?.username ||
     'Asesor';
 
-  // Extract header and footer
   const headerText = useMemo(() => {
     return (
       baseTemplate?.headerText ||
@@ -147,7 +143,6 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
     );
   }, [baseTemplate]);
 
-  // Pre-render body substituting {{1}}, {{2}}, {{3}} with highlighted chips
   const previewBody = useMemo(() => {
     const rawBody: string =
       baseTemplate?.bodyText ||
@@ -199,7 +194,7 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
         return (
           <strong
             key={index}
-            className="font-bold text-gray-800 bg-gray-100 px-1 py-0.5 rounded border border-gray-300 shadow-2xs mx-0.5"
+            className="font-bold text-slate-800 bg-slate-100 px-1 py-0.5 rounded border border-slate-300 shadow-2xs mx-0.5"
           >
             {`Dato ${match[1]}`}
           </strong>
@@ -263,12 +258,12 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
   };
 
   return (
-    <footer className="p-4 border-t border-gray-150 bg-white relative">
+    <footer className="p-3.5 border-t border-slate-200 bg-white relative">
       {isWhatsAppWindowClosed ? (
-        <div className="bg-gradient-to-r from-amber-50/90 via-orange-50/80 to-amber-50/90 border border-amber-200/90 rounded-2xl p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-xs animate-fade-in relative">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-amber-500 text-white rounded-xl shadow-xs shrink-0 mt-0.5 lg:mt-0">
-              <AlertTriangle size={18} />
+        <div className="bg-gradient-to-r from-amber-50/90 via-orange-50/80 to-amber-50/90 border border-amber-200/90 rounded-2xl p-3 sm:p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-2xs animate-fade-in relative">
+          <div className="flex items-start gap-2.5">
+            <div className="p-2 bg-amber-500 text-white rounded-xl shadow-2xs shrink-0 mt-0.5 lg:mt-0">
+              <AlertTriangle size={17} />
             </div>
             <div>
               <h4 className="text-xs font-black text-amber-900 flex items-center gap-1.5 uppercase tracking-wide">
@@ -288,14 +283,14 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
             {/* Live WhatsApp Bubble Preview Popover on Hover */}
             {isHovered && (
               <div
-                className="absolute bottom-full mb-3 right-0 w-80 sm:w-96 max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-gray-200/90 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150 pointer-events-none text-left"
+                className="absolute bottom-full mb-3 right-0 w-80 sm:w-96 max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150 pointer-events-none text-left"
                 style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.18))' }}
               >
                 {/* Popover Header */}
-                <div className="px-3.5 py-2 bg-gradient-to-r from-slate-50 via-emerald-50/40 to-slate-50 border-b border-gray-150 flex items-center justify-between">
+                <div className="px-3.5 py-2 bg-gradient-to-r from-slate-50 via-emerald-50/40 to-slate-50 border-b border-slate-100 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <Sparkles size={13} className="text-emerald-600" />
-                    <span className="text-xs font-black text-gray-800 tracking-tight">
+                    <span className="text-xs font-black text-slate-800 tracking-tight">
                       Vista Previa del Mensaje
                     </span>
                   </div>
@@ -320,32 +315,31 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
                   }}
                 >
                   {loadingTemplate && !baseTemplate ? (
-                    <div className="bg-white rounded-2xl p-4 shadow-xs border border-emerald-950/5 flex items-center justify-center gap-2 text-xs text-gray-500 font-medium">
+                    <div className="bg-white rounded-2xl p-4 shadow-2xs border border-emerald-950/5 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
                       <Loader size="sm" className="h-auto" />
                       <span>Cargando plantilla...</span>
                     </div>
                   ) : (
-                    /* WhatsApp Bubble */
-                    <div className="bg-white rounded-2xl rounded-tr-xs p-3.5 shadow-xs border border-emerald-950/5 max-w-[95%] space-y-1.5 relative">
+                    <div className="bg-white rounded-2xl rounded-tr-xs p-3.5 shadow-2xs border border-emerald-950/5 max-w-[95%] space-y-1.5 relative">
                       <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white rotate-45 border-t border-r border-emerald-950/5" />
 
                       {headerText && (
-                        <p className="font-extrabold text-xs text-gray-900 border-b border-gray-100 pb-1">
+                        <p className="font-extrabold text-xs text-slate-900 border-b border-slate-100 pb-1">
                           {headerText}
                         </p>
                       )}
 
-                      <p className="text-xs text-gray-800 leading-relaxed font-normal whitespace-pre-line">
+                      <p className="text-xs text-slate-800 leading-relaxed font-normal whitespace-pre-line">
                         {previewBody}
                       </p>
 
                       {footerText && (
-                        <p className="text-[10px] text-gray-400 font-medium pt-0.5">
+                        <p className="text-[10px] text-slate-400 font-medium pt-0.5">
                           {footerText}
                         </p>
                       )}
 
-                      <div className="flex items-center justify-end gap-1 text-[10px] text-gray-400 font-medium pt-0.5">
+                      <div className="flex items-center justify-end gap-1 text-[10px] text-slate-400 font-medium pt-0.5">
                         <span>Ahora</span>
                         <CheckCheck size={12} className="text-blue-500" />
                       </div>
@@ -356,13 +350,13 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
                 {/* Popover Footer - Clic envía directamente */}
                 <div
                   onClick={handleSendDirectTemplate}
-                  className="bg-slate-50 hover:bg-emerald-50 px-3.5 py-2 border-t border-gray-150 flex items-center justify-between text-[11px] text-gray-500 font-medium cursor-pointer transition-colors"
+                  className="bg-slate-50 hover:bg-emerald-50 px-3.5 py-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium cursor-pointer transition-colors"
                   title="Haz clic para enviar de inmediato"
                 >
                   <span className="flex items-center gap-1 truncate max-w-[190px]">
-                    <User size={12} className="text-blue-600 shrink-0" />
+                    <User size={12} className="text-indigo-600 shrink-0" />
                     <span className="truncate">
-                      Para: <strong className="text-gray-800 font-bold">{clientName}</strong>
+                      Para: <strong className="text-slate-800 font-bold">{clientName}</strong>
                     </span>
                   </span>
                   <span className="text-emerald-700 font-black flex items-center gap-1 text-[10px] uppercase tracking-wide shrink-0">
@@ -371,7 +365,7 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
                 </div>
 
                 {/* Triangle Pointer down */}
-                <div className="absolute -bottom-1.5 right-8 w-3 h-3 bg-slate-50 rotate-45 border-r border-b border-gray-200/90 shadow-2xs" />
+                <div className="absolute -bottom-1.5 right-8 w-3 h-3 bg-slate-50 rotate-45 border-r border-b border-slate-200/90 shadow-2xs" />
               </div>
             )}
 
@@ -382,7 +376,7 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
               onClick={handleSendDirectTemplate}
               disabled={sendingTemplate || loadingTemplate}
               loading={sendingTemplate}
-              className="!py-2.5 !px-4 !rounded-xl !text-xs !font-black shadow-sm gap-2 group active:scale-95"
+              className="!py-2 !px-3.5 !rounded-xl !text-xs !font-black shadow-2xs gap-2 group active:scale-95"
               title="Haz clic para enviar la plantilla oficial de WhatsApp de inmediato"
             >
               <Zap size={14} className="fill-white text-white group-hover:scale-110 transition-transform" />
@@ -392,27 +386,28 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
         </div>
       ) : botActive ? (
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2.5 text-slate-500 select-none">
-          <Bot size={18} className="text-blue-500 animate-pulse" />
+          <Bot size={17} className="text-indigo-500 animate-pulse" />
           <span className="text-xs font-bold uppercase tracking-wider">
-            Bot activo respondiendo en este chat. Desactívalo para permitir la intervención humana.
+            Bot IA activo respondiendo en este chat. Desactívalo en la cabecera para intervenir como humano.
           </span>
         </div>
       ) : (
         <form onSubmit={onSubmit} className="flex gap-2">
           <input
             type="text"
-            placeholder="Escribe un mensaje de respuesta..."
+            placeholder="Escribe una respuesta en tiempo real..."
             value={inputText}
             onChange={(e) => onInputChange(e.target.value)}
-            className="flex-grow py-3 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:bg-white outline-none transition-all text-gray-700 font-medium"
+            className="flex-grow py-2.5 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:border-indigo-500 focus:bg-white outline-none transition-all text-slate-800 font-medium"
             disabled={sending}
           />
           <button
             type="submit"
             disabled={!inputText.trim() || sending}
-            className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 transition-colors cursor-pointer flex items-center justify-center shrink-0 shadow-xs"
+            className="p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 transition-colors cursor-pointer flex items-center justify-center shrink-0 shadow-2xs"
+            title="Enviar mensaje"
           >
-            <Send size={18} />
+            <Send size={16} />
           </button>
         </form>
       )}
@@ -421,5 +416,3 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
 };
 
 export default MessageInputBar;
-
-

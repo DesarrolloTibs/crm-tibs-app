@@ -1,39 +1,39 @@
 import React, { useMemo } from 'react';
 import { ShieldAlert, Bot, Smartphone } from 'lucide-react';
-import type { Message } from '../../core/models/Conversation';
-import { getInitials } from './ChatListSidebar';
+import type { Message } from '../schemas/conversations.schema';
+import { getInitials } from '../utils/conversations.helpers';
 import {
   renderMessageContent,
   groupMessagesByDate,
   formatMessageTime,
   renderDeliveryStatusIcon,
-} from '../../utils/messageUtils';
+} from '../utils/conversations.messages';
 
 interface MessageFeedProps {
   messages: Message[];
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) => {
+export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) => {
   const groupedMessages = useMemo(() => groupMessagesByDate(messages), [messages]);
 
   return (
-    <div className="flex-grow p-4 overflow-y-auto space-y-4">
+    <div className="flex-grow p-4 overflow-y-auto space-y-4 bg-slate-50/20">
       {groupedMessages.map((group) => (
         <div key={group.dateKey} className="space-y-3">
-          {/* WhatsApp-style Date Divider Pill */}
+          {/* Divisor de fecha estilo WhatsApp */}
           <div className="flex justify-center my-3 sticky top-1 z-10">
-            <div className="bg-white/90 backdrop-blur-xs border border-gray-200/80 shadow-xs px-3.5 py-1 rounded-full text-[11px] font-bold text-gray-500 uppercase tracking-wide select-none">
+            <div className="bg-white/95 backdrop-blur-xs border border-slate-200/90 shadow-2xs px-3.5 py-1 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-wide select-none">
               {group.dateLabel}
             </div>
           </div>
 
-          {/* Messages within this date group */}
+          {/* Mensajes dentro del grupo de fecha */}
           {group.messages.map((msg) => {
             if (msg.sender === 'system') {
               return (
                 <div key={msg.id} className="flex justify-center my-2 animate-fade-in">
-                  <div className="bg-amber-50/80 border border-amber-200/50 rounded-xl px-4 py-2 text-center text-xs text-amber-800 font-bold max-w-lg flex items-center gap-2 shadow-xs select-none">
+                  <div className="bg-amber-50/90 border border-amber-200/60 rounded-xl px-4 py-2 text-center text-xs text-amber-800 font-bold max-w-lg flex items-center gap-2 shadow-2xs select-none">
                     <ShieldAlert size={14} className="shrink-0 text-amber-600" />
                     <span>{msg.content}</span>
                   </div>
@@ -52,17 +52,17 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
                   isContact ? 'mr-auto text-left' : 'ml-auto flex-row-reverse text-right'
                 }`}
               >
-                {/* Sender avatar (human/bot only) */}
+                {/* Avatar del remitente (Asesor o Bot) */}
                 {!isContact && (
                   <div className="relative group shrink-0 select-none">
                     {isBot ? (
-                      <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center border border-blue-200">
+                      <div className="w-8 h-8 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center border border-indigo-200 shadow-2xs">
                         <Bot size={15} />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold text-xs border border-emerald-200 cursor-help">
+                      <div className="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold text-xs border border-emerald-200 cursor-help shadow-2xs">
                         {msg.senderUser ? getInitials(msg.senderUser.username) : 'U'}
-                        <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] font-bold py-1 px-2.5 rounded shadow-lg whitespace-nowrap z-50 transition-opacity">
+                        <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 hidden group-hover:block bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded shadow-lg whitespace-nowrap z-50 transition-opacity">
                           {msg.senderUser ? msg.senderUser.username : 'Ejecutivo'}
                         </div>
                       </div>
@@ -70,16 +70,16 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
                   </div>
                 )}
 
-                {/* Bubble */}
+                {/* Burbuja del mensaje */}
                 <div className="flex flex-col gap-0.5">
                   <div
-                    className={`rounded-2xl px-4 py-2.5 text-sm font-medium shadow-xs leading-relaxed ${
+                    className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-2xs leading-relaxed ${
                       isContact
-                        ? 'bg-white text-gray-800 border border-gray-150 rounded-bl-xs'
+                        ? 'bg-white text-slate-800 border border-slate-200 rounded-bl-xs'
                         : isTemplate
                           ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-br-xs border border-emerald-500/50'
                           : isBot
-                            ? 'bg-blue-600 text-white rounded-br-xs'
+                            ? 'bg-indigo-600 text-white rounded-br-xs'
                             : 'bg-emerald-600 text-white rounded-br-xs'
                     }`}
                   >
@@ -87,7 +87,7 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
                       <div>
                         <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-100 pb-1.5 mb-1.5 border-b border-white/20 select-none">
                           <Smartphone size={12} className="text-emerald-200" />
-                          <span>Plantilla de WhatsApp</span>
+                          <span>Plantilla Oficial de WhatsApp</span>
                         </div>
                         {renderMessageContent(msg.content)}
                       </div>
@@ -96,8 +96,10 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
                     )}
                   </div>
 
-                  {/* Timestamp + Delivery Status */}
-                  <div className={`flex items-center gap-1 text-[10px] text-gray-400 font-bold px-1.5 mt-0.5 select-none ${!isContact ? 'justify-end' : 'justify-start'}`}>
+                  {/* Timestamp y Receipt de Entrega de Meta */}
+                  <div className={`flex items-center gap-1 text-[10px] text-slate-400 font-bold px-1.5 mt-0.5 select-none ${
+                    !isContact ? 'justify-end' : 'justify-start'
+                  }`}>
                     <span>{formatMessageTime(msg.createdAt)}</span>
                     {!isContact && renderDeliveryStatusIcon(msg.status, msg.errorMessage)}
                   </div>
@@ -113,4 +115,3 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
 };
 
 export default MessageFeed;
-

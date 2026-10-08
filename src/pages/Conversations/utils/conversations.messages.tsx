@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileText, Download, Clock, Check, CheckCheck, AlertCircle } from 'lucide-react';
-import type { Conversation, MessageDeliveryStatus } from '../core/models/Conversation';
+import type { Conversation, MessageDeliveryStatus } from '../schemas/conversations.schema';
 
 /** Renderiza el contenido de un mensaje, detectando links a PDF para mostrar un card descargable. */
 export const renderMessageContent = (content: string): React.ReactNode => {
@@ -49,7 +49,7 @@ export const renderMessageContent = (content: string): React.ReactNode => {
         link.parentNode?.removeChild(link);
         window.URL.revokeObjectURL(url);
       } catch (error) {
-        console.error("Error downloading file, falling back to new tab:", error);
+        console.error('Error downloading file, falling back to new tab:', error);
         window.open(fullUrl, '_blank', 'noopener,noreferrer');
       }
     };
@@ -387,4 +387,3 @@ export const renderDeliveryStatusIcon = (status?: MessageDeliveryStatus, errorMe
       return null;
   }
 };
-

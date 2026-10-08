@@ -16,7 +16,7 @@ import ProductsPage from './pages/ProductsPage';
 import HelpdeskPage from './pages/HelpdeskPage';
 import SupportTicketPage from './pages/SupportTicketPage';
 import DashboardPage from './pages/DashboardPage';
-import ConversationsPage from './pages/ConversationsPage';
+import ConversationsPage from './pages/Conversations';
 import OAuthCallbackPopup from './pages/Settings/AiAgentChannels/components/OAuthCallbackPopup';
 import PwaUpdateNotification from './components/shared/PwaUpdateNotification';
 

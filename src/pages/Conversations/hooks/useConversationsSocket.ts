@@ -1,27 +1,30 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
-import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
-import { useAuth } from './useAuth';
-import { useConfigStore } from '../store/useConfigStore';
-import { getUsers } from '../services/usersService';
+
+// Sockets y Autenticación
+import { createAppSocket, safeDisconnect } from '../../../core/socket/socketClient';
+import { useAuth } from '../../../hooks/useAuth';
+import { useConfigStore } from '../../../store/useConfigStore';
+
+// Modelos y Esquemas
 import type {
   Conversation,
   Message,
   MessageStatusUpdatedEvent,
-} from '../core/models/Conversation';
+  ConversationFiltersState,
+} from '../schemas/conversations.schema';
+import { INITIAL_CONVERSATION_FILTERS, filterConversations } from '../utils/conversations.helpers';
+
+// Servicios
 import {
   getConversations,
   getConversationMessages,
   sendMessage,
   toggleBotStatus,
   assignConversation,
-  getConversationBaseTemplate,
-  sendWhatsAppTemplate,
-} from '../services/conversationsService';
-import type { SendTemplatePayload } from '../core/models/Conversation';
-
-export type ChannelFilter = 'all' | 'whatsapp' | 'messenger' | 'instagram' | 'webchat';
+} from '../../../services/conversationsService';
+import { getUsers } from '../../../services/usersService';
 
 export interface ConvNotification {
   show: boolean;
@@ -30,62 +33,102 @@ export interface ConvNotification {
   message: string;
 }
 
-const NOTIF_HIDDEN: ConvNotification = { show: false, type: 'success', title: '', message: '' };
+export interface UseConversationsSocketReturn {
+  loading: boolean;
+  conversations: Conversation[];
+  filteredConversations: Conversation[];
+  selectedConv: Conversation | null;
+  messages: Message[];
+  allUsers: any[];
+  unreadMap: Record<string, number>;
+  inputText: string;
+  filters: ConversationFiltersState;
+  sending: boolean;
+  isTemplateModalOpen: boolean;
+  notification: ConvNotification;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  setInputText: (text: string) => void;
+  setFilters: React.Dispatch<React.SetStateAction<ConversationFiltersState>>;
+  setIsTemplateModalOpen: (open: boolean) => void;
+  handleSelectConv: (conv: Conversation | null) => void;
+  handleSendMessage: (e: React.FormEvent) => Promise<void>;
+  handleTemplateSent: (newMsg: Message) => void;
+  handleToggleBot: () => Promise<void>;
+  handleAssignUser: (userId: string) => Promise<void>;
+  loadConversationsList: (selectId?: string) => Promise<void>;
+  notify: (type: 'success' | 'error' | 'warning' | 'confirmation', title: string, message: string) => void;
+  hideNotification: () => void;
+}
 
-export function useConversationsSocket() {
+export function useConversationsSocket(): UseConversationsSocketReturn {
   const { user, isAdmin } = useAuth();
   const { selectedTenant } = useConfigStore();
   const schemaName = selectedTenant?.schema_name;
   const currentUserId = user?.id || user?.sub;
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const urlConvId = searchParams.get('id') || searchParams.get('conversationId');
 
-  // ── Core state ──
-  const [loading, setLoading] = useState(true);
+  // ── Estados Principales ──
+  const [loading, setLoading] = useState<boolean>(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
-  const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
 
-  // ── UI state ──
-  const [inputText, setInputText] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedChannelFilter, setSelectedChannelFilter] = useState<ChannelFilter>('all');
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [notification, setNotification] = useState<ConvNotification>(NOTIF_HIDDEN);
+  // ── Estados de Interfaz y Filtros ──
+  const [inputText, setInputText] = useState<string>('');
+  const [filters, setFilters] = useState<ConversationFiltersState>(INITIAL_CONVERSATION_FILTERS);
+  const [sending, setSending] = useState<boolean>(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState<boolean>(false);
 
-  // ── Countdown re-render tick (actualiza badges de tiempo cada 60s) ──
+  // ── Notificaciones Unificadas (reemplaza SweetAlert2) ──
+  const [notification, setNotification] = useState<ConvNotification>({
+    show: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const notify = useCallback(
+    (type: 'success' | 'error' | 'warning' | 'confirmation', title: string, message: string) => {
+      setNotification({ show: true, type, title, message });
+    },
+    []
+  );
+
+  const hideNotification = useCallback(() => {
+    setNotification((prev) => ({ ...prev, show: false }));
+  }, []);
+
+  // ── Countdown de re-renderizado para actualizar tiempos de expiración cada 60s ──
   const [, setTick] = useState(0);
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTick((t) => t + 1);
-    }, 60000);
+    const timer = setInterval(() => setTick((t) => t + 1), 60000);
     return () => clearInterval(timer);
   }, []);
 
-  // ── Refs (stale closure prevention) ──
+  // ── Mutable Refs (Prevención de Stale Closures en WebSockets) ──
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const selectedConvRef = useRef<Conversation | null>(null);
   const allUsersRef = useRef<any[]>([]);
   const isAdminRef = useRef<boolean>(false);
-  const loadConversationsListRef = useRef<any>(null);
+  const loadConversationsListRef = useRef<() => Promise<void>>(() => Promise.resolve());
   const isInitialConnectRef = useRef<boolean>(true);
+  const isFetchingRef = useRef<boolean>(false);
 
-  // Sync refs
-  useEffect(() => { selectedConvRef.current = selectedConv; }, [selectedConv]);
-  useEffect(() => { allUsersRef.current = allUsers; }, [allUsers]);
-  useEffect(() => { isAdminRef.current = isAdmin; }, [isAdmin]);
-  useEffect(() => { loadConversationsListRef.current = loadConversationsList; });
-
-  // ── Helpers ──
-  const showNotif = (type: ConvNotification['type'], title: string, message: string) =>
-    setNotification({ show: true, type, title, message });
-  const hideNotif = () => setNotification(NOTIF_HIDDEN);
+  // Sincronizar referencias mutables
+  useEffect(() => {
+    selectedConvRef.current = selectedConv;
+  }, [selectedConv]);
+  useEffect(() => {
+    allUsersRef.current = allUsers;
+  }, [allUsers]);
+  useEffect(() => {
+    isAdminRef.current = isAdmin;
+  }, [isAdmin]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -93,81 +136,105 @@ export function useConversationsSocket() {
     }, 100);
   }, []);
 
-  // ── Load conversations list ──
-  const loadConversationsList = async (selectId?: string) => {
-    try {
-      const list = await getConversations();
-      setConversations(list);
+  // ── Carga de Lista de Conversaciones vía REST ──
+  const loadConversationsList = useCallback(
+    async (selectId?: string) => {
+      try {
+        const list = await getConversations();
+        const validList = Array.isArray(list) ? list : [];
+        setConversations(validList);
 
-      const currentSelected = selectedConvRef.current;
-      const currentIsAdmin = isAdminRef.current;
+        const currentSelected = selectedConvRef.current;
+        const currentIsAdmin = isAdminRef.current;
 
-      if (selectId) {
-        const found = list.find((c) => c.id === selectId);
-        if (found) { setSelectedConv(found); return; }
-      }
-
-      if (currentSelected) {
-        const updated = list.find((c) => c.id === currentSelected.id);
-        if (updated) {
-          setSelectedConv(updated);
-        } else if (!currentIsAdmin) {
-          setSelectedConv(null);
+        if (selectId) {
+          const found = validList.find((c) => c.id === selectId);
+          if (found) {
+            setSelectedConv(found);
+            return;
+          }
         }
-      }
-    } catch (err) {
-      console.error('Error al cargar lista de chats:', err);
-    }
-  };
 
-  // ── Initial load ──
+        if (currentSelected) {
+          const updated = validList.find((c) => c.id === currentSelected.id);
+          if (updated) {
+            setSelectedConv(updated);
+          } else if (!currentIsAdmin) {
+            setSelectedConv(null);
+          }
+        }
+      } catch (err) {
+        console.error('Error al cargar lista de chats:', err);
+      }
+    },
+    []
+  );
+
+  loadConversationsListRef.current = loadConversationsList;
+
+  // ── Montaje Inicial de Datos (Guard contra StrictMode de React 19) ──
   useEffect(() => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     const initData = async () => {
       try {
         setLoading(true);
         const [, usersList] = await Promise.all([
           loadConversationsList(urlConvId || undefined),
-          getUsers(),
+          getUsers().catch(() => []),
         ]);
-        setAllUsers(usersList);
+        setAllUsers(Array.isArray(usersList) ? usersList : []);
       } catch (err) {
         console.error('Error cargando datos de conversaciones:', err);
+        notify('error', 'Error de Carga', 'No se pudieron sincronizar las conversaciones iniciales.');
       } finally {
         setLoading(false);
+        isFetchingRef.current = false;
       }
     };
-    initData();
-  }, [urlConvId, schemaName]);
 
-  // ── Load messages when conversation is selected ──
+    initData();
+  }, [urlConvId, schemaName, loadConversationsList, notify]);
+
+  // ── Cargar Mensajes al Seleccionar una Conversación ──
   useEffect(() => {
-    if (!selectedConv) return;
+    if (!selectedConv?.id) {
+      setMessages([]);
+      return;
+    }
+
     const loadMessages = async () => {
       try {
         const data = await getConversationMessages(selectedConv.id);
-        setMessages(data);
+        setMessages(Array.isArray(data) ? data : []);
         scrollToBottom();
       } catch (err) {
-        console.error('Error al cargar mensajes:', err);
+        console.error('Error al cargar mensajes de la conversación seleccionada:', err);
+        notify('error', 'Error de Conversación', 'No fue posible descargar los mensajes.');
       }
     };
-    loadMessages();
-  }, [selectedConv?.id]);
 
-  // ── WebSocket connection ──
+    loadMessages();
+  }, [selectedConv?.id, scrollToBottom, notify]);
+
+  // ── Conexión en Tiempo Real con WebSockets (`/conversations`) ──
   useEffect(() => {
     if (!currentUserId) return;
 
+    isInitialConnectRef.current = true;
     const socket = createAppSocket({
       namespace: 'conversations',
-      query: { userId: currentUserId },
+      query: { userId: currentUserId, tenantSchema: schemaName || 'public' },
     });
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      setIsWsConnected(true);
+      // Asegurar que el socket ingrese a la sala del tenant activo
+      socket.emit('set_tenant', { tenantSchema: schemaName || 'public' });
+
       if (!isInitialConnectRef.current) {
-        console.log('[Conversations WS] Reconectado. Sincronizando estado más reciente vía REST...');
+        console.log('[Conversations WS] Reconectado. Re-sincronizando estado vía REST...');
         if (loadConversationsListRef.current) {
           loadConversationsListRef.current();
         }
@@ -175,30 +242,31 @@ export function useConversationsSocket() {
         if (currentSelected) {
           getConversationMessages(currentSelected.id)
             .then((latestMessages) => {
-              setMessages(latestMessages);
+              setMessages(Array.isArray(latestMessages) ? latestMessages : []);
               scrollToBottom();
             })
-            .catch((err) => console.error('Error re-sincronizando mensajes tras reconexión:', err));
+            .catch((err) => console.error('Error sincronizando mensajes tras reconexión:', err));
         }
       } else {
         isInitialConnectRef.current = false;
-        console.log('Conectado a Websockets de Conversaciones');
+        console.log(`Conectado a WebSocket de Conversaciones`);
       }
     });
 
     socket.on('disconnect', (reason) => {
-      setIsWsConnected(false);
       console.warn('Desconexión en Conversations WebSocket:', reason);
     });
 
     socket.on('connect_error', (err) => {
-      setIsWsConnected(false);
       console.warn('Error de conexión en Conversations WebSocket:', err.message);
     });
 
-    // 1. Mensaje recibido (entrante de cliente o emitido por usuario/bot)
+    // 1. Mensaje recibido en tiempo real (entrante de cliente o saliente)
     socket.on('message_received', (newMsg: Message) => {
-      const convId = newMsg.conversationId || (newMsg as any).conversation_id || (newMsg as any).conversation?.id;
+      const convId =
+        newMsg.conversationId ||
+        (newMsg as any).conversation_id ||
+        (newMsg as any).conversation?.id;
       if (!convId) return;
 
       const isCustomer = newMsg.sender === 'contact';
@@ -209,11 +277,11 @@ export function useConversationsSocket() {
         ? new Date(new Date(newMsg.createdAt).getTime() + 24 * 3600 * 1000).toISOString()
         : undefined;
 
-      // Actualizar lista de conversaciones en tiempo real y mover a la cima
+      // Actualizar lista de conversaciones y mover la conversación a la cima (índice 0)
       setConversations((prev) => {
         const convIndex = prev.findIndex((c) => c.id === convId);
         if (convIndex === -1) {
-          // Si el chat es nuevo o no está cargado localmente, recargar lista del backend
+          // Si el chat es nuevo, recargar la lista completa desde el backend
           if (loadConversationsListRef.current) {
             loadConversationsListRef.current();
           }
@@ -231,12 +299,11 @@ export function useConversationsSocket() {
           updatedAt: newMsg.createdAt || new Date().toISOString(),
         };
 
-        // Colocar la conversación que tuvo actividad en la cima (índice 0)
         const remaining = prev.filter((_, idx) => idx !== convIndex);
         return [updatedConv, ...remaining];
       });
 
-      // Incrementar contador de no leídos si el mensaje es del contacto y el chat no está abierto
+      // Incrementar contador de no leídos si el mensaje proviene del cliente y el chat no está abierto
       const currentSelected = selectedConvRef.current;
       if (isCustomer && (!currentSelected || currentSelected.id !== convId)) {
         setUnreadMap((prev) => ({
@@ -245,7 +312,7 @@ export function useConversationsSocket() {
         }));
       }
 
-      // Si coincide con la conversación activa en pantalla
+      // Si coincide con la conversación seleccionada activamente en pantalla
       if (currentSelected && currentSelected.id === convId) {
         setSelectedConv((prev) =>
           prev
@@ -262,7 +329,13 @@ export function useConversationsSocket() {
         );
 
         setMessages((prev) => {
-          if (prev.some((m) => m.id === newMsg.id || (newMsg.externalMessageId && m.externalMessageId === newMsg.externalMessageId))) {
+          if (
+            prev.some(
+              (m) =>
+                m.id === newMsg.id ||
+                (newMsg.externalMessageId && m.externalMessageId === newMsg.externalMessageId)
+            )
+          ) {
             return prev;
           }
           return [...prev, newMsg];
@@ -277,7 +350,8 @@ export function useConversationsSocket() {
 
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === data.messageId || (data.externalMessageId && m.externalMessageId === data.externalMessageId)
+          m.id === data.messageId ||
+          (data.externalMessageId && m.externalMessageId === data.externalMessageId)
             ? {
                 ...m,
                 status: data.status,
@@ -298,22 +372,15 @@ export function useConversationsSocket() {
                 (data.externalMessageId && c.lastMessage.externalMessageId === data.externalMessageId)));
 
           if (isTargetConv && c.lastMessage) {
-            const isTargetMsg =
-              c.lastMessage.id === data.messageId ||
-              (data.externalMessageId && c.lastMessage.externalMessageId === data.externalMessageId) ||
-              (!data.messageId && !data.externalMessageId);
-
-            if (isTargetMsg) {
-              return {
-                ...c,
-                lastMessage: {
-                  ...c.lastMessage,
-                  status: data.status,
-                  externalMessageId: data.externalMessageId ?? c.lastMessage.externalMessageId,
-                  errorMessage: data.errorMessage ?? c.lastMessage.errorMessage,
-                },
-              };
-            }
+            return {
+              ...c,
+              lastMessage: {
+                ...c.lastMessage,
+                status: data.status,
+                externalMessageId: data.externalMessageId ?? c.lastMessage.externalMessageId,
+                errorMessage: data.errorMessage ?? c.lastMessage.errorMessage,
+              },
+            };
           }
           return c;
         })
@@ -344,7 +411,7 @@ export function useConversationsSocket() {
       }
     });
 
-    // 3. Cambio de estado del bot
+    // 3. Conmutación en tiempo real del Bot de IA
     socket.on('bot_status_changed', (data: { conversationId: string; botActive: boolean }) => {
       const convId = data.conversationId || (data as any).conversation_id;
       const currentSelected = selectedConvRef.current;
@@ -356,7 +423,7 @@ export function useConversationsSocket() {
       );
     });
 
-    // 4. Asignación de ejecutivo
+    // 4. Reasignación de ejecutivo responsable en vivo
     socket.on('conversation_assigned', (data: { conversationId: string; assignedUserId: string | null }) => {
       const convId = data.conversationId || (data as any).conversation_id;
       const newAssignedUser = allUsersRef.current.find((u) => u.id === data.assignedUserId) || null;
@@ -375,30 +442,51 @@ export function useConversationsSocket() {
             : prev
         );
       }
-      if (loadConversationsListRef.current) loadConversationsListRef.current();
     });
 
-    return () => { safeDisconnect(socket); };
-  }, [currentUserId, schemaName]);
+    return () => {
+      safeDisconnect(socket);
+    };
+  }, [currentUserId, schemaName, scrollToBottom]);
 
-  // ── Actions ──
-  const handleSelectConv = useCallback((conv: Conversation | null) => {
-    setSelectedConv(conv);
-    if (conv) {
-      setUnreadMap((prev) => {
-        if (!prev[conv.id]) return prev;
-        const next = { ...prev };
-        delete next[conv.id];
-        return next;
-      });
-    }
-  }, []);
+  // ── Selección Reactiva de Conversación con Sincronización de URL ──
+  const handleSelectConv = useCallback(
+    (conv: Conversation | null) => {
+      setSelectedConv(conv);
+      if (conv) {
+        // Limpiar conteo de no leídos
+        setUnreadMap((prev) => {
+          if (!prev[conv.id]) return prev;
+          const next = { ...prev };
+          delete next[conv.id];
+          return next;
+        });
 
+        // Sincronizar parámetro de URL
+        setSearchParams((prevParams) => {
+          const next = new URLSearchParams(prevParams);
+          next.set('id', conv.id);
+          return next;
+        });
+      } else {
+        setSearchParams((prevParams) => {
+          const next = new URLSearchParams(prevParams);
+          next.delete('id');
+          next.delete('conversationId');
+          return next;
+        });
+      }
+    },
+    [setSearchParams]
+  );
+
+  // ── Envío de Mensaje de Texto Libre ──
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || !selectedConv || sending) return;
     const textToSend = inputText.trim();
     setInputText('');
+
     try {
       setSending(true);
       const msg = await sendMessage(selectedConv.id, textToSend);
@@ -411,7 +499,7 @@ export function useConversationsSocket() {
         });
         scrollToBottom();
 
-        // Actualizar la conversación en la barra lateral de forma inmediata y moverla a la cima
+        // Mover la conversación inmediatamente a la cima de la barra lateral
         setConversations((prev) => {
           const convIndex = prev.findIndex((c) => c.id === selectedConv.id);
           if (convIndex === -1) return prev;
@@ -439,29 +527,28 @@ export function useConversationsSocket() {
           errMsg.toLowerCase().includes('expirad'));
 
       if (isWindowExpiredError) {
-        // Bloquear localmente el input al detectar corte de ventana
+        // Bloquear localmente el input al detectar corte de ventana de 23h
         if (selectedConv) {
           setSelectedConv((prev) => (prev ? { ...prev, is24HourWindowActive: false } : null));
           setConversations((prev) =>
             prev.map((c) => (c.id === selectedConv.id ? { ...c, is24HourWindowActive: false } : c))
           );
         }
-        showNotif(
+        notify(
           'warning',
           'Ventana de WhatsApp Expirada',
-          'La ventana de atención de 24 horas (margen seguro de 23h) ha expirado. Abriendo catálogo de plantillas pre-aprobadas de Meta...'
+          'La ventana de atención de 24 horas (margen de 23h) ha expirado. Por favor, envía una plantilla oficial pre-aprobada.'
         );
-        setTimeout(() => {
-          setIsTemplateModalOpen(true);
-        }, 600);
+        setTimeout(() => setIsTemplateModalOpen(true), 600);
       } else {
-        showNotif('error', 'Error', errMsg || 'No se pudo enviar el mensaje.');
+        notify('error', 'Error al Enviar', errMsg || 'No fue posible enviar el mensaje.');
       }
     } finally {
       setSending(false);
     }
   };
 
+  // ── Envío de Plantilla Oficial de WhatsApp ──
   const handleTemplateSent = (newMsg: Message) => {
     const convId = newMsg.conversationId || (newMsg as any).conversation_id;
     setMessages((prev) => {
@@ -470,7 +557,6 @@ export function useConversationsSocket() {
     });
     scrollToBottom();
 
-    // Actualizar la conversación y moverla a la cima de la barra lateral
     setConversations((prev) => {
       const convIndex = prev.findIndex((c) => c.id === convId);
       if (convIndex === -1) return prev;
@@ -484,94 +570,27 @@ export function useConversationsSocket() {
     });
 
     setSelectedConv((prev) => (prev && prev.id === convId ? { ...prev, lastMessage: newMsg } : prev));
-    showNotif('success', 'Plantilla Enviada', 'La plantilla oficial de WhatsApp ha sido despachada con éxito.');
+    notify('success', 'Plantilla Enviada', 'La plantilla oficial de WhatsApp fue despachada con éxito.');
   };
 
-  const handleSendBaseTemplate = async (conversationId?: string) => {
-    const targetConv = conversationId
-      ? conversations.find((c) => c.id === conversationId) || selectedConv
-      : selectedConv;
-    if (!targetConv || sending) return;
-
-    try {
-      setSending(true);
-      const baseTpl = await getConversationBaseTemplate(targetConv.id);
-      if (!baseTpl) {
-        showNotif(
-          'error',
-          'Plantilla No Configurada',
-          'No se encontró la plantilla base configurada para este canal de WhatsApp.'
-        );
-        return;
-      }
-
-      const matches = baseTpl.bodyText?.match(/\{\{(\d+)\}\}/g) || [];
-      const varNumbers = Array.from(
-        new Set(matches.map((m) => parseInt(m.replace(/\D/g, ''), 10)))
-      ).sort((a, b) => a - b);
-
-      const clientName =
-        baseTpl.resolvedVariables?.[1] ||
-        baseTpl.contact?.name ||
-        targetConv.clientName?.trim() ||
-        'Cliente';
-
-      const companyName =
-        baseTpl.resolvedVariables?.[2] ??
-        baseTpl.contact?.company ??
-        (targetConv.client as any)?.company?.nombre ??
-        (targetConv.client as any)?.empresa ??
-        '';
-
-      const agentName =
-        baseTpl.resolvedVariables?.[3] ||
-        baseTpl.contact?.agent ||
-        targetConv.assignedUser?.username ||
-        user?.username ||
-        'Asesor';
-
-      const parameters = varNumbers.map((n) => {
-        if (n === 1) return { type: 'text' as const, text: clientName.trim() || targetConv.clientName || 'Cliente' };
-        if (n === 2) return { type: 'text' as const, text: companyName.trim() || ' ' };
-        if (n === 3) return { type: 'text' as const, text: agentName };
-        return { type: 'text' as const, text: '-' };
-      });
-
-      const payload: SendTemplatePayload = {
-        templateName: baseTpl.name || 'crm_inicio_conversacion',
-        languageCode: baseTpl.language || 'es',
-        components: parameters.length > 0 ? [{ type: 'body', parameters }] : undefined,
-      };
-
-      const newMsg = await sendWhatsAppTemplate(targetConv.id, payload);
-      handleTemplateSent(newMsg);
-    } catch (err: any) {
-      console.error('Error al enviar plantilla base directa:', err);
-      showNotif(
-        'error',
-        'Error al Enviar Plantilla',
-        err?.response?.data?.message || 'Fallo al despachar la plantilla a WhatsApp Cloud API.'
-      );
-    } finally {
-      setSending(false);
-    }
-  };
-
+  // ── Conmutar Estado del Bot IA ──
   const handleToggleBot = async () => {
     if (!selectedConv) return;
     const newStatus = !selectedConv.botActive;
     try {
       await toggleBotStatus(selectedConv.id, newStatus);
       setSelectedConv((prev) => (prev ? { ...prev, botActive: newStatus } : null));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error al alternar bot:', err);
+      notify('error', 'Error del Bot', 'No se pudo conmutar el estado del agente de IA.');
     }
   };
 
+  // ── Asignar Ejecutivo Responsable ──
   const handleAssignUser = async (userId: string) => {
     if (!selectedConv) return;
     if (selectedConv.assignedUserId && (!userId || userId.trim() === '')) {
-      showNotif('warning', 'Acción No Permitida', 'Una conversación asignada previamente no puede quedar sin ejecutivo.');
+      notify('warning', 'Acción no permitida', 'Una conversación ya asignada no puede quedar desatendida.');
       return;
     }
     try {
@@ -589,52 +608,45 @@ export function useConversationsSocket() {
             : c
         )
       );
-      showNotif('success', 'Reasignado', 'Conversación reasignada con éxito.');
-      loadConversationsList();
+      notify('success', 'Reasignado', 'La conversación ha sido reasignada correctamente.');
     } catch (err: any) {
       console.error('Error al asignar ejecutivo:', err);
-      showNotif('error', 'Error de Asignación', err?.response?.data?.message || 'No se pudo reasignar la conversación.');
+      notify('error', 'Error de Asignación', err?.response?.data?.message || 'No fue posible reasignar la conversación.');
     }
   };
 
-  // ── Derived: filtered & dynamically sorted conversations ──
-  const filteredConversations = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    return conversations
-      .filter((c) => {
-        const matchesQuery =
-          !q ||
-          (c.clientName || '').toLowerCase().includes(q) ||
-          (c.externalId || '').toLowerCase().includes(q) ||
-          (c.client?.nombre || '').toLowerCase().includes(q) ||
-          (c.assignedUser?.username || '').toLowerCase().includes(q);
-        const matchesChannel = selectedChannelFilter === 'all' || c.channel === selectedChannelFilter;
-        return matchesQuery && matchesChannel;
-      })
-      .sort((a, b) => {
-        const timeA = new Date(a.lastMessage?.createdAt || a.updatedAt || a.createdAt || 0).getTime();
-        const timeB = new Date(b.lastMessage?.createdAt || b.updatedAt || b.createdAt || 0).getTime();
-        return timeB - timeA;
-      });
-  }, [conversations, searchQuery, selectedChannelFilter]);
+  // ── Colección Filtrada y Ordenada en Memoria ──
+  const filteredConversations = useMemo(
+    () => filterConversations(conversations, filters),
+    [conversations, filters]
+  );
 
   return {
-    // state
-    loading, conversations, selectedConv, messages, allUsers,
-    inputText, searchQuery, selectedChannelFilter,
-    isTemplateModalOpen, sending, notification,
-    filteredConversations, unreadMap,
-    isWsConnected, isConnected: isWsConnected,
-    // refs
+    loading,
+    conversations,
+    filteredConversations,
+    selectedConv,
+    messages,
+    allUsers,
+    unreadMap,
+    inputText,
+    filters,
+    sending,
+    isTemplateModalOpen,
+    notification,
     messagesEndRef,
-    // setters
-    setSelectedConv: handleSelectConv, setInputText, setSearchQuery,
-    setSelectedChannelFilter, setIsTemplateModalOpen,
-    hideNotif, showNotif,
-    // actions
-    handleSendMessage, handleSendBaseTemplate, handleTemplateSent, handleToggleBot, handleAssignUser,
+    setInputText,
+    setFilters,
+    setIsTemplateModalOpen,
+    handleSelectConv,
+    handleSendMessage,
+    handleTemplateSent,
+    handleToggleBot,
+    handleAssignUser,
     loadConversationsList,
-    // auth
-    isAdmin, currentUserId,
+    notify,
+    hideNotification,
   };
 }
+
+export default useConversationsSocket;

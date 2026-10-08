@@ -33,6 +33,9 @@ src/pages/Activities/
 │   ├── ActivityModal.tsx              # Modal contenedor responsive con cabecera de icono y descripción
 │   └── ActivityForm.tsx               # Formulario reactivo con Yup (activityValidationSchema), FormField, Select y sección de alertas
 │
+├── hooks/                             # Hooks modulares del ciclo de vida y sockets
+│   └── useActivities.ts               # Orquestador del socket (/activities), sincronización REST, filtros y modales
+│
 ├── schemas/
 │   └── activities.schema.ts           # Esquema Yup (activityValidationSchema), ActivityFormData y Filtros
 │

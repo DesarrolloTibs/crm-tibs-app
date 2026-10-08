@@ -32,6 +32,18 @@ export function createAppSocket(options: CreateSocketOptions): Socket {
   const { originUrl, socketPath } = getSocketConfig();
   const ns = options.namespace.startsWith('/') ? options.namespace : `/${options.namespace}`;
 
+  // Resolver esquema de tenant activo
+  let activeTenantSchema = 'public';
+  try {
+    const rawTenant = localStorage.getItem('selected_tenant');
+    if (rawTenant) {
+      const parsed = JSON.parse(rawTenant);
+      if (parsed?.schema_name) {
+        activeTenantSchema = parsed.schema_name;
+      }
+    }
+  } catch {}
+
   return io(`${originUrl}${ns}`, {
     path: socketPath,
     transports: ['websocket', 'polling'],
@@ -41,7 +53,10 @@ export function createAppSocket(options: CreateSocketOptions): Socket {
     reconnectionDelayMax: 5000,
     randomizationFactor: 0.5,
     timeout: 20000,
-    query: options.query,
+    query: {
+      tenantSchema: activeTenantSchema,
+      ...options.query,
+    },
     withCredentials: options.withCredentials ?? true,
     auth: options.authCallback ?? (async (cb: (data: object) => void) => {
       let token = localStorage.getItem('token');
@@ -62,7 +77,19 @@ export function createAppSocket(options: CreateSocketOptions): Socket {
         }
       }
 
-      cb({ token });
+      // Re-evaluar el tenant activo en el momento del handshake
+      let currentTenant = activeTenantSchema;
+      try {
+        const rawTenant = localStorage.getItem('selected_tenant');
+        if (rawTenant) {
+          const parsed = JSON.parse(rawTenant);
+          if (parsed?.schema_name) {
+            currentTenant = parsed.schema_name;
+          }
+        }
+      } catch {}
+
+      cb({ token, tenantSchema: currentTenant });
     }),
   });
 }
