@@ -1,28 +1,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Opportunity, CurrencyType, Stage } from '../../core/models/Opportunity';
-import { Currency } from '../../core/models/Opportunity';
-import { getActiveCatalogOptions } from '../../services/opportunityCatalogsService';
-import type { OpportunityCatalogOption } from '../../core/models/OpportunityCatalog';
+import type { Opportunity, CurrencyType, Stage } from '@core/models/Opportunity';
+import { Currency } from '@core/models/Opportunity';
+import { getActiveCatalogOptions } from '@core/services/opportunityCatalogsService';
+import type { OpportunityCatalogOption } from '@core/models/OpportunityCatalog';
 import type { SingleValue, MultiValue } from 'react-select';
-import { getActiveStages } from '../../services/pipelinesService';
+import { getActiveStages } from '@core/services/pipelinesService';
 import { FileText, ChevronDown } from 'lucide-react';
-import type { Client } from '../../core/models/Client';
-import { getClients, createClient } from '../../services/clientsService';
-import { getUsers } from '../../services/usersService';
-import { useAuth } from '../../hooks/useAuth';
-import type { User } from '../../core/models/User';
-import { ContactModal } from '../../pages/Clients/contacts/components/ContactModal';
-import { getCompanies } from '../../services/companiesService';
-import type { Company } from '../../core/models/Company';
-import type { Product } from '../../core/models/Product';
-import { getProducts, downloadProductFile } from '../../services/productsService';
-import { getOpportunityLabels } from '../../services/opportunityLabelsService';
-import type { OpportunityLabel } from '../../core/models/OpportunityLabel';
-import Input from '../shared/Input';
-import TextArea from '../shared/TextArea';
-import Select from '../shared/Select';
-import Button from '../shared/Button';
-import StageStepper from '../shared/StageStepper';
+import type { Client } from '@core/models/Client';
+import { getClients, createClient } from '@core/services/clientsService';
+import { getUsers } from '@core/services/usersService';
+import { useAuth } from '@features/auth';
+import type { User } from '@core/models/User';
+import { ContactModal } from '@features/crm';
+import { getCompanies } from '@core/services/companiesService';
+import type { Company } from '@core/models/Company';
+import type { Product } from '@core/models/Product';
+import { getProducts, downloadProductFile } from '@core/services/productsService';
+import { getOpportunityLabels } from '@core/services/opportunityLabelsService';
+import type { OpportunityLabel } from '@core/models/OpportunityLabel';
+import Input from '@shared/components/Input';
+import TextArea from '@shared/components/TextArea';
+import Select from '@shared/components/Select';
+import Button from '@shared/components/Button';
+import StageStepper from '@shared/components/StageStepper';
 
 interface Props {
   initialData?: Opportunity;
@@ -1013,7 +1013,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
         executives={executives.filter((u) => u.id).map((u) => ({ value: u.id!, label: u.username }))}
         companies={companies.filter((c) => c.id).map((c) => ({ value: c.id!, label: c.nombre }))}
         onClose={() => setIsClientModalOpen(false)}
-        onSubmit={async (data) => {
+        onSubmit={async (data: any) => {
           await handleCreateClient(data as Client);
         }}
       />

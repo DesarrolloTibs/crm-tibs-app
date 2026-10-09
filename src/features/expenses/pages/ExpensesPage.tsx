@@ -1,14 +1,12 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import ExpensesTable from '../components/Expense/ExpensesTable';
-import ExpenseForm from '../components/Expense/ExpenseForm';
-import Modal from '../components/Modal/Modal';
-import Notification from '../components/Modal/Notification';
-import ReceiptUploadModal from '../components/Expense/ReceiptUploadModal';
-import Button from '../components/shared/Button';
-import ExpenseFiltersBar from '../components/Expense/ExpenseFiltersBar';
+import ExpensesTable from '../components/ExpensesTable';
+import ExpenseForm from '../components/ExpenseForm';
+import ReceiptUploadModal from '../components/ReceiptUploadModal';
+import ExpenseFiltersBar from '../components/ExpenseFiltersBar';
 import { useExpenses } from '../hooks/useExpenses';
-import type { Expense } from '../core/models/Expense';
+import { Modal, Notification, Button } from '@shared/components';
+import type { Expense } from '@core/models/Expense';
 
 const ExpensesPage: React.FC = () => {
   const {

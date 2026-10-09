@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { getRemindersByOpportunity, createReminder, deleteReminder } from '../../services/remindersService';
+import { getRemindersByOpportunity, createReminder, deleteReminder } from '@core/services/remindersService';
 import { Plus, Search, Trash2 } from 'lucide-react';
-import type { Reminder } from '../../core/models/Reminder';
-import { useAuth } from '../../hooks/useAuth';
-import Notification from '../Modal/Notification';
-import Modal from '../Modal/Modal';
+import type { Reminder } from '@core/models/Reminder';
+import { useAuth } from '@features/auth';
+import Notification from '@shared/components/Notification';
+import Modal from '@shared/components/Modal';
 
 interface RemindersTabProps {
   opportunityId: string;

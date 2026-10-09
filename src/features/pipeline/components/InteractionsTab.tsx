@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getInteractionsByOpportunity, createInteraction, deleteInteraction } from '../../services/interactionsService'; // Asumiendo que se movió a src/services
+import { getInteractionsByOpportunity, createInteraction, deleteInteraction } from '@core/services/interactionsService'; // Asumiendo que se movió a src/services
 import { Plus, Search, Trash2 } from 'lucide-react';
-import type { Interaction } from '../../core/models/Interaction';
-import { useAuth } from '../../hooks/useAuth';
-import Notification from '../Modal/Notification';
-import Modal from '../Modal/Modal';
-import Button from '../shared/Button';
-import Input from '../shared/Input';
-import TextArea from '../shared/TextArea';
+import type { Interaction } from '@core/models/Interaction';
+import { useAuth } from '@features/auth';
+import Notification from '@shared/components/Notification';
+import Modal from '@shared/components/Modal';
+import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
+import TextArea from '@shared/components/TextArea';
 interface InteractionsTabProps {
   opportunityId: string;
 }

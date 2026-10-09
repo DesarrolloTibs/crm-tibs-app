@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
 import Confetti from 'react-confetti-boom';
 import { Filter, User, Tag, Star, Calendar } from 'lucide-react';
-import { usePipeline } from '../../hooks/usePipeline';
-import Loader from '../Loader/Loader';
-import Notification from '../Modal/Notification';
+import { usePipeline } from '../hooks/usePipeline';
+import Loader from '@shared/components/Loader';
+import Notification from '@shared/components/Notification';
 import OpportunityHistoryTable from './OpportunityHistoryTable';
 import PipelineToolbar from './PipelineToolbar';
 import PipelineKanban from './PipelineKanban';
 import PipelineModals from './PipelineModals';
 import PipelineCustomFilterModal from './PipelineCustomFilterModal';
-import type { SearchBadge } from '../shared/UnifiedSearchBar';
+import type { SearchBadge } from '@shared/components/UnifiedSearchBar';
 
 const PipelineBoard: React.FC = () => {
   const p = usePipeline();

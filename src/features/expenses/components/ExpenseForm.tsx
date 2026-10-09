@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import Select from '../shared/Select';
-import Input from '../shared/Input';
-import Button from '../shared/Button';
-import type { Expense } from '../../core/models/Expense';
-import { getActiveClients } from '../../services/clientsService';
-import { getAllOpportunities } from '../../services/opportunitiesService'; // Assuming getAll exists or using getOpportunities
-import type { Client } from '../../core/models/Client';
-import type { Opportunity } from '../../core/models/Opportunity';
+import Select from '@shared/components/Select';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
+import type { Expense } from '@core/models/Expense';
+import { getActiveClients } from '@core/services/clientsService';
+import { getAllOpportunities } from '@core/services/opportunitiesService'; // Assuming getAll exists or using getOpportunities
+import type { Client } from '@core/models/Client';
+import type { Opportunity } from '@core/models/Opportunity';
 
 interface Props {
     initialData?: Expense;

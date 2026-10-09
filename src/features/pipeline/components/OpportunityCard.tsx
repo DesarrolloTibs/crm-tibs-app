@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Opportunity, Stage } from '../../core/models/Opportunity';
-import { useAuth } from '../../hooks/useAuth';
+import type { Opportunity, Stage } from '@core/models/Opportunity';
+import { useAuth } from '@features/auth';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Edit, Trash2, Building2, Archive, ArchiveRestore, MoreVertical, Mail, User, Clock } from 'lucide-react';

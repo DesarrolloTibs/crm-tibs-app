@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { uploadProductFile, downloadProductFile, deleteProductFile, getProduct } from '../../services/productsService';
+import { uploadProductFile, downloadProductFile, deleteProductFile, getProduct } from '@core/services/productsService';
 import { 
   Paperclip, 
   UploadCloud, 
@@ -14,8 +14,8 @@ import {
   Trash2,
   FolderOpen
 } from 'lucide-react';
-import type { Product, ProductFile } from '../../core/models/Product';
-import Notification from '../Modal/Notification';
+import type { Product, ProductFile } from '@core/models/Product';
+import Notification from '@shared/components/Notification';
 
 interface ProductFilesTabProps {
   product: Product;

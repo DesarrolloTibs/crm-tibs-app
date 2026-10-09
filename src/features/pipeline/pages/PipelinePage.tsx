@@ -1,5 +1,5 @@
 import React from 'react';
-import PipelineBoard from '../components/Pipeline/PipelineBoard';
+import PipelineBoard from '../components/PipelineBoard';
 
 const PipelinePage: React.FC = () => {
   return (

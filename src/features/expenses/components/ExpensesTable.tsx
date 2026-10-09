@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import type { Expense } from '../../core/models/Expense';
+import type { Expense } from '@core/models/Expense';
 import { Edit, Trash2, Inbox, Calendar, Briefcase } from 'lucide-react';
-import Table, { type ColumnDef } from '../shared/Table';
+import Table, { type ColumnDef } from '@shared/components/Table';
 
 interface Props {
   expenses: Expense[];

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { Product } from '../../core/models/Product';
+import type { Product } from '@core/models/Product';
 import { UploadCloud, X, DollarSign, Paperclip, Tag } from 'lucide-react';
-import Input from '../shared/Input';
-import TextArea from '../shared/TextArea';
-import Button from '../shared/Button';
-import Dropzone from '../shared/Dropzone';
+import Input from '@shared/components/Input';
+import TextArea from '@shared/components/TextArea';
+import Button from '@shared/components/Button';
+import Dropzone from '@shared/components/Dropzone';
 
 interface StagedSpecFile {
   id: string;

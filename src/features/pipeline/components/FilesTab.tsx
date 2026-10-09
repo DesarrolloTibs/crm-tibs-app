@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { uploadOpportunityFile, downloadOpportunityFile, deleteOpportunityFile, getOpportunity } from '../../services/opportunitiesService';
+import { uploadOpportunityFile, downloadOpportunityFile, deleteOpportunityFile, getOpportunity } from '@core/services/opportunitiesService';
 import { 
   Paperclip, 
   UploadCloud, 
@@ -15,8 +15,8 @@ import {
   Trash2,
   FolderOpen
 } from 'lucide-react';
-import type { Opportunity, OpportunityFile } from '../../core/models/Opportunity';
-import Notification from '../Modal/Notification';
+import type { Opportunity, OpportunityFile } from '@core/models/Opportunity';
+import Notification from '@shared/components/Notification';
 
 interface FilesTabProps {
   opportunity: Opportunity;

@@ -1,11 +1,11 @@
 import React from 'react';
 import { Plus, Users, XCircle, Filter, ChevronUp, ChevronDown, Settings2, Star, Kanban as KanbanIcon, List as ListIcon, FileText, FileSpreadsheet, Calendar, UserCheck } from 'lucide-react';
-import UnifiedSearchBar from '../shared/UnifiedSearchBar';
-import type { SearchBadge } from '../shared/UnifiedSearchBar';
-import StageVisibilitySelector from '../shared/StageVisibilitySelector';
-import Button from '../shared/Button';
-import Input from '../shared/Input';
-import type { Stage } from '../../core/models/Opportunity';
+import UnifiedSearchBar from '@shared/components/UnifiedSearchBar';
+import type { SearchBadge } from '@shared/components/UnifiedSearchBar';
+import StageVisibilitySelector from '@shared/components/StageVisibilitySelector';
+import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
+import type { Stage } from '@core/models/Opportunity';
 
 interface Executive { id: string; username: string; }
 interface ContactItem { id: string; name: string; }

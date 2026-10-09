@@ -1,10 +1,10 @@
 import React from 'react';
 import { Filter, X, Trash2, Star } from 'lucide-react';
-import Button from '../shared/Button';
-import Modal from '../shared/Modal';
-import type { FilterRule } from '../../hooks/usePipeline';
-import type { Stage } from '../../core/models/Opportunity';
-import type { OpportunityCatalogOption } from '../../core/models/OpportunityCatalog';
+import Button from '@shared/components/Button';
+import Modal from '@shared/components/Modal';
+import type { FilterRule } from '../hooks/usePipeline';
+import type { Stage } from '@core/models/Opportunity';
+import type { OpportunityCatalogOption } from '@core/models/OpportunityCatalog';
 
 interface Executive { id: string; username: string; }
 

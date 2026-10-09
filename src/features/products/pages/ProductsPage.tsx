@@ -1,15 +1,15 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import ProductForm from '../components/Product/ProductForm';
-import ProductFilesTab from '../components/Product/ProductFilesTab';
-import Modal from '../components/Modal/Modal';
-import Tabs from '../components/Tabs/Tabs';
-import ProductsTable from '../components/Product/ProductsTable';
-import Notification from '../components/Modal/Notification';
-import Button from '../components/shared/Button';
-import ProductFiltersBar from '../components/Product/ProductFiltersBar';
+import ProductForm from '../components/ProductForm';
+import ProductFilesTab from '../components/ProductFilesTab';
+import Modal from '@shared/components/Modal';
+import Tabs from '@shared/components/Tabs';
+import ProductsTable from '../components/ProductsTable';
+import Notification from '@shared/components/Notification';
+import Button from '@shared/components/Button';
+import ProductFiltersBar from '../components/ProductFiltersBar';
 import { useProducts } from '../hooks/useProducts';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 const ProductsPage: React.FC = () => {
   const { isAdmin } = useAuth();

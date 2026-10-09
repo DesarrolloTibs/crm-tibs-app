@@ -1,16 +1,16 @@
 import React from 'react';
 import { Settings2, X } from 'lucide-react';
-import Modal from '../shared/Modal';
-import ConfirmModal from '../shared/ConfirmModal';
-import Input from '../shared/Input';
-import Button from '../shared/Button';
-import Tabs from '../shared/Tabs';
+import Modal from '@shared/components/Modal';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
+import Tabs from '@shared/components/Tabs';
 import OpportunityForm from './OpportunityForm';
 import PipelineStagesSettings from './PipelineStagesSettings';
-import InteractionsTab from '../Interaction/InteractionsTab';
-import FilesTab from '../Files/FilesTab';
-import ActivitiesTab from '../../pages/Activities/components/ActivitiesTab';
-import type { Stage, Opportunity } from '../../core/models/Opportunity';
+import InteractionsTab from './InteractionsTab';
+import FilesTab from './FilesTab';
+import { ActivitiesTab } from '@features/activities';
+import type { Stage, Opportunity } from '@core/models/Opportunity';
 
 interface Props {
   // Form modal (create / edit)

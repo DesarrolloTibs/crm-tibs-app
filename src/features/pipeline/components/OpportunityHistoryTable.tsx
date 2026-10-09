@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import type { Opportunity } from '../../core/models/Opportunity';
+import type { Opportunity } from '@core/models/Opportunity';
 import { Edit, Trash2, Archive, ArchiveRestore, Check, X } from 'lucide-react';
-import Table, { type ColumnDef } from '../shared/Table';
+import Table, { type ColumnDef } from '@shared/components/Table';
 
 interface Props {
   opportunities: Opportunity[];

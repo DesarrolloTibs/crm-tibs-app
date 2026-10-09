@@ -4,9 +4,9 @@ import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import PipelineColumn from './PipelineColumn';
 import OpportunityCard from './OpportunityCard';
-import Input from '../shared/Input';
-import Button from '../shared/Button';
-import type { Stage, Opportunity } from '../../core/models/Opportunity';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
+import type { Stage, Opportunity } from '@core/models/Opportunity';
 
 interface Props {
   sensors: ReturnType<typeof useSensors>;

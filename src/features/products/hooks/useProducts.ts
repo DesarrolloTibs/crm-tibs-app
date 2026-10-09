@@ -7,12 +7,12 @@ import {
   updateProductStatus,
   uploadProductCoverImage,
   uploadProductFile,
-} from '../services/productsService';
-import type { Product } from '../core/models/Product';
-import { useConfigStore } from '../store/useConfigStore';
-import useDebounce from './useDebounce';
-import useNotification from './useNotification';
-import type { ProductFiltersState } from '../components/Product/ProductFiltersBar';
+} from '@core/services/productsService';
+import type { Product } from '@core/models/Product';
+import { useConfigStore } from '@/store/useConfigStore';
+import useDebounce from '@shared/hooks/useDebounce';
+import useNotification from '@shared/hooks/useNotification';
+import type { ProductFiltersState } from '../components/ProductFiltersBar';
 
 const INITIAL_FILTERS: ProductFiltersState = {
   nombre: '',

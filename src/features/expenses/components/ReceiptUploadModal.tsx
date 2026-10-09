@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { uploadReceipt, downloadReceipt } from '../../services/expensesService';
+import { uploadReceipt, downloadReceipt } from '@core/services/expensesService';
 import { Paperclip, X, Download } from 'lucide-react';
-import type { Expense } from '../../core/models/Expense';
-import Notification from '../Modal/Notification';
-import Dropzone from '../shared/Dropzone';
-import Button from '../shared/Button';
+import type { Expense } from '@core/models/Expense';
+import Notification from '@shared/components/Notification';
+import Dropzone from '@shared/components/Dropzone';
+import Button from '@shared/components/Button';
 
 interface ReceiptUploadModalProps {
     expense: Expense;

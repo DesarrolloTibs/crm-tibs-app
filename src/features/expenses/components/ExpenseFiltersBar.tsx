@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Filter, XCircle, Calendar } from 'lucide-react';
 import Select, { type SingleValue } from 'react-select';
-import Input from '../shared/Input';
-import Button from '../shared/Button';
-import UnifiedSearchBar, { type SearchBadge } from '../shared/UnifiedSearchBar';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
+import UnifiedSearchBar, { type SearchBadge } from '@shared/components/UnifiedSearchBar';
 
 export interface ExpenseFiltersState {
   concept: string;

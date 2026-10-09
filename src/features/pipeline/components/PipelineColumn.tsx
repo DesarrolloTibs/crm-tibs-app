@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import type { Opportunity, Stage } from '../../core/models/Opportunity';
+import type { Opportunity, Stage } from '@core/models/Opportunity';
 import OpportunityCard from './OpportunityCard';
-import KanbanColumn from '../shared/KanbanColumn';
-import { useAuth } from '../../hooks/useAuth';
+import KanbanColumn from '@shared/components/KanbanColumn';
+import { useAuth } from '@features/auth';
 
 interface Props {
   stage: Stage;

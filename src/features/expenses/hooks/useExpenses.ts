@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { getExpenses, createExpense, updateExpense, deleteExpense } from '../services/expensesService';
-import { getUsers } from '../services/usersService';
-import type { Expense } from '../core/models/Expense';
-import type { User as UserModel } from '../core/models/User';
-import { useConfigStore } from '../store/useConfigStore';
-import useDebounce from './useDebounce';
-import useNotification from './useNotification';
-import type { ExpenseFiltersState } from '../components/Expense/ExpenseFiltersBar';
+import { getExpenses, createExpense, updateExpense, deleteExpense } from '@core/services/expensesService';
+import { getUsers } from '@core/services/usersService';
+import type { Expense } from '@core/models/Expense';
+import type { User as UserModel } from '@core/models/User';
+import { useConfigStore } from '@/store/useConfigStore';
+import useDebounce from '@shared/hooks/useDebounce';
+import useNotification from '@shared/hooks/useNotification';
+import type { ExpenseFiltersState } from '../components/ExpenseFiltersBar';
 
 const INITIAL_FILTERS: ExpenseFiltersState = {
   concept: '',

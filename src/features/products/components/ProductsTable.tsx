@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import type { Product } from '../../core/models/Product';
+import type { Product } from '@core/models/Product';
 import { Edit, Trash2, UserCheck, UserX, Package } from 'lucide-react';
-import Table, { type ColumnDef } from '../shared/Table';
+import Table, { type ColumnDef } from '@shared/components/Table';
 
 interface Props {
   products: Product[];

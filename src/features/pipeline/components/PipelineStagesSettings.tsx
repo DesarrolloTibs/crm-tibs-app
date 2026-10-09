@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { getMainPipeline, updateMainPipeline } from '../../services/pipelinesService';
-import type { Stage } from '../../core/models/Opportunity';
+import { getMainPipeline, updateMainPipeline } from '@core/services/pipelinesService';
+import type { Stage } from '@core/models/Opportunity';
 import { ArrowUp, ArrowDown, Plus, Trash2, Save, Info, Check, Sliders } from 'lucide-react';
-import Notification from '../Modal/Notification';
-import Loader from '../Loader/Loader';
-import Button from '../shared/Button';
+import Notification from '@shared/components/Notification';
+import Loader from '@shared/components/Loader';
+import Button from '@shared/components/Button';
 
 interface Props {
   onSaveSuccess?: () => void;

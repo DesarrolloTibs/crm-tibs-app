@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Filter, XCircle } from 'lucide-react';
 import Select, { type SingleValue } from 'react-select';
-import Button from '../shared/Button';
-import UnifiedSearchBar, { type SearchBadge } from '../shared/UnifiedSearchBar';
+import Button from '@shared/components/Button';
+import UnifiedSearchBar, { type SearchBadge } from '@shared/components/UnifiedSearchBar';
 
 export interface ProductFiltersState {
   nombre: string;
