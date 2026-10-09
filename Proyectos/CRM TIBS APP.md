@@ -114,44 +114,35 @@ graph TD
 
 ```
 src/
-├── assets/                  # Iconografía y recursos estáticos SVG/PNG
-├── components/              # Componentes de interfaz divididos por dominio funcional
-│   ├── Activity/            # Calendario FullCalendar, modales de cita y popovers
-│   ├── ActivityType/        # Ajustes y formularios de tipos cromáticos de actividad
-│   ├── Client/              # Formulario y tabla de contactos de clientes
-│   ├── Company/             # Gestión de empresas B2B
-│   ├── Dashboard/           # Tarjetas KPI, gráficas de ventas y plantilla PDF
-│   ├── Expense/             # Gestión de gastos corporativos y recibos
-│   ├── Files/               # Pestaña de archivos adjuntos
-│   ├── Helpdesk/            # Tablero Kanban de soporte, cron de SLAs y detalle de ticket
-│   ├── Interaction/         # Bitácora de seguimiento de oportunidades
-│   ├── Layout/              # Contenedor con barra lateral y superior unificada
-│   ├── Loader/              # Indicadores visuales de carga de página
-│   ├── Login/               # Pantallas de bienvenida, formulario y webchat público
-│   ├── Modal/               # Modales de confirmación y notificaciones
-│   ├── Navbar/              # Barra superior con selector de tenant, decoraciones estacionales
-│   ├── OpportunityLabel/    # Etiquetas comerciales personalizadas
-│   ├── Pipeline/            # Tablero comercial, tarjetas de trato y filtros avanzados
-│   ├── Product/             # Catálogo de productos y notas para el agente de IA
-│   ├── Reminder/            # Recordatorios de seguimiento comercial
-│   ├── Settings/            # Pestañas de configuración, OAuth de calendarios y planes
-│   ├── shared/              # Sistema de diseño (Button, Input, Table, Dropzone, Tabs, Modal)
-│   ├── Sidebar/             # Menú de navegación principal con animaciones colapsables
-│   ├── User/                # Formularios de alta y administración de ejecutivos
-│   └── WebChat/             # Centro de mensajería omnicanal y simulador de prospectos
-├── core/                    # Núcleo de la aplicación
-│   ├── axios/               # Instancia singleton e interceptores request/response
-│   ├── guards/              # ProtectedRoute y validaciones de rol de acceso
-│   └── models/              # Modelos TypeScript e interfaces de negocio
-├── global/                  # Definición centralizada de endpoints REST (`endpoints.ts`)
-├── hooks/                   # 13 custom hooks de lógica de negocio y tiempo real
-├── pages/                   # 15 vistas de ruta principales
-├── services/                # 23 clientes de servicio HTTP organizados por dominio
-├── store/                   # Estado global liviano (`useConfigStore.ts`)
-└── utils/                   # Utilidades de formateo de moneda, fechas y renderizado de chat
+├── app/                     # Capa de aplicación y Shell
+│   ├── layout/              # Layout principal, Navbar, Sidebar, ConsumptionInfoPopover
+│   ├── App.tsx              # Configuración limpia de rutas React Router DOM
+│   └── main.tsx             # Entry point de Vite
+├── features/                # 💼 Módulos de dominio de negocio autónomos (Vertical Slices)
+│   ├── activities/          # Agenda, Calendario FullCalendar y tipos de actividades
+│   ├── auth/                # Login, recuperación de credenciales y hooks de sesión
+│   ├── conversations/       # Chat omnicanal en tiempo real, WebChat e integración IA
+│   ├── crm/                 # Gestión unificada de clientes (contactos) y empresas B2B
+│   ├── dashboard/           # Analítica ejecutiva, KPIs, gráficas y plantillas PDF
+│   ├── expenses/            # Gastos corporativos, comprobantes y filtros
+│   ├── helpdesk/            # Mesa de ayuda, SLAs, cron de helpdesk y portal público
+│   ├── pipeline/            # Embudo comercial, Kanban, modales, cotizaciones y tratos
+│   ├── products/            # Catálogo de productos, fichas técnicas y notas IA
+│   ├── settings/            # Centro de configuración SaaS, tenants y canales IA
+│   └── users/               # Administración de ejecutivos comerciales y roles
+├── shared/                  # 🛠️ Sistema compartido transversal y agnóstico al negocio
+│   ├── components/          # UI Kit (Button, Input, Modal, Dropzone, TanStack Table)
+│   ├── hooks/               # Custom hooks utilitarios (useDebounce, useNotification)
+│   └── utils/               # Formateadores monetarios y notificaciones toast
+├── core/                    # 🏛️ Infraestructura, seguridad y servicios centralizados
+│   ├── axios/               # Instancia singleton e interceptores de esquema/token
+│   ├── guards/              # ProtectedRoute y guardias de rol
+│   ├── models/              # Modelos TypeScript de datos de negocio
+│   ├── services/            # 23 clientes HTTP centralizados para toda la app
+│   └── socket/              # Gestor de conexiones WebSockets con Socket.IO
+├── store/                   # Almacén reactivo de tenant activo (`useConfigStore.ts`)
+└── global/                  # Diccionario central de endpoints REST (`endpoints.ts`)
 ```
-
----
 
 ## ⚙️ Variables de Entorno y Proxy en Desarrollo
 

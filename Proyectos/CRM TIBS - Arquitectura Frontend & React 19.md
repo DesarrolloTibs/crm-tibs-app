@@ -7,13 +7,13 @@ tags:
   - "#vite7"
   - "#typescript"
   - "#pwa"
-date: 2026-09-08
+date: 2026-10-09
 status: produccion
 ---
 
 # 🏗️ CRM TIBS — Arquitectura Frontend & React 19
 
-Este documento describe la arquitectura modular, el ciclo de vida de empaquetado con **Vite 7**, el uso de **React 19** y los patrones de gestión de estado que estructuran el frontend de **CRM TIBS App**.
+Este documento describe la arquitectura modular basada en características (**Feature-Driven Modular Architecture**), el ciclo de vida de empaquetado con **Vite 7**, el uso de **React 19** y los patrones de gestión de estado que estructuran el frontend de **CRM TIBS App**.
 
 ---
 
@@ -21,22 +21,38 @@ Este documento describe la arquitectura modular, el ciclo de vida de empaquetado
 
 ```mermaid
 flowchart TD
-    subgraph CapaPresentacion ["🎨 Capa de Presentación (UI)"]
-        Pages["📄 Páginas de Ruta (`src/pages/`)"]
-        Components["🧩 Componentes de Dominio (`src/components/`)"]
-        Shared["🛠️ Sistema Compartido (`src/components/shared/`)"]
+    subgraph CapaApp ["🚀 Capa de Aplicación (`src/app/`)"]
+        AppRoot["Raíz (`App.tsx`, `main.tsx`)"]
+        Layout["App Shell (`src/app/layout/`)"]
     end
 
-    subgraph CapaEstado ["🧠 Capa de Estado & Hooks"]
-        Hooks["🎣 Custom Hooks (`src/hooks/`)"]
-        Store["📦 Config Store (`src/store/useConfigStore.ts`)"]
-        AuthHook["🔐 Auth Hook (`src/hooks/useAuth.ts`)"]
+    subgraph CapaFeatures ["💼 Capa de Módulos de Negocio (`src/features/`)"]
+        AuthFeat["🔐 auth"]
+        PipeFeat["📊 pipeline"]
+        HelpFeat["🎫 helpdesk"]
+        CrmFeat["👥 crm (Clients & Companies)"]
+        ActFeat["📅 activities"]
+        ChatFeat["💬 conversations (WebChat & IA)"]
+        DashFeat["📈 dashboard"]
+        ProdFeat["📦 products"]
+        ExpFeat["💰 expenses"]
+        UserFeat["👤 users"]
+        SettFeat["⚙️ settings"]
     end
 
-    subgraph CapaTransporte ["🌐 Capa de Transporte & Red"]
-        Services["📡 Servicios HTTP (`src/services/`)"]
+    subgraph CapaShared ["🛠️ Capa Reutilizable Transversal (`src/shared/`)"]
+        SharedUI["🎨 UI Kit (`src/shared/components/`)"]
+        SharedHooks["🎣 Hooks Comunes (`src/shared/hooks/`)"]
+        SharedUtils["🧮 Utilidades (`src/shared/utils/`)"]
+    end
+
+    subgraph CapaCore ["🏛️ Núcleo y Servicios Centralizados (`src/core/`)"]
+        Services["📡 Servicios HTTP (`src/core/services/`)"]
         Axios["⚙️ Axios Instance + Interceptors (`src/core/axios/`)"]
-        Sockets["⚡ Socket.IO Client (`/conversations`)"]
+        Guards["🛡️ ProtectedRoute (`src/core/guards/`)"]
+        Models["📋 Modelos & Interfaces (`src/core/models/`)"]
+        Sockets["⚡ Socket.IO Client (`src/core/socket/`)"]
+        Store["📦 Config Store (`src/store/`)"]
     end
 
     subgraph Backend ["🏢 Backend NestJS (Puerto 3091)"]
@@ -44,52 +60,71 @@ flowchart TD
         WSGateway["WebSocket Gateway (`/socket.io`)"]
     end
 
-    Pages --> Components
-    Components --> Shared
-    Pages --> Hooks
-    Components --> Hooks
-
-    Hooks --> Store
-    Hooks --> AuthHook
-    Hooks --> Services
-    Hooks --> Sockets
+    AppRoot --> Layout
+    AppRoot --> CapaFeatures
+    CapaFeatures --> SharedUI
+    CapaFeatures --> SharedHooks
+    CapaFeatures --> SharedUtils
+    CapaFeatures --> Services
+    CapaFeatures --> Models
+    CapaFeatures --> Store
+    CapaFeatures --> Sockets
 
     Services --> Axios
     Axios --> API
     Sockets --> WSGateway
 
-    classDef ui fill:#1e40af,stroke:#60a5fa,color:#fff;
-    classDef state fill:#0f766e,stroke:#2dd4bf,color:#fff;
-    classDef net fill:#3730a3,stroke:#818cf8,color:#fff;
-    classDef bnd fill:#334155,stroke:#94a3b8,color:#fff;
+    classDef app fill:#1e3a8a,stroke:#3b82f6,color:#fff;
+    classDef feat fill:#0f766e,stroke:#2dd4bf,color:#fff;
+    classDef shared fill:#3730a3,stroke:#818cf8,color:#fff;
+    classDef core fill:#334155,stroke:#94a3b8,color:#fff;
+    classDef bnd fill:#701a75,stroke:#d946ef,color:#fff;
 
-    class Pages,Components,Shared ui;
-    class Hooks,Store,AuthHook state;
-    class Services,Axios,Sockets net;
+    class AppRoot,Layout app;
+    class AuthFeat,PipeFeat,HelpFeat,CrmFeat,ActFeat,ChatFeat,DashFeat,ProdFeat,ExpFeat,UserFeat,SettFeat feat;
+    class SharedUI,SharedHooks,SharedUtils shared;
+    class Services,Axios,Guards,Models,Sockets,Store core;
     class API,WSGateway bnd;
 ```
 
 ---
 
-## 🧩 1. Organización Modular por Capas
+## 🧩 1. Organización Modular por Características (Vertical Slices)
 
-La aplicación está diseñada bajo el principio de separación de responsabilidades:
+La aplicación implementa una **arquitectura modular orientada al dominio**, eliminando la dispersión horizontal y garantizando alta cohesión:
 
-1. **`src/pages/` (Vistas de Ruta):**
-   * Actúan como orquestadores de alto nivel.
-   * Conectan la URL con los hooks de dominio y renderizan el diseño estructural provisto por [`Layout.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Layout/Layout.tsx).
-2. **`src/components/` (Componentes de Dominio):**
-   * Agrupados por contexto (`Activity`, `Company`, `Client`, `Dashboard`, `Expense`, `Helpdesk`, `Pipeline`, `Product`, `Settings`, `User`, `WebChat`).
-   * No realizan peticiones `axios` directamente; delegan los eventos hacia props o consumen hooks.
-3. **`src/components/shared/` (Sistema de Diseño Reusable):**
-   * Primitivas agnósticas al negocio: botones, inputs, tablas con paginador, diálogos modales, stepper de etapas y zona de carga `Dropzone`.
-4. **`src/hooks/` (Lógica de Negocio y Reactividad):**
-   * Encapsulan estados locales, efectos, suscripciones WebSocket, temporizadores y llamadas a servicios.
-   * Previenen cierres obsoletos (*stale closures*) en llamadas asíncronas mediante el uso intensivo de `useRef` (e.g. en [`useConversationsSocket.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useConversationsSocket.ts)).
-5. **`src/services/` (Clientes de Red Tipados):**
-   * Colección de 23 módulos de funciones asíncronas que consumen `axiosInstance` y devuelven modelos TypeScript limpios.
-6. **`src/store/` (Almacén de Configuración Global):**
-   * [`useConfigStore.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/store/useConfigStore.ts) implementa un patrón **Observable / Pub-Sub** liviano para almacenar el tenant activo seleccionado por el usuario y la lista de inquilinos accesibles.
+1. **`src/app/` (Capa de Aplicación y Shell):**
+   * Contiene el punto de entrada, configuración de rutas y el Layout unificado (`src/app/layout/` con `Sidebar`, `Navbar`, menús estacionales y contenedor principal).
+2. **`src/features/` (Módulos de Negocio Autónomos):**
+   * Cada módulo encapsula sus componentes, hooks, páginas de ruta y utilidades específicas:
+     * `auth/`: Login, recuperación de contraseña, cambio de credenciales y `useAuth`.
+     * `pipeline/`: Tablero Kanban comercial, modales de oportunidades, cotizaciones, archivos e interacciones.
+     * `helpdesk/`: Mesa de ayuda, SLAs, cron de helpdesk y portal de tickets público.
+     * `crm/`: Gestión unificada de clientes (contactos) y empresas B2B.
+     * `activities/`: Agenda operativa, calendario FullCalendar y tipos de actividades.
+     * `conversations/`: Centro omnicanal de mensajería en vivo, WhatsApp Cloud API y WebChat con IA.
+     * `dashboard/`: Analítica ejecutiva, gráficas comparativas, indicadores KPI y exportación PDF/Excel.
+     * `products/`: Catálogo de productos, fichas técnicas y notas contextuales para IA.
+     * `expenses/`: Registro y control de gastos corporativos y comprobantes.
+     * `users/`: Administración de ejecutivos comerciales, avatares y control de roles.
+     * `settings/`: Centro de configuración SaaS, tenants multi-empresa, planes y canales de IA.
+   * Cada feature expone un barril público canónico (`index.ts`) para proteger sus fronteras internas.
+3. **`src/shared/` (Componentes y Utilidades Agnósticas al Negocio):**
+   * `components/`: UI Kit modular (`Button`, `Input`, `Select`, `Modal`, `Dropzone`, suite TanStack `Table`, etc.).
+   * `hooks/`: Hooks transversales agnósticos (`useDebounce`, `useNotification`, `useFormValidation`).
+   * `utils/`: Utilidades generales (`formatters.ts` para MXN/USD y fechas, `toast.ts` para alertas).
+4. **`src/core/` (Servicios Centralizados e Infraestructura):**
+   * `services/`: Los 23 clientes HTTP centralizados para toda la aplicación.
+   * `axios/`: Instancia singleton de Axios con inyección dinámica del Bearer Token y cabecera `x-tenant-schema`.
+   * `guards/`: `ProtectedRoute` y guardias de navegación por rol.
+   * `models/`: Contratos de interfaces TypeScript de entidades globales.
+   * `socket/`: Gestor base de conexiones Socket.IO.
+5. **Path Aliases Tipados:**
+   * `@/*` $\rightarrow$ `src/*`
+   * `@app/*` $\rightarrow$ `src/app/*`
+   * `@features/*` $\rightarrow$ `src/features/*`
+   * `@shared/*` $\rightarrow$ `src/shared/*`
+   * `@core/*` $\rightarrow$ `src/core/*`
 
 ---
 
@@ -97,56 +132,25 @@ La aplicación está diseñada bajo el principio de separación de responsabilid
 
 ### Adopción de React 19:
 * **Mejoras en el motor de renderizado:** React 19 (`19.1.1`) optimiza el reconciliador de árbol virtual eliminando costos de re-renderizado innecesarios en listas largas de oportunidades y tablas de tickets.
-* **Transiciones y renderizado concurrente:** Permite mantener responsiva la interfaz mientras se realizan cálculos complejos de filtros o agrupaciones de fechas en [`useDashboard.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useDashboard.ts).
+* **Transiciones y renderizado concurrente:** Permite mantener responsiva la interfaz mientras se realizan cálculos complejos de filtros o agrupaciones de fechas.
 
 ### Configuración de Vite 7 (`vite.config.ts`):
 * **Hot Module Replacement:** Tiempos de recarga en caliente inferiores a 50ms durante desarrollo.
 * **Proxy Transparente:** Redirección de `/api`, `/socket.io` y `/uploads` al backend para evitar problemas de CORS en local.
 * **Soporte PWA Integral (`vite-plugin-pwa`):**
-  * `registerType: 'prompt'`: Actualización interactiva controlada del service worker. Cuando se detecta una nueva compilación, se mantiene en espera sin interrumpir al usuario y se despliega la notificación interactiva [`PwaUpdateNotification`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/PwaUpdateNotification.tsx) para recargar a demanda sin pérdida de datos.
+  * `registerType: 'prompt'`: Actualización interactiva controlada del service worker. Cuando se detecta una nueva compilación, se despliega la notificación interactiva `PwaUpdateNotification`.
   * Manifiesto PWA completo con iconos `180x180`, `192x192` y `512x512`.
   * Caché de Workbox con límite de tamaño de hasta 5 MB (`maximumFileSizeToCacheInBytes: 5 * 1024 * 1024`).
-  * Verificación periódica (cada 30 minutos) y proactiva ante reactivación de app (`visibilitychange` / `window.focus`).
 
 ---
 
 ## 🔄 3. Patrón de Gestión de Estado y Eventos
 
-En lugar de requerir librerías pesadas como Redux, CRM TIBS utiliza una estrategia equilibrada de 3 niveles:
+En lugar de requerir librerías pesadas como Redux, CRM TIBS utiliza una estrategia equilibrada:
 
-```mermaid
-sequenceDiagram
-    participant Navbar as Navbar / TenantSelector
-    participant ConfigStore as configStore (Pub/Sub)
-    participant Axios as Interceptor Axios
-    participant Hook as usePipeline / useActivities
-    participant Backend as Backend NestJS
-
-    Navbar->>ConfigStore: setSelectedTenant({ schema_name: 'acme_corp' })
-    ConfigStore-->>Axios: getSelectedTenant() -> 'acme_corp'
-    ConfigStore-->>Hook: Notifica a suscriptores reactivos
-    Hook->>Axios: getOpportunities()
-    Axios->>Backend: GET /api/opportunities [x-tenant-schema: acme_corp]
-    Backend-->>Axios: 200 OK (Datos del esquema acme_corp)
-    Axios-->>Hook: Actualiza estado local de oportunidades
-```
-
-1. **Estado de Sesión:** `localStorage` para tokens JWT decodificados al vuelo mediante [`useAuth.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useAuth.ts).
-2. **Estado de Tenant Activo:** `configStore` con persistencia en `localStorage.getItem('selected_tenant')`.
-3. **Eventos Desacoplados:** `window.dispatchEvent(new CustomEvent('settingsTabChanged'))` para comunicación entre componentes hermanos en la pantalla de configuración sin prop-drilling.
-
----
-
-## 📦 4. Librerías de Componentes y Utilidades Clave
-
-| Librería | Versión | Uso Concreto |
-| :--- | :--- | :--- |
-| `@tanstack/react-table` | 8.21.3 | Motor headless para tablas complejas con soporte para ordenamiento multi-columna, filtros, modo tarjetas (`cards`), modo plano (`flat`), acordeón responsive (`hideOnMobile`) y paginador desacoplado. Encapsulado en la suite modular `Table` (`src/components/shared/Table/`), consumida de forma 100% homologada en Pipeline, Helpdesk, Actividades, Clientes (Empresas/Contactos), Productos, Gastos, Usuarios y módulos de Configuración. |
-| `yup` | 1.7.1 | Validación declarativa de esquemas de formularios. Se usa para verificar integridad de datos antes de enviarlos al backend (e.g., cotizaciones, configuración de canales, usuarios, clientes). |
-| `react-select` | 5.10.2 | Selects ricos con búsqueda asistida, multi-valor y temas personalizados. Usado extensivamente en filtros de Pipeline, formularios de CRM y panel de configuración. |
-| `jwt-decode` | 4.0.0 | Decodificación client-side del payload del JWT de sesión para extraer `userId`, `tenantId`, `role` y `exp` sin roundtrip al servidor. Consumido en `useAuth.ts`. |
-| `xlsx` | 0.18.5 | Generación de archivos `.xlsx` para exportación de historial de interacciones, reporte de cortesías, pipeline y otras tablas de datos. Complementario a jsPDF para flujos con preferencia a hoja de cálculo. |
-| `react-confetti-boom` | 2.0.1 | Efecto de confeti celebratorio ante eventos positivos de negocio (e.g., cierre de trato ganado, logros comerciales clave). |
+1. **Estado de Sesión:** `localStorage` para tokens JWT decodificados al vuelo mediante `@features/auth`.
+2. **Estado de Tenant Activo:** `configStore` (`src/store/useConfigStore.ts`) con persistencia en `localStorage.getItem('selected_tenant')` y sincronización reactiva con interceptores Axios.
+3. **Eventos Desacoplados:** Canales de comunicación reactivos y `BroadcastChannel` para sincronización inter-pestañas.
 
 ---
 
