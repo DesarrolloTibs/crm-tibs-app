@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '@features/auth';
 import { Users, Briefcase, BarChart3, LogOut, ClipboardList, DollarSign, Settings, Package, LifeBuoy, LayoutDashboard, MessageSquare } from 'lucide-react';
 
 interface Props {

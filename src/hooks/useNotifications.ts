@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
 import type { NotificationItem } from '../core/models/Notification';
-import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../services/notificationsService';
+import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@core/services/notificationsService';
 import { useAuth } from './useAuth';
 
 export const useNotifications = () => {

@@ -1,24 +1,20 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import ClientsPage from './pages/Clients';
-import PipelinePage from './pages/PipelinePage';
-import UsersPage from './pages/UsersPage';
-import ProtectedRoute from './core/guards/ProtectedRoute';
-import Layout from './components/Layout/Layout'; // Importar el Layout
-import './components/Sidebar/animations.css'; // Importar los estilos globales
-import ActivitiesPage from './pages/Activities';
-import ExpensesPage from './pages/ExpensesPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import SettingsPage from './pages/Settings/SettingsPage';
-import ProductsPage from './pages/ProductsPage';
-import HelpdeskPage from './pages/HelpdeskPage';
-import SupportTicketPage from './pages/SupportTicketPage';
-import DashboardPage from './pages/DashboardPage';
-import ConversationsPage from './pages/ConversationsPage';
-import OAuthCallbackPopup from './pages/Settings/AiAgentChannels/components/OAuthCallbackPopup';
-import PwaUpdateNotification from './components/shared/PwaUpdateNotification';
+import ProtectedRoute from '@core/guards/ProtectedRoute';
+import { Layout } from '@app/layout';
+import '@app/layout/sidebar/animations.css';
+import { PwaUpdateNotification } from '@shared/components';
+import { LoginPage, ForgotPasswordPage, ResetPasswordPage } from '@features/auth';
+import { ClientsPage } from '@features/crm';
+import { PipelinePage } from '@features/pipeline';
+import { UsersPage } from '@features/users';
+import { ActivitiesPage } from '@features/activities';
+import { ExpensesPage } from '@features/expenses';
+import { ProductsPage } from '@features/products';
+import { HelpdeskPage, SupportTicketPage } from '@features/helpdesk';
+import { DashboardPage } from '@features/dashboard';
+import { ConversationsPage } from '@features/conversations';
+import { SettingsPage, OAuthCallbackPopup } from '@features/settings';
 
 const isOAuthPopup = typeof window !== 'undefined' && (
     window.location.search.includes('meta_oauth') ||

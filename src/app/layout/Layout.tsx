@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Sidebar from '../Sidebar/Sidebar';
-import Navbar from '../Navbar/Navbar';
-import WebChat from '../WebChat/WebChat';
-import { useConfigStore } from '../../store/useConfigStore';
+import Sidebar from './sidebar/Sidebar';
+import Navbar from './navbar/Navbar';
+import { WebChat } from '@features/conversations';
+import { useConfigStore } from '@/store/useConfigStore';
 
 interface Props {
     children: React.ReactNode;

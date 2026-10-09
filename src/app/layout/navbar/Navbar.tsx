@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { useConfigStore } from '../../store/useConfigStore';
+import { useAuth } from '@features/auth';
+import { useConfigStore } from '@/store/useConfigStore';
 import { Menu, X } from 'lucide-react';
 import SeasonalContainer from './Season/SeasonalContainer';
 import NotificationBell from './NotificationBell';
 import TenantSelector from './TenantSelector';
 import ConsumptionInfoPopover from './ConsumptionInfoPopover';
-import { getTenantConsumption } from '../../services/tenantsService';
+import { getTenantConsumption } from '@core/services/tenantsService';
 
 interface Props {
     toggleSidebar: () => void;

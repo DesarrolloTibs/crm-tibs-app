@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Building2, ChevronDown, Check, Lock } from 'lucide-react';
-import { useConfigStore, configStore } from '../../store/useConfigStore';
-import { getTenants } from '../../services/tenantsService';
+import { useConfigStore, configStore } from '@/store/useConfigStore';
+import { getTenants } from '@core/services/tenantsService';
 
 interface Props {
   activeTab?: string;

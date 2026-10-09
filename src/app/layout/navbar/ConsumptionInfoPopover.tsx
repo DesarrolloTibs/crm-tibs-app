@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Info, Box, Database, Zap } from 'lucide-react';
-import { createAppSocket, safeDisconnect } from '../../core/socket/socketClient';
-import { useConfigStore } from '../../store/useConfigStore';
-import { getTenantConsumption } from '../../services/tenantsService';
-import type { TenantConsumptionData } from '../../services/tenantsService';
+import { createAppSocket, safeDisconnect } from '@core/socket/socketClient';
+import { useConfigStore } from '@/store/useConfigStore';
+import { getTenantConsumption } from '@core/services/tenantsService';
+import type { TenantConsumptionData } from '@core/services/tenantsService';
 
 const ConsumptionInfoPopover: React.FC = () => {
   const { selectedTenant } = useConfigStore();

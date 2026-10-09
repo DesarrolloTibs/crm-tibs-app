@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, AlertTriangle, Briefcase, Calendar, Info, MessageSquare } from 'lucide-react';
-import { useNotifications } from '../../hooks/useNotifications';
-import type { NotificationItem } from '../../core/models/Notification';
+import { useNotifications } from '@/hooks/useNotifications';
+import type { NotificationItem } from '@core/models/Notification';
 
 const NotificationBell: React.FC = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
