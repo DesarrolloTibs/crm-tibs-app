@@ -7,13 +7,15 @@ tags:
   - "#vite7"
   - "#typescript"
   - "#pwa"
+  - "#performance"
+  - "#lazy-loading"
 date: 2026-10-09
 status: produccion
 ---
 
 # 🏗️ CRM TIBS — Arquitectura Frontend & React 19
 
-Este documento describe la arquitectura modular basada en características (**Feature-Driven Modular Architecture**), el ciclo de vida de empaquetado con **Vite 7**, el uso de **React 19** y los patrones de gestión de estado que estructuran el frontend de **CRM TIBS App**.
+Este documento describe la arquitectura modular basada en características (**Feature-Driven Modular Architecture**), el ciclo de vida de empaquetado con **Vite 7**, el uso de **React 19**, las estrategias de **Lazy Loading / Code-Splitting** y los patrones de gestión de estado que estructuran el frontend de **CRM TIBS App**.
 
 ---
 
@@ -140,11 +142,38 @@ La aplicación implementa una **arquitectura modular orientada al dominio**, eli
 * **Soporte PWA Integral (`vite-plugin-pwa`):**
   * `registerType: 'prompt'`: Actualización interactiva controlada del service worker. Cuando se detecta una nueva compilación, se despliega la notificación interactiva `PwaUpdateNotification`.
   * Manifiesto PWA completo con iconos `180x180`, `192x192` y `512x512`.
-  * Caché de Workbox con límite de tamaño de hasta 5 MB (`maximumFileSizeToCacheInBytes: 5 * 1024 * 1024`).
+  * Caché de Workbox optimizado.
 
 ---
 
-## 🔄 3. Patrón de Gestión de Estado y Eventos
+## 🚀 3. Code Splitting, Lazy Loading & Optimización de Chunks
+
+Para evitar la descarga de un bundle monolítico inicial que sobrepasaba los 2.8 MB, la aplicación implementa una estrategia de carga diferida en tres niveles:
+
+### A. Route-Level Code Splitting (`React.lazy` + `<Suspense />`):
+En [`src/App.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/App.tsx), todas las vistas de ruta se cargan bajo demanda:
+* **Rutas Públicas / Auth:** `LoginPage`, `ForgotPasswordPage`, `ResetPasswordPage`, `SupportTicketPage` y `OAuthCallbackPopup`. Un usuario no autenticado descarga un chunk de solo ~16 kB.
+* **Rutas Protegidas:** `DashboardPage`, `PipelinePage`, `ClientsPage`, `ActivitiesPage`, `HelpdeskPage`, `ConversationsPage`, `ExpensesPage`, `ProductsPage`, `UsersPage` y `SettingsPage`.
+* **Shell Estable (Zero-Flicker):** El contenedor principal [`src/app/layout/Layout.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/app/layout/Layout.tsx) envuelve su contenido `children` en un `<Suspense fallback={<Loader className="h-64" size="lg" />}>`. Esto garantiza que la navegación entre páginas no destruya ni haga parpadear el `Navbar` o el `Sidebar`.
+
+### B. Segmentación de Vendors en Vite (`manualChunks`):
+En [`vite.config.ts`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/vite.config.ts), se definen particiones manuales en Rollup para librerías de terceros con ciclos de actualización independientes:
+* `vendor-calendar`: Paquetes de FullCalendar (`@fullcalendar/core`, `@fullcalendar/react`, `@fullcalendar/daygrid`, etc. ~268 kB). Solo se descarga al abrir la Agenda/Calendario.
+* `vendor-dnd`: Paquetes de Drag & Drop (`@dnd-kit/core`, `@dnd-kit/sortable` ~51 kB).
+* `vendor-table`: Paquete de `@tanstack/react-table` (~59 kB).
+* `vendor-xlsx`: Motor de hojas de cálculo `xlsx` (~429 kB), aislado completamente.
+
+### C. Importaciones Dinámicas Bajo Demanda:
+Las librerías analíticas y de exportación pesadas (como `xlsx`) no se cargan al montar módulos, sino mediante `const XLSX = await import('xlsx')` dentro de los handlers de exportación en `exportCourtesy.utils.ts` y `exportHistory.utils.ts`.
+
+#### 📊 Resultado de Optimización:
+* **Bundle inicial:** Reducido de **2,859.40 kB (2.86 MB)** a **495.10 kB** (**-82.7% de reducción** en carga inicial).
+* **Chunk de Login:** Reducido a **16.14 kB** (5.65 kB gzipped).
+* **Eliminación de advertencias:** Cero advertencias de Rollup por chunks superiores a 500 kB.
+
+---
+
+## 🔄 4. Patrón de Gestión de Estado y Eventos
 
 En lugar de requerir librerías pesadas como Redux, CRM TIBS utiliza una estrategia equilibrada:
 
