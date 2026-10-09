@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Sliders, Save, Sparkles } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
-import Select from '../../../../components/shared/Select';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
+import Select from '@shared/components/Select';
 import type {
   GlobalAiConfig,
   GlobalAiParametersFormData,

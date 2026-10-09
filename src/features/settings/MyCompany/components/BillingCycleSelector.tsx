@@ -2,9 +2,9 @@ import React from 'react';
 import {
   Calendar, Clock, Sparkles, RefreshCw, Search
 } from 'lucide-react';
-import Badge from '../../../../components/shared/Badge';
-import Button from '../../../../components/shared/Button';
-import UnifiedSearchBar, { type SearchBadge } from '../../../../components/shared/UnifiedSearchBar';
+import Badge from '@shared/components/Badge';
+import Button from '@shared/components/Button';
+import UnifiedSearchBar, { type SearchBadge } from '@shared/components/UnifiedSearchBar';
 import type { TenantBillingCycle, TenantConsumptionData, CycleSelectOption } from '../schemas/myCompany.schema';
 import { formatCycleDate } from '../utils/myCompany.helpers';
 

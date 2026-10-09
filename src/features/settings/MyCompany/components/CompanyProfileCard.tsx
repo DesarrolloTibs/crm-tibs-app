@@ -3,11 +3,11 @@ import {
   Building2, Upload, CheckCircle2, Image as ImageIcon,
   Lightbulb, ShieldCheck, Database
 } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
-import Badge from '../../../../components/shared/Badge';
+import Button from '@shared/components/Button';
+import Badge from '@shared/components/Badge';
 import type { TenantConsumptionData } from '../schemas/myCompany.schema';
-import { uploadTenantLogo } from '../../../../services/tenantsService';
-import { useConfigStore } from '../../../../store/useConfigStore';
+import { uploadTenantLogo } from '@core/services/tenantsService';
+import { useConfigStore } from '@/store/useConfigStore';
 
 interface CompanyProfileCardProps {
   consumption: TenantConsumptionData | null;

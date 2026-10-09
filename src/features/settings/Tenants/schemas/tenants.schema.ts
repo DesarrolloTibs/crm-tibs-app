@@ -1,12 +1,12 @@
 import * as yup from 'yup';
-import type { TenantPlanInfo } from '../../../../store/useConfigStore';
-import type { Plan } from '../../../../services/plansService';
+import type { TenantPlanInfo } from '@/store/useConfigStore';
+import type { Plan } from '@core/services/plansService';
 import type {
   ProvisionTenantPayload,
   RenewalQueueResponse,
   RenewalQueueItem,
   UpdateTenantPlanPayload,
-} from '../../../../services/tenantsService';
+} from '@core/services/tenantsService';
 
 export type {
   TenantPlanInfo,

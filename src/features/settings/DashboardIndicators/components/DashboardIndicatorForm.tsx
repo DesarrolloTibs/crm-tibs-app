@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import type { DashboardIndicator, DashboardIndicatorFormData } from '../schemas/dashboardIndicators.schema';
 import { validateIndicatorForm, COLOR_OPTIONS } from '../utils/dashboardIndicators.helpers';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
-import Select from '../../../../components/shared/Select';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
+import Select from '@shared/components/Select';
 import { LayoutDashboard, AlertCircle, Check, CheckSquare, Square } from 'lucide-react';
 
 interface DashboardIndicatorFormProps {

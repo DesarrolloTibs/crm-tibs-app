@@ -1,14 +1,14 @@
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useConversationsSocket } from '../hooks/useConversationsSocket';
-import Loader from '../components/shared/Loader';
-import EmptyState from '../components/shared/EmptyState';
-import Notification from '../components/shared/Notification';
-import ChatListSidebar from '../components/WebChat/ChatListSidebar';
-import ChatWindowHeader from '../components/WebChat/ChatWindowHeader';
-import MessageFeed from '../components/WebChat/MessageFeed';
-import MessageInputBar from '../components/WebChat/MessageInputBar';
-import WhatsAppTemplateSelectorModal from '../components/WebChat/WhatsAppTemplateSelectorModal';
+import Loader from '@shared/components/Loader';
+import EmptyState from '@shared/components/EmptyState';
+import Notification from '@shared/components/Notification';
+import ChatListSidebar from '../components/ChatListSidebar';
+import ChatWindowHeader from '../components/ChatWindowHeader';
+import MessageFeed from '../components/MessageFeed';
+import MessageInputBar from '../components/MessageInputBar';
+import WhatsAppTemplateSelectorModal from '../components/WhatsAppTemplateSelectorModal';
 import { getWhatsAppWindowStatus } from '../utils/messageUtils';
 
 const ConversationsPage: React.FC = () => {

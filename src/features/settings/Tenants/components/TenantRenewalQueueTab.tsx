@@ -9,8 +9,8 @@ import {
   Trash2,
   ArrowRight,
 } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
-import Select from '../../../../components/shared/Select';
+import Button from '@shared/components/Button';
+import Select from '@shared/components/Select';
 import type {
   TenantPlanInfo,
   Plan,

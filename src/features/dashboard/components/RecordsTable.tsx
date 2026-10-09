@@ -1,12 +1,12 @@
 import React from 'react';
 import { ClipboardList, Search, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { Opportunity } from '../../core/models/Opportunity';
-import type { Ticket } from '../../core/models/Ticket';
-import type { ActiveTab, CurrencyFilter } from '../../hooks/useDashboard';
-import { formatCurrency } from '../../utils/formatters';
-import EmptyState from '../shared/EmptyState';
-import Button from '../shared/Button';
+import type { Opportunity } from '@core/models/Opportunity';
+import type { Ticket } from '@core/models/Ticket';
+import type { ActiveTab, CurrencyFilter } from '../hooks/useDashboard';
+import { formatCurrency } from '@shared/utils/formatters';
+import EmptyState from '@shared/components/EmptyState';
+import Button from '@shared/components/Button';
 
 interface RecordsTableProps {
   activeTab: ActiveTab;

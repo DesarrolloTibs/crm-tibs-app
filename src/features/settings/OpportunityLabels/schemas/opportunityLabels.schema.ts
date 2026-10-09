@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import type { OpportunityLabel } from '../../../../core/models/OpportunityLabel';
+import type { OpportunityLabel } from '@core/models/OpportunityLabel';
 
 export type { OpportunityLabel };
 

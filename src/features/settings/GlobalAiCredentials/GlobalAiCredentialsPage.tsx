@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { KeyRound, RefreshCw } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Button from '../../../components/shared/Button';
-import ConfirmModal from '../../../components/shared/ConfirmModal';
-import Notification from '../../../components/shared/Notification';
-import Loader from '../../../components/Loader/Loader';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Button from '@shared/components/Button';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Notification from '@shared/components/Notification';
+import Loader from '@shared/components/Loader';
 
 // Subcomponentes Modulares de Credenciales LLM Global
 import { GlobalAiStatsBanner } from './components/GlobalAiStatsBanner';
@@ -36,7 +36,7 @@ import {
 import {
   getAiAgentConfig,
   saveAiAgentConfig,
-} from '../../../services/conversationsService';
+} from '@core/services/conversationsService';
 
 export const GlobalAiCredentialsPage: React.FC = () => {
   // Estado de configuración cruda de la API

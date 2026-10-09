@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Building2, Plus, RefreshCw } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Button from '../../../components/shared/Button';
-import ConfirmModal from '../../../components/shared/ConfirmModal';
-import Notification from '../../../components/shared/Notification';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Button from '@shared/components/Button';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Notification from '@shared/components/Notification';
 
 // Subcomponentes Modulares de Gestión de Organizaciones
 import { TenantsStatsBanner } from './components/TenantsStatsBanner';
@@ -39,9 +39,9 @@ import {
   updateAllowExtra,
   deleteTenant,
   getTenantRenewalQueue,
-} from '../../../services/tenantsService';
-import { getPlans } from '../../../services/plansService';
-import { useConfigStore } from '../../../store/useConfigStore';
+} from '@core/services/tenantsService';
+import { getPlans } from '@core/services/plansService';
+import { useConfigStore } from '@/store/useConfigStore';
 
 export const TenantsPage: React.FC = () => {
   const { tenants, setTenants } = useConfigStore();

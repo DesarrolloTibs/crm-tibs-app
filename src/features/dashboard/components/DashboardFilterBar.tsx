@@ -1,11 +1,11 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
-import UnifiedSearchBar from '../shared/UnifiedSearchBar';
-import Select from '../shared/Select';
-import Input from '../shared/Input';
-import Button from '../shared/Button';
-import type { SearchBadge } from '../shared/UnifiedSearchBar';
-import type { DatePeriod, CurrencyFilter, ActiveTab } from '../../hooks/useDashboard';
+import UnifiedSearchBar from '@shared/components/UnifiedSearchBar';
+import Select from '@shared/components/Select';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
+import type { SearchBadge } from '@shared/components/UnifiedSearchBar';
+import type { DatePeriod, CurrencyFilter, ActiveTab } from '../hooks/useDashboard';
 
 interface DashboardFilterBarProps {
   searchDropdownRef: React.RefObject<HTMLDivElement | null>;

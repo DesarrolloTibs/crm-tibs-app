@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Calendar, Zap, Check } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
-import Select from '../../../../components/shared/Select';
+import Button from '@shared/components/Button';
+import Select from '@shared/components/Select';
 import type { TenantPlanInfo, Plan } from '../schemas/tenants.schema';
 
 interface TenantPlanTabProps {

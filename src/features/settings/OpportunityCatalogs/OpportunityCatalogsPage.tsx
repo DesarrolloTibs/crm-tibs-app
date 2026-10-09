@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Database, Plus, RefreshCw } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Button from '../../../components/shared/Button';
-import ConfirmModal from '../../../components/shared/ConfirmModal';
-import Notification from '../../../components/shared/Notification';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Button from '@shared/components/Button';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Notification from '@shared/components/Notification';
 
 // Subcomponentes Modulares de Valores de Catálogos
 import { CatalogSubTabsNav } from './components/CatalogSubTabsNav';
@@ -36,9 +36,9 @@ import {
   createCatalogOption,
   updateCatalogOption,
   deleteCatalogOption,
-} from '../../../services/opportunityCatalogsService';
-import { getOpportunityLabels } from '../../../services/opportunityLabelsService';
-import type { OpportunityLabel } from '../../../core/models/OpportunityLabel';
+} from '@core/services/opportunityCatalogsService';
+import { getOpportunityLabels } from '@core/services/opportunityLabelsService';
+import type { OpportunityLabel } from '@core/models/OpportunityLabel';
 
 interface OpportunityCatalogsPageProps {
   activeSubTab?: CatalogType;

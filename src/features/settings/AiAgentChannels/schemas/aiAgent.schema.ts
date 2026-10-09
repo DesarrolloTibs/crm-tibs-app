@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import type { ChannelConfig } from '../../../../core/models/Conversation';
+import type { ChannelConfig } from '@core/models/Conversation';
 
 export type { ChannelConfig };
 

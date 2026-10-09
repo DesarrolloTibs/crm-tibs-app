@@ -1,8 +1,8 @@
 import React from 'react';
 import { BarChart3, TrendingUp, PieChart, Table as TableIcon } from 'lucide-react';
-import type { ChartType } from '../../hooks/useDashboard';
+import type { ChartType } from '../hooks/useDashboard';
 import VisualChart from './VisualChart';
-import SkeletonLoader from '../shared/SkeletonLoader';
+import SkeletonLoader from '@shared/components/SkeletonLoader';
 
 interface ChartBlock {
   title: string;

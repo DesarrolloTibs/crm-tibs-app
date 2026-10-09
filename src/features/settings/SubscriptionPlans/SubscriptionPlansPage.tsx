@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Layers, Plus, RefreshCw } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Button from '../../../components/shared/Button';
-import ConfirmModal from '../../../components/shared/ConfirmModal';
-import Notification from '../../../components/shared/Notification';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Button from '@shared/components/Button';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Notification from '@shared/components/Notification';
 
 // Subcomponentes Modulares de Planes de Suscripción
 import { SubscriptionPlansStatsBanner } from './components/SubscriptionPlansStatsBanner';
@@ -32,7 +32,7 @@ import {
   createPlan,
   updatePlan,
   deletePlan,
-} from '../../../services/plansService';
+} from '@core/services/plansService';
 
 export const SubscriptionPlansPage: React.FC = () => {
   // Estado de datos

@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../../../../components/shared/Modal';
+import Modal from '@shared/components/Modal';
 import { SubscriptionPlanForm } from './SubscriptionPlanForm';
 import type { Plan, SubscriptionPlanFormData } from '../schemas/subscriptionPlans.schema';
 import { Edit, Layers } from 'lucide-react';

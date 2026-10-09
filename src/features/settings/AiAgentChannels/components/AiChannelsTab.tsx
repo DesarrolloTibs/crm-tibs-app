@@ -8,8 +8,8 @@ import {
   CheckCircle,
   Trash2,
 } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
-import type { ChannelConfig } from '../../../../core/models/Conversation';
+import Button from '@shared/components/Button';
+import type { ChannelConfig } from '@core/models/Conversation';
 
 interface AiChannelsTabProps {
   channelConfigs: ChannelConfig[];

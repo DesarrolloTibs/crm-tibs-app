@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Brain } from 'lucide-react';
-import Modal from '../../../../components/shared/Modal';
-import Button from '../../../../components/shared/Button';
-import TextArea from '../../../../components/shared/TextArea';
-import { useFormValidation } from '../../../../components/shared/useFormValidation';
+import Modal from '@shared/components/Modal';
+import Button from '@shared/components/Button';
+import TextArea from '@shared/components/TextArea';
+import { useFormValidation } from '@shared/components/useFormValidation';
 import { routerPromptValidationSchema, type RouterPromptFormData } from '../schemas/aiAgent.schema';
 
 interface AiRouterModalProps {

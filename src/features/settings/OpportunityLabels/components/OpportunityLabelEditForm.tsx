@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, HelpCircle, Info } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
 import type { OpportunityLabel } from '../schemas/opportunityLabels.schema';
 import {
   getFieldDefaultName,

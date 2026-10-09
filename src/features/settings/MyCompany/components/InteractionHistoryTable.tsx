@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Activity, Search, X, FileSpreadsheet, FileText, Calendar } from 'lucide-react';
-import Table from '../../../../components/shared/Table';
-import Badge from '../../../../components/shared/Badge';
+import Table from '@shared/components/Table';
+import Badge from '@shared/components/Badge';
 import type { RecentTransaction } from '../schemas/myCompany.schema';
 import { getInteractionHistoryColumns } from '../utils/interactionHistory.columns';
 import { formatShortDate, formatFriendlyDate, formatNumber, formatTokensCompact } from '../utils/myCompany.helpers';

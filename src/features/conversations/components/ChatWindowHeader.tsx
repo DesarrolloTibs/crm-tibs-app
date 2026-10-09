@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowLeft, Bot, Users, Clock, AlertTriangle, ShieldCheck } from 'lucide-react';
-import type { Conversation } from '../../core/models/Conversation';
+import type { Conversation } from '@core/models/Conversation';
 import { getChannelIcon, getInitials } from './ChatListSidebar';
-import { getWhatsAppWindowStatus } from '../../utils/messageUtils';
+import { getWhatsAppWindowStatus } from '../utils/messageUtils';
 
 interface ChatWindowHeaderProps {
   conv: Conversation;

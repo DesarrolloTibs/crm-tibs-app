@@ -5,12 +5,12 @@ import { Save, Bell } from 'lucide-react';
 import {
   getHelpdeskCronConfig,
   saveHelpdeskCronConfig,
-} from '../../../services/helpdeskCronService';
-import type { HelpdeskCronConfig } from '../../../core/models/HelpdeskCronConfig';
+} from '@core/services/helpdeskCronService';
+import type { HelpdeskCronConfig } from '@core/models/HelpdeskCronConfig';
 
 // Componentes Compartidos
-import Button from '../../../components/shared/Button';
-import SettingsContainer from '../../../components/shared/SettingsContainer';
+import Button from '@shared/components/Button';
+import SettingsContainer from '@shared/components/SettingsContainer';
 
 // Sub-componentes Modulares
 import { CronModeSelector } from './components/CronModeSelector';

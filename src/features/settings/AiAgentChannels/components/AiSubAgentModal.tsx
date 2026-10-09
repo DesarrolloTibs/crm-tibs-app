@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Sliders } from 'lucide-react';
-import Modal from '../../../../components/shared/Modal';
-import Button from '../../../../components/shared/Button';
-import Input from '../../../../components/shared/Input';
-import TextArea from '../../../../components/shared/TextArea';
-import { useFormValidation } from '../../../../components/shared/useFormValidation';
+import Modal from '@shared/components/Modal';
+import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
+import TextArea from '@shared/components/TextArea';
+import { useFormValidation } from '@shared/components/useFormValidation';
 import {
   AVAILABLE_TOOLS,
   subAgentValidationSchema,

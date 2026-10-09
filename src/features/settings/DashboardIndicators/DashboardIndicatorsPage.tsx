@@ -13,20 +13,20 @@ import {
   createIndicator,
   updateIndicator,
   deleteIndicator,
-} from '../../../services/reportsService';
-import { getPipelines } from '../../../services/pipelinesService';
-import { getHelpdesks } from '../../../services/ticketsService';
+} from '@core/services/reportsService';
+import { getPipelines } from '@core/services/pipelinesService';
+import { getHelpdesks } from '@core/services/ticketsService';
 
 // Store Global
-import { useConfigStore } from '../../../store/useConfigStore';
+import { useConfigStore } from '@/store/useConfigStore';
 
 // Componentes Compartidos del Sistema
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Button from '../../../components/shared/Button';
-import Select from '../../../components/shared/Select';
-import ConfirmModal from '../../../components/shared/ConfirmModal';
-import Notification from '../../../components/shared/Notification';
-import Loader from '../../../components/Loader/Loader';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Button from '@shared/components/Button';
+import Select from '@shared/components/Select';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Notification from '@shared/components/Notification';
+import Loader from '@shared/components/Loader';
 
 // Subcomponentes Modulares de Indicadores de Dashboard
 import { DashboardIndicatorsStatsBanner } from './components/DashboardIndicatorsStatsBanner';

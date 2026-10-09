@@ -19,14 +19,14 @@ import type {
   WhatsAppTemplate,
   SendTemplatePayload,
   Message,
-} from '../../core/models/Conversation';
-import { getWhatsAppTemplates, sendWhatsAppTemplate } from '../../services/conversationsService';
-import Loader from '../shared/Loader';
-import Modal from '../shared/Modal';
-import Badge from '../shared/Badge';
-import Button from '../shared/Button';
-import EmptyState from '../shared/EmptyState';
-import Input from '../shared/Input';
+} from '@core/models/Conversation';
+import { getWhatsAppTemplates, sendWhatsAppTemplate } from '@core/services/conversationsService';
+import Loader from '@shared/components/Loader';
+import Modal from '@shared/components/Modal';
+import Badge from '@shared/components/Badge';
+import Button from '@shared/components/Button';
+import EmptyState from '@shared/components/EmptyState';
+import Input from '@shared/components/Input';
 
 interface WhatsAppTemplateSelectorModalProps {
   open: boolean;

@@ -1,6 +1,6 @@
 import { UserCheck, Users } from 'lucide-react';
-import type { ColumnDef } from '../../../../components/shared/Table';
-import Badge from '../../../../components/shared/Badge';
+import type { ColumnDef } from '@shared/components/Table';
+import Badge from '@shared/components/Badge';
 import type { RecentTransaction } from '../schemas/myCompany.schema';
 import {
   formatDateTime,

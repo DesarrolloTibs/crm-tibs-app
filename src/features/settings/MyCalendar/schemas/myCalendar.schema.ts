@@ -1,4 +1,4 @@
-import type { CalendarIntegrationStatus } from '../../../../services/calendarIntegrationsService';
+import type { CalendarIntegrationStatus } from '@core/services/calendarIntegrationsService';
 
 export type { CalendarIntegrationStatus };
 

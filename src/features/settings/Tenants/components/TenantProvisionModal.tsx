@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, User, Mail, X, Plus } from 'lucide-react';
-import Modal from '../../../../components/shared/Modal';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
-import Select from '../../../../components/shared/Select';
+import Modal from '@shared/components/Modal';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
+import Select from '@shared/components/Select';
 import type { Plan, ProvisionTenantFormData } from '../schemas/tenants.schema';
 import { validateProvisionForm } from '../utils/tenants.helpers';
 

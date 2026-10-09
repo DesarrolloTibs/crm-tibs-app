@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserCheck, Users } from 'lucide-react';
-import Badge from '../../../../components/shared/Badge';
-import EmptyState from '../../../../components/shared/EmptyState';
+import Badge from '@shared/components/Badge';
+import EmptyState from '@shared/components/EmptyState';
 import type { TopUserConsumption, TopClientConsumption } from '../schemas/myCompany.schema';
 import {
   formatNumber,

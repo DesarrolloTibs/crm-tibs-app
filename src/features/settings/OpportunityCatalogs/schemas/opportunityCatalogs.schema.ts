@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import type { OpportunityCatalogOption } from '../../../../core/models/OpportunityCatalog';
+import type { OpportunityCatalogOption } from '@core/models/OpportunityCatalog';
 
 export type { OpportunityCatalogOption };
 

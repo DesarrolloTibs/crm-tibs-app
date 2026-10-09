@@ -6,9 +6,9 @@ import {
   LayoutGrid,
   Table as TableIcon,
 } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
-import Input from '../../../../components/shared/Input';
-import Select from '../../../../components/shared/Select';
+import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
+import Select from '@shared/components/Select';
 import { AiOrchestratorCanvas } from './AiOrchestratorCanvas';
 import { AiSubAgentsTable } from './AiSubAgentsTable';
 import type { SubAgent, SubAgentStatusFilter } from '../schemas/aiAgent.schema';

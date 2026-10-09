@@ -1,7 +1,7 @@
 import { Settings, Sparkles, Cpu, Server, ArrowRight } from 'lucide-react';
-import type { ColumnDef } from '../../../../components/shared/Table';
-import Button from '../../../../components/shared/Button';
-import Badge from '../../../../components/shared/Badge';
+import type { ColumnDef } from '@shared/components/Table';
+import Button from '@shared/components/Button';
+import Badge from '@shared/components/Badge';
 import type { LlmProviderItem } from '../schemas/globalAiCredentials.schema';
 
 interface GlobalAiColumnsCallbacks {

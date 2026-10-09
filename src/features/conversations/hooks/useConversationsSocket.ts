@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
-import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
-import { useAuth } from './useAuth';
-import { useConfigStore } from '../store/useConfigStore';
-import { getUsers } from '../services/usersService';
+import { createAppSocket, safeDisconnect } from '@core/socket/socketClient';
+import { useAuth } from '@features/auth';
+import { useConfigStore } from '@/store/useConfigStore';
+import { getUsers } from '@core/services/usersService';
 import type {
   Conversation,
   Message,
   MessageStatusUpdatedEvent,
-} from '../core/models/Conversation';
+} from '@core/models/Conversation';
 import {
   getConversations,
   getConversationMessages,
@@ -18,8 +18,8 @@ import {
   assignConversation,
   getConversationBaseTemplate,
   sendWhatsAppTemplate,
-} from '../services/conversationsService';
-import type { SendTemplatePayload } from '../core/models/Conversation';
+} from '@core/services/conversationsService';
+import type { SendTemplatePayload } from '@core/models/Conversation';
 
 export type ChannelFilter = 'all' | 'whatsapp' | 'messenger' | 'instagram' | 'webchat';
 

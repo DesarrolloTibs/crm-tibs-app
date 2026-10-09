@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../../../../components/shared/Modal';
+import Modal from '@shared/components/Modal';
 import { ActivityTypeForm } from './ActivityTypeForm';
 import type { TypeActivity, ActivityTypeFormData } from '../schemas/activityTypes.schema';
 import { Plus, Edit } from 'lucide-react';

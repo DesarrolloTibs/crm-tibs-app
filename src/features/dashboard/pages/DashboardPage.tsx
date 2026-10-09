@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { TrendingUp, Briefcase, LifeBuoy, FileText, FileSpreadsheet } from 'lucide-react';
 import { useDashboard } from '../hooks/useDashboard';
-import Loader from '../components/shared/Loader';
-import KpiSection from '../components/Dashboard/KpiSection';
-import SalesCharts from '../components/Dashboard/SalesCharts';
-import DashboardFilterBar from '../components/Dashboard/DashboardFilterBar';
-import RecordsTable from '../components/Dashboard/RecordsTable';
-import PdfSummaryTemplate from '../components/Dashboard/PdfSummaryTemplate';
+import Loader from '@shared/components/Loader';
+import KpiSection from '../components/KpiSection';
+import SalesCharts from '../components/SalesCharts';
+import DashboardFilterBar from '../components/DashboardFilterBar';
+import RecordsTable from '../components/RecordsTable';
+import PdfSummaryTemplate from '../components/PdfSummaryTemplate';
 
 const DashboardPage: React.FC = () => {
   const db = useDashboard();

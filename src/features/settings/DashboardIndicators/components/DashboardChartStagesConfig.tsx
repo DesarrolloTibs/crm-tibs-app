@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart3, CheckCircle2, AlertCircle, CheckSquare, Square } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
+import Button from '@shared/components/Button';
 import type { ChartTab, ChartKey, IndicatorModule } from '../schemas/dashboardIndicators.schema';
 
 interface DashboardChartStagesConfigProps {

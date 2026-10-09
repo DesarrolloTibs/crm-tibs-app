@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { queryWebChat } from '../../services/webchatService';
-import type { WebChatMessage, WebChatResponse, DashboardRedirect } from '../../services/webchatService';
+import { useAuth } from '@features/auth';
+import { queryWebChat } from '@core/services/webchatService';
+import type { WebChatMessage, WebChatResponse, DashboardRedirect } from '@core/services/webchatService';
 import {
   MessageSquare,
   Send,

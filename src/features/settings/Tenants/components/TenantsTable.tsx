@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Building2, Search, X } from 'lucide-react';
-import Table from '../../../../components/shared/Table';
-import Button from '../../../../components/shared/Button';
+import Table from '@shared/components/Table';
+import Button from '@shared/components/Button';
 import type { TenantPlanInfo, TenantStatusFilter } from '../schemas/tenants.schema';
 import { getTenantsColumns } from '../utils/tenants.columns';
 

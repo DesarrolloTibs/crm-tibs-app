@@ -3,7 +3,7 @@ import {
   Layers, ShieldCheck, DollarSign, Calendar, Sparkles,
   Zap, ShieldPlus, ShieldAlert, AlertTriangle, Database
 } from 'lucide-react';
-import Badge from '../../../../components/shared/Badge';
+import Badge from '@shared/components/Badge';
 import type { TenantConsumptionData } from '../schemas/myCompany.schema';
 import {
   formatNumber,

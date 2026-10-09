@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency } from '@shared/utils/formatters';
 
 export interface VisualChartProps {
   type: 'bar' | 'line' | 'pie' | 'table';

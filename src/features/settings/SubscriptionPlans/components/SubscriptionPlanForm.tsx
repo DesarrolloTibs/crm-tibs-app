@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { Plan, SubscriptionPlanFormData } from '../schemas/subscriptionPlans.schema';
 import { validateSubscriptionPlanForm } from '../utils/subscriptionPlans.helpers';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
 import { Layers, DollarSign, Zap, Calendar, Check, AlertCircle } from 'lucide-react';
 
 interface SubscriptionPlanFormProps {

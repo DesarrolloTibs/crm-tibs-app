@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Database, Check } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
 import type { TenantPlanInfo, TenantGeneralFormData } from '../schemas/tenants.schema';
 import { validateTenantGeneralForm } from '../utils/tenants.helpers';
 

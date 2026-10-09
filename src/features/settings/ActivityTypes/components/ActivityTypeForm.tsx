@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { TypeActivity, ActivityTypeFormData } from '../schemas/activityTypes.schema';
 import { validateActivityTypeForm } from '../utils/activityTypes.helpers';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
 import { Tag, Check } from 'lucide-react';
 
 interface ActivityTypeFormProps {

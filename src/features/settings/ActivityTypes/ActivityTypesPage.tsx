@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { ClipboardList, Plus, RefreshCw } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Button from '../../../components/shared/Button';
-import ConfirmModal from '../../../components/shared/ConfirmModal';
-import Notification from '../../../components/shared/Notification';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Button from '@shared/components/Button';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Notification from '@shared/components/Notification';
 
 // Subcomponentes Modulares de Tipos de Actividad
 import { ActivityTypesStatsBanner } from './components/ActivityTypesStatsBanner';
@@ -32,7 +32,7 @@ import {
   createActivityType,
   updateActivityType,
   deleteActivityType,
-} from '../../../services/activitiesService';
+} from '@core/services/activitiesService';
 
 export const ActivityTypesPage: React.FC = () => {
   // Estado de datos

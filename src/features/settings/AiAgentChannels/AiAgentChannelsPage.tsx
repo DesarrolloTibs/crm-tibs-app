@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Brain, RefreshCw } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Button from '../../../components/shared/Button';
-import Notification from '../../../components/shared/Notification';
-import ConfirmModal from '../../../components/shared/ConfirmModal';
-import Loader from '../../../components/shared/Loader';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Button from '@shared/components/Button';
+import Notification from '@shared/components/Notification';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Loader from '@shared/components/Loader';
 import { showToast } from '../../../utils/toast';
 
 // Subcomponentes Modulares de Agente IA & Canales
@@ -37,8 +37,8 @@ import {
   getSubAgents,
   saveSubAgent,
   deleteSubAgent,
-} from '../../../services/conversationsService';
-import { getUsers } from '../../../services/usersService';
+} from '@core/services/conversationsService';
+import { getUsers } from '@core/services/usersService';
 
 export const AiAgentChannelsPage: React.FC = () => {
   // Estado de carga inicial y guardado

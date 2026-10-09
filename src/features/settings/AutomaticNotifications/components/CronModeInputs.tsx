@@ -1,5 +1,5 @@
 import React from 'react';
-import Input from '../../../../components/shared/Input';
+import Input from '@shared/components/Input';
 import type { CronMode } from '../schemas/automaticNotifications.schema';
 
 interface CronModeInputsProps {

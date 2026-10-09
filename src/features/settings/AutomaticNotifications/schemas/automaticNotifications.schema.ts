@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import type { HelpdeskCronConfig } from '../../../../core/models/HelpdeskCronConfig';
+import type { HelpdeskCronConfig } from '@core/models/HelpdeskCronConfig';
 
 export type { HelpdeskCronConfig };
 

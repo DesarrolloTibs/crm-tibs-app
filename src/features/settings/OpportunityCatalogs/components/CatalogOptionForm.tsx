@@ -4,8 +4,8 @@ import type {
   CatalogOptionFormData,
 } from '../schemas/opportunityCatalogs.schema';
 import { validateCatalogOptionForm } from '../utils/opportunityCatalogs.helpers';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
 import { Tag, Check } from 'lucide-react';
 
 interface CatalogOptionFormProps {

@@ -1,7 +1,7 @@
 import React from 'react';
-import type { ActiveTab, ChartType, CurrencyFilter } from '../../hooks/useDashboard';
-import type { DashboardIndicator } from '../../services/reportsService';
-import { formatCurrency } from '../../utils/formatters';
+import type { ActiveTab, ChartType, CurrencyFilter } from '../hooks/useDashboard';
+import type { DashboardIndicator } from '@core/services/reportsService';
+import { formatCurrency } from '@shared/utils/formatters';
 import VisualChart from './VisualChart';
 
 interface PdfSummaryTemplateProps {

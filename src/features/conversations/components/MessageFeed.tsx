@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { ShieldAlert, Bot, Smartphone } from 'lucide-react';
-import type { Message } from '../../core/models/Conversation';
+import type { Message } from '@core/models/Conversation';
 import { getInitials } from './ChatListSidebar';
 import {
   renderMessageContent,
   groupMessagesByDate,
   formatMessageTime,
   renderDeliveryStatusIcon,
-} from '../../utils/messageUtils';
+} from '../utils/messageUtils';
 
 interface MessageFeedProps {
   messages: Message[];

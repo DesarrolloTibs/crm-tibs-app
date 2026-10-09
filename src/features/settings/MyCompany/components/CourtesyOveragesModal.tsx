@@ -2,12 +2,12 @@ import React, { useMemo } from 'react';
 import {
   Sparkles, FileSpreadsheet, Download, RefreshCw, X, AlertTriangle
 } from 'lucide-react';
-import Modal from '../../../../components/shared/Modal';
-import Badge from '../../../../components/shared/Badge';
-import Button from '../../../../components/shared/Button';
-import Loader from '../../../../components/shared/Loader';
-import EmptyState from '../../../../components/shared/EmptyState';
-import Table from '../../../../components/shared/Table';
+import Modal from '@shared/components/Modal';
+import Badge from '@shared/components/Badge';
+import Button from '@shared/components/Button';
+import Loader from '@shared/components/Loader';
+import EmptyState from '@shared/components/EmptyState';
+import Table from '@shared/components/Table';
 import type {
   CourtesyOveragesReportResponse,
   CourtesyOverageTenantReport,

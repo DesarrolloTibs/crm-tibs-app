@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Sliders } from 'lucide-react';
 
 // Componentes Compartidos
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Notification from '../../../components/shared/Notification';
-import Loader from '../../../components/Loader/Loader';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Notification from '@shared/components/Notification';
+import Loader from '@shared/components/Loader';
 
 // Subcomponentes Modulares del Asistente
 import { OpportunityLabelsStepper } from './components/OpportunityLabelsStepper';
@@ -19,7 +19,7 @@ import type { OpportunityLabel, NotificationState } from './schemas/opportunityL
 import {
   getOpportunityLabels,
   updateOpportunityLabel,
-} from '../../../services/opportunityLabelsService';
+} from '@core/services/opportunityLabelsService';
 
 interface OpportunityLabelsPageProps {
   onLabelsUpdated?: () => void;

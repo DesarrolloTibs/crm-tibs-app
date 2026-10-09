@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { LayoutDashboard, Search, X } from 'lucide-react';
-import Table from '../../../../components/shared/Table';
-import Button from '../../../../components/shared/Button';
+import Table from '@shared/components/Table';
+import Button from '@shared/components/Button';
 import type { DashboardIndicator, IndicatorTypeFilter } from '../schemas/dashboardIndicators.schema';
 import { getDashboardIndicatorsColumns } from '../utils/dashboardIndicators.columns';
 import { COLOR_OPTIONS } from '../utils/dashboardIndicators.helpers';

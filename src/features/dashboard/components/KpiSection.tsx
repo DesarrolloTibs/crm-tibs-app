@@ -1,9 +1,9 @@
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
-import type { DashboardIndicator } from '../../services/reportsService';
+import type { DashboardIndicator } from '@core/services/reportsService';
 import KpiCard from './KpiCard';
-import SkeletonLoader from '../shared/SkeletonLoader';
-import { formatCurrency } from '../../utils/formatters';
+import SkeletonLoader from '@shared/components/SkeletonLoader';
+import { formatCurrency } from '@shared/utils/formatters';
 
 interface KpiSectionProps {
   loading: boolean;

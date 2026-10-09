@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Smartphone, Link2 } from 'lucide-react';
-import Modal from '../../../../components/shared/Modal';
-import Button from '../../../../components/shared/Button';
-import Input from '../../../../components/shared/Input';
-import { useFormValidation } from '../../../../components/shared/useFormValidation';
+import Modal from '@shared/components/Modal';
+import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
+import { useFormValidation } from '@shared/components/useFormValidation';
 import WhatsAppBaseTemplateSettings from './WhatsAppBaseTemplateSettings';
-import type { ChannelConfig } from '../../../../core/models/Conversation';
+import type { ChannelConfig } from '@core/models/Conversation';
 import {
   whatsappChannelValidationSchema,
   type WhatsAppChannelFormData,

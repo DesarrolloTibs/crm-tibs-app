@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { TrendingUp, Calendar, X, Check } from 'lucide-react';
-import Badge from '../../../../components/shared/Badge';
-import EmptyState from '../../../../components/shared/EmptyState';
+import Badge from '@shared/components/Badge';
+import EmptyState from '@shared/components/EmptyState';
 import type { DailyTimelineConsumption } from '../schemas/myCompany.schema';
 import {
   formatNumber,

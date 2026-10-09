@@ -9,7 +9,7 @@ import type {
   RecentTransaction,
   CourtesyOveragesReportResponse,
   CourtesyOverageTenantReport,
-} from '../../../../services/tenantsService';
+} from '@core/services/tenantsService';
 
 export type {
   TenantConsumptionData,

@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../../../../components/shared/Modal';
+import Modal from '@shared/components/Modal';
 import { DashboardIndicatorForm } from './DashboardIndicatorForm';
 import type { DashboardIndicator, DashboardIndicatorFormData } from '../schemas/dashboardIndicators.schema';
 

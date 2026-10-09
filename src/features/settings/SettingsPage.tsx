@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import Select from '../../components/shared/Select';
-import { useAuth } from '../../hooks/useAuth';
+import Select from '@shared/components/Select';
+import { useAuth } from '@features/auth';
 import {
   ClipboardList, Settings, Sliders, Database, Bell,
   LayoutDashboard, Brain, Building2, Layers, KeyRound, Calendar
@@ -32,9 +32,9 @@ import MyCalendarPage from './MyCalendar/MyCalendarPage';
 // Módulo unificado y refactorizado de Mi Empresa (incluye Consumo de IA & Suscripción)
 import MyCompanyPage from './MyCompany/MyCompanyPage';
 
-import { useConfigStore } from '../../store/useConfigStore';
-import { getOpportunityLabels } from '../../services/opportunityLabelsService';
-import type { OpportunityLabel } from '../../core/models/OpportunityLabel';
+import { useConfigStore } from '@/store/useConfigStore';
+import { getOpportunityLabels } from '@core/services/opportunityLabelsService';
+import type { OpportunityLabel } from '@core/models/OpportunityLabel';
 
 export type SettingTab =
   | 'my-calendar' | 'my-company' | 'ai-consumption' | 'activity-types' | 'opportunity-labels' | 'opportunity-catalogs'

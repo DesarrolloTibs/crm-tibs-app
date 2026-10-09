@@ -3,16 +3,16 @@ import {
   Building2, Sparkles, RefreshCw, Layers, Smartphone, Users,
   Activity, Clock
 } from 'lucide-react';
-import { useAuth } from '../../../hooks/useAuth';
-import { useConfigStore } from '../../../store/useConfigStore';
+import { useAuth } from '@features/auth';
+import { useConfigStore } from '@/store/useConfigStore';
 
 // Componentes Compartidos del Sistema
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Tabs, { type Tab } from '../../../components/shared/Tabs';
-import Button from '../../../components/shared/Button';
-import Notification from '../../../components/shared/Notification';
-import SkeletonLoader from '../../../components/shared/SkeletonLoader';
-import EmptyState from '../../../components/shared/EmptyState';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Tabs, { type Tab } from '@shared/components/Tabs';
+import Button from '@shared/components/Button';
+import Notification from '@shared/components/Notification';
+import SkeletonLoader from '@shared/components/SkeletonLoader';
+import EmptyState from '@shared/components/EmptyState';
 
 // Subcomponentes Modulares de Mi Empresa
 import { CompanyProfileCard } from './components/CompanyProfileCard';
@@ -62,8 +62,8 @@ import {
   getBillingCycles,
   updateAllowExtra,
   getCourtesyOveragesReport,
-} from '../../../services/tenantsService';
-import type { SearchBadge } from '../../../components/shared/UnifiedSearchBar';
+} from '@core/services/tenantsService';
+import type { SearchBadge } from '@shared/components/UnifiedSearchBar';
 
 const DEFAULT_ACTIVE_OPTION: CycleSelectOption = {
   value: 'active',

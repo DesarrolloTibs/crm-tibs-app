@@ -14,16 +14,16 @@ import type {
   WhatsAppBaseTemplate,
   Message,
   SendTemplatePayload,
-} from '../../core/models/Conversation';
+} from '@core/models/Conversation';
 import {
   getConversationBaseTemplate,
   getWhatsAppTemplates,
   sendWhatsAppTemplate,
-} from '../../services/conversationsService';
-import Badge from '../shared/Badge';
-import Loader from '../shared/Loader';
-import Button from '../shared/Button';
-import { useAuth } from '../../hooks/useAuth';
+} from '@core/services/conversationsService';
+import Badge from '@shared/components/Badge';
+import Loader from '@shared/components/Loader';
+import Button from '@shared/components/Button';
+import { useAuth } from '@features/auth';
 
 interface MessageInputBarProps {
   botActive: boolean;

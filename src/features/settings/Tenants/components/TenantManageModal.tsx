@@ -6,8 +6,8 @@ import {
   Layers,
   X,
 } from 'lucide-react';
-import Modal from '../../../../components/shared/Modal';
-import Button from '../../../../components/shared/Button';
+import Modal from '@shared/components/Modal';
+import Button from '@shared/components/Button';
 import { TenantGeneralTab } from './TenantGeneralTab';
 import { TenantPlanTab } from './TenantPlanTab';
 import { TenantRenewalQueueTab } from './TenantRenewalQueueTab';

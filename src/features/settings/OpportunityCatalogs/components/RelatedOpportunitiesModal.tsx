@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Modal from '../../../../components/shared/Modal';
-import Button from '../../../../components/shared/Button';
+import Modal from '@shared/components/Modal';
+import Button from '@shared/components/Button';
 import type { OpportunityCatalogOption } from '../schemas/opportunityCatalogs.schema';
 import { FolderKanban, ArrowRight } from 'lucide-react';
 

@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import type { Plan, CreatePlanPayload } from '../../../../services/plansService';
+import type { Plan, CreatePlanPayload } from '@core/services/plansService';
 
 export type { Plan, CreatePlanPayload };
 

@@ -13,16 +13,16 @@ import {
   Clock,
   ShieldCheck,
 } from 'lucide-react';
-import type { ChannelFilter } from '../../hooks/useConversationsSocket';
-import type { Conversation } from '../../core/models/Conversation';
-import EmptyState from '../shared/EmptyState';
-import Badge from '../shared/Badge';
+import type { ChannelFilter } from '../hooks/useConversationsSocket';
+import type { Conversation } from '@core/models/Conversation';
+import EmptyState from '@shared/components/EmptyState';
+import Badge from '@shared/components/Badge';
 import {
   formatSidebarDate,
   getWhatsAppWindowStatus,
   renderDeliveryStatusIcon,
-} from '../../utils/messageUtils';
-import ConnectionStatusBadge from '../shared/ConnectionStatusBadge';
+} from '../utils/messageUtils';
+import ConnectionStatusBadge from '@shared/components/ConnectionStatusBadge';
 
 interface ChatListSidebarProps {
   conversations: Conversation[];

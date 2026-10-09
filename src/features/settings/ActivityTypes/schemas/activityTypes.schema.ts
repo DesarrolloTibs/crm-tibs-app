@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import type { TypeActivity } from '../../../../core/models/Activity';
+import type { TypeActivity } from '@core/models/Activity';
 
 export type { TypeActivity };
 

@@ -3,11 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import { Calendar, RefreshCw, AlertCircle, CheckCircle2, X } from 'lucide-react';
 
 // Componentes Compartidos del Sistema
-import SettingsContainer from '../../../components/shared/SettingsContainer';
-import Button from '../../../components/shared/Button';
-import ConfirmModal from '../../../components/shared/ConfirmModal';
-import Notification from '../../../components/shared/Notification';
-import SkeletonLoader from '../../../components/shared/SkeletonLoader';
+import SettingsContainer from '@shared/components/SettingsContainer';
+import Button from '@shared/components/Button';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Notification from '@shared/components/Notification';
+import SkeletonLoader from '@shared/components/SkeletonLoader';
 
 // Subcomponentes Modulares de Mi Calendario
 import { CalendarSyncStatusBanner } from './components/CalendarSyncStatusBanner';
@@ -22,7 +22,7 @@ import {
   getCalendarIntegrationStatus,
   getCalendarAuthUrl,
   disconnectCalendar,
-} from '../../../services/calendarIntegrationsService';
+} from '@core/services/calendarIntegrationsService';
 
 export const MyCalendarPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();

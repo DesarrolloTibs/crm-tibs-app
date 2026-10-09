@@ -1,7 +1,7 @@
 import { ChevronRight } from 'lucide-react';
-import type { ColumnDef } from '../../../../components/shared/Table';
-import Badge from '../../../../components/shared/Badge';
-import Button from '../../../../components/shared/Button';
+import type { ColumnDef } from '@shared/components/Table';
+import Badge from '@shared/components/Badge';
+import Button from '@shared/components/Button';
 import type { CourtesyOverageTenantReport } from '../schemas/myCompany.schema';
 import { formatNumber, formatFriendlyDate } from './myCompany.helpers';
 

@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import type { DashboardIndicator } from '../../../../services/reportsService';
+import type { DashboardIndicator } from '@core/services/reportsService';
 
 export type { DashboardIndicator };
 

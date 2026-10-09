@@ -1,7 +1,7 @@
 import React from 'react';
 import { Mail, Unlink, Link2, Lock } from 'lucide-react';
-import Button from '../../../../components/shared/Button';
-import Badge from '../../../../components/shared/Badge';
+import Button from '@shared/components/Button';
+import Badge from '@shared/components/Badge';
 import type { CalendarProviderConfig, CalendarIntegrationStatus } from '../schemas/myCalendar.schema';
 import { renderProviderIcon } from '../utils/myCalendar.helpers';
 
