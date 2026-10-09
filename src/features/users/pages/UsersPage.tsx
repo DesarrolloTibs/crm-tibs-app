@@ -1,12 +1,12 @@
 import React from 'react';
 import { UserPlus } from 'lucide-react';
-import UserForm from '../components/User/UserForm';
-import UsersTable from '../components/User/UsersTable';
-import Modal from '../components/Modal/Modal';
-import ProfileImageUploadModal from '../components/User/ProfileImageUploadModal';
-import Notification from '../components/Modal/Notification';
-import Button from '../components/shared/Button';
-import UserFiltersBar from '../components/User/UserFiltersBar';
+import UserForm from '../components/UserForm';
+import UsersTable from '../components/UsersTable';
+import Modal from '@shared/components/Modal';
+import ProfileImageUploadModal from '../components/ProfileImageUploadModal';
+import Notification from '@shared/components/Notification';
+import Button from '@shared/components/Button';
+import UserFiltersBar from '../components/UserFiltersBar';
 import { useUsers } from '../hooks/useUsers';
 
 const UsersPage: React.FC = () => {

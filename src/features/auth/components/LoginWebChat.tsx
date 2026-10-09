@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { MessageSquare, X, Send, Bot, User, Sparkles, Maximize2, Minimize2, FileText, Download } from 'lucide-react';
-import '../WebChat/WebChat.css';
+import '@features/conversations/components/WebChat.css';
 
 interface Message {
   id: string;

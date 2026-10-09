@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { getUsers, createUser, updateUser, updateUserStatus } from '../services/usersService';
-import type { User } from '../core/models/User';
-import { useAuth } from './useAuth';
-import { useConfigStore } from '../store/useConfigStore';
-import useDebounce from './useDebounce';
-import useNotification from './useNotification';
-import type { UserFiltersState } from '../components/User/UserFiltersBar';
+import { getUsers, createUser, updateUser, updateUserStatus } from '@core/services/usersService';
+import type { User } from '@core/models/User';
+import { useAuth } from '@features/auth';
+import { useConfigStore } from '@/store/useConfigStore';
+import useDebounce from '@shared/hooks/useDebounce';
+import useNotification from '@shared/hooks/useNotification';
+import type { UserFiltersState } from '../components/UserFiltersBar';
 
 const INITIAL_FILTERS: UserFiltersState = {
   username: '',

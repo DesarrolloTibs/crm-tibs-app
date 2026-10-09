@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../core/axios/axiosInstance';
-import { auth } from '../global/endpoints';
+import axiosInstance from '@core/axios/axiosInstance';
+import { auth } from '@/global/endpoints';
 
 export function useForgotPassword() {
   const [email, setEmail] = useState('');

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { refreshToken, logout as authServiceLogout, authChannel } from '../services/authService';
+import { refreshToken, logout as authServiceLogout, authChannel } from '@core/services/authService';
 
 // Define la estructura esperada del payload del token
 interface DecodedToken {

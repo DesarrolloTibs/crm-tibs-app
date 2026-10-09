@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { User } from '../../core/models/User';
-import Input from '../shared/Input';
-import Select from '../shared/Select';
-import Button from '../shared/Button';
-import { useConfigStore } from '../../store/useConfigStore';
-import { useAuth } from '../../hooks/useAuth';
+import type { User } from '@core/models/User';
+import Input from '@shared/components/Input';
+import Select from '@shared/components/Select';
+import Button from '@shared/components/Button';
+import { useConfigStore } from '@/store/useConfigStore';
+import { useAuth } from '@features/auth';
 
 interface Props {
     initialData?: User;

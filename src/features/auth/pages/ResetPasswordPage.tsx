@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Lock, CheckCircle, AlertTriangle, Eye, EyeOff, ArrowLeft, LogIn, ShieldAlert } from 'lucide-react';
-import LoginBackground from '../components/Login/LoginBackground';
-import Button from '../components/shared/Button';
+import LoginBackground from '../components/LoginBackground';
+import Button from '@shared/components/Button';
 import { useResetPassword } from '../hooks/useAuthForms';
-import '../components/Login/Login.css';
+import '../components/Login.css';
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();

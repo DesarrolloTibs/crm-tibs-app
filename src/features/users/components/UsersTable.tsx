@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import type { User } from '../../core/models/User';
+import type { User } from '@core/models/User';
 import { Edit, UserCheck, UserX, Camera } from 'lucide-react';
-import Table, { type ColumnDef } from '../shared/Table';
+import Table, { type ColumnDef } from '@shared/components/Table';
 
 interface Props {
   users: User[];

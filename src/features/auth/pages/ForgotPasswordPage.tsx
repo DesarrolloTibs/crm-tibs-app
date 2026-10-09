@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle, ShieldAlert, LogIn } from 'lucide-react';
-import LoginBackground from '../components/Login/LoginBackground';
+import LoginBackground from '../components/LoginBackground';
 import { useForgotPassword } from '../hooks/useAuthForms';
-import '../components/Login/Login.css';
+import '../components/Login.css';
 
 const ForgotPasswordPage: React.FC = () => {
   const { email, setEmail, loading, error, setError, success, handleSubmit, navigate } = useForgotPassword();

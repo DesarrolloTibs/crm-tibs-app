@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { uploadProfileImage } from '../../services/usersService';
+import { uploadProfileImage } from '@core/services/usersService';
 import { Paperclip, X } from 'lucide-react';
-import type { User } from '../../core/models/User';
-import Notification from '../Modal/Notification';
-import Dropzone from '../shared/Dropzone';
-import Button from '../shared/Button';
+import type { User } from '@core/models/User';
+import Notification from '@shared/components/Notification';
+import Dropzone from '@shared/components/Dropzone';
+import Button from '@shared/components/Button';
 
 interface ProfileImageUploadModalProps {
   user: User;
