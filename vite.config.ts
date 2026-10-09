@@ -78,5 +78,25 @@ export default defineConfig(({ mode }) => {
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-calendar': [
+            '@fullcalendar/core',
+            '@fullcalendar/daygrid',
+            '@fullcalendar/interaction',
+            '@fullcalendar/list',
+            '@fullcalendar/react',
+            '@fullcalendar/timegrid',
+          ],
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable'],
+          'vendor-table': ['@tanstack/react-table'],
+          'vendor-xlsx': ['xlsx'],
+        },
+      },
+    },
+  },
   }
 })

@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { CourtesyOveragesReportResponse, CourtesyOverageTenantReport } from '../schemas/myCompany.schema';
@@ -7,8 +6,9 @@ import { formatNumber, formatFriendlyDate } from './myCompany.helpers';
 /**
  * Exporta el reporte consolidado de cortesías a Excel (.xlsx nativo)
  */
-export const exportCourtesyReportToExcel = (reportData: CourtesyOveragesReportResponse): void => {
+export const exportCourtesyReportToExcel = async (reportData: CourtesyOveragesReportResponse): Promise<void> => {
   if (!reportData || !reportData.report.length) return;
+  const XLSX = await import('xlsx');
 
   // 1. Hoja de Datos principales
   const dataRows = reportData.report.map((item: CourtesyOverageTenantReport, idx: number) => ({

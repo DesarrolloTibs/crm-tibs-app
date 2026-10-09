@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { RecentTransaction } from '../schemas/myCompany.schema';
@@ -22,7 +21,8 @@ export interface ExportHistoryOptions {
 /**
  * Exporta el historial de interacciones a Excel (.xlsx nativo) bajo la marca Billy Sales & Services
  */
-export const exportInteractionHistoryToExcel = (options: ExportHistoryOptions): void => {
+export const exportInteractionHistoryToExcel = async (options: ExportHistoryOptions): Promise<void> => {
+  const XLSX = await import('xlsx');
   const {
     transactions,
     orgName,
