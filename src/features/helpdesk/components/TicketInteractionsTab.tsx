@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getTicketInteractions, createTicketInteraction, deleteTicketInteraction } from '../../services/ticketInteractionsService';
+import { getTicketInteractions, createTicketInteraction, deleteTicketInteraction } from '@core/services/ticketInteractionsService';
 import { Plus, Search, Trash2 } from 'lucide-react';
-import type { TicketInteraction } from '../../services/ticketInteractionsService';
-import { useAuth } from '../../hooks/useAuth';
-import Notification from '../Modal/Notification';
-import Modal from '../Modal/Modal';
-import Button from '../shared/Button';
-import Input from '../shared/Input';
-import TextArea from '../shared/TextArea';
+import type { TicketInteraction } from '@core/services/ticketInteractionsService';
+import { useAuth } from '@features/auth';
+import Notification from '@shared/components/Notification';
+import Modal from '@shared/components/Modal';
+import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
+import TextArea from '@shared/components/TextArea';
 
 interface TicketInteractionsTabProps {
   ticketId: string;

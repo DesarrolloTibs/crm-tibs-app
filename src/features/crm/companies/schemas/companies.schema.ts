@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import type { Company } from '../../../../core/models/Company';
+import type { Company } from '@core/models/Company';
 
 export type { Company };
 

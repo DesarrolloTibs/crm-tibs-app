@@ -1,6 +1,6 @@
 import * as yup from 'yup';
-import type { Client, ClientCategoryType } from '../../../../core/models/Client';
-import { ClientCategory } from '../../../../core/models/Client';
+import type { Client, ClientCategoryType } from '@core/models/Client';
+import { ClientCategory } from '@core/models/Client';
 
 export type { Client, ClientCategoryType };
 

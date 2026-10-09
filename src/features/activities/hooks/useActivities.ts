@@ -1,14 +1,14 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { type SingleValue } from 'react-select';
-import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
-import { getActivities, createActivity, updateActivity, deleteActivity, getActivityTypes } from '../services/activitiesService';
-import { getUsers } from '../services/usersService';
-import { useAuth } from './useAuth';
-import { useConfigStore } from '../store/useConfigStore';
+import { createAppSocket, safeDisconnect } from '@core/socket/socketClient';
+import { getActivities, createActivity, updateActivity, deleteActivity, getActivityTypes } from '@core/services/activitiesService';
+import { getUsers } from '@core/services/usersService';
+import { useAuth } from '@features/auth';
+import { useConfigStore } from '@/store/useConfigStore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { Activity, TypeActivity } from '../core/models/Activity';
-import type { User as UserModel } from '../core/models/User';
+import type { Activity, TypeActivity } from '@core/models/Activity';
+import type { User as UserModel } from '@core/models/User';
 
 export interface SelectOption { value: string; label: string; }
 

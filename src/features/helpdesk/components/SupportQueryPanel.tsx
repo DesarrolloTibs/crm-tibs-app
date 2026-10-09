@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Search, ArrowLeft, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
-import { queryTicketsPublic } from '../../services/ticketsService';
-import Input from '../shared/Input';
-import Button from '../shared/Button';
-import LoginBackground from '../Login/LoginBackground';
-import type { Ticket } from '../../core/models/Ticket';
+import { queryTicketsPublic } from '@core/services/ticketsService';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
+import { LoginBackground } from '@features/auth';
+import type { Ticket } from '@core/models/Ticket';
 
 const getStageBadgeStyles = (stageName: string, customColor?: string | null) => {
   if (customColor) return { backgroundColor: `${customColor}15`, color: customColor, borderColor: `${customColor}30` };

@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../../../../components/shared/Modal';
+import Modal from '@shared/components/Modal';
 import { CompanyForm } from './CompanyForm';
 import type { Company, CompanyFormData } from '../schemas/companies.schema';
 import { Edit, Building2 } from 'lucide-react';

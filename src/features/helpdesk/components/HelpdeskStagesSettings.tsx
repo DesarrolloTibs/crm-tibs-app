@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { getMainHelpdesk, updateMainHelpdesk } from '../../services/ticketsService';
-import type { TicketStage } from '../../core/models/Ticket';
+import { getMainHelpdesk, updateMainHelpdesk } from '@core/services/ticketsService';
+import type { TicketStage } from '@core/models/Ticket';
 import { ArrowUp, ArrowDown, Plus, Trash2, Save, Info, Check, Sliders } from 'lucide-react';
-import Notification from '../Modal/Notification';
-import Loader from '../Loader/Loader';
-import Input from '../shared/Input';
-import Button from '../shared/Button';
+import Notification from '@shared/components/Notification';
+import Loader from '@shared/components/Loader';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
 
 interface Props {
   onSaveSuccess?: () => void;

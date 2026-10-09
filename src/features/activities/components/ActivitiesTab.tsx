@@ -5,18 +5,18 @@ import {
   updateActivity,
   deleteActivity,
   getActivityTypes,
-} from '../../../services/activitiesService';
+} from '@core/services/activitiesService';
 
 import { Plus, Search } from 'lucide-react';
-import Loader from '../../../components/Loader/Loader';
-import Notification from '../../../components/shared/Notification';
-import ConfirmModal from '../../../components/shared/ConfirmModal';
-import Input from '../../../components/shared/Input';
-import Button from '../../../components/shared/Button';
+import Loader from '@shared/components/Loader';
+import Notification from '@shared/components/Notification';
+import ConfirmModal from '@shared/components/ConfirmModal';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
 import type { Activity, TypeActivity } from '../schemas/activities.schema';
-import type { Opportunity } from '../../../core/models/Opportunity';
+import type { Opportunity } from '@core/models/Opportunity';
 import { ActivityModal } from './ActivityModal';
-import Table, { type ColumnDef } from '../../../components/shared/Table';
+import Table, { type ColumnDef } from '@shared/components/Table';
 import { getActivitiesColumns } from '../utils/activities.columns';
 
 interface ActivitiesTabProps {

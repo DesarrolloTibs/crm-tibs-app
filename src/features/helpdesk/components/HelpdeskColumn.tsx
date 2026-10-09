@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import type { Ticket, TicketStage } from '../../core/models/Ticket';
+import type { Ticket, TicketStage } from '@core/models/Ticket';
 import TicketCard from './TicketCard';
-import { useAuth } from '../../hooks/useAuth';
-import KanbanColumn from '../shared/KanbanColumn';
+import { useAuth } from '@features/auth';
+import KanbanColumn from '@shared/components/KanbanColumn';
 
 interface Props {
   stage: TicketStage;

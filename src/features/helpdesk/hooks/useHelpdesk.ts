@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
-import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
-import { useAuth } from './useAuth';
-import { useConfigStore } from '../store/useConfigStore';
+import { createAppSocket, safeDisconnect } from '@core/socket/socketClient';
+import { useAuth } from '@features/auth';
+import { useConfigStore } from '@/store/useConfigStore';
 import {
   getMainHelpdesk,
   updateMainHelpdesk,
@@ -13,10 +13,10 @@ import {
   updateTicket,
   deleteTicket,
   archiveTicket,
-} from '../services/ticketsService';
-import { createOpportunity } from '../services/opportunitiesService';
-import { getActiveStages } from '../services/pipelinesService';
-import type { Helpdesk, TicketStage, Ticket } from '../core/models/Ticket';
+} from '@core/services/ticketsService';
+import { createOpportunity } from '@core/services/opportunitiesService';
+import { getActiveStages } from '@core/services/pipelinesService';
+import type { Helpdesk, TicketStage, Ticket } from '@core/models/Ticket';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 

@@ -17,15 +17,15 @@ import {
   validateActivityForm,
 } from '../utils/activities.helpers';
 
-import { useAuth } from '../../../hooks/useAuth';
-import { getOpportunities, getOpportunity } from '../../../services/opportunitiesService';
-import { getActiveClients } from '../../../services/clientsService';
-import { getCompanies } from '../../../services/companiesService';
+import { useAuth } from '@features/auth';
+import { getOpportunities, getOpportunity } from '@core/services/opportunitiesService';
+import { getActiveClients } from '@core/services/clientsService';
+import { getCompanies } from '@core/services/companiesService';
 
-import FormField from '../../../components/shared/FormField';
-import TextArea from '../../../components/shared/TextArea';
-import Select from '../../../components/shared/Select';
-import Button from '../../../components/shared/Button';
+import FormField from '@shared/components/FormField';
+import TextArea from '@shared/components/TextArea';
+import Select from '@shared/components/Select';
+import Button from '@shared/components/Button';
 
 interface ActivityFormProps {
   initialData?: Partial<Activity> | null;

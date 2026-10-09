@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { LifeBuoy, ChevronUp, ChevronDown, Filter, Tag, Star } from 'lucide-react';
 import { useHelpdesk } from '../hooks/useHelpdesk';
-import Notification from '../components/Modal/Notification';
-import Loader from '../components/Loader/Loader';
-import TicketsListTable from '../components/Helpdesk/TicketsListTable';
-import HelpdeskToolbar from '../components/Helpdesk/HelpdeskToolbar';
-import HelpdeskKanban from '../components/Helpdesk/HelpdeskKanban';
-import HelpdeskModals from '../components/Helpdesk/HelpdeskModals';
-import type { SearchBadge } from '../components/shared/UnifiedSearchBar';
+import Notification from '@shared/components/Notification';
+import Loader from '@shared/components/Loader';
+import TicketsListTable from '../components/TicketsListTable';
+import HelpdeskToolbar from '../components/HelpdeskToolbar';
+import HelpdeskKanban from '../components/HelpdeskKanban';
+import HelpdeskModals from '../components/HelpdeskModals';
+import type { SearchBadge } from '@shared/components/UnifiedSearchBar';
 
 const HelpdeskPage: React.FC = () => {
   const hd = useHelpdesk();

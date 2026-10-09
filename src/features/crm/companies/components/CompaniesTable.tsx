@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Building2, Search, X, Plus } from 'lucide-react';
-import Table from '../../../../components/shared/Table';
-import Button from '../../../../components/shared/Button';
+import Table from '@shared/components/Table';
+import Button from '@shared/components/Button';
 import type { Company, CompanyFiltersState } from '../schemas/companies.schema';
 import { getCompaniesColumns } from '../utils/companies.columns';
 

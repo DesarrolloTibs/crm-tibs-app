@@ -1,9 +1,9 @@
 import * as yup from 'yup';
-import type { Activity, TypeActivity, ActivityReminder } from '../../../core/models/Activity';
-import type { Opportunity } from '../../../core/models/Opportunity';
-import type { Client } from '../../../core/models/Client';
-import type { Company } from '../../../core/models/Company';
-import type { User } from '../../../core/models/User';
+import type { Activity, TypeActivity, ActivityReminder } from '@core/models/Activity';
+import type { Opportunity } from '@core/models/Opportunity';
+import type { Client } from '@core/models/Client';
+import type { Company } from '@core/models/Company';
+import type { User } from '@core/models/User';
 
 export type { Activity, TypeActivity, ActivityReminder, Opportunity, Client, Company, User };
 

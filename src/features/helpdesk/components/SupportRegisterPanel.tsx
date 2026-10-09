@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
-import { createTicket } from '../../services/ticketsService';
-import Input from '../shared/Input';
-import TextArea from '../shared/TextArea';
-import Select from '../shared/Select';
-import Button from '../shared/Button';
+import { createTicket } from '@core/services/ticketsService';
+import Input from '@shared/components/Input';
+import TextArea from '@shared/components/TextArea';
+import Select from '@shared/components/Select';
+import Button from '@shared/components/Button';
 
 const incidenceTypeOptions = [
   { value: 'Soporte Técnico', label: 'Soporte Técnico' },

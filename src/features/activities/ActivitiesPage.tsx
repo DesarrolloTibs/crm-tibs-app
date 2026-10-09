@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CalendarDays, Plus } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { useConfigStore } from '../../store/useConfigStore';
-import { createAppSocket, safeDisconnect } from '../../core/socket/socketClient';
+import { useAuth } from '@features/auth';
+import { useConfigStore } from '@/store/useConfigStore';
+import { createAppSocket, safeDisconnect } from '@core/socket/socketClient';
 
 // Componentes Compartidos
-import Button from '../../components/shared/Button';
-import Notification from '../../components/shared/Notification';
-import ConfirmModal from '../../components/shared/ConfirmModal';
+import Button from '@shared/components/Button';
+import Notification from '@shared/components/Notification';
+import ConfirmModal from '@shared/components/ConfirmModal';
 
 // Subcomponentes Modulares de Actividades
 import { ActivitiesNavTabs } from './components/ActivitiesNavTabs';
@@ -40,11 +40,11 @@ import {
   updateActivity,
   deleteActivity,
   getActivityTypes,
-} from '../../services/activitiesService';
-import { getOpportunities } from '../../services/opportunitiesService';
-import { getActiveClients } from '../../services/clientsService';
-import { getCompanies } from '../../services/companiesService';
-import { getActiveUsers } from '../../services/usersService';
+} from '@core/services/activitiesService';
+import { getOpportunities } from '@core/services/opportunitiesService';
+import { getActiveClients } from '@core/services/clientsService';
+import { getCompanies } from '@core/services/companiesService';
+import { getActiveUsers } from '@core/services/usersService';
 
 interface ActivitiesPageProps {
   defaultView?: ActivityViewMode;

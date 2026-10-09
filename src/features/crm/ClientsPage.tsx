@@ -2,12 +2,12 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom';
 import { RefreshCw, Users } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useConfigStore } from '../../store/useConfigStore';
+import { useConfigStore } from '@/store/useConfigStore';
 
 // Componentes Compartidos
-import Button from '../../components/shared/Button';
-import Notification from '../../components/shared/Notification';
-import ConfirmModal from '../../components/shared/ConfirmModal';
+import Button from '@shared/components/Button';
+import Notification from '@shared/components/Notification';
+import ConfirmModal from '@shared/components/ConfirmModal';
 
 // Submódulo de Contactos
 import {
@@ -43,7 +43,7 @@ import {
   updateClient,
   updateClientStatus,
   clearClientsCache,
-} from '../../services/clientsService';
+} from '@core/services/clientsService';
 
 import {
   getCompanies,
@@ -51,9 +51,9 @@ import {
   updateCompany,
   updateCompanyStatus,
   clearCompaniesCache,
-} from '../../services/companiesService';
+} from '@core/services/companiesService';
 
-import { getActiveUsers } from '../../services/usersService';
+import { getActiveUsers } from '@core/services/usersService';
 
 interface ClientsPageProps {
   defaultTab?: ClientsActiveTab;

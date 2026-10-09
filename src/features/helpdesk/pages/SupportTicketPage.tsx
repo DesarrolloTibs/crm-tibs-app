@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import SupportRegisterPanel from '../components/Helpdesk/SupportRegisterPanel';
-import SupportQueryPanel from '../components/Helpdesk/SupportQueryPanel';
+import SupportRegisterPanel from '../components/SupportRegisterPanel';
+import SupportQueryPanel from '../components/SupportQueryPanel';
 
 const SupportTicketPage: React.FC = () => {
   const [activeTabMobile, setActiveTabMobile] = useState<'register' | 'query'>('register');

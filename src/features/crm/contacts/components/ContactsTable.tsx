@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { Users, Search, X, UserPlus } from 'lucide-react';
-import Table from '../../../../components/shared/Table';
-import Button from '../../../../components/shared/Button';
+import Table from '@shared/components/Table';
+import Button from '@shared/components/Button';
 import type { Client, ContactFiltersState } from '../schemas/contacts.schema';
-import { ClientCategory, type ClientCategoryType } from '../../../../core/models/Client';
+import { ClientCategory, type ClientCategoryType } from '@core/models/Client';
 import { getContactsColumns } from '../utils/contacts.columns';
 
 interface ContactsTableProps {

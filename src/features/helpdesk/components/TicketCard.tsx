@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Ticket } from '../../core/models/Ticket';
+import type { Ticket } from '@core/models/Ticket';
 import { User, Building2, Clock, AlertTriangle, MoreVertical, Edit, Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '@features/auth';
 
 interface Props {
   ticket: Ticket;

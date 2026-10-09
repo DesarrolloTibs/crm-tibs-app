@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import type { Ticket } from '../../core/models/Ticket';
+import type { Ticket } from '@core/models/Ticket';
 import { Clock, Building2, User, AlertTriangle, Check, ChevronRight } from 'lucide-react';
-import Table, { type ColumnDef } from '../shared/Table';
+import Table, { type ColumnDef } from '@shared/components/Table';
 
 interface Props {
   tickets: Ticket[];

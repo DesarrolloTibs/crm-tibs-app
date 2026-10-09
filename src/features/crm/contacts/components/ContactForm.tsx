@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import type { Client } from '../../../../core/models/Client';
-import { ClientCategory } from '../../../../core/models/Client';
+import type { Client } from '@core/models/Client';
+import { ClientCategory } from '@core/models/Client';
 import type { ContactFormData } from '../schemas/contacts.schema';
 import { validateContactForm, INITIAL_CONTACT_FORM } from '../utils/contacts.helpers';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
-import Select from '../../../../components/shared/Select';
-import CreatableSelect from '../../../../components/shared/CreatableSelect';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
+import Select from '@shared/components/Select';
+import CreatableSelect from '@shared/components/CreatableSelect';
 import { User, Mail, Phone, Briefcase, Check } from 'lucide-react';
 
 interface ContactFormProps {

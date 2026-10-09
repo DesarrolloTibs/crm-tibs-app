@@ -1,7 +1,7 @@
-import type { ColumnDef } from '../../../../components/shared/Table';
+import type { ColumnDef } from '@shared/components/Table';
 import type { Company } from '../schemas/companies.schema';
-import Badge from '../../../../components/shared/Badge';
-import Button from '../../../../components/shared/Button';
+import Badge from '@shared/components/Badge';
+import Button from '@shared/components/Button';
 import {
   Edit,
   CheckCircle2,

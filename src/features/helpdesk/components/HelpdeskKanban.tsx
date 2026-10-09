@@ -4,9 +4,9 @@ import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import HelpdeskColumn from './HelpdeskColumn';
 import TicketCard from './TicketCard';
-import Input from '../shared/Input';
-import Button from '../shared/Button';
-import type { TicketStage, Ticket } from '../../core/models/Ticket';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
+import type { TicketStage, Ticket } from '@core/models/Ticket';
 
 interface Props {
   sensors: ReturnType<typeof useSensors>;

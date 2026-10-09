@@ -3,11 +3,11 @@ import {
   Kanban as KanbanIcon, List as ListIcon, Plus, Settings2,
   Filter, Tag, Star, XCircle, FileText, FileSpreadsheet,
 } from 'lucide-react';
-import UnifiedSearchBar from '../shared/UnifiedSearchBar';
-import type { SearchBadge } from '../shared/UnifiedSearchBar';
-import StageVisibilitySelector from '../shared/StageVisibilitySelector';
-import Button from '../shared/Button';
-import type { TicketStage } from '../../core/models/Ticket';
+import UnifiedSearchBar from '@shared/components/UnifiedSearchBar';
+import type { SearchBadge } from '@shared/components/UnifiedSearchBar';
+import StageVisibilitySelector from '@shared/components/StageVisibilitySelector';
+import Button from '@shared/components/Button';
+import type { TicketStage } from '@core/models/Ticket';
 
 interface Props {
   helpdesk: { strname?: string; strdescription?: string | null } | null;

@@ -5,9 +5,9 @@ import {
   CalendarDays,
   RotateCcw,
 } from 'lucide-react';
-import UnifiedSearchBar, { type SearchBadge } from '../../../components/shared/UnifiedSearchBar';
-import Button from '../../../components/shared/Button';
-import Select from '../../../components/shared/Select';
+import UnifiedSearchBar, { type SearchBadge } from '@shared/components/UnifiedSearchBar';
+import Button from '@shared/components/Button';
+import Select from '@shared/components/Select';
 import type {
   TypeActivity,
   ActivityFiltersState,

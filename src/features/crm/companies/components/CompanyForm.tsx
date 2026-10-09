@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { Company } from '../../../../core/models/Company';
+import type { Company } from '@core/models/Company';
 import type { CompanyFormData } from '../schemas/companies.schema';
 import { validateCompanyForm, INITIAL_COMPANY_FORM } from '../utils/companies.helpers';
-import Button from '../../../../components/shared/Button';
-import FormField from '../../../../components/shared/FormField';
-import Select from '../../../../components/shared/Select';
+import Button from '@shared/components/Button';
+import FormField from '@shared/components/FormField';
+import Select from '@shared/components/Select';
 import { Building2, Mail, Phone, Globe, MapPin, Check } from 'lucide-react';
 
 interface CompanyFormProps {

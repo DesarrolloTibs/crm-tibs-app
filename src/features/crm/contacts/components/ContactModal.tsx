@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../../../../components/shared/Modal';
+import Modal from '@shared/components/Modal';
 import { ContactForm } from './ContactForm';
 import type { Client, ContactFormData } from '../schemas/contacts.schema';
 import { Edit, UserPlus } from 'lucide-react';

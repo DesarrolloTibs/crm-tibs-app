@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../../../components/shared/Modal';
+import Modal from '@shared/components/Modal';
 import { ActivityForm } from './ActivityForm';
 import type {
   Activity,

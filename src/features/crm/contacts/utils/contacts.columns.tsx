@@ -1,8 +1,8 @@
-import type { ColumnDef } from '../../../../components/shared/Table';
+import type { ColumnDef } from '@shared/components/Table';
 import type { Client } from '../schemas/contacts.schema';
-import { ClientCategory } from '../../../../core/models/Client';
-import Badge from '../../../../components/shared/Badge';
-import Button from '../../../../components/shared/Button';
+import { ClientCategory } from '@core/models/Client';
+import Badge from '@shared/components/Badge';
+import Button from '@shared/components/Button';
 import { Edit, UserCheck, UserX, Building, Mail, Phone } from 'lucide-react';
 
 interface ContactsColumnsParams {

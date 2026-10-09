@@ -1,13 +1,13 @@
 import React from 'react';
 import { Settings2, LifeBuoy, AlertTriangle, X } from 'lucide-react';
-import Modal from '../shared/Modal';
-import Input from '../shared/Input';
-import TextArea from '../shared/TextArea';
-import Button from '../shared/Button';
+import Modal from '@shared/components/Modal';
+import Input from '@shared/components/Input';
+import TextArea from '@shared/components/TextArea';
+import Button from '@shared/components/Button';
 import TicketDetail from './TicketDetail';
-import OpportunityForm from '../Pipeline/OpportunityForm';
+import { OpportunityForm } from '@features/pipeline';
 import HelpdeskStagesSettings from './HelpdeskStagesSettings';
-import type { TicketStage, Ticket } from '../../core/models/Ticket';
+import type { TicketStage, Ticket } from '@core/models/Ticket';
 
 interface Props {
   // Editing stage modal

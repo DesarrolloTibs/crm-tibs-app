@@ -6,7 +6,7 @@ import type {
   ContactStats,
 } from '../schemas/contacts.schema';
 import { contactValidationSchema } from '../schemas/contacts.schema';
-import { ClientCategory } from '../../../../core/models/Client';
+import { ClientCategory } from '@core/models/Client';
 
 export const INITIAL_CONTACT_FORM: ContactFormData = {
   nombre: '',

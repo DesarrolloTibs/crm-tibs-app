@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import type { ColumnDef } from '../../../components/shared/Table';
+import type { ColumnDef } from '@shared/components/Table';
 import type { Activity } from '../schemas/activities.schema';
-import Button from '../../../components/shared/Button';
+import Button from '@shared/components/Button';
 import { getActivityColor } from '../../../utils/activityColors';
 import { Edit, Trash2, Bell, Building, User, Calendar, Briefcase } from 'lucide-react';
 
