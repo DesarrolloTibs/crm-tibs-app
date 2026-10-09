@@ -16,6 +16,16 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path Aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@app/*": ["src/app/*"],
+      "@core/*": ["src/core/*"],
+      "@shared/*": ["src/shared/*"],
+      "@features/*": ["src/features/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
