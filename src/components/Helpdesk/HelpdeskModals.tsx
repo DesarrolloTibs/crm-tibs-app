@@ -5,7 +5,7 @@ import Input from '../shared/Input';
 import TextArea from '../shared/TextArea';
 import Button from '../shared/Button';
 import TicketDetail from './TicketDetail';
-import OpportunityForm from '../Pipeline/OpportunityForm';
+import { OpportunityForm } from '../../pages/Pipeline';
 import HelpdeskStagesSettings from './HelpdeskStagesSettings';
 import type { TicketStage, Ticket } from '../../core/models/Ticket';
 

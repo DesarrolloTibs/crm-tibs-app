@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import type { Opportunity, Stage } from '../../core/models/Opportunity';
-import OpportunityCard from './OpportunityCard';
-import KanbanColumn from '../shared/KanbanColumn';
-import { useAuth } from '../../hooks/useAuth';
+import type { Opportunity, Stage } from '../../schemas/pipeline.schema';
+import OpportunityKanbanCard from './OpportunityKanbanCard';
+import KanbanColumn from '../../../../components/shared/KanbanColumn';
+import { useAuth } from '../../../../hooks/useAuth';
 
 interface Props {
   stage: Stage;
@@ -20,12 +20,12 @@ interface Props {
   onUnfoldStage: (stageId: string) => void;
 }
 
-const PipelineColumn: React.FC<Props> = ({ 
-  stage, 
-  opportunities, 
-  onEdit, 
-  onDelete, 
-  onArchive, 
+export const PipelineKanbanColumn: React.FC<Props> = ({
+  stage,
+  opportunities,
+  onEdit,
+  onDelete,
+  onArchive,
   stages,
   onEditStage,
   onDisableStage,
@@ -33,21 +33,31 @@ const PipelineColumn: React.FC<Props> = ({
   isOverlay = false,
   isFolded = false,
   onFoldStage,
-  onUnfoldStage
+  onUnfoldStage,
 }) => {
   const { isAdmin } = useAuth();
 
   const sortedOpportunities = useMemo(() => {
     return [...opportunities].sort((a, b) => {
-      const aDate = a.stage_entered_at ? new Date(a.stage_entered_at) : new Date(a.createdAt || Date.now());
-      const aDays = Math.floor(Math.max(0, Date.now() - aDate.getTime()) / (1000 * 60 * 60 * 24));
+      const aDate = a.stage_entered_at
+        ? new Date(a.stage_entered_at)
+        : new Date(a.createdAt || Date.now());
+      const aDays = Math.floor(
+        Math.max(0, Date.now() - aDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
-      const bDate = b.stage_entered_at ? new Date(b.stage_entered_at) : new Date(b.createdAt || Date.now());
-      const bDays = Math.floor(Math.max(0, Date.now() - bDate.getTime()) / (1000 * 60 * 60 * 24));
+      const bDate = b.stage_entered_at
+        ? new Date(b.stage_entered_at)
+        : new Date(b.createdAt || Date.now());
+      const bDays = Math.floor(
+        Math.max(0, Date.now() - bDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       const limit = stage.intmaxdays;
-      const aIsRed = limit !== undefined && limit !== null && limit > 0 && aDays > limit;
-      const bIsRed = limit !== undefined && limit !== null && limit > 0 && bDays > limit;
+      const aIsRed =
+        limit !== undefined && limit !== null && limit > 0 && aDays > limit;
+      const bIsRed =
+        limit !== undefined && limit !== null && limit > 0 && bDays > limit;
 
       if (aIsRed && !bIsRed) return -1;
       if (!aIsRed && bIsRed) return 1;
@@ -64,13 +74,16 @@ const PipelineColumn: React.FC<Props> = ({
       if (opp.moneda === 'USD') {
         const rawTc = opp.tipoCambio ?? (opp as any).tipo_cambio;
         const exchangeRate = rawTc && Number(rawTc) > 0 ? Number(rawTc) : 1;
-        return acc + (amount * exchangeRate);
+        return acc + amount * exchangeRate;
       }
       return acc + amount;
     }, 0);
   }, [opportunities]);
 
-  const sortedOpportunityIds = useMemo(() => sortedOpportunities.map(o => o.id), [sortedOpportunities]);
+  const sortedOpportunityIds = useMemo(
+    () => sortedOpportunities.map((o) => o.id),
+    [sortedOpportunities]
+  );
 
   return (
     <KanbanColumn
@@ -90,9 +103,9 @@ const PipelineColumn: React.FC<Props> = ({
       accentColorFallback="#3b82f6"
       plusButtonTitle="Nueva oportunidad"
     >
-      {sortedOpportunities.map(opportunity => (
-        <OpportunityCard 
-          key={opportunity.id} 
+      {sortedOpportunities.map((opportunity) => (
+        <OpportunityKanbanCard
+          key={opportunity.id}
           opportunity={opportunity}
           onEdit={onEdit}
           onDelete={onDelete}
@@ -104,4 +117,5 @@ const PipelineColumn: React.FC<Props> = ({
   );
 };
 
-export default PipelineColumn;
+export const PipelineColumn = PipelineKanbanColumn;
+export default PipelineKanbanColumn;

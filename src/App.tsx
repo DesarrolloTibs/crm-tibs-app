@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import ClientsPage from './pages/Clients';
-import PipelinePage from './pages/PipelinePage';
+import PipelinePage from './pages/Pipeline';
 import UsersPage from './pages/UsersPage';
 import ProtectedRoute from './core/guards/ProtectedRoute';
 import Layout from './components/Layout/Layout'; // Importar el Layout

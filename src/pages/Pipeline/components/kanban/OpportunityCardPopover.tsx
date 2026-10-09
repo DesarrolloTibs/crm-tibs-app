@@ -9,7 +9,7 @@ interface PopoverProps {
   className?: string;
 }
 
-const Popover: React.FC<PopoverProps> = ({ children, targetRef, show, onClose, className }) => {
+export const OpportunityCardPopover: React.FC<PopoverProps> = ({ children, targetRef, show, onClose, className }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
@@ -25,28 +25,31 @@ const Popover: React.FC<PopoverProps> = ({ children, targetRef, show, onClose, c
       const spaceAbove = targetRect.top;
       let top;
       if (spaceAbove > popoverRect.height + 8) {
-        // Hay espacio arriba
-        top = targetRect.top - popoverRect.height - 8; // 8px de margen
+        top = targetRect.top - popoverRect.height - 8;
       } else {
-        // No hay espacio arriba, lo ponemos abajo
         top = targetRect.bottom + 8;
       }
 
       setPosition({
         top,
-        left: targetRect.left + (targetRect.width / 2) - (popoverRect.width / 2),
+        left: targetRect.left + targetRect.width / 2 - popoverRect.width / 2,
       });
     };
 
-    updatePosition(); // Calcular al mostrar
-
-    window.addEventListener('scroll', updatePosition, true); // Recalcular en scroll
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
     return () => window.removeEventListener('scroll', updatePosition, true);
-  }, [show]);
+  }, [show, targetRef]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (show && popoverRef.current && !popoverRef.current.contains(event.target as Node) && targetRef.current && !targetRef.current.contains(event.target as Node)) {
+      if (
+        show &&
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node) &&
+        targetRef.current &&
+        !targetRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
@@ -59,8 +62,13 @@ const Popover: React.FC<PopoverProps> = ({ children, targetRef, show, onClose, c
   return createPortal(
     <div
       ref={popoverRef}
-      style={position ? { top: `${position.top}px`, left: `${position.left}px`, opacity: 1 } : { opacity: 0 }}
-      className={`fixed bg-white border rounded-lg shadow-lg p-3 z-[100] text-left transition-opacity duration-150 ${className}`}
+      style={{
+        position: 'fixed',
+        top: position ? `${position.top}px` : '-9999px',
+        left: position ? `${position.left}px` : '-9999px',
+        zIndex: 50,
+      }}
+      className={`bg-white border border-gray-200 rounded-lg shadow-lg p-3 ${className || ''}`}
     >
       {children}
     </div>,
@@ -68,4 +76,5 @@ const Popover: React.FC<PopoverProps> = ({ children, targetRef, show, onClose, c
   );
 };
 
-export default Popover;
+export const Popover = OpportunityCardPopover;
+export default OpportunityCardPopover;

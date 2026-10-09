@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import Loader from '../../components/Loader/Loader';
+import Loader from '../../components/shared/Loader';
 
 interface Props {
   children: React.ReactElement;

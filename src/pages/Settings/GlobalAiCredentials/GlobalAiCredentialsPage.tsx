@@ -6,7 +6,7 @@ import SettingsContainer from '../../../components/shared/SettingsContainer';
 import Button from '../../../components/shared/Button';
 import ConfirmModal from '../../../components/shared/ConfirmModal';
 import Notification from '../../../components/shared/Notification';
-import Loader from '../../../components/Loader/Loader';
+import Loader from '../../../components/shared/Loader';
 
 // Subcomponentes Modulares de Credenciales LLM Global
 import { GlobalAiStatsBanner } from './components/GlobalAiStatsBanner';

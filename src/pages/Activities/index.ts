@@ -8,5 +8,6 @@ export * from './components/ActivitiesTable';
 export * from './components/ActivityModal';
 export * from './components/ActivityForm';
 export * from './components/ActivitiesFilters';
+export * from './components/ActivitiesTab';
 
 export { default } from './ActivitiesPage';

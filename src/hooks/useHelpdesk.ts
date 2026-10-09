@@ -160,16 +160,20 @@ export function useHelpdesk() {
   useEffect(() => {
     const socket = createAppSocket({
       namespace: 'tickets',
+      query: { tenantSchema: schemaName || 'public' },
     });
 
     socket.on('connect', () => {
       setIsWsConnected(true);
+      // Asegurar suscripción reactiva a la sala del tenant activo
+      socket.emit('set_tenant', { tenantSchema: schemaName || 'public' });
+
       if (!isInitialConnectRef.current) {
         console.log('[Tickets WS] Reconectado. Re-sincronizando tickets y etapas vía REST...');
         loadDataRef.current();
       } else {
         isInitialConnectRef.current = false;
-        console.log('Connected to WebSocket server');
+        console.log('Conectado a WebSocket de Tickets');
       }
     });
 

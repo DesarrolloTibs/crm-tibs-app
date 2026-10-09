@@ -247,15 +247,19 @@ export function useActivities(options: UseActivitiesOptions = {}) {
     isInitialConnectRef.current = true;
     const socket = createAppSocket({
       namespace: 'activities',
+      query: { tenantSchema: schemaName || 'public' },
     });
 
     socket.on('connect', () => {
+      // Asegurar suscripción reactiva a la sala del tenant activo
+      socket.emit('set_tenant', { tenantSchema: schemaName || 'public' });
+
       if (!isInitialConnectRef.current) {
         console.log('Reconectado a WebSocket de Actividades. Sincronizando...');
         loadModuleDataRef.current(true);
       } else {
         isInitialConnectRef.current = false;
-        console.log('Connectado a WebSocket de Actividades');
+        console.log('Conectado a WebSocket de Actividades');
       }
     });
 

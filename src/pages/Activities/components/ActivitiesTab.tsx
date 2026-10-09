@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   getActivitiesByOpportunity,
   createActivity,
@@ -8,7 +8,7 @@ import {
 } from '../../../services/activitiesService';
 
 import { Plus, Search } from 'lucide-react';
-import Loader from '../../../components/Loader/Loader';
+import Loader from '../../../components/shared/Loader';
 import Notification from '../../../components/shared/Notification';
 import ConfirmModal from '../../../components/shared/ConfirmModal';
 import Input from '../../../components/shared/Input';
@@ -71,11 +71,23 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
     });
   };
 
+  const isFetchingRef = useRef<boolean>(false);
+
   const fetchActivities = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     setLoading(true);
+
     try {
-      const data = await getActivitiesByOpportunity({ opportunityId });
+      const [data, types] = await Promise.all([
+        getActivitiesByOpportunity({ opportunityId }),
+        getActivityTypes().catch(() => []),
+      ]);
+
       setActivities(Array.isArray(data) ? data : []);
+      if (Array.isArray(types)) {
+        setActivityTypes(types.filter((t) => t.blnstatus !== false));
+      }
     } catch {
       notify({
         type: 'error',
@@ -84,20 +96,12 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
       });
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, [opportunityId]);
 
   useEffect(() => {
     fetchActivities();
-    const fetchTypes = async () => {
-      try {
-        const types = await getActivityTypes();
-        setActivityTypes(types.filter((t) => t.blnstatus !== false));
-      } catch (error) {
-        console.error('Error al cargar tipos de actividad en ActivitiesTab:', error);
-      }
-    };
-    fetchTypes();
   }, [fetchActivities]);
 
   const handleCreate = async (activity: Partial<Activity>) => {

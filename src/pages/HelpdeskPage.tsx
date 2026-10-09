@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { LifeBuoy, ChevronUp, ChevronDown, Filter, Tag, Star } from 'lucide-react';
 import { useHelpdesk } from '../hooks/useHelpdesk';
 import Notification from '../components/Modal/Notification';
-import Loader from '../components/Loader/Loader';
+import Loader from '../components/shared/Loader';
 import TicketsListTable from '../components/Helpdesk/TicketsListTable';
 import HelpdeskToolbar from '../components/Helpdesk/HelpdeskToolbar';
 import HelpdeskKanban from '../components/Helpdesk/HelpdeskKanban';

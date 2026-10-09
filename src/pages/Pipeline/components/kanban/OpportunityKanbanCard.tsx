@@ -1,11 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Opportunity, Stage } from '../../core/models/Opportunity';
-import { useAuth } from '../../hooks/useAuth';
+import type { Opportunity, Stage } from '../../schemas/pipeline.schema';
+import { useAuth } from '../../../../hooks/useAuth';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Edit, Trash2, Building2, Archive, ArchiveRestore, MoreVertical, Mail, User, Clock } from 'lucide-react';
-import Popover from './Popover';
-
+import Button from '../../../../components/shared/Button';
+import {
+  Edit,
+  Trash2,
+  Building2,
+  Archive,
+  ArchiveRestore,
+  MoreVertical,
+  Mail,
+  User,
+  Clock,
+} from 'lucide-react';
+import { OpportunityCardPopover } from './OpportunityCardPopover';
+const Popover = OpportunityCardPopover;
 
 interface Props {
   opportunity: Opportunity;
@@ -17,10 +28,10 @@ interface Props {
 }
 
 const businessLineColors: Record<string, string> = {
-  'Datos': '#dbed74 #707a10',
-  'Desarrollo': '#dcaeed #371450',
-  'RH': '#80d3f4 #2f5367',
-  'IA': '#c8e7df #1b6b65',
+  Datos: '#dbed74 #707a10',
+  Desarrollo: '#dcaeed #371450',
+  RH: '#80d3f4 #2f5367',
+  IA: '#c8e7df #1b6b65',
 };
 
 const getInitials = (name = '') => {
@@ -67,9 +78,20 @@ const Avatar: React.FC<{ opportunity: Opportunity }> = ({ opportunity }) => {
           onMouseLeave={() => setShowPopover(false)}
           onError={() => setImgError(true)}
         />
-        <Popover targetRef={avatarRef} show={showPopover} onClose={() => setShowPopover(false)} className="w-max max-w-xs">
-          <p className="font-bold text-sm text-gray-800 flex items-center gap-2"><User size={14} /> {ejecutivo.username}</p>
-          {ejecutivo.email && <p className="text-xs text-gray-600 flex items-center gap-2 mt-1"><Mail size={14} /> {ejecutivo.email}</p>}
+        <Popover
+          targetRef={avatarRef}
+          show={showPopover}
+          onClose={() => setShowPopover(false)}
+          className="w-max max-w-xs"
+        >
+          <p className="font-bold text-sm text-gray-800 flex items-center gap-2">
+            <User size={14} /> {ejecutivo.username}
+          </p>
+          {ejecutivo.email && (
+            <p className="text-xs text-gray-600 flex items-center gap-2 mt-1">
+              <Mail size={14} /> {ejecutivo.email}
+            </p>
+          )}
         </Popover>
       </>
     );
@@ -78,23 +100,42 @@ const Avatar: React.FC<{ opportunity: Opportunity }> = ({ opportunity }) => {
   // 3. Ejecutivo asignado sin foto (iniciales)
   return (
     <>
-      <div 
-        ref={avatarRef as React.RefObject<HTMLDivElement>} 
-        className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[9px] font-bold border border-slate-200 shrink-0 cursor-pointer select-none" 
-        title={`Asignado a: ${ejecutivo.username}`} 
-        onMouseEnter={() => setShowPopover(true)} 
-        onMouseLeave={() => setShowPopover(false)}>
+      <div
+        ref={avatarRef as React.RefObject<HTMLDivElement>}
+        className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[9px] font-bold border border-slate-200 shrink-0 cursor-pointer select-none"
+        title={`Asignado a: ${ejecutivo.username}`}
+        onMouseEnter={() => setShowPopover(true)}
+        onMouseLeave={() => setShowPopover(false)}
+      >
         {getInitials(ejecutivo.username)}
       </div>
-      <Popover targetRef={avatarRef} show={showPopover} onClose={() => setShowPopover(false)} className="w-max max-w-xs">
-        <p className="font-bold text-sm text-gray-800 flex items-center gap-2"><User size={14} /> {ejecutivo.username}</p>
-        {ejecutivo.email && <p className="text-xs text-gray-600 flex items-center gap-2 mt-1"><Mail size={14} /> {ejecutivo.email}</p>}
+      <Popover
+        targetRef={avatarRef}
+        show={showPopover}
+        onClose={() => setShowPopover(false)}
+        className="w-max max-w-xs"
+      >
+        <p className="font-bold text-sm text-gray-800 flex items-center gap-2">
+          <User size={14} /> {ejecutivo.username}
+        </p>
+        {ejecutivo.email && (
+          <p className="text-xs text-gray-600 flex items-center gap-2 mt-1">
+            <Mail size={14} /> {ejecutivo.email}
+          </p>
+        )}
       </Popover>
     </>
   );
 };
 
-const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArchive, isOverlay = false, stages = [] }) => {
+export const OpportunityKanbanCard: React.FC<Props> = ({
+  opportunity,
+  onEdit,
+  onDelete,
+  onArchive,
+  isOverlay = false,
+  stages = [],
+}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { isAdmin, user: currentUser } = useAuth();
@@ -112,9 +153,10 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: opportunity.id,
-    disabled: !(isAdmin || isOwner) || isOverlay, // Deshabilita el drag si no es admin/dueño o si es el overlay visual
+    disabled: !(isAdmin || isOwner) || isOverlay,
   });
 
   const style = isOverlay
@@ -127,22 +169,24 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
   const canDrag = (isAdmin || isOwner) && !isOverlay;
   const isDraggingStyle = isDragging && !isOverlay;
 
-  // Calcular progreso en base a la lista de etapas activas ordenadas
   const getProgress = () => {
-    const activeStages = stages.filter(s => s.blnstatus).sort((a, b) => a.display_order - b.display_order);
-    const index = activeStages.findIndex(s => s.id === opportunity.stage_id);
+    const activeStages = stages
+      .filter((s) => s.blnstatus)
+      .sort((a, b) => a.display_order - b.display_order);
+    const index = activeStages.findIndex((s) => s.id === opportunity.stage_id);
     if (index === -1 || activeStages.length <= 1) {
       return { percent: 0, color: opportunity.stage?.strcolor || '#9ca3af' };
     }
     const percent = Math.round((index / (activeStages.length - 1)) * 100);
     return {
       percent,
-      color: opportunity.stage?.strcolor || '#9ca3af'
+      color: opportunity.stage?.strcolor || '#9ca3af',
     };
   };
 
   const progress = getProgress();
-  const tagColorString = businessLineColors[opportunity.linea_negocio?.strname || ''] || '#f3f4f6 #1f2937'; // Default to gray-100 and gray-800
+  const tagColorString =
+    businessLineColors[opportunity.linea_negocio?.strname || ''] || '#f3f4f6 #1f2937';
   const [tagBgColor, tagTextColor] = tagColorString.split(' ');
   const tagStyle = {
     backgroundColor: tagBgColor,
@@ -150,8 +194,8 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
   };
 
   const getDaysInCurrentStage = () => {
-    const enteredDate = opportunity.stage_entered_at 
-      ? new Date(opportunity.stage_entered_at) 
+    const enteredDate = opportunity.stage_entered_at
+      ? new Date(opportunity.stage_entered_at)
       : new Date(opportunity.createdAt || Date.now());
     const diffTime = Math.max(0, Date.now() - enteredDate.getTime());
     return Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -159,8 +203,14 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
 
   const days = getDaysInCurrentStage();
   const stageLimit = opportunity.stage?.intmaxdays;
-  const isRed = stageLimit !== undefined && stageLimit !== null && stageLimit > 0 && days > stageLimit;
-  const isYellow = stageLimit !== undefined && stageLimit !== null && stageLimit > 0 && !isRed && days >= (stageLimit / 2);
+  const isRed =
+    stageLimit !== undefined && stageLimit !== null && stageLimit > 0 && days > stageLimit;
+  const isYellow =
+    stageLimit !== undefined &&
+    stageLimit !== null &&
+    stageLimit > 0 &&
+    !isRed &&
+    days >= stageLimit / 2;
 
   const lastTap = useRef<number>(0);
 
@@ -190,7 +240,9 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
           ? 'border-red-300 bg-gradient-to-br from-red-50 to-white shadow-sm hover:shadow-lg hover:-translate-y-0.5'
           : isYellow
           ? 'border-amber-300 bg-gradient-to-br from-amber-50/60 to-white shadow-sm hover:shadow-lg hover:-translate-y-0.5'
-          : `bg-white border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 ${!canDrag ? 'cursor-not-allowed' : ''}`
+          : `bg-white border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+              !canDrag ? 'cursor-not-allowed' : ''
+            }`
       }`}
       {...attributes}
       onDoubleClick={() => {
@@ -208,11 +260,13 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
         </div>
       )}
 
-      {/* Actions Menu Popover */}
+      {/* Menú contextual flotante */}
       {(isAdmin || isOwner) && (
         <div className="absolute top-2.5 right-2.5 z-20" ref={menuRef}>
-          <button
-            className="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          <Button
+            type="button"
+            variant="icon"
+            className="!p-1.5 !text-gray-500 hover:!text-gray-800 hover:!bg-gray-200 !rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
               setIsMenuOpen(!isMenuOpen);
@@ -221,12 +275,14 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
             aria-expanded={isMenuOpen}
           >
             <MoreVertical size={16} />
-          </button>
+          </Button>
           {isMenuOpen && (
             <div className="absolute top-0 right-full mr-2 flex items-center space-x-1 bg-white p-1 rounded-full shadow-lg border border-gray-100 z-30">
               {(isAdmin || isOwner) && (
-                <button
-                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full cursor-pointer"
+                <Button
+                  type="button"
+                  variant="icon"
+                  className="!p-1.5 !text-gray-500 hover:!text-blue-600 hover:!bg-blue-100 !rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(opportunity);
@@ -235,11 +291,13 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
                   title="Editar"
                 >
                   <Edit size={16} />
-                </button>
+                </Button>
               )}
               {(isAdmin || isOwner) && (
-                <button
-                  className="p-1.5 text-gray-500 hover:text-yellow-600 hover:bg-yellow-100 rounded-full cursor-pointer"
+                <Button
+                  type="button"
+                  variant="icon"
+                  className="!p-1.5 !text-gray-500 hover:!text-yellow-600 hover:!bg-yellow-100 !rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onArchive(opportunity);
@@ -247,12 +305,18 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
                   }}
                   title={opportunity.archived ? 'Desarchivar' : 'Archivar'}
                 >
-                  {opportunity.archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
-                </button>
+                  {opportunity.archived ? (
+                    <ArchiveRestore size={16} />
+                  ) : (
+                    <Archive size={16} />
+                  )}
+                </Button>
               )}
               {isAdmin && (
-                <button
-                  className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full cursor-pointer"
+                <Button
+                  type="button"
+                  variant="icon"
+                  className="!p-1.5 !text-gray-500 hover:!text-red-600 hover:!bg-red-100 !rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(opportunity);
@@ -261,50 +325,68 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
                   title="Eliminar"
                 >
                   <Trash2 size={16} />
-                </button>
+                </Button>
               )}
             </div>
           )}
         </div>
       )}
 
-      {/* Draggable and Clickable Content */}
-      <div 
-        {...listeners} 
-        className={`${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} flex-grow flex flex-col justify-between`}
+      {/* Contenido Arrastrable y Clickeable */}
+      <div
+        {...listeners}
+        className={`${
+          canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
+        } flex-grow flex flex-col justify-between`}
       >
-        {/* Opportunity Header */}
+        {/* Cabecera de la Oportunidad */}
         <div className="flex flex-col gap-0.5 pr-8">
-          
-          <h4 className="font-bold text-slate-900 text-sm leading-snug truncate" title={opportunity.nombre_proyecto}>
+          <h4
+            className="font-bold text-slate-900 text-sm leading-snug truncate"
+            title={opportunity.nombre_proyecto}
+          >
             {opportunity.nombre_proyecto}
           </h4>
         </div>
 
-        {/* Opportunity Body / Client */}
+        {/* Cliente / Empresa */}
         <div className="mt-1 flex-grow flex flex-col justify-end">
           {opportunity.company ? (
             <p
               className="font-semibold text-slate-800 text-xs truncate flex items-center gap-1"
-              title={`${opportunity.company.nombre}${opportunity.contacts && opportunity.contacts.length > 0 ? ` - Contactos: ${opportunity.contacts.map(c => `${c.nombre} ${c.apellido}`).join(', ')}` : ''}`}
+              title={`${opportunity.company.nombre}${
+                opportunity.contacts && opportunity.contacts.length > 0
+                  ? ` - Contactos: ${opportunity.contacts
+                      .map((c) => `${c.nombre} ${c.apellido}`)
+                      .join(', ')}`
+                  : ''
+              }`}
             >
               <Building2 size={11} className="text-slate-400 shrink-0" />
               <span className="truncate">{opportunity.company.nombre}</span>
               {opportunity.contacts && opportunity.contacts.length > 0 && (
                 <span className="text-[10px] text-slate-500 font-normal truncate">
-                  ({opportunity.contacts.map(c => `${c.nombre} ${c.apellido}`).join(', ')})
+                  ({opportunity.contacts.map((c) => `${c.nombre} ${c.apellido}`).join(', ')})
                 </span>
               )}
             </p>
           ) : (
             <p
               className="font-semibold text-slate-800 text-xs truncate flex items-center gap-1"
-              title={opportunity.cliente ? `${opportunity.cliente.nombre} ${opportunity.cliente.apellido}${opportunity.empresa ? ` (${opportunity.empresa})` : ''}` : (opportunity.empresa || 'Sin empresa')}
+              title={
+                opportunity.cliente
+                  ? `${opportunity.cliente.nombre} ${opportunity.cliente.apellido}${
+                      opportunity.empresa ? ` (${opportunity.empresa})` : ''
+                    }`
+                  : opportunity.empresa || 'Sin empresa'
+              }
             >
               {opportunity.cliente ? (
                 <>
                   <User size={11} className="text-slate-400 shrink-0" />
-                  <span className="truncate">{opportunity.cliente.nombre} {opportunity.cliente.apellido}</span>
+                  <span className="truncate">
+                    {opportunity.cliente.nombre} {opportunity.cliente.apellido}
+                  </span>
                   {opportunity.empresa && (
                     <span className="text-[10px] text-slate-400 font-normal truncate">
                       ({opportunity.empresa})
@@ -319,12 +401,18 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
               )}
             </p>
           )}
+
           <div className="flex items-center justify-between mt-0.5">
             <span className="text-sm font-bold text-slate-700">
               {opportunity.monto_total && Number(opportunity.monto_total) > 0 ? (
                 <>
-                  ${Number(opportunity.monto_total).toLocaleString('es-MX', { minimumFractionDigits: 0 })}{' '}
-                  <span className="text-xs font-semibold text-slate-500">{opportunity.moneda}</span>
+                  $
+                  {Number(opportunity.monto_total).toLocaleString('es-MX', {
+                    minimumFractionDigits: 0,
+                  })}{' '}
+                  <span className="text-xs font-semibold text-slate-500">
+                    {opportunity.moneda}
+                  </span>
                 </>
               ) : (
                 <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-semibold border border-indigo-100">
@@ -332,28 +420,35 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
                 </span>
               )}
             </span>
-            <span className="px-2 py-0.5 text-[9px] font-semibold rounded-full inline-block shrink-0" style={tagStyle}>
+            <span
+              className="px-2 py-0.5 text-[9px] font-semibold rounded-full inline-block shrink-0"
+              style={tagStyle}
+            >
               {opportunity.linea_negocio?.strname || ''}
             </span>
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Barra de Progreso */}
         <div className="mt-1.5">
           <div className="bg-gray-200 rounded-full h-1 w-full relative">
-            <div className="h-1 rounded-full transition-all duration-300" style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}></div>
+            <div
+              className="h-1 rounded-full transition-all duration-300"
+              style={{ width: `${progress.percent}%`, backgroundColor: progress.color }}
+            />
           </div>
         </div>
 
-        {/* Opportunity Footer (Stars + Clock) */}
+        {/* Footer (Prioridad + Tiempo en Etapa + Avatar) */}
         <div className="flex items-center justify-between border-t border-slate-100 pt-1.5 mt-1.5">
-          {/* Stars */}
           <div className="flex gap-0.5 items-center">
             {[1, 2, 3].map((star) => (
               <svg
                 key={star}
                 className={`w-3.5 h-3.5 ${
-                  star <= (opportunity.priority ?? 0) ? 'text-amber-400 fill-current' : 'text-slate-200'
+                  star <= (opportunity.priority ?? 0)
+                    ? 'text-amber-400 fill-current'
+                    : 'text-slate-200'
                 }`}
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -365,14 +460,12 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
             ))}
           </div>
 
-          {/* Right side: Traffic Light + Avatar */}
           <div className="flex items-center gap-2">
-            {/* Traffic Light */}
             {stageLimit ? (
               <div
                 className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border ${
-                  isRed 
-                    ? 'text-red-600 bg-red-50 border-red-200/50' 
+                  isRed
+                    ? 'text-red-600 bg-red-50 border-red-200/50'
                     : isYellow
                     ? 'text-amber-600 bg-amber-50 border-amber-200/50'
                     : 'text-slate-400 bg-slate-50 border-slate-100/60'
@@ -389,7 +482,6 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
               </div>
             )}
 
-            {/* User Avatar */}
             <Avatar opportunity={opportunity} />
           </div>
         </div>
@@ -398,4 +490,5 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
   );
 };
 
-export default OpportunityCard;
+export const OpportunityCard = OpportunityKanbanCard;
+export default OpportunityKanbanCard;

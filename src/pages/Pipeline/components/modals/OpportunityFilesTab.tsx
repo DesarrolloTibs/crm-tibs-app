@@ -1,5 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { uploadOpportunityFile, downloadOpportunityFile, deleteOpportunityFile, getOpportunity } from '../../services/opportunitiesService';
+import { 
+  uploadOpportunityFile, 
+  downloadOpportunityFile, 
+  deleteOpportunityFile, 
+  getOpportunity 
+} from '../../../../services/opportunitiesService';
 import { 
   Paperclip, 
   UploadCloud, 
@@ -15,13 +20,16 @@ import {
   Trash2,
   FolderOpen
 } from 'lucide-react';
-import type { Opportunity, OpportunityFile } from '../../core/models/Opportunity';
-import Notification from '../Modal/Notification';
+import type { Opportunity, OpportunityFile } from '../../schemas/pipeline.schema';
+import Notification from '../../../../components/shared/Notification';
+import Button from '../../../../components/shared/Button';
 
-interface FilesTabProps {
+export interface OpportunityFilesTabProps {
   opportunity: Opportunity;
   onUploadSuccess: (updatedOpportunity: Opportunity) => void;
 }
+
+export type FilesTabProps = OpportunityFilesTabProps;
 
 interface StagedFile {
   id: string;
@@ -30,7 +38,7 @@ interface StagedFile {
   date: string;
 }
 
-const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => {
+export const OpportunityFilesTab: React.FC<OpportunityFilesTabProps> = ({ opportunity, onUploadSuccess }) => {
   const [currentOpportunity, setCurrentOpportunity] = useState<Opportunity>(opportunity);
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -57,29 +65,32 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
 
   // Cargar los archivos actualizados desde el servidor al montar o cuando cambie la oportunidad
   React.useEffect(() => {
-    let active = true;
+    let isMounted = true;
+    if (!opportunity?.id) return;
+
+    setLoadingFiles(true);
+
     const fetchLatestFiles = async () => {
-      setLoadingFiles(true);
       try {
         const latestOpp = await getOpportunity(opportunity.id);
-        if (active) {
+        if (isMounted && latestOpp) {
           setCurrentOpportunity(latestOpp);
-          // Sincronizar con el estado del componente padre
-          onUploadSuccess(latestOpp);
         }
       } catch (err) {
         console.error("Error al cargar archivos de la oportunidad:", err);
       } finally {
-        if (active) {
+        if (isMounted) {
           setLoadingFiles(false);
         }
       }
     };
+
     fetchLatestFiles();
+
     return () => {
-      active = false;
+      isMounted = false;
     };
-  }, [opportunity.id]);
+  }, [opportunity?.id]);
 
   // Helper to determine icon based on file extension
   const getFileIcon = (fileName: string) => {
@@ -318,13 +329,14 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
           <div className="space-y-4 max-h-[250px] overflow-y-auto pr-1">
             {stagedFiles.map((sf) => (
               <div key={sf.id} className="p-3 border border-slate-100 bg-slate-50/60 rounded-xl relative flex flex-col gap-2.5">
-                <button 
-                  onClick={() => removeStagedFile(sf.id)} 
-                  className="absolute top-2.5 right-2.5 p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded-full transition-colors"
+                <Button
+                  variant="icon"
+                  onClick={() => removeStagedFile(sf.id)}
+                  className="absolute top-2.5 right-2.5 !p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 !rounded-full"
                   title="Quitar"
                 >
                   <X size={16} />
-                </button>
+                </Button>
                 
                 <div className="flex items-center gap-2 pr-6">
                   {getFileIcon(sf.file.name)}
@@ -359,27 +371,23 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
           </div>
 
           <div className="mt-4 flex gap-3">
-            <button 
-              onClick={() => setStagedFiles([])} 
+            <Button
+              variant="secondary"
+              onClick={() => setStagedFiles([])}
               disabled={uploading}
-              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs py-2 rounded-lg transition-colors border border-slate-200 cursor-pointer disabled:opacity-50"
+              className="flex-1 !text-xs !py-2 !font-semibold"
             >
               Cancelar
-            </button>
-            <button 
-              onClick={handleUploadAll} 
+            </Button>
+            <Button
+              variant="indigo"
+              onClick={handleUploadAll}
+              loading={uploading}
               disabled={uploading}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 rounded-lg transition-colors shadow-sm cursor-pointer disabled:bg-slate-300 flex items-center justify-center gap-1.5"
+              className="flex-1 !text-xs !py-2 !font-semibold"
             >
-              {uploading ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Subiendo...</span>
-                </>
-              ) : (
-                <span>Subir todo ({stagedFiles.length})</span>
-              )}
-            </button>
+              Subir todo ({stagedFiles.length})
+            </Button>
           </div>
         </div>
       )}
@@ -433,30 +441,26 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
                       </td>
                       <td className="p-3 pr-4 text-right">
                         <div className="inline-flex gap-1.5">
-                          <button
+                          <Button
+                            variant="icon"
                             onClick={() => handleDownload(file)}
+                            loading={downloadingFileId === file.id}
                             disabled={downloadingFileId === file.id || deletingFileId === file.id}
-                            className="p-1.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50"
+                            className="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 !p-1.5"
                             title="Descargar archivo"
                           >
-                            {downloadingFileId === file.id ? (
-                              <div className="w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <Download size={15} />
-                            )}
-                          </button>
-                          <button
+                            <Download size={15} />
+                          </Button>
+                          <Button
+                            variant="icon"
                             onClick={() => handleDeleteConfirm(file)}
+                            loading={deletingFileId === file.id}
                             disabled={downloadingFileId === file.id || deletingFileId === file.id}
-                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 !p-1.5"
                             title="Eliminar archivo"
                           >
-                            {deletingFileId === file.id ? (
-                              <div className="w-3.5 h-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <Trash2 size={15} />
-                            )}
-                          </button>
+                            <Trash2 size={15} />
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -471,4 +475,4 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
   );
 };
 
-export default FilesTab;
+export default OpportunityFilesTab;

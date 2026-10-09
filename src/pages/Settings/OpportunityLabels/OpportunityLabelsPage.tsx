@@ -4,7 +4,7 @@ import { Sliders } from 'lucide-react';
 // Componentes Compartidos
 import SettingsContainer from '../../../components/shared/SettingsContainer';
 import Notification from '../../../components/shared/Notification';
-import Loader from '../../../components/Loader/Loader';
+import Loader from '../../../components/shared/Loader';
 
 // Subcomponentes Modulares del Asistente
 import { OpportunityLabelsStepper } from './components/OpportunityLabelsStepper';

@@ -26,7 +26,7 @@ import Button from '../../../components/shared/Button';
 import Select from '../../../components/shared/Select';
 import ConfirmModal from '../../../components/shared/ConfirmModal';
 import Notification from '../../../components/shared/Notification';
-import Loader from '../../../components/Loader/Loader';
+import Loader from '../../../components/shared/Loader';
 
 // Subcomponentes Modulares de Indicadores de Dashboard
 import { DashboardIndicatorsStatsBanner } from './components/DashboardIndicatorsStatsBanner';

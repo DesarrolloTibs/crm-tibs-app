@@ -136,10 +136,8 @@ En [`src/components/Activity/ActivitiesCalendar.tsx`](file:///c:/Users/sopor/Pro
 
 * **Guards de Red (`isFetchingRef`):** Previene peticiones simultáneas provocadas por el montaje dual en React 19 y StrictMode.
 * **Persistencia de URL:** Sincroniza el parámetro `?view=calendar` o `?view=table` para mantener el estado de la vista al recargar o compartir enlaces.
-* **Tiempo Real:** Conexión nativa con Socket.IO sobre el namespace `/activities` para reflejar altas, modificaciones y bajas en tiempo real con indicador [`ConnectionStatusBadge.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/ConnectionStatusBadge.tsx).
+* **Tiempo Real & Aislamiento Multi-Tenant:** Conexión nativa con Socket.IO sobre el namespace `/activities` vía `createAppSocket({ namespace: 'activities', query: { tenantSchema } })`. En el evento `connect`, emite `set_tenant` para sincronizar dinámicamente la sala `tenant:${tenantSchema}`, con soporte backend completo para roles SuperAdmin y esquemas `public`, resincronización automática de estado (`loadModuleData(true)`) tras reconexiones e indicador de estado reactivo [`ConnectionStatusBadge.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/ConnectionStatusBadge.tsx).
 * **Retrocompatibilidad:** La ruta original en [`ActivitiesPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/ActivitiesPage.tsx) delega directamente en el orquestador modular de [`src/pages/Activities/`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Activities/index.ts).
-
----
 
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.

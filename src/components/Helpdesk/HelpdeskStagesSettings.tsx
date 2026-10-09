@@ -3,7 +3,7 @@ import { getMainHelpdesk, updateMainHelpdesk } from '../../services/ticketsServi
 import type { TicketStage } from '../../core/models/Ticket';
 import { ArrowUp, ArrowDown, Plus, Trash2, Save, Info, Check, Sliders } from 'lucide-react';
 import Notification from '../Modal/Notification';
-import Loader from '../Loader/Loader';
+import Loader from '../shared/Loader';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 
