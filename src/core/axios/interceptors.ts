@@ -1,7 +1,7 @@
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import Swal from 'sweetalert2';
 import { configStore } from '../../store/useConfigStore';
-import { refreshToken, logout } from '../../services/authService';
+import { refreshToken, logout } from '@core/services/authService';
 
 let isRefreshing = false;
 let failedQueue: Array<{

@@ -1,6 +1,6 @@
-import axiosInstance from '../core/axios/axiosInstance';
-import { HELPDESK_CRON } from '../global/endpoints';
-import type { HelpdeskCronConfig } from '../core/models/HelpdeskCronConfig';
+import axiosInstance from '@core/axios/axiosInstance';
+import { HELPDESK_CRON } from '@/global/endpoints';
+import type { HelpdeskCronConfig } from '@core/models/HelpdeskCronConfig';
 
 /**
  * Obtiene la configuración del cron de notificaciones de la Mesa de Ayuda principal.

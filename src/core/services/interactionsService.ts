@@ -1,6 +1,6 @@
-import  axiosInstance from "../core/axios/axiosInstance";
-import type { Interaction } from '../core/models/Interaction';
-import { INTERACTIONS } from '../global/endpoints';
+import  axiosInstance from "@core/axios/axiosInstance";
+import type { Interaction } from '@core/models/Interaction';
+import { INTERACTIONS } from '@/global/endpoints';
 
 
 

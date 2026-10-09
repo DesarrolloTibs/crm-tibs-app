@@ -1,7 +1,7 @@
-import axiosInstance from "../core/axios/axiosInstance";
-import type { Product } from "../core/models/Product";
-import { PRODUCTS } from "../global/endpoints";
-import { configStore } from "../store/useConfigStore";
+import axiosInstance from "@core/axios/axiosInstance";
+import type { Product } from "@core/models/Product";
+import { PRODUCTS } from "@/global/endpoints";
+import { configStore } from "@/store/useConfigStore";
 
 let productsCache: Record<string, { data: Product[]; timestamp: number }> = {};
 let pendingProductsPromises: Record<string, Promise<Product[]>> = {};

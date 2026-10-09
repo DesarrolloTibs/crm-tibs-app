@@ -1,8 +1,8 @@
 
-import axiosInstance from '../core/axios/axiosInstance';
-import type { Activity, TypeActivity } from '../core/models/Activity';
-import { ACTIVITIES } from '../global/endpoints';
-import { configStore } from '../store/useConfigStore';
+import axiosInstance from '@core/axios/axiosInstance';
+import type { Activity, TypeActivity } from '@core/models/Activity';
+import { ACTIVITIES } from '@/global/endpoints';
+import { configStore } from '@/store/useConfigStore';
 
 let activitiesCache: Record<string, { data: Activity[]; timestamp: number }> = {};
 let pendingActivitiesPromises: Record<string, Promise<Activity[]>> = {};

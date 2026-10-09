@@ -1,7 +1,7 @@
-import axiosInstance from "../core/axios/axiosInstance";
-import { HELPDESKS, TICKETS } from "../global/endpoints";
-import type { Helpdesk, TicketStage, Ticket } from "../core/models/Ticket";
-import { configStore } from "../store/useConfigStore";
+import axiosInstance from "@core/axios/axiosInstance";
+import { HELPDESKS, TICKETS } from "@/global/endpoints";
+import type { Helpdesk, TicketStage, Ticket } from "@core/models/Ticket";
+import { configStore } from "@/store/useConfigStore";
 
 let ticketsCache: Record<string, { data: Ticket[]; timestamp: number }> = {};
 let pendingTicketsPromises: Record<string, Promise<Ticket[]>> = {};

@@ -1,7 +1,7 @@
-import axiosInstance from "../core/axios/axiosInstance";
-import { PIPELINES } from "../global/endpoints";
-import type { Stage } from "../core/models/Opportunity";
-import { configStore } from "../store/useConfigStore";
+import axiosInstance from "@core/axios/axiosInstance";
+import { PIPELINES } from "@/global/endpoints";
+import type { Stage } from "@core/models/Opportunity";
+import { configStore } from "@/store/useConfigStore";
 
 export interface Pipeline {
   id: string;

@@ -1,5 +1,5 @@
-import axiosInstance from "../core/axios/axiosInstance";
-import { TICKET_INTERACTIONS } from "../global/endpoints";
+import axiosInstance from "@core/axios/axiosInstance";
+import { TICKET_INTERACTIONS } from "@/global/endpoints";
 
 export interface TicketInteraction {
   id?: string;

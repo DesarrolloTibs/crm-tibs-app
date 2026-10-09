@@ -1,6 +1,6 @@
-import axiosInstance from "../core/axios/axiosInstance";
-import type { OpportunityCatalogOption } from "../core/models/OpportunityCatalog";
-import { OPPORTUNITY_CATALOGS } from "../global/endpoints";
+import axiosInstance from "@core/axios/axiosInstance";
+import type { OpportunityCatalogOption } from "@core/models/OpportunityCatalog";
+import { OPPORTUNITY_CATALOGS } from "@/global/endpoints";
 
 type CatalogType = 'business-lines' | 'delivery-types' | 'licensings';
 

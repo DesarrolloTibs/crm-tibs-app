@@ -1,5 +1,5 @@
-import axiosInstance from '../core/axios/axiosInstance';
-import { PLANS } from '../global/endpoints';
+import axiosInstance from '@core/axios/axiosInstance';
+import { PLANS } from '@/global/endpoints';
 
 export interface Plan {
   plan_id: number;

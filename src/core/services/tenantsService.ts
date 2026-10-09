@@ -1,6 +1,6 @@
-import axiosInstance from '../core/axios/axiosInstance';
-import type { TenantPlanInfo } from '../store/useConfigStore';
-import { TENANTS } from '../global/endpoints';
+import axiosInstance from '@core/axios/axiosInstance';
+import type { TenantPlanInfo } from '@/store/useConfigStore';
+import { TENANTS } from '@/global/endpoints';
 
 export interface ProvisionTenantPayload {
   tenantName: string;

@@ -1,9 +1,9 @@
-import axiosInstance from "../core/axios/axiosInstance";
-import { REPORTS } from "../global/endpoints";
-import { configStore } from "../store/useConfigStore";
-import type { Opportunity, Stage } from "../core/models/Opportunity";
-import type { Ticket, Helpdesk } from "../core/models/Ticket";
-import type { Activity } from "../core/models/Activity";
+import axiosInstance from "@core/axios/axiosInstance";
+import { REPORTS } from "@/global/endpoints";
+import { configStore } from "@/store/useConfigStore";
+import type { Opportunity, Stage } from "@core/models/Opportunity";
+import type { Ticket, Helpdesk } from "@core/models/Ticket";
+import type { Activity } from "@core/models/Activity";
 
 export interface DashboardIndicator {
   id?: string;

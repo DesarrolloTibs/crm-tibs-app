@@ -1,7 +1,7 @@
-import axiosInstance from '../core/axios/axiosInstance';
-import { EXPENSES } from '../global/endpoints';
-import type { Expense } from '../core/models/Expense';
-import { configStore } from '../store/useConfigStore';
+import axiosInstance from '@core/axios/axiosInstance';
+import { EXPENSES } from '@/global/endpoints';
+import type { Expense } from '@core/models/Expense';
+import { configStore } from '@/store/useConfigStore';
 
 let expensesCache: Record<string, { data: Expense[]; timestamp: number }> = {};
 let pendingExpensesPromises: Record<string, Promise<Expense[]>> = {};

@@ -1,4 +1,4 @@
-import axiosInstance from '../core/axios/axiosInstance';
+import axiosInstance from '@core/axios/axiosInstance';
 
 export interface CalendarIntegrationStatus {
   connected: boolean;

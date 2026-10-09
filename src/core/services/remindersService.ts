@@ -1,6 +1,6 @@
-import  axiosInstance from "../core/axios/axiosInstance";
-import type { Reminder } from '../core/models/Reminder';
-import { REMINDERS } from '../global/endpoints';
+import  axiosInstance from "@core/axios/axiosInstance";
+import type { Reminder } from '@core/models/Reminder';
+import { REMINDERS } from '@/global/endpoints';
 
 
 

@@ -1,7 +1,7 @@
-import axiosInstance from '../core/axios/axiosInstance';
-import { USERS } from '../global/endpoints';
-import type { User } from '../core/models/User';
-import { configStore } from '../store/useConfigStore';
+import axiosInstance from '@core/axios/axiosInstance';
+import { USERS } from '@/global/endpoints';
+import type { User } from '@core/models/User';
+import { configStore } from '@/store/useConfigStore';
 
 let usersCache: Record<string, { data: User[]; timestamp: number }> = {};
 let pendingUsersPromises: Record<string, Promise<User[]>> = {};

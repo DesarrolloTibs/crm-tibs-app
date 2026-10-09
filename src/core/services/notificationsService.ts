@@ -1,6 +1,6 @@
-import axiosInstance from "../core/axios/axiosInstance";
-import type { NotificationItem } from '../core/models/Notification';
-import { NOTIFICATIONS } from '../global/endpoints';
+import axiosInstance from "@core/axios/axiosInstance";
+import type { NotificationItem } from '@core/models/Notification';
+import { NOTIFICATIONS } from '@/global/endpoints';
 
 export const getMyNotifications = async (): Promise<NotificationItem[]> => {
   const response = await axiosInstance.get(NOTIFICATIONS.NOTIFICATIONS);

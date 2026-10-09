@@ -1,4 +1,4 @@
-import axiosInstance from '../core/axios/axiosInstance';
+import axiosInstance from '@core/axios/axiosInstance';
 import type {
     Conversation,
     Message,
@@ -8,7 +8,7 @@ import type {
     UpsertBaseTemplateDto,
     SelectExistingBaseTemplateDto,
     ChannelConfig,
-} from '../core/models/Conversation';
+} from '@core/models/Conversation';
 
 export type { ChannelConfig };
 

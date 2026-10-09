@@ -1,7 +1,7 @@
 import axios from 'axios';
-import axiosInstance from '../core/axios/axiosInstance';
-import { auth } from '../global/endpoints';
-import type { User } from '../core/models/User';
+import axiosInstance from '@core/axios/axiosInstance';
+import { auth } from '@/global/endpoints';
+import type { User } from '@core/models/User';
 
 // Canal de difusión para sincronización en tiempo real entre ventanas/pestañas de la PWA
 export const authChannel =

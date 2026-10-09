@@ -1,4 +1,4 @@
-import axiosInstance from '../core/axios/axiosInstance';
+import axiosInstance from '@core/axios/axiosInstance';
 
 const urlBase = (import.meta.env.VITE_BASE_URL || 'http://localhost:3091') + '/api/webchat';
 

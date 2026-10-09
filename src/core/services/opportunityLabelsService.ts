@@ -1,6 +1,6 @@
-import axiosInstance from "../core/axios/axiosInstance";
-import type { OpportunityLabel } from "../core/models/OpportunityLabel";
-import { OPPORTUNITY_LABELS } from "../global/endpoints";
+import axiosInstance from "@core/axios/axiosInstance";
+import type { OpportunityLabel } from "@core/models/OpportunityLabel";
+import { OPPORTUNITY_LABELS } from "@/global/endpoints";
 
 export const getOpportunityLabels = async (): Promise<OpportunityLabel[]> => {
   const response = await axiosInstance.get<OpportunityLabel[]>(OPPORTUNITY_LABELS.OPPORTUNITY_LABELS);

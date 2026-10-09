@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { jwtDecode } from 'jwt-decode';
-import { refreshToken } from '../../services/authService';
+import { refreshToken } from '@core/services/authService';
 
 export interface CreateSocketOptions {
   namespace: string;

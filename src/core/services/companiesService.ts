@@ -1,7 +1,7 @@
-import axiosInstance from '../core/axios/axiosInstance';
-import { COMPANIES } from '../global/endpoints';
-import type { Company } from '../core/models/Company';
-import { configStore } from '../store/useConfigStore';
+import axiosInstance from '@core/axios/axiosInstance';
+import { COMPANIES } from '@/global/endpoints';
+import type { Company } from '@core/models/Company';
+import { configStore } from '@/store/useConfigStore';
 
 let companiesCache: Record<string, { data: Company[]; timestamp: number }> = {};
 let pendingCompaniesPromises: Record<string, Promise<Company[]>> = {};

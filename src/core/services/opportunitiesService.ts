@@ -1,7 +1,7 @@
-import axiosInstance from "../core/axios/axiosInstance";
-import type { Opportunity } from "../core/models/Opportunity";
-import { OPPORTUNITIES } from "../global/endpoints";
-import { configStore } from "../store/useConfigStore";
+import axiosInstance from "@core/axios/axiosInstance";
+import type { Opportunity } from "@core/models/Opportunity";
+import { OPPORTUNITIES } from "@/global/endpoints";
+import { configStore } from "@/store/useConfigStore";
 
 const buildQueryString = (params: Record<string, string | undefined>): string => {
   const query = Object.entries(params)
