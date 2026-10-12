@@ -4,8 +4,6 @@ import {
   Users,
   XCircle,
   Filter,
-  ChevronUp,
-  ChevronDown,
   Settings2,
   Star,
   Calendar,
@@ -49,8 +47,8 @@ interface Props {
   setPriorityFilter: (v: number | null) => void;
   showFilters: boolean;
   setShowFilters: (v: boolean) => void;
-  showToolbar: boolean;
-  setShowToolbar: (v: boolean) => void;
+  showToolbar?: boolean;
+  setShowToolbar?: (v: boolean) => void;
   stages: Stage[];
   activeStages: Stage[];
   visibleStageIds: string[];
@@ -91,8 +89,6 @@ export const PipelineToolbar: React.FC<Props> = ({
   setPriorityFilter,
   showFilters,
   setShowFilters,
-  showToolbar,
-  setShowToolbar,
   stages,
   activeStages,
   visibleStageIds,
