@@ -2,10 +2,6 @@ import React from 'react';
 import {
   MessageSquare,
   Search,
-  Smartphone,
-  Facebook,
-  Instagram,
-  Globe,
   Bot,
   User,
   RefreshCw,
@@ -14,6 +10,12 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react';
+import {
+  WhatsAppLogo,
+  InstagramLogo,
+  FacebookLogo,
+  WebchatLogo,
+} from '../../../components/shared/ChannelIcons';
 import type { ChannelFilter, Conversation } from '../schemas/conversations.schema';
 import EmptyState from '../../../components/shared/EmptyState';
 import Badge from '../../../components/shared/Badge';
@@ -56,28 +58,28 @@ const CHANNEL_FILTERS: ChannelFilterItem[] = [
     id: 'whatsapp',
     label: 'WhatsApp',
     shortLabel: 'WhatsApp',
-    icon: (active) => <Smartphone size={14} className={active ? 'text-white' : 'text-emerald-600'} />,
+    icon: (active) => <WhatsAppLogo size={14} className={active ? 'text-white' : 'text-emerald-600'} />,
     activeClass: 'bg-emerald-600 text-white shadow-xs',
   },
   {
     id: 'messenger',
     label: 'Facebook Messenger',
     shortLabel: 'Messenger',
-    icon: (active) => <Facebook size={14} className={active ? 'text-white' : 'text-blue-600'} />,
+    icon: (active) => <FacebookLogo size={14} className={active ? 'text-white' : 'text-blue-600'} />,
     activeClass: 'bg-blue-600 text-white shadow-xs',
   },
   {
     id: 'instagram',
     label: 'Instagram Direct',
     shortLabel: 'Instagram',
-    icon: (active) => <Instagram size={14} className={active ? 'text-white' : 'text-rose-600'} />,
+    icon: (active) => <InstagramLogo size={14} className={active ? 'text-white' : 'text-rose-600'} />,
     activeClass: 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white shadow-xs',
   },
   {
     id: 'webchat',
     label: 'WebChat Asistente',
     shortLabel: 'WebChat',
-    icon: (active) => <Globe size={14} className={active ? 'text-white' : 'text-purple-600'} />,
+    icon: (active) => <WebchatLogo size={14} className={active ? 'text-white' : 'text-purple-600'} />,
     activeClass: 'bg-purple-600 text-white shadow-xs',
   },
 ];
@@ -88,37 +90,37 @@ export const getChannelIcon = (channel: string) => {
       return (
         <span
           className="inline-flex items-center justify-center w-5 h-5 bg-emerald-500 rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
-          title="WhatsApp"
+          title="WhatsApp Oficial"
         >
-          <Smartphone size={12} />
+          <WhatsAppLogo size={12} />
         </span>
       );
     case 'messenger':
     case 'facebook':
       return (
         <span
-          className="inline-flex items-center justify-center w-5 h-5 bg-blue-500 rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
+          className="inline-flex items-center justify-center w-5 h-5 bg-[#1877F2] rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
           title="Facebook Messenger"
         >
-          <Facebook size={12} />
+          <FacebookLogo size={12} />
         </span>
       );
     case 'instagram':
       return (
         <span
-          className="inline-flex items-center justify-center w-5 h-5 bg-gradient-to-tr from-amber-500 via-red-500 to-purple-600 rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
-          title="Instagram"
+          className="inline-flex items-center justify-center w-5 h-5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
+          title="Instagram Direct"
         >
-          <Instagram size={12} />
+          <InstagramLogo size={12} />
         </span>
       );
     case 'webchat':
       return (
         <span
           className="inline-flex items-center justify-center w-5 h-5 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
-          title="WebChat"
+          title="WebChat Asistente"
         >
-          <Globe size={12} />
+          <WebchatLogo size={12} />
         </span>
       );
     default:

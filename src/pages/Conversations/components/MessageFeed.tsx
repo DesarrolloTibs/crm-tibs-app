@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { ShieldAlert, Bot, Smartphone } from 'lucide-react';
+import { ShieldAlert, Bot } from 'lucide-react';
+import { WhatsAppLogo } from '../../../components/shared/ChannelIcons';
 import type { Message } from '../schemas/conversations.schema';
 import { getInitials } from '../utils/conversations.helpers';
 import {
@@ -86,7 +87,7 @@ export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndR
                     {isTemplate ? (
                       <div>
                         <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-100 pb-1.5 mb-1.5 border-b border-white/20 select-none">
-                          <Smartphone size={12} className="text-emerald-200" />
+                          <WhatsAppLogo size={12} className="text-emerald-100" />
                           <span>Plantilla Oficial de WhatsApp</span>
                         </div>
                         {renderMessageContent(msg.content)}

@@ -4,7 +4,6 @@ import {
   Clock,
   AlertCircle,
   HelpCircle,
-  Smartphone,
   Info,
   CheckCheck,
   RefreshCw,
@@ -13,6 +12,7 @@ import {
   Building2,
   UserCheck,
 } from 'lucide-react';
+import { WhatsAppLogo } from '../../../../components/shared/ChannelIcons';
 import { ValidationError } from 'yup';
 import type {
   WhatsAppBaseTemplate,
@@ -314,7 +314,7 @@ export const WhatsAppBaseTemplateSettings: React.FC<WhatsAppBaseTemplateSettings
       <div className="bg-gradient-to-r from-slate-50 to-emerald-50/40 border border-emerald-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
-            <Smartphone size={20} />
+            <WhatsAppLogo size={20} />
           </div>
           <div>
             <div className="flex items-center gap-2">

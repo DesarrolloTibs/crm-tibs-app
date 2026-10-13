@@ -9,12 +9,14 @@ import {
   Calendar,
   UserCheck,
   Kanban,
-  Smartphone,
-  Instagram,
-  Facebook,
-  Globe,
-  User,
 } from 'lucide-react';
+import {
+  WhatsAppLogo,
+  InstagramLogo,
+  FacebookLogo,
+  WebchatLogo,
+  ManualCrmLogo,
+} from '../OpportunityChannelBadge';
 import UnifiedSearchBar from '../../../../components/shared/UnifiedSearchBar';
 import type { SearchBadge } from '../../../../components/shared/UnifiedSearchBar';
 import StageVisibilitySelector from '../../../../components/shared/StageVisibilitySelector';
@@ -241,11 +243,11 @@ export const PipelineToolbar: React.FC<Props> = ({
             Canal de Origen
           </h5>
           {[
-            { id: 'whatsapp', label: 'WhatsApp', color: 'bg-emerald-500', icon: Smartphone },
-            { id: 'instagram', label: 'Instagram', color: 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600', icon: Instagram },
-            { id: 'facebook', label: 'Facebook', color: 'bg-blue-600', icon: Facebook },
-            { id: 'webchat', label: 'Webchat', color: 'bg-indigo-600', icon: Globe },
-            { id: 'manual', label: 'Manual / CRM', color: 'bg-slate-400', icon: User },
+            { id: 'whatsapp', label: 'WhatsApp (IA)', color: 'bg-emerald-500', text: 'text-emerald-600', icon: WhatsAppLogo },
+            { id: 'instagram', label: 'Instagram (IA)', color: 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600', text: 'text-rose-600', icon: InstagramLogo },
+            { id: 'facebook', label: 'Facebook (IA)', color: 'bg-[#1877F2]', text: 'text-blue-600', icon: FacebookLogo },
+            { id: 'webchat', label: 'Webchat (IA)', color: 'bg-gradient-to-tr from-indigo-600 to-purple-600', text: 'text-indigo-600', icon: WebchatLogo },
+            { id: 'manual', label: 'Manual / CRM', color: 'bg-slate-400', text: 'text-slate-600', icon: ManualCrmLogo },
           ].map((ch) => {
             const Icon = ch.icon;
             const isSelected = channelFilter === ch.id;
@@ -258,7 +260,7 @@ export const PipelineToolbar: React.FC<Props> = ({
               >
                 <div className="flex items-center gap-2 truncate">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${ch.color}`} />
-                  <Icon size={12} className="text-slate-500 shrink-0" />
+                  <Icon size={13} className={`${ch.text} shrink-0`} />
                   <span className="truncate">{ch.label}</span>
                 </div>
                 {isSelected && (
