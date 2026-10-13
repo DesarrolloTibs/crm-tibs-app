@@ -86,6 +86,22 @@ export const PipelinePage: React.FC = () => {
         onRemove: () => p.setPriorityFilter(null),
       });
 
+    if (p.channelFilter) {
+      const channelLabels: Record<string, string> = {
+        whatsapp: 'WhatsApp',
+        facebook: 'Facebook',
+        instagram: 'Instagram',
+        webchat: 'Webchat',
+        manual: 'Manual / CRM',
+      };
+      list.push({
+        id: 'channel',
+        label: `Canal: ${channelLabels[p.channelFilter] || p.channelFilter}`,
+        icon: <Filter size={10} className="shrink-0" />,
+        onRemove: () => p.setChannelFilter(''),
+      });
+    }
+
     if (p.startDate || p.endDate) {
       const currentYear = new Date().getFullYear();
       const defaultStartDate = `${currentYear}-01-01`;
@@ -112,6 +128,7 @@ export const PipelinePage: React.FC = () => {
     p.contactsList,
     p.executiveFilter,
     p.statusFilter,
+    p.channelFilter,
     p.priorityFilter,
     p.executives,
     p.activeStages,
@@ -153,6 +170,8 @@ export const PipelinePage: React.FC = () => {
         setExecutiveFilter={p.setExecutiveFilter}
         statusFilter={p.statusFilter}
         setStatusFilter={p.setStatusFilter}
+        channelFilter={p.channelFilter}
+        setChannelFilter={p.setChannelFilter}
         archivedFilter={p.archivedFilter}
         setArchivedFilter={p.setArchivedFilter}
         priorityFilter={p.priorityFilter}

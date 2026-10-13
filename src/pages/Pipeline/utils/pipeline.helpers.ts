@@ -74,6 +74,7 @@ export const getInitialPipelineFilters = (): PipelineFiltersState => {
     contactFilter: '',
     executiveFilter: '',
     statusFilter: '',
+    channelFilter: '',
     archivedFilter: 'active',
     priorityFilter: null,
     startDate: `${currentYear}-01-01`,
@@ -225,6 +226,7 @@ export const filterOpportunities = (
     contactFilter,
     executiveFilter,
     statusFilter,
+    channelFilter,
     priorityFilter,
     archivedFilter,
     startDate,
@@ -263,6 +265,9 @@ export const filterOpportunities = (
         : true;
       const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
       const matchesStatus = statusFilter ? opp.stage_id === statusFilter : true;
+      const matchesChannel = channelFilter
+        ? (opp.canal_origen || 'manual').toLowerCase() === channelFilter.toLowerCase()
+        : true;
       const matchesPriority = priorityFilter !== null ? (opp.priority ?? 0) >= priorityFilter : true;
       const matchesArchived =
         archivedFilter === 'all'
@@ -290,6 +295,7 @@ export const filterOpportunities = (
         matchesContact &&
         matchesExecutive &&
         matchesStatus &&
+        matchesChannel &&
         matchesPriority &&
         matchesArchived &&
         matchesDate

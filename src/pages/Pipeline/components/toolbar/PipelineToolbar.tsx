@@ -11,6 +11,11 @@ import {
   Calendar,
   UserCheck,
   Kanban,
+  Smartphone,
+  Instagram,
+  Facebook,
+  Globe,
+  User,
 } from 'lucide-react';
 import UnifiedSearchBar from '../../../../components/shared/UnifiedSearchBar';
 import type { SearchBadge } from '../../../../components/shared/UnifiedSearchBar';
@@ -43,6 +48,8 @@ interface Props {
   setExecutiveFilter: (v: string) => void;
   statusFilter: string;
   setStatusFilter: (v: string) => void;
+  channelFilter: string;
+  setChannelFilter: (v: string) => void;
   archivedFilter: 'active' | 'archived' | 'all';
   setArchivedFilter: (v: 'active' | 'archived' | 'all') => void;
   priorityFilter: number | null;
@@ -85,6 +92,8 @@ export const PipelineToolbar: React.FC<Props> = ({
   setExecutiveFilter,
   statusFilter,
   setStatusFilter,
+  channelFilter,
+  setChannelFilter,
   archivedFilter,
   setArchivedFilter,
   priorityFilter,
@@ -136,6 +145,7 @@ export const PipelineToolbar: React.FC<Props> = ({
         placeholder={
           !executiveFilter &&
           !statusFilter &&
+          !channelFilter &&
           priorityFilter === null &&
           archivedFilter === 'active' &&
           !startDate &&
@@ -230,6 +240,37 @@ export const PipelineToolbar: React.FC<Props> = ({
               )}
             </Button>
           ))}
+          <div className="border-t border-gray-100 my-1 shrink-0" />
+          <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-1 shrink-0 select-none">
+            Canal de Origen
+          </h5>
+          {[
+            { id: 'whatsapp', label: 'WhatsApp', color: 'bg-emerald-500', icon: Smartphone },
+            { id: 'instagram', label: 'Instagram', color: 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600', icon: Instagram },
+            { id: 'facebook', label: 'Facebook', color: 'bg-blue-600', icon: Facebook },
+            { id: 'webchat', label: 'Webchat', color: 'bg-indigo-600', icon: Globe },
+            { id: 'manual', label: 'Manual / CRM', color: 'bg-slate-400', icon: User },
+          ].map((ch) => {
+            const Icon = ch.icon;
+            const isSelected = channelFilter === ch.id;
+            return (
+              <Button
+                key={ch.id}
+                variant="ghost"
+                onClick={() => setChannelFilter(isSelected ? '' : ch.id)}
+                className="!justify-between !text-xs !text-gray-700 !px-2 !py-1 !rounded w-full"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${ch.color}`} />
+                  <Icon size={12} className="text-slate-500 shrink-0" />
+                  <span className="truncate">{ch.label}</span>
+                </div>
+                {isSelected && (
+                  <span className="text-indigo-600 font-extrabold text-sm ml-auto">✓</span>
+                )}
+              </Button>
+            );
+          })}
           <div className="border-t border-gray-100 my-1 shrink-0" />
           <Button
             variant="ghost"

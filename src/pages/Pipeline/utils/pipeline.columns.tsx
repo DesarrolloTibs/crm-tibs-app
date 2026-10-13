@@ -4,6 +4,7 @@ import Badge from '../../../components/shared/Badge';
 import Button from '../../../components/shared/Button';
 import { formatNumber } from '../../../utils/formatters';
 import { Edit, Trash2, Archive, ArchiveRestore, Check, X } from 'lucide-react';
+import { OpportunityChannelBadge } from '../components/OpportunityChannelBadge';
 
 export interface OpportunityColumnsOptions {
   isAdmin: boolean;
@@ -28,11 +29,14 @@ export const getOpportunityColumns = ({
     cell: ({ row }) => (
       <div>
         <p className="text-slate-900 font-semibold">{row.original.nombre_proyecto}</p>
-        {row.original.linea_negocio?.strname && (
-          <span className="inline-block mt-0.5 text-[11px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100/80">
-            {row.original.linea_negocio.strname}
-          </span>
-        )}
+        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+          {row.original.linea_negocio?.strname && (
+            <span className="inline-block text-[11px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100/80">
+              {row.original.linea_negocio.strname}
+            </span>
+          )}
+          <OpportunityChannelBadge channel={row.original.canal_origen} size="xs" />
+        </div>
       </div>
     ),
     meta: {
@@ -114,6 +118,18 @@ export const getOpportunityColumns = ({
     },
     meta: {
       mobileLabel: 'Etapa',
+    },
+  },
+  {
+    id: 'canal_origen',
+    header: 'Origen',
+    accessorKey: 'canal_origen',
+    cell: ({ row }) => (
+      <OpportunityChannelBadge channel={row.original.canal_origen} size="sm" />
+    ),
+    meta: {
+      mobileLabel: 'Origen',
+      hideOnMobile: true,
     },
   },
   {

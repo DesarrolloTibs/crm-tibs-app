@@ -15,6 +15,7 @@ import {
   User,
   Clock,
 } from 'lucide-react';
+import { OpportunityChannelBadge } from '../OpportunityChannelBadge';
 import { OpportunityCardPopover } from './OpportunityCardPopover';
 const Popover = OpportunityCardPopover;
 
@@ -439,25 +440,28 @@ export const OpportunityKanbanCard: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Footer (Prioridad + Tiempo en Etapa + Avatar) */}
-        <div className="flex items-center justify-between border-t border-slate-100 pt-1.5 mt-1.5">
-          <div className="flex gap-0.5 items-center">
-            {[1, 2, 3].map((star) => (
-              <svg
-                key={star}
-                className={`w-3.5 h-3.5 ${
-                  star <= (opportunity.priority ?? 0)
-                    ? 'text-amber-400 fill-current'
-                    : 'text-slate-200'
-                }`}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            ))}
+        {/* Footer (Prioridad + Canal de Origen + Tiempo en Etapa + Avatar) */}
+        <div className="flex items-center justify-between border-t border-slate-100 pt-1.5 mt-1.5 gap-1.5">
+          <div className="flex gap-1.5 items-center truncate">
+            <div className="flex gap-0.5 items-center shrink-0">
+              {[1, 2, 3].map((star) => (
+                <svg
+                  key={star}
+                  className={`w-3.5 h-3.5 ${
+                    star <= (opportunity.priority ?? 0)
+                      ? 'text-amber-400 fill-current'
+                      : 'text-slate-200'
+                  }`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              ))}
+            </div>
+            <OpportunityChannelBadge channel={opportunity.canal_origen} size="xs" />
           </div>
 
           <div className="flex items-center gap-2">
