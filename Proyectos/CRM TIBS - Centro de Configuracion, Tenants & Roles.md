@@ -388,7 +388,7 @@ src/pages/settings/
     │   ├── AiGeneralTab.tsx       # Switch de respuesta automática, selector de vista (Lienzo vs Tabla), parámetros y asignaciones
     │   ├── AiOrchestratorCanvas.tsx# Lienzo interactivo del grafo de orquestador (Router + Subagentes, SVG Bézier, glow, pan y drag)
     │   ├── AiSubAgentsTable.tsx   # Tabla TanStack Table (@tanstack/react-table) con buscador reactivo y filtro de estado
-    │   ├── AiChannelsTab.tsx      # Tarjetas comerciales Meta (WhatsApp Cloud API, Facebook Messenger, Instagram Direct)
+    │   ├── AiChannelsTab.tsx      # Tarjetas comerciales omnicanal (WhatsApp Cloud API, Facebook Messenger, Instagram Direct, WebChat Widget)
     │   ├── AiRouterModal.tsx      # Modal para configurar el Prompt de Directivas del Enrutador Principal con validación Yup
     │   ├── AiSubAgentModal.tsx    # Modal de alta/edición de sub-agentes con slider de temperatura y panel Drag & Drop de herramientas
     │   └── AiWhatsAppChannelModal.tsx # Modal de credenciales de WhatsApp Cloud API con validación Yup y pestaña de Plantilla Base
@@ -407,10 +407,9 @@ src/pages/settings/
   - Esquema `subAgentValidationSchema` para clave única (`slug`), nombre, descripción para el enrutador, directivas de prompt y temperatura calibrada (0.0 a 1.0).
   - Esquema `routerPromptValidationSchema` para las directivas globales del Agente Principal.
   - Esquema `whatsappChannelValidationSchema` para App ID, WABA ID, Phone ID, Access Token y Verify Token del webhook.
-* **Canales de Comunicación Meta (OAuth2 en 1 Clic & Webhook):**
-  - Conexión desatendida mediante popup con comunicación inter-proceso (IPC) resiliente vía `BroadcastChannel('meta_oauth_channel')`, `window.postMessage` y `localStorage`.
-  - Recarga en caliente en tiempo real y sincronización directa con Meta Graph API.
-  - Integración nativa con `WhatsAppBaseTemplateSettings` para la gestión de la plantilla oficial de inicio de conversación (`crm_inicio_conversacion`).
+* **Canales de Comunicación Omnicanal (Meta & WebChat Externo):**
+  - **Meta Graph APIs (WhatsApp, Messenger, Instagram):** Conexión desatendida mediante popup OAuth2 con comunicación inter-proceso (IPC) resiliente vía `BroadcastChannel('meta_oauth_channel')`, `window.postMessage` y `localStorage`, con sincronización en caliente contra Meta Graph API y gestión de plantillas de inicio (`crm_inicio_conversacion`).
+  - **WebChat Widget Externo:** Tarjeta comercial que expone la `tenantKey` pública y genera el snippet incrustable HTML (`<script src=".../widget.js" data-tenant-key="...">`). Permite activar/pausar el canal en vivo y aprovisionar el canal en inquilinos preexistentes mediante `onToggleWebchatStatus` y `onCreateWebchatChannel`.
 * **Componentes Compartidos Utilizados:**
   - `SettingsContainer`, `Table`, `Button`, `Badge`, `Modal`, `ConfirmModal`, `Notification`, `Input`, `TextArea`, `Select`, `Loader`.
 

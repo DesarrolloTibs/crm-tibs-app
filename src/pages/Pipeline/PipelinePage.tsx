@@ -15,6 +15,7 @@ import PipelineKanbanView from './components/kanban/PipelineKanbanView';
 import PipelineTableView from './components/table/PipelineTableView';
 import PipelineModalsManager from './components/modals/PipelineModalsManager';
 import PipelineCustomFilterModal from './components/modals/PipelineCustomFilterModal';
+import { getChannelMeta } from './components/OpportunityChannelBadge';
 
 export const PipelinePage: React.FC = () => {
   const p = usePipeline();
@@ -87,17 +88,12 @@ export const PipelinePage: React.FC = () => {
       });
 
     if (p.channelFilter) {
-      const channelLabels: Record<string, string> = {
-        whatsapp: 'WhatsApp',
-        facebook: 'Facebook',
-        instagram: 'Instagram',
-        webchat: 'Webchat',
-        manual: 'Manual / CRM',
-      };
+      const meta = getChannelMeta(p.channelFilter);
+      const ChannelIcon = meta.icon;
       list.push({
         id: 'channel',
-        label: `Canal: ${channelLabels[p.channelFilter] || p.channelFilter}`,
-        icon: <Filter size={10} className="shrink-0" />,
+        label: `Canal: ${meta.label}`,
+        icon: <ChannelIcon size={12} className={`shrink-0 ${meta.text}`} />,
         onRemove: () => p.setChannelFilter(''),
       });
     }

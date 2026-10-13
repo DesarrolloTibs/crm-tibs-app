@@ -1,4 +1,10 @@
-import { Smartphone, MessageSquare, Layers, MessageCircle, Sparkles, Activity } from 'lucide-react';
+import { Layers, Activity } from 'lucide-react';
+import {
+  WhatsAppLogo,
+  FacebookLogo,
+  InstagramLogo,
+  WebchatLogo,
+} from '../../../../components/shared/ChannelIcons';
 
 /**
  * Normaliza cadenas de texto para búsqueda: elimina mayúsculas y diacríticos/acentos.
@@ -120,7 +126,7 @@ export const getChannelMeta = (channel: string) => {
     case 'whatsapp':
       return {
         label: 'WhatsApp',
-        icon: <Smartphone size={14} className="text-emerald-600" />,
+        icon: <WhatsAppLogo size={14} className="text-emerald-600" />,
         badgeVariant: 'success' as const,
         bgColor: 'bg-emerald-50',
         borderColor: 'border-emerald-200',
@@ -131,7 +137,7 @@ export const getChannelMeta = (channel: string) => {
     case 'webchat':
       return {
         label: 'Webchat CRM',
-        icon: <MessageSquare size={14} className="text-indigo-600" />,
+        icon: <WebchatLogo size={14} className="text-indigo-600" />,
         badgeVariant: 'indigo' as const,
         bgColor: 'bg-indigo-50',
         borderColor: 'border-indigo-200',
@@ -151,17 +157,17 @@ export const getChannelMeta = (channel: string) => {
     case 'messenger':
       return {
         label: 'Messenger',
-        icon: <MessageCircle size={14} className="text-sky-600" />,
+        icon: <FacebookLogo size={14} className="text-[#1877F2]" />,
         badgeVariant: 'info' as const,
-        bgColor: 'bg-sky-50',
-        borderColor: 'border-sky-200',
-        textColor: 'text-sky-700',
-        barColor: 'bg-sky-500',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200',
+        textColor: 'text-blue-700',
+        barColor: 'bg-blue-500',
       };
     case 'instagram':
       return {
         label: 'Instagram',
-        icon: <Sparkles size={14} className="text-pink-600" />,
+        icon: <InstagramLogo size={14} className="text-pink-600" />,
         badgeVariant: 'purple' as const,
         bgColor: 'bg-pink-50',
         borderColor: 'border-pink-200',

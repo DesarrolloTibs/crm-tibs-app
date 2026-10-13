@@ -355,6 +355,35 @@ Para evitar conflictos de enrutamiento de webhooks, colisiones del Agente IA o f
   - Si existe un conflicto, la vinculación OAuth aborta retornando un error claro y el endpoint REST lanza `ConflictException` (HTTP 409), bloqueando la duplicidad y notificando el nombre del inquilino donde el canal se encuentra actualmente en uso.
 * **Transferencia de Activos:** Si una organización transfiere un activo a otra empresa, basta con desactivar (`isActive = false`) o eliminar el canal en la organización de origen para desbloquear su registro en el nuevo tenant.
 
+
+
+---
+
+## 🌐 9. Canal Webchat Externo (Widget Web para Tenants)
+
+Adicional al asistente analítico interno (`WebChat.tsx`), el sistema implementa la infraestructura omnicanal para el **Widget Webchat Externo**, permitiendo que cada inquilino (*tenant*) incruste un chat en vivo en su propio sitio web corporativo o tienda en línea:
+
+### 9.1 Clave Pública del Inquilino (`tenantKey`) y Aislamiento Multi-Tenant
+* **Identificador Desacoplado:** Cada canal de tipo `webchat` cuenta con un identificador único (`ChannelConfig.id`) que actúa como la **`tenantKey` pública**.
+* **Resolución Automática:** Las peticiones del widget externo (`/api/webchat/public/*`) envían `tenantKey` mediante cabecera `x-tenant-key` o query string. El backend resuelve el esquema PostgreSQL del tenant en caché LRU (TTL 300s) y ejecuta la transacción aislada mediante `TenantContextService.run()`.
+* **Seguridad:** Los clientes externos no necesitan credenciales JWT ni llaves maestras de API; la `tenantKey` solo otorga acceso a recibir e intercambiar mensajes en el canal público de ese tenant.
+
+### 9.2 Script Incrustable Standalone (`public/widget.js`)
+* **Incrustación en 1 Línea:** El administrador del tenant copia el snippet desde [`AiChannelsTab.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Settings/AiAgentChannels/components/AiChannelsTab.tsx):
+  ```html
+  <script src="https://crm.tibs/widget.js" data-tenant-key="TU_CLAVE_DE_TENANT" defer></script>
+  ```
+* **Características del Widget:**
+  * **Cero Dependencias:** JavaScript vanilla puro que se inyecta en el DOM sin colisionar con Tailwind ni bibliotecas del sitio web anfitrión.
+  * **Persistencia de Sesión:** Almacena `visitorId` en `localStorage` (`tibs_webchat_visitor_id`) para que el cliente conserve el hilo de su conversación si recarga o regresa a la web.
+  * **Sondeo y Sincronización:** Consulta periódicamente novedades mediante `GET /api/webchat/public/messages/:visitorId` y despacha mensajes entrantes vía `POST /api/webchat/public/message`.
+
+### 9.3 Experiencia en la Bandeja Omnicanal del CRM
+* **Identificación Visual:** Las conversaciones se marcan con `channel: 'webchat'`, icono `Globe` púrpura y badge *"WebChat Asistente"* en [`ChatListSidebar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/ChatListSidebar.tsx).
+* **Sin Ventana de 24 Horas:** A diferencia de WhatsApp, el canal webchat no impone restricciones de tiempo; los asesores humanos pueden responder libremente en cualquier momento desde [`MessageInputBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/pages/Conversations/components/MessageInputBar.tsx) cuando el bot esté pausado (`botActive = false`).
+
+---
+
 ## 🔗 Enlaces Relacionados
 * [[CRM TIBS APP]] — Hub Maestro.
 * [[CRM TIBS - Arquitectura Frontend & React 19]] — Stack y estándares de desarrollo.

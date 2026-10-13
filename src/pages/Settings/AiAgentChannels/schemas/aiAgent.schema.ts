@@ -179,6 +179,7 @@ export interface AiAgentStats {
   hasWhatsApp: boolean;
   hasFacebook: boolean;
   hasInstagram: boolean;
+  hasWebchat: boolean;
   temperature: number;
   historyLimit: number;
 }

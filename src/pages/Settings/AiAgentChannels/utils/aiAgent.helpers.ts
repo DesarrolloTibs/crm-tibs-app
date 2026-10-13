@@ -20,6 +20,7 @@ export function calculateAiAgentStats(
   const hasWhatsApp = channels.some((c) => c.channel === 'whatsapp' && c.isActive);
   const hasFacebook = channels.some((c) => c.channel === 'facebook' && c.isActive);
   const hasInstagram = channels.some((c) => c.channel === 'instagram' && c.isActive);
+  const hasWebchat = channels.some((c) => c.channel === 'webchat' && c.isActive);
 
   return {
     isAgentActive: isActive,
@@ -30,6 +31,7 @@ export function calculateAiAgentStats(
     hasWhatsApp,
     hasFacebook,
     hasInstagram,
+    hasWebchat,
     temperature,
     historyLimit,
   };

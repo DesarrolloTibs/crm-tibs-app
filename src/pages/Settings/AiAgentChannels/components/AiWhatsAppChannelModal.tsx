@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Smartphone, Link2 } from 'lucide-react';
+import { Link2 } from 'lucide-react';
+import { WhatsAppLogo } from '../../../../components/shared/ChannelIcons';
 import Modal from '../../../../components/shared/Modal';
 import Button from '../../../../components/shared/Button';
 import Input from '../../../../components/shared/Input';
@@ -111,7 +112,7 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
       <div className="pb-4 border-b border-slate-150 flex justify-between items-center pr-8 text-left">
         <div>
           <h3 className="font-extrabold text-slate-800 text-base flex items-center gap-2">
-            <Smartphone size={18} className="text-emerald-600" />
+            <WhatsAppLogo size={18} className="text-emerald-600" />
             {editingChannel
               ? `Configuración WhatsApp: ${channelName || editingChannel.name}`
               : 'Conectar WhatsApp Cloud API'}

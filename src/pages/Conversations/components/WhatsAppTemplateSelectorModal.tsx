@@ -3,7 +3,6 @@ import {
   X,
   Search,
   Send,
-  Smartphone,
   CheckCircle2,
   AlertCircle,
   ExternalLink,
@@ -14,6 +13,7 @@ import {
   Sparkles,
   Info,
 } from 'lucide-react';
+import { WhatsAppLogo } from '../../../components/shared/ChannelIcons';
 import type {
   Conversation,
   WhatsAppTemplate,
@@ -260,7 +260,7 @@ export const WhatsAppTemplateSelectorModal: React.FC<WhatsAppTemplateSelectorMod
         <div className="p-4 sm:px-6 py-4 border-b border-gray-150 flex items-center justify-between bg-slate-50/70 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-              <Smartphone size={22} />
+              <WhatsAppLogo size={22} />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -604,7 +604,7 @@ export const WhatsAppTemplateSelectorModal: React.FC<WhatsAppTemplateSelectorMod
                 <EmptyState
                   title="Ninguna plantilla seleccionada"
                   message="Selecciona una plantilla del panel izquierdo para previsualizarla y configurar sus variables."
-                  icon={<Smartphone size={36} className="text-slate-400" />}
+                  icon={<WhatsAppLogo size={36} className="text-slate-400" />}
                   className="flex-grow justify-center"
                 />
               )}
