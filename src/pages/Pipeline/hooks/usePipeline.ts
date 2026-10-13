@@ -137,6 +137,7 @@ export function usePipeline(options: UsePipelineOptions = {}) {
   const [contactFilter, setContactFilter] = useState('');
   const [executiveFilter, setExecutiveFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [channelFilter, setChannelFilter] = useState('');
   const [archivedFilter, setArchivedFilter] = useState<'active' | 'archived' | 'all'>('active');
   const [priorityFilter, setPriorityFilter] = useState<number | null>(null);
 
@@ -868,6 +869,7 @@ export function usePipeline(options: UsePipelineOptions = {}) {
     setContactFilter('');
     setExecutiveFilter('');
     setStatusFilter('');
+    setChannelFilter('');
     setPriorityFilter(null);
     setArchivedFilter('active');
     setIsCustomFilterActive(false);
@@ -929,6 +931,7 @@ export function usePipeline(options: UsePipelineOptions = {}) {
       contactFilter,
       executiveFilter,
       statusFilter,
+      channelFilter,
       archivedFilter,
       priorityFilter,
       startDate,
@@ -943,6 +946,7 @@ export function usePipeline(options: UsePipelineOptions = {}) {
       contactFilter,
       executiveFilter,
       statusFilter,
+      channelFilter,
       archivedFilter,
       priorityFilter,
       startDate,
@@ -1075,6 +1079,8 @@ export function usePipeline(options: UsePipelineOptions = {}) {
     setExecutiveFilter,
     statusFilter,
     setStatusFilter,
+    channelFilter,
+    setChannelFilter,
     archivedFilter,
     setArchivedFilter,
     showFilters,

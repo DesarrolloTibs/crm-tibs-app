@@ -212,3 +212,17 @@ Todos los subcomponentes del módulo de Pipeline han sido refactorizados para el
 * [[CRM TIBS - Dashboard, Analitica & Reportes]] — Métricas agregadas de conversión y embudo.
 * [[Catalogo de Componentes y Vistas]] — Vistas y componentes del frontend.
 * [[Matriz de Servicios y Hooks API]] — Servicios REST y WebSocket de oportunidades.
+
+
+---
+
+## 11. Filtro y Trazabilidad por Canal de Origen (`canal_origen`)
+Se integró la trazabilidad y filtrado por canal de procedencia de las oportunidades y cotizaciones:
+* **Canales soportados:**
+  * `whatsapp`: Creada automáticamente por el Agente de IA en WhatsApp Cloud API.
+  * `instagram`: Creada por el Agente de IA vía Instagram Direct.
+  * `facebook`: Creada por el Agente de IA en Messenger / Facebook.
+  * `webchat`: Creada vía WebChat widget o asistente interno de IA.
+  * `manual`: Creada manualmente por un ejecutivo en el CRM con el botón "Nueva Oportunidad".
+* **Filtro en `PipelineToolbar`:** Integrado dentro del `UnifiedSearchBar` con selección rápida, badge activo interactivo y reseteo global.
+* **Componente `OpportunityChannelBadge`:** Renderizado en el pie de las tarjetas Kanban (`OpportunityKanbanCard`) y en la columna de origen de la vista de tabla (`pipeline.columns.tsx`).

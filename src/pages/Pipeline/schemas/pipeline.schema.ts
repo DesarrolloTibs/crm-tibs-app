@@ -35,6 +35,7 @@ export interface PipelineFiltersState {
   contactFilter: string;
   executiveFilter: string;
   statusFilter: string;
+  channelFilter?: string;
   archivedFilter: 'active' | 'archived' | 'all';
   priorityFilter: number | null;
   startDate: string;
