@@ -7,6 +7,8 @@ import OpportunityKanbanCard from './OpportunityKanbanCard';
 import Input from '../../../../components/shared/Input';
 import Button from '../../../../components/shared/Button';
 import type { Stage, Opportunity } from '../../schemas/pipeline.schema';
+import { useKanbanScroll } from '../../../../hooks/useKanbanScroll';
+import KanbanScrollControls from '../../../../components/shared/KanbanScrollControls';
 
 interface Props {
   sensors: ReturnType<typeof useSensors>;
@@ -67,13 +69,31 @@ export const PipelineKanbanView: React.FC<Props> = ({
 }) => {
   const visibleActive = activeStages.filter((s) => visibleStageIds.includes(s.id));
 
+  const {
+    containerRef,
+    canScrollLeft,
+    canScrollRight,
+    scrollToLeft,
+    scrollToRight,
+  } = useKanbanScroll<HTMLDivElement>({
+    disabled: Boolean(activeOpportunity || activeStage),
+  });
+
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div
-        className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar ${
-          !activeOpportunity && !activeStage ? 'snap-x snap-mandatory' : ''
-        }`}
-      >
+      <div className="relative group">
+        <KanbanScrollControls
+          canScrollLeft={canScrollLeft}
+          canScrollRight={canScrollRight}
+          onScrollLeft={scrollToLeft}
+          onScrollRight={scrollToRight}
+        />
+        <div
+          ref={containerRef}
+          className={`flex space-x-4 overflow-x-auto pb-4 pt-1 kanban-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 ${
+            !activeOpportunity && !activeStage ? 'snap-x snap-mandatory md:snap-none' : ''
+          }`}
+        >
         <SortableContext
           items={visibleActive.map((s) => s.id)}
           strategy={horizontalListSortingStrategy}
@@ -155,6 +175,7 @@ export const PipelineKanbanView: React.FC<Props> = ({
               </form>
             </div>
           ))}
+        </div>
       </div>
 
       <DragOverlay>

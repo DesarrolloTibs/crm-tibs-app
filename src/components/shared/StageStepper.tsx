@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface StepperStage {
     id: string;
@@ -38,6 +39,8 @@ export const StageStepper: React.FC<StageStepperProps> = ({
     onStageClick,
 }) => {
     const [showStageDropdown, setShowStageDropdown] = useState(false);
+    const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+    const moreButtonRef = useRef<HTMLButtonElement>(null);
 
     const foldedNames = ['resuelto', 'cancelado', 'cancelada', 'ganada', 'perdida', 'lost', 'won', 'cancelled', 'solved', 'standby'];
     const activeStages = stages.filter(s => s.blnstatus);
@@ -58,6 +61,66 @@ export const StageStepper: React.FC<StageStepperProps> = ({
         const isFolded = isStageFolded(s);
         return isFolded && s.id !== currentStageId;
     });
+
+    const updateDropdownPosition = useCallback(() => {
+        if (!moreButtonRef.current) return;
+        const rect = moreButtonRef.current.getBoundingClientRect();
+        const dropdownWidth = 190;
+        let left = rect.right - dropdownWidth;
+        if (left < 10) left = 10;
+        if (left + dropdownWidth > window.innerWidth - 10) {
+            left = window.innerWidth - dropdownWidth - 10;
+        }
+
+        const top = rect.bottom + 6;
+        setDropdownPosition({ top, left });
+    }, []);
+
+    const toggleDropdown = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!showStageDropdown) {
+            if (moreButtonRef.current) {
+                const rect = moreButtonRef.current.getBoundingClientRect();
+                const dropdownWidth = 190;
+                let left = rect.right - dropdownWidth;
+                if (left < 10) left = 10;
+                if (left + dropdownWidth > window.innerWidth - 10) {
+                    left = window.innerWidth - dropdownWidth - 10;
+                }
+                const top = rect.bottom + 6;
+                setDropdownPosition({ top, left });
+            }
+            setShowStageDropdown(true);
+        } else {
+            setShowStageDropdown(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!showStageDropdown) return;
+        updateDropdownPosition();
+
+        const handleScrollOrResize = () => {
+            updateDropdownPosition();
+        };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setShowStageDropdown(false);
+            }
+        };
+
+        window.addEventListener('scroll', handleScrollOrResize, true);
+        window.addEventListener('resize', handleScrollOrResize);
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('scroll', handleScrollOrResize, true);
+            window.removeEventListener('resize', handleScrollOrResize);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [showStageDropdown, updateDropdownPosition]);
 
     return (
         <div className="w-full overflow-x-auto hide-scrollbar py-1 px-1 flex justify-start md:justify-end">
@@ -90,36 +153,51 @@ export const StageStepper: React.FC<StageStepperProps> = ({
                 {foldedStages.length > 0 && (
                     <div className="relative flex">
                         <button
+                            ref={moreButtonRef}
                             type="button"
-                            onClick={() => setShowStageDropdown(!showStageDropdown)}
+                            onClick={toggleDropdown}
                             className="odoo-step cursor-pointer px-4 font-bold"
                             title="Más etapas"
                         >
                             ...
                         </button>
 
-                        {showStageDropdown && (
+                        {showStageDropdown && dropdownPosition && createPortal(
                             <>
                                 <div
-                                    className="fixed inset-0 z-40 bg-transparent"
-                                    onClick={() => setShowStageDropdown(false)}
+                                    className="fixed inset-0 z-[9998] bg-transparent"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowStageDropdown(false);
+                                    }}
                                 />
-                                <div className="absolute right-0 top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-lg shadow-xl z-50 p-1 flex flex-col animate-in fade-in duration-100">
+                                <div
+                                    style={{
+                                        position: 'fixed',
+                                        top: `${dropdownPosition.top}px`,
+                                        left: `${dropdownPosition.left}px`,
+                                        zIndex: 9999,
+                                    }}
+                                    className="w-48 bg-white border border-slate-200 rounded-xl shadow-2xl p-1.5 flex flex-col animate-in fade-in zoom-in-95 duration-100"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     {foldedStages.map((s) => (
                                         <button
-                                          key={s.id}
-                                          type="button"
-                                          onClick={() => {
-                                              onStageClick(s);
-                                              setShowStageDropdown(false);
-                                          }}
-                                          className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md font-semibold transition-colors cursor-pointer"
+                                            key={s.id}
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onStageClick(s);
+                                                setShowStageDropdown(false);
+                                            }}
+                                            className="w-full text-left px-3 py-2 text-xs text-slate-700 rounded-lg font-semibold transition-colors cursor-pointer flex items-center justify-between"
                                         >
-                                            {s.strname}
+                                            <span>{s.strname}</span>
                                         </button>
                                     ))}
                                 </div>
                             </>
+                            , document.body
                         )}
                     </div>
                 )}
