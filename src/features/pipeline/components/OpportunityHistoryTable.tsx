@@ -3,6 +3,8 @@ import type { Opportunity } from '@core/models/Opportunity';
 import { Edit, Trash2, Archive, ArchiveRestore, Check, X } from 'lucide-react';
 import Table, { type ColumnDef } from '@shared/components/Table';
 
+import OpportunityChannelBadge from './OpportunityChannelBadge';
+
 interface Props {
   opportunities: Opportunity[];
   onEdit: (opportunity: Opportunity) => void;
@@ -47,7 +49,14 @@ const OpportunityHistoryTable: React.FC<Props> = ({
         accessorKey: 'nombre_proyecto',
         header: 'Proyecto',
         cell: ({ row }) => (
-          <p className="text-gray-900 font-semibold">{row.original.nombre_proyecto}</p>
+          <div>
+            <p className="text-gray-900 font-semibold">{row.original.nombre_proyecto}</p>
+            {row.original.canal_origen && (
+              <div className="mt-0.5">
+                <OpportunityChannelBadge channel={row.original.canal_origen} size="xs" />
+              </div>
+            )}
+          </div>
         ),
         meta: {
           mobileLabel: 'Proyecto',

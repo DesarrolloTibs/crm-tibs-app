@@ -21,4 +21,6 @@ export { default as SettingsContainer } from './SettingsContainer';
 export { default as StageStepper } from './StageStepper';
 export { default as StageVisibilitySelector } from './StageVisibilitySelector';
 export { default as UnifiedSearchBar } from './UnifiedSearchBar';
+export * from './ChannelIcons';
 export * from './Table/types';
+

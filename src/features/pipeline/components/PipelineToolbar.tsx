@@ -5,6 +5,7 @@ import type { SearchBadge } from '@shared/components/UnifiedSearchBar';
 import StageVisibilitySelector from '@shared/components/StageVisibilitySelector';
 import Button from '@shared/components/Button';
 import Input from '@shared/components/Input';
+import { WhatsAppLogo, InstagramLogo, FacebookLogo, WebchatLogo, ManualCrmLogo } from '@shared/components/ChannelIcons';
 import type { Stage } from '@core/models/Opportunity';
 
 interface Executive { id: string; username: string; }
@@ -24,6 +25,8 @@ interface Props {
   setExecutiveFilter: (v: string) => void;
   statusFilter: string;
   setStatusFilter: (v: string) => void;
+  channelFilter: string;
+  setChannelFilter: (v: string) => void;
   archivedFilter: 'active' | 'archived' | 'all';
   setArchivedFilter: (v: 'active' | 'archived' | 'all') => void;
   priorityFilter: number | null;
@@ -57,7 +60,7 @@ const PipelineToolbar: React.FC<Props> = ({
   pipelineName, pipelineDescription, viewMode, setViewMode,
   searchTerm, setSearchTerm, contactFilter, setContactFilter, contactsList,
   executiveFilter, setExecutiveFilter,
-  statusFilter, setStatusFilter, archivedFilter, setArchivedFilter,
+  statusFilter, setStatusFilter, channelFilter, setChannelFilter, archivedFilter, setArchivedFilter,
   priorityFilter, setPriorityFilter, showFilters, setShowFilters,
   showToolbar, setShowToolbar, stages, activeStages, visibleStageIds,
   onVisibilityChange, executives, isAdmin, searchDropdownRef,
@@ -81,7 +84,7 @@ const PipelineToolbar: React.FC<Props> = ({
         ref={searchDropdownRef}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        placeholder={!executiveFilter && !statusFilter && priorityFilter === null && archivedFilter === 'active' && !startDate && !endDate && !contactFilter ? 'Buscar...' : ''}
+        placeholder={!executiveFilter && !statusFilter && !channelFilter && priorityFilter === null && archivedFilter === 'active' && !startDate && !endDate && !contactFilter ? 'Buscar...' : ''}
         badges={badges}
         showFilters={showFilters}
         setShowFilters={setShowFilters}
@@ -113,6 +116,33 @@ const PipelineToolbar: React.FC<Props> = ({
               {statusFilter===stage.id && <span className="text-indigo-600 font-extrabold text-sm ml-auto">✓</span>}
             </Button>
           ))}
+          <div className="border-t border-gray-100 my-1 shrink-0" />
+          <h5 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider px-2 mt-1 mb-1 shrink-0 select-none">Canal de Origen</h5>
+          {[
+            { id: 'whatsapp', label: 'WhatsApp', color: 'bg-emerald-500', icon: WhatsAppLogo },
+            { id: 'instagram', label: 'Instagram', color: 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600', icon: InstagramLogo },
+            { id: 'facebook', label: 'Facebook', color: 'bg-blue-600', icon: FacebookLogo },
+            { id: 'webchat', label: 'Webchat', color: 'bg-indigo-600', icon: WebchatLogo },
+            { id: 'manual', label: 'Manual / CRM', color: 'bg-slate-400', icon: ManualCrmLogo },
+          ].map(ch => {
+            const Icon = ch.icon;
+            const isSelected = channelFilter === ch.id;
+            return (
+              <Button
+                key={ch.id}
+                variant="ghost"
+                onClick={() => setChannelFilter(isSelected ? '' : ch.id)}
+                className="!justify-between !text-xs !text-gray-700 !px-2 !py-1 !rounded w-full"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${ch.color}`} />
+                  <Icon size={12} className="text-slate-500 shrink-0" />
+                  <span className="truncate">{ch.label}</span>
+                </div>
+                {isSelected && <span className="text-indigo-600 font-extrabold text-sm ml-auto">✓</span>}
+              </Button>
+            );
+          })}
           <div className="border-t border-gray-100 my-1 shrink-0" />
           <Button variant="ghost" onClick={() => { setShowFilters(false); onOpenCustomFilter(); }} className="!gap-1 !text-xs !text-indigo-600 hover:!text-indigo-800 !px-2 !py-1.5 !rounded w-full !justify-start hover:!bg-indigo-50 !font-bold">+ Filtro personalizado...</Button>
         </div>

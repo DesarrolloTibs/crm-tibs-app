@@ -5,6 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Edit, Trash2, Building2, Archive, ArchiveRestore, MoreVertical, Mail, User, Clock } from 'lucide-react';
 import Popover from './Popover';
+import OpportunityChannelBadge from './OpportunityChannelBadge';
 
 
 interface Props {
@@ -332,9 +333,16 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
                 </span>
               )}
             </span>
-            <span className="px-2 py-0.5 text-[9px] font-semibold rounded-full inline-block shrink-0" style={tagStyle}>
-              {opportunity.linea_negocio?.strname || ''}
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {opportunity.canal_origen && (
+                <OpportunityChannelBadge channel={opportunity.canal_origen} size="xs" />
+              )}
+              {opportunity.linea_negocio?.strname && (
+                <span className="px-2 py-0.5 text-[9px] font-semibold rounded-full inline-block shrink-0" style={tagStyle}>
+                  {opportunity.linea_negocio.strname}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

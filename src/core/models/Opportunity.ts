@@ -65,6 +65,7 @@ export interface Opportunity  {
   createdAt?: Date;
   stage_entered_at?: Date | string;
   priority?: number;
+  canal_origen?: 'whatsapp' | 'facebook' | 'instagram' | 'webchat' | 'manual' | string;
 }
 
 export interface OpportunityFile {

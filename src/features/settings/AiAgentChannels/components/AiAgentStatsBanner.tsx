@@ -4,10 +4,13 @@ import {
   Sliders,
   Link2,
   Cpu,
-  Smartphone,
-  Facebook,
-  Instagram,
 } from 'lucide-react';
+import {
+  WhatsAppLogo,
+  FacebookLogo,
+  InstagramLogo,
+  WebchatLogo,
+} from '@shared/components/ChannelIcons';
 import type { AiAgentStats } from '../schemas/aiAgent.schema';
 
 interface AiAgentStatsBannerProps {
@@ -81,42 +84,52 @@ export const AiAgentStatsBanner: React.FC<AiAgentStatsBannerProps> = ({ stats })
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
             Canales Conectados
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span
-              className={`p-1 rounded-md text-[10px] border flex items-center gap-0.5 ${
+              className={`p-1 rounded-md text-[10px] border flex items-center gap-1 ${
                 stats.hasWhatsApp
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : 'bg-slate-50 text-slate-400 border-slate-200'
               }`}
               title={stats.hasWhatsApp ? 'WhatsApp Cloud API Conectado' : 'WhatsApp Desconectado'}
             >
-              <Smartphone size={11} /> WA
+              <WhatsAppLogo size={12} /> WA
             </span>
             <span
-              className={`p-1 rounded-md text-[10px] border flex items-center gap-0.5 ${
+              className={`p-1 rounded-md text-[10px] border flex items-center gap-1 ${
                 stats.hasFacebook
                   ? 'bg-blue-50 text-blue-700 border-blue-200'
                   : 'bg-slate-50 text-slate-400 border-slate-200'
               }`}
               title={stats.hasFacebook ? 'Facebook Messenger Conectado' : 'Facebook Desconectado'}
             >
-              <Facebook size={11} /> FB
+              <FacebookLogo size={12} /> FB
             </span>
             <span
-              className={`p-1 rounded-md text-[10px] border flex items-center gap-0.5 ${
+              className={`p-1 rounded-md text-[10px] border flex items-center gap-1 ${
                 stats.hasInstagram
                   ? 'bg-pink-50 text-pink-700 border-pink-200'
                   : 'bg-slate-50 text-slate-400 border-slate-200'
               }`}
               title={stats.hasInstagram ? 'Instagram Direct Conectado' : 'Instagram Desconectado'}
             >
-              <Instagram size={11} /> IG
+              <InstagramLogo size={12} /> IG
+            </span>
+            <span
+              className={`p-1 rounded-md text-[10px] border flex items-center gap-1 ${
+                stats.hasWebchat
+                  ? 'bg-purple-50 text-purple-700 border-purple-200'
+                  : 'bg-slate-50 text-slate-400 border-slate-200'
+              }`}
+              title={stats.hasWebchat ? 'WebChat Externo Conectado' : 'WebChat Desconectado'}
+            >
+              <WebchatLogo size={12} /> Web
             </span>
           </div>
           <p className="text-[10px] text-slate-500">
             {stats.totalChannels > 0
               ? `${stats.totalChannels} canal(es) vinculados`
-              : 'Sin canales Meta vinculados'}
+              : 'Sin canales activos'}
           </p>
         </div>
         <div className="p-3 rounded-2xl bg-sky-50 text-sky-600 border border-sky-100">

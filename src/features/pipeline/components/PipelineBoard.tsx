@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import Confetti from 'react-confetti-boom';
-import { Filter, User, Tag, Star, Calendar } from 'lucide-react';
+import { Filter, User, Tag, Star, Calendar, Radio } from 'lucide-react';
 import { usePipeline } from '../hooks/usePipeline';
 import Loader from '@shared/components/Loader';
 import Notification from '@shared/components/Notification';
@@ -31,6 +31,21 @@ const PipelineBoard: React.FC = () => {
     if (p.executiveFilter) list.push({ id:'executive', label:p.executives.find(e=>e.id===p.executiveFilter)?.username||'Ejecutivo', icon:<User size={10} className="shrink-0" />, onRemove:()=>p.setExecutiveFilter('') });
     if (p.statusFilter) list.push({ id:'status', label:p.activeStages.find(s=>s.id===p.statusFilter)?.strname||'Estatus', icon:<Tag size={10} className="shrink-0" />, onRemove:()=>p.setStatusFilter('') });
     if (p.priorityFilter!==null) list.push({ id:'priority', label:p.priorityFilter===1?'★ Baja+':p.priorityFilter===2?'★★ Media+':'★★★ Alta', icon:<Star size={10} className="shrink-0" />, onRemove:()=>p.setPriorityFilter(null) });
+    if (p.channelFilter) {
+      const channelLabels: Record<string, string> = {
+        whatsapp: 'WhatsApp',
+        instagram: 'Instagram',
+        facebook: 'Facebook',
+        webchat: 'Webchat',
+        manual: 'Manual / CRM',
+      };
+      list.push({
+        id: 'channel',
+        label: channelLabels[p.channelFilter] || p.channelFilter,
+        icon: <Radio size={10} className="shrink-0" />,
+        onRemove: () => p.setChannelFilter(''),
+      });
+    }
     
     if (p.startDate || p.endDate) {
       const currentYear = new Date().getFullYear();
@@ -48,7 +63,7 @@ const PipelineBoard: React.FC = () => {
       });
     }
     return list;
-  }, [p.isCustomFilterActive, p.archivedFilter, p.contactFilter, p.contactsList, p.executiveFilter, p.statusFilter, p.priorityFilter, p.executives, p.activeStages, p.startDate, p.endDate]);
+  }, [p.isCustomFilterActive, p.archivedFilter, p.contactFilter, p.contactsList, p.executiveFilter, p.statusFilter, p.channelFilter, p.priorityFilter, p.executives, p.activeStages, p.startDate, p.endDate]);
 
   if (p.loading) return <Loader />;
 
@@ -75,6 +90,8 @@ const PipelineBoard: React.FC = () => {
         setExecutiveFilter={p.setExecutiveFilter}
         statusFilter={p.statusFilter}
         setStatusFilter={p.setStatusFilter}
+        channelFilter={p.channelFilter}
+        setChannelFilter={p.setChannelFilter}
         archivedFilter={p.archivedFilter}
         setArchivedFilter={p.setArchivedFilter}
         priorityFilter={p.priorityFilter}

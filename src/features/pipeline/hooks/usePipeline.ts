@@ -99,6 +99,7 @@ export function usePipeline() {
   const [contactFilter, setContactFilter] = useState('');
   const [executiveFilter, setExecutiveFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [channelFilter, setChannelFilter] = useState('');
   const [archivedFilter, setArchivedFilter] = useState<'active' | 'archived' | 'all'>('active');
   const [showFilters, setShowFilters] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
@@ -137,7 +138,7 @@ export function usePipeline() {
   useEffect(() => { localStorage.setItem('pipeline_folded_stages', JSON.stringify(foldedStageIds)); }, [foldedStageIds]);
   useEffect(() => { localStorage.setItem('pipeline_view_mode', viewMode); }, [viewMode]);
   useEffect(() => { if (isAddingStage && addStageInputRef.current) addStageInputRef.current.focus(); }, [isAddingStage]);
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, contactFilter, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, pageSize, startDate, endDate]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, contactFilter, executiveFilter, statusFilter, channelFilter, priorityFilter, archivedFilter, isCustomFilterActive, pageSize, startDate, endDate]);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchDropdownRef.current && !searchDropdownRef.current.contains(e.target as Node)) setShowFilters(false);
@@ -420,6 +421,7 @@ export function usePipeline() {
     setContactFilter('');
     setExecutiveFilter('');
     setStatusFilter('');
+    setChannelFilter('');
     setPriorityFilter(null);
     setArchivedFilter('active');
     setIsCustomFilterActive(false);
@@ -480,6 +482,9 @@ export function usePipeline() {
         : true;
       const matchesExecutive = executiveFilter ? opp.ejecutivo_id === executiveFilter : true;
       const matchesStatus = statusFilter ? opp.stage_id === statusFilter : true;
+      const matchesChannel = channelFilter
+        ? (opp.canal_origen || 'manual').toLowerCase() === channelFilter.toLowerCase()
+        : true;
       const matchesPriority = priorityFilter !== null ? (opp.priority ?? 0) >= priorityFilter : true;
       const matchesArchived = archivedFilter === 'all' ? true : archivedFilter === 'archived' ? opp.archived === true : (opp.archived === false || opp.archived === undefined);
       
@@ -492,7 +497,7 @@ export function usePipeline() {
           if (endDate && oppDayStr > endDate) matchesDate = false;
         }
       }
-      return matchesSearch && matchesContact && matchesExecutive && matchesStatus && matchesPriority && matchesArchived && matchesDate;
+      return matchesSearch && matchesContact && matchesExecutive && matchesStatus && matchesChannel && matchesPriority && matchesArchived && matchesDate;
     }
     if (!includeArchived && opp.archived) return false;
     if (customRules.length === 0) return true;
@@ -535,7 +540,7 @@ export function usePipeline() {
     };
 
     return matchType === 'any' ? customRules.some(matchesRule) : customRules.every(matchesRule);
-  }), [opportunities, searchTerm, contactFilter, executiveFilter, statusFilter, priorityFilter, archivedFilter, isCustomFilterActive, customRules, matchType, includeArchived, startDate, endDate]);
+  }), [opportunities, searchTerm, contactFilter, executiveFilter, statusFilter, channelFilter, priorityFilter, archivedFilter, isCustomFilterActive, customRules, matchType, includeArchived, startDate, endDate]);
 
   const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredOpportunities.length / pageSize);
   const paginatedOpportunities = useMemo(() => pageSize === 0 ? filteredOpportunities : filteredOpportunities.slice((currentPage-1)*pageSize, currentPage*pageSize), [filteredOpportunities, currentPage, pageSize]);
@@ -590,7 +595,7 @@ export function usePipeline() {
     foldedStageIds, setFoldedStageIds, viewMode, setViewMode, currentPage, setCurrentPage,
     pageSize, setPageSize, isConfirmModalOpen, setIsConfirmModalOpen, searchTerm, setSearchTerm,
     contactFilter, setContactFilter, contactsList,
-    executiveFilter, setExecutiveFilter, statusFilter, setStatusFilter, archivedFilter, setArchivedFilter,
+    executiveFilter, setExecutiveFilter, statusFilter, setStatusFilter, channelFilter, setChannelFilter, archivedFilter, setArchivedFilter,
     showFilters, setShowFilters, showToolbar, setShowToolbar, showStagesConfig, setShowStagesConfig,
     isExploding, priorityFilter, setPriorityFilter, searchDropdownRef,
     startDate, setStartDate, endDate, setEndDate,

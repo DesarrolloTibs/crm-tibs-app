@@ -5,7 +5,6 @@ import { Mail, Lock, LogIn, ShieldAlert, Eye, EyeOff, AlertCircle } from 'lucide
 import LoginBackground from './LoginBackground';
 import './Login.css';
 
-import LoginWebChat from './LoginWebChat';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -221,8 +220,6 @@ const Login: React.FC = () => {
                 </div>
             </div>
 
-            {/* Widget de WebChat flotante en Login */}
-            <LoginWebChat />
         </div>
     );
 };

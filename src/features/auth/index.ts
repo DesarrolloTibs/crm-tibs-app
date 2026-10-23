@@ -5,4 +5,3 @@ export { useAuth } from './hooks/useAuth';
 export { useForgotPassword, useResetPassword } from './hooks/useAuthForms';
 export { default as Login } from './components/Login';
 export { default as LoginBackground } from './components/LoginBackground';
-export { default as LoginWebChat } from './components/LoginWebChat';

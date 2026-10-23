@@ -297,6 +297,45 @@ export const AiAgentChannelsPage: React.FC = () => {
     }
   };
 
+  // Manejador para activar / pausar el WebChat Externo
+  const handleToggleWebchatStatus = async (config: ChannelConfig) => {
+    try {
+      setIsLoadingChannels(true);
+      await saveChannelConfig({
+        id: config.id,
+        isActive: !config.isActive,
+      });
+      showToast.success(`Canal WebChat ${!config.isActive ? 'activado' : 'pausado'} con éxito.`);
+      const list = await getChannelConfigs();
+      setChannelConfigs(Array.isArray(list) ? list : []);
+    } catch (err: any) {
+      console.error('Error al actualizar estado del WebChat:', err);
+      showToast.error('No se pudo cambiar el estado del canal WebChat.');
+    } finally {
+      setIsLoadingChannels(false);
+    }
+  };
+
+  // Manejador para habilitar el canal WebChat por primera vez
+  const handleCreateWebchatChannel = async () => {
+    try {
+      setIsLoadingChannels(true);
+      await saveChannelConfig({
+        channel: 'webchat',
+        name: 'WebChat Externo',
+        isActive: true,
+      });
+      showToast.success('¡Canal WebChat habilitado con éxito!');
+      const list = await getChannelConfigs();
+      setChannelConfigs(Array.isArray(list) ? list : []);
+    } catch (err: any) {
+      console.error('Error al crear canal WebChat:', err);
+      showToast.error('No se pudo habilitar el canal WebChat.');
+    } finally {
+      setIsLoadingChannels(false);
+    }
+  };
+
   // Guardar Configuración General
   const handleSaveGeneralConfig = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -720,6 +759,8 @@ export const AiAgentChannelsPage: React.FC = () => {
             onOpenWhatsAppModal={handleOpenWhatsAppModal}
             onConnectMeta={handleConnectMeta}
             onDeleteChannel={(id) => setDeletingChannelId(id)}
+            onToggleWebchatStatus={handleToggleWebchatStatus}
+            onCreateWebchatChannel={handleCreateWebchatChannel}
           />
         )}
       </div>
