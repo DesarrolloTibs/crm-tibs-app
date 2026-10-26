@@ -226,3 +226,14 @@ Se integró la trazabilidad y filtrado por canal de procedencia de las oportunid
   * `manual`: Creada manualmente por un ejecutivo en el CRM con el botón "Nueva Oportunidad".
 * **Filtro en `PipelineToolbar`:** Integrado dentro del `UnifiedSearchBar` con selección rápida, badge activo interactivo y reseteo global.
 * **Componente `OpportunityChannelBadge`:** Renderizado en el pie de las tarjetas Kanban (`OpportunityKanbanCard`) y en la columna de origen de la vista de tabla (`pipeline.columns.tsx`).
+
+
+---
+
+## 🖱️ 12. Navegación y Desplazamiento Horizontal con Mouse (`useKanbanScroll`)
+Se optimizó la usabilidad del tablero Kanban eliminando la dependencia obligatoria de touchpads o pantallas táctiles:
+* **Hook reutilizable `useKanbanScroll` (`src/hooks/useKanbanScroll.ts`):**
+  * **Preservación del scroll vertical nativo con rueda del mouse:** No intercepta la rueda del ratón para permitir navegación vertical normal en la página y columnas de tarjetas.
+  * **Scrollbar visible y estilizada (`.kanban-scrollbar`):** Barra de desplazamiento horizontal interactiva de 10px con pista (`#f1f5f9`) y thumb redondeado (`#cbd5e1`), reemplazando la ocultación total previa (`hide-scrollbar`).
+* **Controles flotantes `KanbanScrollControls` (`src/components/shared/KanbanScrollControls.tsx`):**
+  * Botones flotantes circulares (`ChevronLeft` / `ChevronRight`) situados en los extremos del tablero que se activan condicionalmente según el desbordamiento horizontal visible para navegar etapa por etapa.

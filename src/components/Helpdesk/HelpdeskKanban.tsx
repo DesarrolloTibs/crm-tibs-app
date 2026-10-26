@@ -7,6 +7,8 @@ import TicketCard from './TicketCard';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import type { TicketStage, Ticket } from '../../core/models/Ticket';
+import { useKanbanScroll } from '../../hooks/useKanbanScroll';
+import KanbanScrollControls from '../shared/KanbanScrollControls';
 
 interface Props {
   sensors: ReturnType<typeof useSensors>;
@@ -46,9 +48,31 @@ const HelpdeskKanban: React.FC<Props> = ({
 }) => {
   const visibleActiveStages = stages.filter(s => s.blnstatus && visibleStageIds.includes(s.id));
 
+  const {
+    containerRef,
+    canScrollLeft,
+    canScrollRight,
+    scrollToLeft,
+    scrollToRight,
+  } = useKanbanScroll<HTMLDivElement>({
+    disabled: Boolean(activeTicket || activeStage),
+  });
+
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div className={`flex space-x-4 overflow-x-auto pb-4 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 ${!activeTicket && !activeStage ? 'snap-x snap-mandatory' : ''}`}>
+      <div className="relative group">
+        <KanbanScrollControls
+          canScrollLeft={canScrollLeft}
+          canScrollRight={canScrollRight}
+          onScrollLeft={scrollToLeft}
+          onScrollRight={scrollToRight}
+        />
+        <div
+          ref={containerRef}
+          className={`flex space-x-4 overflow-x-auto pb-4 pt-1 kanban-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 ${
+            !activeTicket && !activeStage ? 'snap-x snap-mandatory md:snap-none' : ''
+          }`}
+        >
         <SortableContext items={visibleActiveStages.map(s => s.id)} strategy={horizontalListSortingStrategy}>
           {visibleActiveStages.map(stage => (
             <HelpdeskColumn
@@ -93,6 +117,7 @@ const HelpdeskKanban: React.FC<Props> = ({
             </div>
           )
         )}
+        </div>
       </div>
 
       <DragOverlay>

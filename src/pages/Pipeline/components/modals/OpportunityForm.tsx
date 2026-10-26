@@ -156,11 +156,14 @@ export const OpportunityForm: React.FC<Props> = ({
         initialData?.opportunityProducts?.map((op) => op.productId).filter(Boolean) ||
         initialData?.products?.map((p) => p.id!).filter(Boolean) ||
         [],
-      monto_licenciamiento: initialData?.monto_licenciamiento || 0,
-      monto_servicios: initialData?.monto_servicios || 0,
-      monto_total: initialData?.monto_total || 0,
+      monto_licenciamiento: Number(initialData?.monto_licenciamiento) || 0,
+      monto_servicios: Number(initialData?.monto_servicios) || 0,
+      monto_total: Number(initialData?.monto_total) || 0,
       moneda: (initialData?.moneda as CurrencyType) || 'MXN',
-      tipoCambio: initialData?.tipoCambio || (initialData?.moneda === 'USD' ? 1 : 0),
+      tipoCambio:
+        initialData?.tipoCambio !== undefined && initialData?.tipoCambio !== null && !isNaN(Number(initialData.tipoCambio))
+          ? Number(initialData.tipoCambio)
+          : (initialData?.moneda === 'USD' ? 1 : 0),
       stage_id: initialData?.stage_id || '',
       cliente_id: initialData?.cliente_id || null,
       ejecutivo_id: initialData?.ejecutivo_id || '',
@@ -206,11 +209,14 @@ export const OpportunityForm: React.FC<Props> = ({
           initialData.opportunityProducts?.map((op) => op.productId).filter(Boolean) ||
           initialData.products?.map((p) => p.id!).filter(Boolean) ||
           [],
-        monto_licenciamiento: initialData.monto_licenciamiento || 0,
-        monto_servicios: initialData.monto_servicios || 0,
-        monto_total: initialData.monto_total || 0,
+        monto_licenciamiento: Number(initialData.monto_licenciamiento) || 0,
+        monto_servicios: Number(initialData.monto_servicios) || 0,
+        monto_total: Number(initialData.monto_total) || 0,
         moneda: (initialData.moneda as CurrencyType) || 'MXN',
-        tipoCambio: initialData.tipoCambio || (initialData.moneda === 'USD' ? 1 : 0),
+        tipoCambio:
+          initialData.tipoCambio !== undefined && initialData.tipoCambio !== null && !isNaN(Number(initialData.tipoCambio))
+            ? Number(initialData.tipoCambio)
+            : (initialData.moneda === 'USD' ? 1 : 0),
         stage_id: initialData.stage_id || '',
         cliente_id: initialData.cliente_id || null,
         ejecutivo_id: initialData.ejecutivo_id || '',
@@ -423,13 +429,21 @@ export const OpportunityForm: React.FC<Props> = ({
 
     if (name === 'moneda') {
       setOpportunity((prev) => {
-        const newTipoCambio = value === 'MXN' ? 0 : prev.tipoCambio || 1;
+        const rawTipo = Number(prev.tipoCambio);
+        const newTipoCambio = value === 'MXN' ? 0 : (!isNaN(rawTipo) && rawTipo > 0 ? rawTipo : 1);
         return {
           ...prev,
           moneda: value as CurrencyType,
           tipoCambio: Number(newTipoCambio.toFixed(2)),
         };
       });
+      if (value === 'MXN') {
+        setErrors((prev) => {
+          const next = { ...prev };
+          delete next.tipoCambio;
+          return next;
+        });
+      }
     } else {
       setOpportunity((prev) => ({ ...prev, [name]: value }));
     }
@@ -1142,13 +1156,21 @@ export const OpportunityForm: React.FC<Props> = ({
               onChange={(val: any) => {
                 const value = val ? val.value : 'USD';
                 setOpportunity((prev) => {
-                  const newTipoCambio = value === 'MXN' ? 0 : prev.tipoCambio || 1;
+                  const rawTipo = Number(prev.tipoCambio);
+                  const newTipoCambio = value === 'MXN' ? 0 : (!isNaN(rawTipo) && rawTipo > 0 ? rawTipo : 1);
                   return {
                     ...prev,
                     moneda: value as CurrencyType,
                     tipoCambio: Number(newTipoCambio.toFixed(2)),
                   };
                 });
+                if (value === 'MXN') {
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.tipoCambio;
+                    return next;
+                  });
+                }
               }}
             />
 
