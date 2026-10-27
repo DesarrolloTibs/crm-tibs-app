@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ShieldAlert, Bot } from 'lucide-react';
+import { ShieldAlert, Bot, Mic } from 'lucide-react';
 import { WhatsAppLogo } from '../../../components/shared/ChannelIcons';
 import type { Message } from '../schemas/conversations.schema';
 import { getInitials } from '../utils/conversations.helpers';
@@ -17,6 +17,7 @@ interface MessageFeedProps {
 
 export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) => {
   const groupedMessages = useMemo(() => groupMessagesByDate(messages), [messages]);
+  const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
 
   return (
     <div className="flex-grow p-4 overflow-y-auto space-y-4 bg-slate-50/20">
@@ -44,12 +45,16 @@ export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndR
 
             const isContact = msg.sender === 'contact';
             const isBot = msg.sender === 'agent' || msg.sender === 'bot';
-            const isTemplate = msg.messageType === 'template' || msg.content.includes('[Plantilla WhatsApp:');
+            const isTemplate = msg.messageType === 'template' || msg.content?.includes('[Plantilla WhatsApp:');
+            const isAudio = msg.messageType === 'audio' || Boolean(msg.mediaUrl);
+            const audioSrc = msg.mediaUrl
+              ? (msg.mediaUrl.startsWith('http') ? msg.mediaUrl : `${baseUrl}${msg.mediaUrl.startsWith('/') ? '' : '/'}${msg.mediaUrl}`)
+              : null;
 
             return (
               <div
                 key={msg.id}
-                className={`flex gap-2.5 items-end max-w-[80%] animate-fade-in ${
+                className={`flex gap-2.5 items-end max-w-[85%] sm:max-w-[80%] animate-fade-in ${
                   isContact ? 'mr-auto text-left' : 'ml-auto flex-row-reverse text-right'
                 }`}
               >
@@ -72,7 +77,7 @@ export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndR
                 )}
 
                 {/* Burbuja del mensaje */}
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-0.5 max-w-full">
                   <div
                     className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-2xs leading-relaxed ${
                       isContact
@@ -91,6 +96,39 @@ export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndR
                           <span>Plantilla Oficial de WhatsApp</span>
                         </div>
                         {renderMessageContent(msg.content)}
+                      </div>
+                    ) : isAudio ? (
+                      <div className="flex flex-col gap-1.5 min-w-[240px] max-w-[320px]">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider opacity-80 select-none">
+                          <Mic size={13} className={isContact ? 'text-indigo-600' : 'text-white'} />
+                          <span>Nota de voz</span>
+                        </div>
+
+                        {audioSrc ? (
+                          <audio
+                            controls
+                            preload="metadata"
+                            className="w-full h-9 rounded-lg"
+                            src={audioSrc}
+                          >
+                            Tu navegador no soporta el reproductor de audio.
+                          </audio>
+                        ) : (
+                          <div className="text-[11px] italic opacity-80 py-1">
+                            Audio procesado sin archivo disponible
+                          </div>
+                        )}
+
+                        {msg.content && msg.content !== '[Nota de voz]' && msg.content !== '[Nota de voz no disponible]' && msg.content !== '[Nota de voz inaudible o vacía]' && (
+                          <div className={`mt-1 pt-1.5 border-t text-[11px] leading-tight ${
+                            isContact ? 'border-slate-100 text-slate-600' : 'border-white/20 text-white/90'
+                          }`}>
+                            <span className="block text-[9px] font-bold uppercase tracking-wider opacity-70 mb-0.5">
+                              Transcripción:
+                            </span>
+                            <span className="italic">"{msg.content}"</span>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       renderMessageContent(msg.content)
