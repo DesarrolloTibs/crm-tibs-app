@@ -16,7 +16,7 @@ export function useKanbanScroll<T extends HTMLElement = HTMLDivElement>({
   // Comprobar límites de scroll para activar o desactivar controles
   const updateScrollBounds = useCallback(() => {
     const el = containerRef.current;
-    if (!el) {
+    if (!el || disabled) {
       setCanScrollLeft(false);
       setCanScrollRight(false);
       return;
@@ -24,11 +24,11 @@ export function useKanbanScroll<T extends HTMLElement = HTMLDivElement>({
     const { scrollLeft, scrollWidth, clientWidth } = el;
     setCanScrollLeft(scrollLeft > 10);
     setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
-  }, []);
+  }, [disabled]);
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el || disabled) return;
 
     updateScrollBounds();
     el.addEventListener('scroll', updateScrollBounds, { passive: true });
@@ -42,16 +42,16 @@ export function useKanbanScroll<T extends HTMLElement = HTMLDivElement>({
       window.removeEventListener('resize', updateScrollBounds);
       observer.disconnect();
     };
-  }, [updateScrollBounds]);
+  }, [updateScrollBounds, disabled]);
 
   const scrollByStep = useCallback(
     (direction: 'left' | 'right') => {
       const el = containerRef.current;
-      if (!el) return;
+      if (!el || disabled) return;
       const delta = direction === 'left' ? -step : step;
       el.scrollBy({ left: delta, behavior: 'smooth' });
     },
-    [step]
+    [step, disabled]
   );
 
   const scrollToLeft = useCallback(() => scrollByStep('left'), [scrollByStep]);

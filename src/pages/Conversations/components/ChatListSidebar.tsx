@@ -9,6 +9,7 @@ import {
   Clock,
   ShieldCheck,
   X,
+  Mic,
 } from 'lucide-react';
 import {
   WhatsAppLogo,
@@ -341,13 +342,24 @@ export const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
                       {conv.lastMessage && conv.lastMessage.sender !== 'contact' && (
                         <span className="shrink-0">{renderDeliveryStatusIcon(conv.lastMessage.status)}</span>
                       )}
-                      <span
-                        className={`truncate ${
+                      {conv.lastMessage?.messageType === 'audio' || conv.lastMessage?.mediaUrl ? (
+                        <span className={`flex items-center gap-1 truncate ${
                           unreadCount > 0 ? 'font-bold text-slate-800' : 'text-slate-500'
-                        }`}
-                      >
-                        {conv.lastMessage?.content || 'Sin mensajes recientes'}
-                      </span>
+                        }`}>
+                          <Mic size={12} className="shrink-0 text-indigo-500" />
+                          <span className="truncate">
+                            Nota de voz{conv.lastMessage?.content && conv.lastMessage.content !== '[Nota de voz]' ? `: ${conv.lastMessage.content}` : ''}
+                          </span>
+                        </span>
+                      ) : (
+                        <span
+                          className={`truncate ${
+                            unreadCount > 0 ? 'font-bold text-slate-800' : 'text-slate-500'
+                          }`}
+                        >
+                          {conv.lastMessage?.content || 'Sin mensajes recientes'}
+                        </span>
+                      )}
                     </div>
 
                     {/* Badges y estados de ventana de 23h / Bot IA */}

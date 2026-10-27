@@ -1,5 +1,5 @@
 export type MessageDeliveryStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
-export type MessageType = 'text' | 'template' | 'document' | 'image';
+export type MessageType = 'text' | 'template' | 'document' | 'image' | 'audio';
 
 export interface Message {
   id: string;
@@ -9,6 +9,9 @@ export interface Message {
   content: string;
   status?: MessageDeliveryStatus;
   messageType?: MessageType;
+  mediaUrl?: string | null;
+  mediaMimeType?: string | null;
+  mediaDuration?: number | null;
   externalMessageId?: string | null;
   errorMessage?: string | null;
   createdAt: string;
@@ -153,4 +156,3 @@ export interface ChannelConfig {
     display_phone_number?: string;
   } | null;
 }
-

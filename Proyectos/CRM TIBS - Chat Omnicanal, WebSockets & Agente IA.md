@@ -264,6 +264,21 @@ Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proy
 
 ---
 
+#### 🎙️ 6. Soporte de Notas de Voz y Reproducción de Audio (`MessageFeed.tsx` & `ChatListSidebar.tsx`)
+* **Modelo Tipado (`src/core/models/Conversation.ts`):**
+  * `MessageType` incluye `'audio'`.
+  * La interfaz `Message` incorpora `mediaUrl?: string | null`, `mediaMimeType?: string | null` y `mediaDuration?: number | null`.
+* **Reproductor Integrado en el Feed de Conversación (`MessageFeed.tsx`):**
+  * Detecta mensajes de audio (`msg.messageType === 'audio'` o `msg.mediaUrl`).
+  * Resuelve la URL absoluta mediante `VITE_BASE_URL` (ej. `http://localhost:3091/uploads/conversations/audios/...`).
+  * Despliega un reproductor nativo con `<audio controls preload="metadata" />` con controles de reproducción, barra de tiempo y volumen.
+  * **Transcripción de Respaldo:** Si el mensaje cuenta con transcripción textual (`content`), se visualiza debajo del reproductor como bloque de referencia con formato itálico y encabezado sutil *"Transcripción:"*.
+  * **Autonomía Operativa:** Si el agente de IA está desactivado (`botActive = false`), el asesor comercial puede escuchar la nota de voz original directamente con un solo clic.
+* **Previsualización en la Barra Lateral (`ChatListSidebar.tsx`):**
+  * Si el último mensaje es de tipo audio, muestra el icono de micrófono `Mic` acompañado de la etiqueta *"Nota de voz: ..."*, permitiendo identificar rápidamente los mensajes de voz pendientes en la lista de chats.
+
+---
+
 ## 🤖 7. Asistente Virtual Flotante (`WebChat.tsx`)
 
 Adicional a la consola omnicanal, el sistema incluye un asistente conversacional flotante disponible en toda la plataforma:
