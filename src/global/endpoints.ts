@@ -1,4 +1,4 @@
-const urlBase = (import.meta.env.VITE_BASE_URL || 'http://localhost:3091').replace(/\/$/, '') + '/api/';
+const urlBase = (import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '') + '/api/';
 
 export const auth = {
     LOGIN: urlBase + 'auth/login',

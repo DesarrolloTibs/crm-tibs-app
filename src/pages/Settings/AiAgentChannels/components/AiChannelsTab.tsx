@@ -176,7 +176,7 @@ export const AiChannelsTab: React.FC<AiChannelsTabProps> = ({
                 className="flex-grow text-xs py-2 font-bold cursor-pointer disabled:opacity-60"
                 onClick={() => onOpenWhatsAppModal(whatsappConfig)}
               >
-                {isLoadingChannels ? 'Cargando...' : whatsappConfig ? 'Configurar / Editar' : 'Link Account'}
+                {isLoadingChannels ? 'Cargando...' : whatsappConfig ? 'Reconectar con Meta' : 'Conectar con Meta'}
               </Button>
               {whatsappConfig && !isLoadingChannels && (
                 <button
