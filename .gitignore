@@ -21,7 +21,9 @@ pnpm-debug.log*
 !.env.example
 
 # Editor directories and files
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea
 *.suo
 *.ntvs*
