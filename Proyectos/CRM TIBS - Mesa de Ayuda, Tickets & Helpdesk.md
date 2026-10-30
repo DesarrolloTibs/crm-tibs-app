@@ -114,3 +114,12 @@ En [`src/services/helpdeskCronService.ts`](file:///c:/Users/sopor/Proyectos/CRM/
 * [[CRM TIBS - Tablero Kanban & Pipeline Comercial]] — Destino de tickets convertidos a venta.
 * [[CRM TIBS - Modulo de Clientes, Empresas & CRM]] — Contactos y empresas que originan tickets.
 * [[CRM TIBS - Dashboard, Analitica & Reportes]] — Métricas agregadas de soporte y SLAs.
+
+
+---
+
+## 🖱️ Navegación y Desplazamiento Horizontal con Mouse en el Tablero Kanban
+Al igual que en el embudo comercial, el tablero de Mesa de Ayuda integra el hook [`useKanbanScroll`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useKanbanScroll.ts) y los controles [`KanbanScrollControls`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/KanbanScrollControls.tsx):
+* **Scroll vertical nativo con rueda del mouse:** No intercepta la rueda del ratón para permitir desplazamiento vertical estándar en la pantalla y tarjetas.
+* **Scrollbar interactiva (`.kanban-scrollbar`):** Visualización de barra de desplazamiento estilizada de 10px en lugar de `hide-scrollbar`.
+* **Botones flotantes de avance/retroceso:** Chevrons circulares a los extremos del tablero para avanzar etapa por etapa con un solo clic.

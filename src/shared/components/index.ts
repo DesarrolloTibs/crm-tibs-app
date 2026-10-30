@@ -17,10 +17,10 @@ export { default as Notification } from './Notification';
 export { default as PwaUpdateNotification } from './PwaUpdateNotification';
 export { default as ConnectionStatusBadge } from './ConnectionStatusBadge';
 export { default as KanbanColumn } from './KanbanColumn';
+export { default as KanbanScrollControls } from './KanbanScrollControls';
 export { default as SettingsContainer } from './SettingsContainer';
 export { default as StageStepper } from './StageStepper';
 export { default as StageVisibilitySelector } from './StageVisibilitySelector';
 export { default as UnifiedSearchBar } from './UnifiedSearchBar';
 export * from './ChannelIcons';
 export * from './Table/types';
-

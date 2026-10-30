@@ -271,7 +271,8 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
     if (name === 'moneda') {
       setOpportunity(prev => {
-        const newTipoCambio = value === 'MXN' ? 0 : (prev.tipoCambio || 1);
+        const rawTipo = Number(prev.tipoCambio);
+        const newTipoCambio = value === 'MXN' ? 0 : (!isNaN(rawTipo) && rawTipo > 0 ? rawTipo : 1);
         return {
           ...prev,
           moneda: value as CurrencyType,
@@ -742,7 +743,8 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               onChange={(val: any) => {
                 const value = val ? val.value : 'USD';
                 setOpportunity(prev => {
-                  const newTipoCambio = value === 'MXN' ? 0 : (prev.tipoCambio || 1);
+                  const rawTipo = Number(prev.tipoCambio);
+        const newTipoCambio = value === 'MXN' ? 0 : (!isNaN(rawTipo) && rawTipo > 0 ? rawTipo : 1);
                   return {
                     ...prev,
                     moneda: value as CurrencyType,

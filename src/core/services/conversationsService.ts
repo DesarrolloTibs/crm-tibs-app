@@ -12,7 +12,7 @@ import type {
 
 export type { ChannelConfig };
 
-const urlBase = (import.meta.env.VITE_BASE_URL || 'http://localhost:3091') + '/api/conversations';
+const urlBase = (import.meta.env.VITE_BASE_URL || '') + '/api/conversations';
 
 export async function getConversations(): Promise<Conversation[]> {
     const response = await axiosInstance.get(urlBase);
@@ -122,5 +122,20 @@ export async function saveSubAgent(subAgent: any): Promise<any> {
 
 export async function deleteSubAgent(id: string): Promise<any> {
     const response = await axiosInstance.delete(`${urlBase}/sub-agents/${id}`);
+    return response.data;
+}
+
+export async function getMetaPublicConfig(): Promise<{ appId: string; whatsappConfigId: string }> {
+    const response = await axiosInstance.get(`${urlBase}/oauth/meta-config`);
+    return response.data;
+}
+
+export async function connectWhatsAppEmbedded(payload: {
+    code: string;
+    wabaId: string;
+    phoneNumberId: string;
+    name?: string;
+}): Promise<{ success: boolean; message: string; channelConfig: ChannelConfig; verifiedName?: string }> {
+    const response = await axiosInstance.post(`${urlBase}/oauth/whatsapp/embedded-callback`, payload);
     return response.data;
 }

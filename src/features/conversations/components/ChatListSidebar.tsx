@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Clock,
   ShieldCheck,
+  Mic,
 } from 'lucide-react';
 import type { ChannelFilter } from '../hooks/useConversationsSocket';
 import type { Conversation } from '@core/models/Conversation';
@@ -146,9 +147,20 @@ const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
                           {renderDeliveryStatusIcon(lastMsg?.status, lastMsg?.errorMessage)}
                         </span>
                       )}
-                      <span className="truncate">
-                        {lastMsg ? lastMsg.content : 'Sin mensajes'}
-                      </span>
+                      {lastMsg?.messageType === 'audio' || lastMsg?.mediaUrl ? (
+                        <span className={`flex items-center gap-1 truncate ${
+                          unreadCount > 0 ? 'font-bold text-gray-800' : 'text-gray-500'
+                        }`}>
+                          <Mic size={12} className="shrink-0 text-indigo-500" />
+                          <span className="truncate">
+                            Nota de voz{lastMsg?.content && lastMsg.content !== '[Nota de voz]' ? `: ${lastMsg.content}` : ''}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="truncate">
+                          {lastMsg ? lastMsg.content : 'Sin mensajes'}
+                        </span>
+                      )}
                     </div>
                     {unreadCount > 0 && (
                       <span className="shrink-0 min-w-4.5 h-4.5 px-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">

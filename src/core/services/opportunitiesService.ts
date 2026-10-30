@@ -94,8 +94,8 @@ export const updateOpportunity = async (id: string, opportunityData: Partial<Opp
     payload.priority = Number(data.priority);
   }
 
-  if (isUuid(data.cliente_id)) payload.cliente_id = data.cliente_id;
-  if (isUuid(data.companyId)) payload.companyId = data.companyId;
+  if (data.cliente_id === null || isUuid(data.cliente_id)) payload.cliente_id = data.cliente_id;
+  if (data.companyId === null || isUuid(data.companyId)) payload.companyId = data.companyId;
   if (isUuid(data.ejecutivo_id)) payload.ejecutivo_id = data.ejecutivo_id;
   if (isUuid(data.stage_id)) payload.stage_id = data.stage_id;
   if (isUuid(data.pipeline_id)) payload.pipeline_id = data.pipeline_id;
@@ -116,8 +116,10 @@ export const updateOpportunity = async (id: string, opportunityData: Partial<Opp
     payload.tipoCambio = Number(data.tipoCambio);
   }
 
-  if (data.estimated_closure_date && typeof data.estimated_closure_date === 'string') {
-    payload.estimated_closure_date = data.estimated_closure_date;
+  if (data.estimated_closure_date) {
+    payload.estimated_closure_date = data.estimated_closure_date instanceof Date
+      ? data.estimated_closure_date.toISOString().split('T')[0]
+      : String(data.estimated_closure_date);
   }
   if (Array.isArray(data.contactIds)) payload.contactIds = data.contactIds.filter(isUuid);
   if (Array.isArray(data.productIds)) payload.productIds = data.productIds.filter(isUuid);
