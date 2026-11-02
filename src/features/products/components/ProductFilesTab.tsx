@@ -1,18 +1,23 @@
 import React, { useState, useCallback } from 'react';
-import { uploadProductFile, downloadProductFile, deleteProductFile, getProduct } from '@core/services/productsService';
-import { 
-  Paperclip, 
-  UploadCloud, 
-  X, 
-  FileText, 
-  FileSpreadsheet, 
-  FileArchive, 
-  Image, 
-  File, 
-  Tag, 
-  Download, 
+import {
+  uploadProductFile,
+  downloadProductFile,
+  deleteProductFile,
+  getProduct,
+} from '@core/services/productsService';
+import {
+  Paperclip,
+  UploadCloud,
+  X,
+  FileText,
+  FileSpreadsheet,
+  FileArchive,
+  Image,
+  File,
+  Tag,
+  Download,
   Trash2,
-  FolderOpen
+  FolderOpen,
 } from 'lucide-react';
 import type { Product, ProductFile } from '@core/models/Product';
 import Notification from '@shared/components/Notification';
@@ -39,14 +44,14 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
 
   const [notification, setNotification] = useState({
     show: false,
-    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+    type: 'success' as 'loading' | 'success' | 'error' | 'warning' | 'confirmation',
     title: '',
     message: '',
     onConfirm: () => {},
     onCancel: () => {},
   });
 
-  const hideNotification = () => setNotification((prev) => ({ ...prev, show: false }));
+  const hideNotification = () => setNotification(prev => ({ ...prev, show: false }));
 
   React.useEffect(() => {
     setCurrentProduct(product);
@@ -64,7 +69,7 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
           onUploadSuccess(latestProduct);
         }
       } catch (err) {
-        console.error("Error al cargar archivos del producto:", err);
+        console.error('Error al cargar archivos del producto:', err);
       } finally {
         if (active) {
           setLoadingFiles(false);
@@ -107,7 +112,7 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
         title: defaultTitle,
       };
     });
-    setStagedFiles((prev) => [...prev, ...newStaged]);
+    setStagedFiles(prev => [...prev, ...newStaged]);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,19 +143,25 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
   }, []);
 
   const updateStagedFile = (id: string, value: string) => {
-    setStagedFiles((prev) =>
-      prev.map((sf) => (sf.id === id ? { ...sf, title: value } : sf))
-    );
+    setStagedFiles(prev => prev.map(sf => (sf.id === id ? { ...sf, title: value } : sf)));
   };
 
   const removeStagedFile = (id: string) => {
-    setStagedFiles((prev) => prev.filter((sf) => sf.id !== id));
+    setStagedFiles(prev => prev.filter(sf => sf.id !== id));
   };
 
   const handleUploadAll = async () => {
     if (stagedFiles.length === 0 || !currentProduct.id) return;
 
     setUploading(true);
+    setNotification({
+      show: true,
+      type: 'loading',
+      title: 'Subiendo archivos...',
+      message: `Subiendo ${stagedFiles.length} archivo(s) técnico(s) al servidor...`,
+      onConfirm: () => {},
+      onCancel: () => {},
+    });
     try {
       let lastUpdatedProduct = currentProduct;
       for (const sf of stagedFiles) {
@@ -167,7 +178,7 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
         onCancel: hideNotification,
       });
     } catch (error) {
-      console.error("Upload product files error:", error);
+      console.error('Upload product files error:', error);
       setNotification({
         show: true,
         type: 'error',
@@ -195,7 +206,7 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Download file error:", error);
+      console.error('Download file error:', error);
       setNotification({
         show: true,
         type: 'error',
@@ -216,9 +227,16 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
       title: '¿Eliminar archivo?',
       message: `¿Estás seguro de que deseas eliminar el archivo "${file.fileName}"? Esta acción no se puede deshacer.`,
       onConfirm: async () => {
-        hideNotification();
         if (!currentProduct.id) return;
         setDeletingFileId(file.id);
+        setNotification({
+          show: true,
+          type: 'loading',
+          title: 'Eliminando archivo...',
+          message: `Eliminando "${file.fileName}" del producto...`,
+          onConfirm: () => {},
+          onCancel: () => {},
+        });
         try {
           const updatedProduct = await deleteProductFile(currentProduct.id, file.id);
           onUploadSuccess(updatedProduct);
@@ -231,7 +249,7 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
             onCancel: hideNotification,
           });
         } catch (error) {
-          console.error("Delete file error:", error);
+          console.error('Delete file error:', error);
           setNotification({
             show: true,
             type: 'error',
@@ -265,13 +283,13 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
       <Notification {...notification} />
 
       {/* Drag & Drop Zone */}
-      <div 
+      <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 ${
-          dragOver 
-            ? 'border-indigo-500 bg-indigo-50/50 scale-[0.99]' 
+          dragOver
+            ? 'border-indigo-500 bg-indigo-50/50 scale-[0.99]'
             : 'border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-400'
         }`}
       >
@@ -282,10 +300,17 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
           onChange={handleFileChange}
           multiple
         />
-        <label htmlFor="product-file-attachments-upload" className="cursor-pointer flex flex-col items-center select-none">
+        <label
+          htmlFor="product-file-attachments-upload"
+          className="cursor-pointer flex flex-col items-center select-none"
+        >
           <UploadCloud size={40} className="text-indigo-500 mb-2 animate-bounce-slow" />
-          <span className="text-sm font-semibold text-slate-700">Arrastra fichas técnicas o documentos aquí</span>
-          <span className="text-xs text-slate-400 mt-1">o haz clic para explorar archivos en tu equipo</span>
+          <span className="text-sm font-semibold text-slate-700">
+            Arrastra fichas técnicas o documentos aquí
+          </span>
+          <span className="text-xs text-slate-400 mt-1">
+            o haz clic para explorar archivos en tu equipo
+          </span>
           <span className="mt-2 inline-flex items-center text-[12px] bg-white border border-slate-200 text-indigo-600 px-3 py-1.5 rounded-lg font-semibold shadow-sm hover:bg-indigo-50 transition-colors">
             Seleccionar archivos
           </span>
@@ -300,19 +325,25 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
             Archivos por subir ({stagedFiles.length})
           </h4>
           <div className="space-y-4 max-h-[250px] overflow-y-auto pr-1">
-            {stagedFiles.map((sf) => (
-              <div key={sf.id} className="p-3 border border-slate-100 bg-slate-50/60 rounded-xl relative flex flex-col gap-2">
-                <button 
+            {stagedFiles.map(sf => (
+              <div
+                key={sf.id}
+                className="p-3 border border-slate-100 bg-slate-50/60 rounded-xl relative flex flex-col gap-2"
+              >
+                <button
                   type="button"
-                  onClick={() => removeStagedFile(sf.id)} 
+                  onClick={() => removeStagedFile(sf.id)}
                   className="absolute top-2.5 right-2.5 p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded-full transition-colors"
                 >
                   <X size={16} />
                 </button>
-                
+
                 <div className="flex items-center gap-2 pr-6">
                   {getFileIcon(sf.file.name)}
-                  <span className="text-xs font-semibold text-slate-700 truncate" title={sf.file.name}>
+                  <span
+                    className="text-xs font-semibold text-slate-700 truncate"
+                    title={sf.file.name}
+                  >
                     {sf.file.name}
                   </span>
                 </div>
@@ -323,7 +354,7 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
                     type="text"
                     placeholder="Etiqueta / Título (ej. Hoja Técnica)"
                     value={sf.title}
-                    onChange={(e) => updateStagedFile(sf.id, e.target.value)}
+                    onChange={e => updateStagedFile(sf.id, e.target.value)}
                     className="text-xs w-full focus:outline-none text-slate-700 bg-transparent"
                   />
                 </div>
@@ -332,17 +363,17 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
           </div>
 
           <div className="mt-4 flex gap-3">
-            <button 
+            <button
               type="button"
-              onClick={() => setStagedFiles([])} 
+              onClick={() => setStagedFiles([])}
               disabled={uploading}
               className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs py-2 rounded-lg transition-colors border border-slate-200 cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
-            <button 
+            <button
               type="button"
-              onClick={handleUploadAll} 
+              onClick={handleUploadAll}
               disabled={uploading}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 rounded-lg transition-colors shadow-sm cursor-pointer disabled:bg-slate-300 flex items-center justify-center gap-1.5"
             >
@@ -369,13 +400,17 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
         {loadingFiles && filesList.length === 0 ? (
           <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center bg-white flex flex-col items-center">
             <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-            <p className="text-xs font-semibold text-slate-400">Cargando adjuntos del producto...</p>
+            <p className="text-xs font-semibold text-slate-400">
+              Cargando adjuntos del producto...
+            </p>
           </div>
         ) : filesList.length === 0 ? (
           <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center bg-white flex flex-col items-center">
             <FolderOpen size={36} className="text-slate-300 mb-2" />
             <p className="text-xs font-semibold text-slate-400">No hay archivos en este producto</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Utiliza la zona superior para cargar PDFs u hojas técnicas</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              Utiliza la zona superior para cargar PDFs u hojas técnicas
+            </p>
           </div>
         ) : (
           <div className="border border-slate-150 rounded-xl overflow-hidden bg-white shadow-sm">
@@ -390,12 +425,15 @@ const ProductFilesTab: React.FC<ProductFilesTabProps> = ({ product, onUploadSucc
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs">
-                  {filesList.map((file) => (
+                  {filesList.map(file => (
                     <tr key={file.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="p-3 pl-4">
                         <div className="flex items-center gap-2 max-w-[200px] sm:max-w-[250px]">
                           {getFileIcon(file.fileName)}
-                          <span className="font-semibold text-slate-700 truncate" title={file.fileName}>
+                          <span
+                            className="font-semibold text-slate-700 truncate"
+                            title={file.fileName}
+                          >
                             {file.fileName}
                           </span>
                         </div>

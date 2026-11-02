@@ -59,7 +59,9 @@ const INITIAL_FILTERS: ActivityFiltersState = {
 
 export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'calendar' }) => {
   const { user, isAdmin, isSuperAdmin } = useAuth();
-  const isPrivilegedUser = Boolean(isAdmin || isSuperAdmin || (user && (user.role === 'admin' || user.role === 'superadmin')));
+  const isPrivilegedUser = Boolean(
+    isAdmin || isSuperAdmin || (user && (user.role === 'admin' || user.role === 'superadmin')),
+  );
   const { selectedTenant } = useConfigStore();
   const schemaName = selectedTenant?.schema_name;
 
@@ -74,7 +76,7 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
 
   const handleChangeView = (view: ActivityViewMode) => {
     setActiveView(view);
-    setSearchParams((prev) => {
+    setSearchParams(prev => {
       const next = new URLSearchParams(prev);
       next.set('view', view);
       return next;
@@ -104,7 +106,7 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
   // 1. Inicializar filtro con el usuario autenticado una vez resuelta la sesión
   useEffect(() => {
     if (user?.id && !initializedUserFilterRef.current) {
-      setFilters((prev) => ({
+      setFilters(prev => ({
         ...prev,
         userId: user.id,
       }));
@@ -115,7 +117,7 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
   // 2. Si el usuario no es admin ni superadmin, asegurar que el filtro esté siempre anclado a su propio ID
   useEffect(() => {
     if (user?.id && !isPrivilegedUser) {
-      setFilters((prev) => (prev.userId !== user.id ? { ...prev, userId: user.id } : prev));
+      setFilters(prev => (prev.userId !== user.id ? { ...prev, userId: user.id } : prev));
     }
   }, [user?.id, isPrivilegedUser]);
 
@@ -143,7 +145,7 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
   // Notificación compartida
   const [notification, setNotification] = useState<{
     show: boolean;
-    type: 'success' | 'error' | 'warning' | 'confirmation';
+    type: 'loading' | 'success' | 'error' | 'warning' | 'confirmation';
     title: string;
     message: string;
   }>({
@@ -154,7 +156,7 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
   });
 
   const notify = (notif: {
-    type: 'success' | 'error' | 'warning' | 'confirmation';
+    type: 'loading' | 'success' | 'error' | 'warning' | 'confirmation';
     title: string;
     message: string;
   }) => {
@@ -192,24 +194,24 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
 
       setActivities(Array.isArray(activitiesData) ? activitiesData : []);
       setActivityTypes(
-        Array.isArray(typesData) ? typesData.filter((t) => t.blnstatus !== false) : []
+        Array.isArray(typesData) ? typesData.filter(t => t.blnstatus !== false) : [],
       );
 
       if (Array.isArray(usersData)) {
         setExecutives(
           usersData
-            .filter((u) => u.id)
-            .map((u) => ({
+            .filter(u => u.id)
+            .map(u => ({
               value: u.id!,
               label: u.username || 'Usuario sin nombre',
-            }))
+            })),
         );
       }
 
       setOpportunities(Array.isArray(oppsData) ? oppsData : []);
       setClients(Array.isArray(clientsData) ? clientsData : []);
       setCompanies(
-        Array.isArray(companiesData) ? companiesData.filter((c) => c.estatus !== false) : []
+        Array.isArray(companiesData) ? companiesData.filter(c => c.estatus !== false) : [],
       );
     } catch (err) {
       console.error('Error al cargar datos del módulo de actividades:', err);
@@ -248,46 +250,42 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
       }
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', reason => {
       console.warn('Desconexión en Activities WebSocket:', reason);
     });
 
-    socket.on('connect_error', (err) => {
+    socket.on('connect_error', err => {
       console.warn('Error de conexión en Activities WebSocket:', err.message);
     });
 
     socket.on('activityCreated', (newActivity: Activity) => {
-      setActivities((prev) =>
-        prev.some((a) => a.id === newActivity.id) ? prev : [newActivity, ...prev]
+      setActivities(prev =>
+        prev.some(a => a.id === newActivity.id) ? prev : [newActivity, ...prev],
       );
     });
 
     socket.on('activityUpdated', (updatedActivity: Activity) => {
-      setActivities((prev) =>
-        prev.map((a) => (a.id === updatedActivity.id ? updatedActivity : a))
-      );
+      setActivities(prev => prev.map(a => (a.id === updatedActivity.id ? updatedActivity : a)));
     });
 
     socket.on('activityDeleted', (deletedId: string) => {
-      setActivities((prev) => prev.filter((a) => a.id !== deletedId));
+      setActivities(prev => prev.filter(a => a.id !== deletedId));
     });
 
     socket.on('activityTypeCreated', (newType: TypeActivity) => {
-      setActivityTypes((prev) =>
-        prev.some((t) => t.id === newType.id)
+      setActivityTypes(prev =>
+        prev.some(t => t.id === newType.id)
           ? prev
-          : [...prev, newType].sort((a, b) => a.strname.localeCompare(b.strname))
+          : [...prev, newType].sort((a, b) => a.strname.localeCompare(b.strname)),
       );
     });
 
     socket.on('activityTypeUpdated', (updatedType: TypeActivity) => {
-      setActivityTypes((prev) =>
-        prev.map((t) => (t.id === updatedType.id ? updatedType : t))
-      );
+      setActivityTypes(prev => prev.map(t => (t.id === updatedType.id ? updatedType : t)));
     });
 
     socket.on('activityTypeDeleted', (deletedTypeId: number) => {
-      setActivityTypes((prev) => prev.filter((t) => t.id !== deletedTypeId));
+      setActivityTypes(prev => prev.filter(t => t.id !== deletedTypeId));
     });
 
     return () => {
@@ -299,7 +297,7 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
 
   const filteredActivities = useMemo(
     () => filterActivities(activities, filters),
-    [activities, filters]
+    [activities, filters],
   );
 
   const paginatedActivities = useMemo(() => {
@@ -312,9 +310,9 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
 
   const handleFilterChange = <K extends keyof ActivityFiltersState>(
     key: K,
-    value: ActivityFiltersState[K]
+    value: ActivityFiltersState[K],
   ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters(prev => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
 
@@ -346,10 +344,21 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
 
   const handleSubmitActivity = async (formData: Partial<Activity>) => {
     setSubmitting(true);
+    notify({
+      type: 'loading',
+      title: editingActivity?.id ? 'Actualizando actividad...' : 'Agendando actividad...',
+      message: 'Guardando la información en la agenda comercial.',
+    });
     try {
       if (editingActivity?.id) {
-        const { id, user: _u, opportunity: _o, userId: _uid, typeActivity: _ta, ...updateData } =
-          formData as Activity;
+        const {
+          id,
+          user: _u,
+          opportunity: _o,
+          userId: _uid,
+          typeActivity: _ta,
+          ...updateData
+        } = formData as Activity;
         await updateActivity(editingActivity.id, updateData);
         notify({
           type: 'success',
@@ -372,7 +381,8 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
       notify({
         type: 'error',
         title: 'Error al Guardar',
-        message: 'No fue posible guardar la actividad. Por favor revisa los datos e inténtalo de nuevo.',
+        message:
+          'No fue posible guardar la actividad. Por favor revisa los datos e inténtalo de nuevo.',
       });
     } finally {
       setSubmitting(false);
@@ -387,12 +397,19 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
       title: '¿Eliminar Actividad?',
       description: `¿Estás seguro de que deseas eliminar la actividad '${activity.activity}'? Esta acción no se puede deshacer.`,
       onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, open: false }));
+        notify({
+          type: 'loading',
+          title: 'Eliminando actividad...',
+          message: 'Retirando la actividad de la agenda.',
+        });
         try {
           await deleteActivity(activity.id!);
           notify({
             type: 'success',
             title: 'Actividad Eliminada',
-            message: 'La actividad ha sido retirada de la agenda y de las oportunidades vinculadas.',
+            message:
+              'La actividad ha sido retirada de la agenda y de las oportunidades vinculadas.',
           });
           await loadModuleData(true);
         } catch (err) {
@@ -402,8 +419,6 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
             title: 'Error de Eliminación',
             message: 'No fue posible eliminar la actividad en el servidor.',
           });
-        } finally {
-          setConfirmConfig((prev) => ({ ...prev, open: false }));
         }
       },
     });
@@ -414,7 +429,7 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
     if (!isAdmin) return user?.username || 'Ejecutivo';
     if (filters.userId === 'all') return 'Todos los usuarios';
     return (
-      executives.find((e) => e.value === filters.userId)?.label ||
+      executives.find(e => e.value === filters.userId)?.label ||
       (filters.userId === user?.id ? user?.username : 'Usuario') ||
       'Usuario'
     );
@@ -442,14 +457,14 @@ export const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ defaultView = 'c
         type={notification.type}
         title={notification.title}
         message={notification.message}
-        onConfirm={() => setNotification((prev) => ({ ...prev, show: false }))}
+        onConfirm={() => setNotification(prev => ({ ...prev, show: false }))}
       />
 
       <ConfirmModal
         open={confirmConfig.open}
         message={confirmConfig.description}
         onConfirm={confirmConfig.onConfirm}
-        onClose={() => setConfirmConfig((prev) => ({ ...prev, open: false }))}
+        onClose={() => setConfirmConfig(prev => ({ ...prev, open: false }))}
         confirmLabel="Eliminar"
         cancelLabel="Cancelar"
         variant="danger"

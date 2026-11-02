@@ -1,19 +1,24 @@
 import React, { useState, useCallback } from 'react';
-import { uploadOpportunityFile, downloadOpportunityFile, deleteOpportunityFile, getOpportunity } from '@core/services/opportunitiesService';
-import { 
-  Paperclip, 
-  UploadCloud, 
-  X, 
-  FileText, 
-  FileSpreadsheet, 
-  FileArchive, 
-  Image, 
-  File, 
-  Calendar, 
-  Tag, 
-  Download, 
+import {
+  uploadOpportunityFile,
+  downloadOpportunityFile,
+  deleteOpportunityFile,
+  getOpportunity,
+} from '@core/services/opportunitiesService';
+import {
+  Paperclip,
+  UploadCloud,
+  X,
+  FileText,
+  FileSpreadsheet,
+  FileArchive,
+  Image,
+  File,
+  Calendar,
+  Tag,
+  Download,
   Trash2,
-  FolderOpen
+  FolderOpen,
 } from 'lucide-react';
 import type { Opportunity, OpportunityFile } from '@core/models/Opportunity';
 import Notification from '@shared/components/Notification';
@@ -41,14 +46,14 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
 
   const [notification, setNotification] = useState({
     show: false,
-    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+    type: 'success' as 'loading' | 'success' | 'error' | 'warning' | 'confirmation',
     title: '',
     message: '',
     onConfirm: () => {},
     onCancel: () => {},
   });
 
-  const hideNotification = () => setNotification((prev) => ({ ...prev, show: false }));
+  const hideNotification = () => setNotification(prev => ({ ...prev, show: false }));
 
   // Sincronizar el estado interno si el prop cambia
   React.useEffect(() => {
@@ -68,7 +73,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
           onUploadSuccess(latestOpp);
         }
       } catch (err) {
-        console.error("Error al cargar archivos de la oportunidad:", err);
+        console.error('Error al cargar archivos de la oportunidad:', err);
       } finally {
         if (active) {
           setLoadingFiles(false);
@@ -116,7 +121,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
         date: today,
       };
     });
-    setStagedFiles((prev) => [...prev, ...newStaged]);
+    setStagedFiles(prev => [...prev, ...newStaged]);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,14 +153,12 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
 
   // Update a staged file field
   const updateStagedFile = (id: string, field: 'title' | 'date', value: string) => {
-    setStagedFiles((prev) =>
-      prev.map((sf) => (sf.id === id ? { ...sf, [field]: value } : sf))
-    );
+    setStagedFiles(prev => prev.map(sf => (sf.id === id ? { ...sf, [field]: value } : sf)));
   };
 
   // Remove file from staging list
   const removeStagedFile = (id: string) => {
-    setStagedFiles((prev) => prev.filter((sf) => sf.id !== id));
+    setStagedFiles(prev => prev.filter(sf => sf.id !== id));
   };
 
   // Upload all staged files sequentially
@@ -163,10 +166,23 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
     if (stagedFiles.length === 0) return;
 
     setUploading(true);
+    setNotification({
+      show: true,
+      type: 'loading',
+      title: 'Subiendo archivos...',
+      message: `Subiendo ${stagedFiles.length} archivo(s) a la oportunidad...`,
+      onConfirm: () => {},
+      onCancel: () => {},
+    });
     try {
       let lastUpdatedOpportunity = currentOpportunity;
       for (const sf of stagedFiles) {
-        lastUpdatedOpportunity = await uploadOpportunityFile(currentOpportunity.id, sf.file, sf.title, sf.date);
+        lastUpdatedOpportunity = await uploadOpportunityFile(
+          currentOpportunity.id,
+          sf.file,
+          sf.title,
+          sf.date,
+        );
       }
       onUploadSuccess(lastUpdatedOpportunity);
       setStagedFiles([]);
@@ -179,7 +195,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
         onCancel: hideNotification,
       });
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error('Upload error:', error);
       setNotification({
         show: true,
         type: 'error',
@@ -207,7 +223,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Download error:", error);
+      console.error('Download error:', error);
       setNotification({
         show: true,
         type: 'error',
@@ -229,8 +245,15 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
       title: '¿Eliminar archivo?',
       message: `¿Estás seguro de que deseas eliminar el archivo "${file.fileName}"? Esta acción no se puede deshacer.`,
       onConfirm: async () => {
-        hideNotification();
         setDeletingFileId(file.id);
+        setNotification({
+          show: true,
+          type: 'loading',
+          title: 'Eliminando archivo...',
+          message: `Eliminando "${file.fileName}" de la oportunidad...`,
+          onConfirm: () => {},
+          onCancel: () => {},
+        });
         try {
           const updatedOpportunity = await deleteOpportunityFile(currentOpportunity.id, file.id);
           onUploadSuccess(updatedOpportunity);
@@ -243,7 +266,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
             onCancel: hideNotification,
           });
         } catch (error) {
-          console.error("Delete error:", error);
+          console.error('Delete error:', error);
           setNotification({
             show: true,
             type: 'error',
@@ -281,13 +304,13 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
       <Notification {...notification} />
 
       {/* Drag & Drop Zone */}
-      <div 
+      <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 ${
-          dragOver 
-            ? 'border-indigo-500 bg-indigo-50/50 scale-[0.99]' 
+          dragOver
+            ? 'border-indigo-500 bg-indigo-50/50 scale-[0.99]'
             : 'border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-400'
         }`}
       >
@@ -298,9 +321,14 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
           onChange={handleFileChange}
           multiple
         />
-        <label htmlFor="file-attachments-upload" className="cursor-pointer flex flex-col items-center select-none">
+        <label
+          htmlFor="file-attachments-upload"
+          className="cursor-pointer flex flex-col items-center select-none"
+        >
           <UploadCloud size={40} className="text-indigo-500 mb-2 animate-bounce-slow" />
-          <span className="text-sm font-semibold text-slate-700">Arrastra y suelta tus archivos aquí</span>
+          <span className="text-sm font-semibold text-slate-700">
+            Arrastra y suelta tus archivos aquí
+          </span>
           <span className="text-xs text-slate-400 mt-1">o haz clic para explorar en tu equipo</span>
           <span className="mt-2 inline-flex items-center text-[12px] bg-white border border-slate-200 text-indigo-600 px-3 py-1.5 rounded-lg font-semibold shadow-sm hover:bg-indigo-50 transition-colors">
             Seleccionar archivos
@@ -316,19 +344,25 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
             Archivos por subir ({stagedFiles.length})
           </h4>
           <div className="space-y-4 max-h-[250px] overflow-y-auto pr-1">
-            {stagedFiles.map((sf) => (
-              <div key={sf.id} className="p-3 border border-slate-100 bg-slate-50/60 rounded-xl relative flex flex-col gap-2.5">
-                <button 
-                  onClick={() => removeStagedFile(sf.id)} 
+            {stagedFiles.map(sf => (
+              <div
+                key={sf.id}
+                className="p-3 border border-slate-100 bg-slate-50/60 rounded-xl relative flex flex-col gap-2.5"
+              >
+                <button
+                  onClick={() => removeStagedFile(sf.id)}
                   className="absolute top-2.5 right-2.5 p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded-full transition-colors"
                   title="Quitar"
                 >
                   <X size={16} />
                 </button>
-                
+
                 <div className="flex items-center gap-2 pr-6">
                   {getFileIcon(sf.file.name)}
-                  <span className="text-xs font-semibold text-slate-700 truncate" title={sf.file.name}>
+                  <span
+                    className="text-xs font-semibold text-slate-700 truncate"
+                    title={sf.file.name}
+                  >
                     {sf.file.name}
                   </span>
                 </div>
@@ -340,7 +374,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
                       type="text"
                       placeholder="Título / Etiqueta"
                       value={sf.title}
-                      onChange={(e) => updateStagedFile(sf.id, 'title', e.target.value)}
+                      onChange={e => updateStagedFile(sf.id, 'title', e.target.value)}
                       className="text-xs w-full focus:outline-none text-slate-700 bg-transparent"
                     />
                   </div>
@@ -349,7 +383,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
                     <input
                       type="date"
                       value={sf.date}
-                      onChange={(e) => updateStagedFile(sf.id, 'date', e.target.value)}
+                      onChange={e => updateStagedFile(sf.id, 'date', e.target.value)}
                       className="text-xs w-full focus:outline-none text-slate-700 bg-transparent cursor-pointer"
                     />
                   </div>
@@ -359,15 +393,15 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
           </div>
 
           <div className="mt-4 flex gap-3">
-            <button 
-              onClick={() => setStagedFiles([])} 
+            <button
+              onClick={() => setStagedFiles([])}
               disabled={uploading}
               className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs py-2 rounded-lg transition-colors border border-slate-200 cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
-            <button 
-              onClick={handleUploadAll} 
+            <button
+              onClick={handleUploadAll}
               disabled={uploading}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 rounded-lg transition-colors shadow-sm cursor-pointer disabled:bg-slate-300 flex items-center justify-center gap-1.5"
             >
@@ -399,8 +433,12 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
         ) : filesList.length === 0 ? (
           <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center bg-white flex flex-col items-center">
             <FolderOpen size={36} className="text-slate-300 mb-2" />
-            <p className="text-xs font-semibold text-slate-400">No hay archivos en esta oportunidad</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Usa la zona de arriba para subir documentos importantes</p>
+            <p className="text-xs font-semibold text-slate-400">
+              No hay archivos en esta oportunidad
+            </p>
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              Usa la zona de arriba para subir documentos importantes
+            </p>
           </div>
         ) : (
           <div className="border border-slate-150 rounded-xl overflow-hidden bg-white shadow-sm">
@@ -415,12 +453,15 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs">
-                  {filesList.map((file) => (
+                  {filesList.map(file => (
                     <tr key={file.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="p-3 pl-4">
                         <div className="flex items-center gap-2 max-w-[200px] sm:max-w-[250px]">
                           {getFileIcon(file.fileName)}
-                          <span className="font-semibold text-slate-700 truncate" title={file.fileName}>
+                          <span
+                            className="font-semibold text-slate-700 truncate"
+                            title={file.fileName}
+                          >
                             {file.fileName}
                           </span>
                         </div>
@@ -428,9 +469,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ opportunity, onUploadSuccess }) => 
                       <td className="p-3 text-slate-600 font-medium truncate max-w-[150px]">
                         {file.title || <span className="italic text-slate-400">Sin etiqueta</span>}
                       </td>
-                      <td className="p-3 text-slate-500 font-medium">
-                        {formatDate(file.date)}
-                      </td>
+                      <td className="p-3 text-slate-500 font-medium">{formatDate(file.date)}</td>
                       <td className="p-3 pr-4 text-right">
                         <div className="inline-flex gap-1.5">
                           <button

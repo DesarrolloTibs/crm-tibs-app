@@ -49,37 +49,73 @@ interface Props {
 }
 
 const HelpdeskModals: React.FC<Props> = ({
-  editingStage, setEditingStage, onSaveStage,
-  resolutionTicketInfo, resolutionNotesTemp, setResolutionNotesTemp, onResolutionSubmit, onResolutionCancel,
-  selectedTicket, setSelectedTicket, stages, onUpdateTicket, onDeleteTicket, onConvertToOpportunity, onArchive,
-  isCreatingTicket, setIsCreatingTicket, onCreateTicket,
-  ticketToConvert, setTicketToConvert, commercialStages, onConvertSubmit,
-  showStagesConfig, setShowStagesConfig, loadData,
+  editingStage,
+  setEditingStage,
+  onSaveStage,
+  resolutionTicketInfo,
+  resolutionNotesTemp,
+  setResolutionNotesTemp,
+  onResolutionSubmit,
+  onResolutionCancel,
+  selectedTicket,
+  setSelectedTicket,
+  stages,
+  onUpdateTicket,
+  onDeleteTicket,
+  onConvertToOpportunity,
+  onArchive,
+  isCreatingTicket,
+  setIsCreatingTicket,
+  onCreateTicket,
+  ticketToConvert,
+  setTicketToConvert,
+  commercialStages,
+  onConvertSubmit,
+  showStagesConfig,
+  setShowStagesConfig,
+  loadData,
 }) => (
   <>
     {/* Drawer: Configurar Mesa de Ayuda */}
     {showStagesConfig && (
       <div className="fixed inset-0 z-50 flex justify-end">
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowStagesConfig(false)} />
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowStagesConfig(false)}
+        />
         <div className="relative w-full max-w-3xl h-full bg-white shadow-2xl flex flex-col animate-slide-in-right">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-center gap-2">
               <Settings2 size={20} className="text-indigo-600" />
               <h2 className="text-lg font-bold text-gray-800">Configurar Mesa de Ayuda</h2>
             </div>
-            <button onClick={() => setShowStagesConfig(false)} className="p-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-200 transition-colors">
+            <button
+              onClick={() => setShowStagesConfig(false)}
+              className="p-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-200 transition-colors"
+            >
               <X size={20} />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-6">
-            <HelpdeskStagesSettings onlyHelpdeskDetails={false} onSaveSuccess={() => { loadData(); setShowStagesConfig(false); }} />
+            <HelpdeskStagesSettings
+              onlyHelpdeskDetails={false}
+              onSaveSuccess={() => {
+                loadData();
+                setShowStagesConfig(false);
+              }}
+            />
           </div>
         </div>
       </div>
     )}
 
     {/* Modal: Editar Etapa */}
-    <Modal open={editingStage !== null} onClose={() => setEditingStage(null)} maxWidth="max-w-md" height="h-auto">
+    <Modal
+      open={editingStage !== null}
+      onClose={() => setEditingStage(null)}
+      maxWidth="max-w-md"
+      height="h-auto"
+    >
       {editingStage && (
         <form onSubmit={onSaveStage} className="space-y-6 p-2">
           <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
@@ -87,17 +123,41 @@ const HelpdeskModals: React.FC<Props> = ({
             Editar Etapa: {editingStage.strname || 'Nueva'}
           </h3>
           <div className="space-y-4">
-            <Input label="Nombre de la Etapa" type="text" value={editingStage.strname} onChange={e => setEditingStage({ ...editingStage, strname: e.target.value })} placeholder="Ej. En Espera" required />
-            <Input label="Límite de Días" type="number" min="0"
-              value={editingStage.intmaxdays !== undefined && editingStage.intmaxdays !== null ? editingStage.intmaxdays : ''}
-              onChange={e => { const val = e.target.value; setEditingStage({ ...editingStage, intmaxdays: val === '' ? null : parseInt(val, 10) }); }}
+            <Input
+              label="Nombre de la Etapa"
+              type="text"
+              value={editingStage.strname}
+              onChange={e => setEditingStage({ ...editingStage, strname: e.target.value })}
+              placeholder="Ej. En Espera"
+              required
+            />
+            <Input
+              label="Límite de Días"
+              type="number"
+              min="0"
+              value={
+                editingStage.intmaxdays !== undefined && editingStage.intmaxdays !== null
+                  ? editingStage.intmaxdays
+                  : ''
+              }
+              onChange={e => {
+                const val = e.target.value;
+                setEditingStage({
+                  ...editingStage,
+                  intmaxdays: val === '' ? null : parseInt(val, 10),
+                });
+              }}
               placeholder="Ej. 15 (dejar vacío para sin límite)"
             />
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-600 uppercase">Tipo de Cierre / Etapa</label>
+              <label className="text-xs font-semibold text-gray-600 uppercase">
+                Tipo de Cierre / Etapa
+              </label>
               <select
                 value={Number(editingStage.stage_type ?? 0)}
-                onChange={e => setEditingStage({ ...editingStage, stage_type: Number(e.target.value) })}
+                onChange={e =>
+                  setEditingStage({ ...editingStage, stage_type: Number(e.target.value) })
+                }
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
               >
                 <option value={0}>Abierto / En Proceso (Default)</option>
@@ -106,15 +166,24 @@ const HelpdeskModals: React.FC<Props> = ({
             </div>
           </div>
           <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
-            <Button type="button" onClick={() => setEditingStage(null)} variant="secondary">Cancelar</Button>
-            <Button type="submit" variant="indigo">Guardar</Button>
+            <Button type="button" onClick={() => setEditingStage(null)} variant="secondary">
+              Cancelar
+            </Button>
+            <Button type="submit" variant="indigo">
+              Guardar
+            </Button>
           </div>
         </form>
       )}
     </Modal>
 
     {/* Modal: Notas de Resolución */}
-    <Modal open={resolutionTicketInfo !== null} onClose={onResolutionCancel} maxWidth="max-w-md" height="h-auto">
+    <Modal
+      open={resolutionTicketInfo !== null}
+      onClose={onResolutionCancel}
+      maxWidth="max-w-md"
+      height="h-auto"
+    >
       {resolutionTicketInfo && (
         <form onSubmit={onResolutionSubmit} className="space-y-4 p-2">
           <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
@@ -122,49 +191,89 @@ const HelpdeskModals: React.FC<Props> = ({
           </h3>
           <div className="flex gap-2 text-rose-800 border border-rose-200 bg-rose-50/40 p-3 rounded-lg text-xs items-center font-medium">
             <AlertTriangle size={15} className="text-rose-600 shrink-0" />
-            <span>El ticket pasará a la etapa <strong>Resuelto</strong>. Las notas de resolución son obligatorias para continuar.</span>
+            <span>
+              El ticket pasará a la etapa <strong>Resuelto</strong>. Las notas de resolución son
+              obligatorias para continuar.
+            </span>
           </div>
-          <TextArea label="Comentarios / Notas" value={resolutionNotesTemp} onChange={e => setResolutionNotesTemp(e.target.value)} placeholder="Describe detalladamente cómo se resolvió la incidencia..." className="w-full min-h-[100px]" required />
+          <TextArea
+            label="Comentarios / Notas"
+            value={resolutionNotesTemp}
+            onChange={e => setResolutionNotesTemp(e.target.value)}
+            placeholder="Describe detalladamente cómo se resolvió la incidencia..."
+            className="w-full min-h-[100px]"
+            required
+          />
           <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
-            <Button type="button" onClick={onResolutionCancel} variant="secondary">Cancelar</Button>
-            <Button type="submit" variant="indigo">Resolver Ticket</Button>
+            <Button type="button" onClick={onResolutionCancel} variant="secondary">
+              Cancelar
+            </Button>
+            <Button type="submit" variant="indigo">
+              Resolver Ticket
+            </Button>
           </div>
         </form>
       )}
     </Modal>
 
     {/* Modal: Detalle del Ticket */}
-    <Modal open={selectedTicket !== null} onClose={() => setSelectedTicket(null)} maxWidth="max-w-6xl">
+    <Modal
+      open={selectedTicket !== null}
+      onClose={() => setSelectedTicket(null)}
+      maxWidth="max-w-5xl"
+    >
       {selectedTicket && (
         <div className="animate-in fade-in duration-300">
           <div className="border-b border-slate-150 pb-4 mb-6 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-slate-800">Detalle del Ticket #{selectedTicket.ticket_number.toString().padStart(5, '0')}</h2>
+            <h2 className="text-lg font-bold text-slate-800">
+              Detalle del Ticket #{selectedTicket.ticket_number.toString().padStart(5, '0')}
+            </h2>
           </div>
-          <TicketDetail ticket={selectedTicket} stages={stages} onSave={onUpdateTicket} onCancel={() => setSelectedTicket(null)} onDelete={onDeleteTicket} onConvertToOpportunity={onConvertToOpportunity} onArchive={onArchive} />
+          <TicketDetail
+            ticket={selectedTicket}
+            stages={stages}
+            onSave={onUpdateTicket}
+            onCancel={() => setSelectedTicket(null)}
+            onDelete={onDeleteTicket}
+            onConvertToOpportunity={onConvertToOpportunity}
+            onArchive={onArchive}
+          />
         </div>
       )}
     </Modal>
 
     {/* Modal: Registrar Nuevo Ticket */}
-    <Modal open={isCreatingTicket} onClose={() => setIsCreatingTicket(false)} maxWidth="max-w-6xl">
+    <Modal open={isCreatingTicket} onClose={() => setIsCreatingTicket(false)} maxWidth="max-w-5xl">
       {isCreatingTicket && (
         <div className="animate-in fade-in duration-300">
           <div className="border-b border-slate-150 pb-4 mb-6">
             <h2 className="text-lg font-bold text-slate-800">Registrar Nuevo Ticket</h2>
           </div>
-          <TicketDetail stages={stages} onSave={onCreateTicket} onCancel={() => setIsCreatingTicket(false)} />
+          <TicketDetail
+            stages={stages}
+            onSave={onCreateTicket}
+            onCancel={() => setIsCreatingTicket(false)}
+          />
         </div>
       )}
     </Modal>
 
     {/* Modal: Convertir Ticket a Oportunidad */}
-    <Modal open={ticketToConvert !== null} onClose={() => setTicketToConvert(null)} maxWidth="max-w-6xl">
+    <Modal
+      open={ticketToConvert !== null}
+      onClose={() => setTicketToConvert(null)}
+      maxWidth="max-w-5xl"
+    >
       {ticketToConvert && (
         <div className="animate-in fade-in duration-300">
           <div className="border-b border-slate-150 pb-4 mb-6">
-            <h2 className="text-lg font-bold text-slate-800">Convertir Ticket a Oportunidad Comercial</h2>
+            <h2 className="text-lg font-bold text-slate-800">
+              Convertir Ticket a Oportunidad Comercial
+            </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Completa los datos para el Pipeline Comercial. Al guardar, el ticket #{ticketToConvert.ticket_number.toString().padStart(5, '0')} pasará automáticamente a la etapa "Resuelto".
+              Completa los datos para el Pipeline Comercial. Al guardar, el ticket #
+              {ticketToConvert.ticket_number.toString().padStart(5, '0')} pasará automáticamente a
+              la etapa "Resuelto".
             </p>
           </div>
           <OpportunityForm
@@ -174,7 +283,9 @@ const HelpdeskModals: React.FC<Props> = ({
               description: ticketToConvert.description,
               cliente_id: ticketToConvert.cliente_id,
               cliente: ticketToConvert.cliente,
-              empresa: ticketToConvert.cliente ? (ticketToConvert.cliente.company?.nombre || ticketToConvert.cliente.empresa || '') : '',
+              empresa: ticketToConvert.cliente
+                ? ticketToConvert.cliente.company?.nombre || ticketToConvert.cliente.empresa || ''
+                : '',
               companyId: ticketToConvert.cliente?.companyId || null,
               priority: ticketToConvert.priority,
               ejecutivo_id: ticketToConvert.responsable_id || '',

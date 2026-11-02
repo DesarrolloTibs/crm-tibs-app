@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getInteractionsByOpportunity, createInteraction, deleteInteraction } from '@core/services/interactionsService'; // Asumiendo que se movió a src/services
+import {
+  getInteractionsByOpportunity,
+  createInteraction,
+  deleteInteraction,
+} from '@core/services/interactionsService'; // Asumiendo que se movió a src/services
 import { Plus, Search, Trash2 } from 'lucide-react';
 import type { Interaction } from '@core/models/Interaction';
 import { useAuth } from '@features/auth';
@@ -23,15 +27,14 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
 
   const [notification, setNotification] = useState({
     show: false,
-    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+    type: 'success' as 'loading' | 'success' | 'error' | 'warning' | 'confirmation',
     title: '',
     message: '',
-    onConfirm: () => { },
-    onCancel: () => { },
+    onConfirm: () => {},
+    onCancel: () => {},
   });
 
   const hideNotification = () => setNotification({ ...notification, show: false });
-
 
   const fetchInteractions = async () => {
     setLoading(true);
@@ -39,7 +42,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
       const data = await getInteractionsByOpportunity(opportunityId);
       setInteractions(data);
     } catch (error) {
-      console.error("Error fetching interactions:", error);
+      console.error('Error fetching interactions:', error);
       setNotification({
         show: true,
         type: 'error',
@@ -72,6 +75,14 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
     }
 
     try {
+      setNotification({
+        show: true,
+        type: 'loading',
+        title: 'Guardando registro...',
+        message: 'Añadiendo comentario al historial de la oportunidad.',
+        onConfirm: () => {},
+        onCancel: () => {},
+      });
       await createInteraction({
         comment: newInteractionComment,
         opportunity_id: opportunityId,
@@ -106,12 +117,34 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
       title: '¿Estás seguro?',
       message: 'No podrás revertir esta acción.',
       onConfirm: async () => {
+        setNotification({
+          show: true,
+          type: 'loading',
+          title: 'Eliminando registro...',
+          message: 'Retirando comentario del historial.',
+          onConfirm: () => {},
+          onCancel: () => {},
+        });
         try {
           await deleteInteraction(interactionId);
-          setNotification({ show: true, type: 'success', title: 'Eliminado', message: 'El registro ha sido eliminado.', onConfirm: hideNotification, onCancel: hideNotification });
+          setNotification({
+            show: true,
+            type: 'success',
+            title: 'Eliminado',
+            message: 'El registro ha sido eliminado.',
+            onConfirm: hideNotification,
+            onCancel: hideNotification,
+          });
           fetchInteractions();
         } catch (error) {
-          setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo eliminar el registro.', onConfirm: hideNotification, onCancel: hideNotification });
+          setNotification({
+            show: true,
+            type: 'error',
+            title: 'Error',
+            message: 'No se pudo eliminar el registro.',
+            onConfirm: hideNotification,
+            onCancel: hideNotification,
+          });
         }
       },
       onCancel: hideNotification,
@@ -119,7 +152,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   };
 
   const filteredInteractions = interactions.filter(interaction =>
-    interaction.comment.toLowerCase().includes(searchTerm.toLowerCase())
+    interaction.comment.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   if (loading) return <p>Cargando historial...</p>;
@@ -148,8 +181,10 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
         </Button>
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Añadir al Historial</h2>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-lg">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
+          Añadir al Historial
+        </h2>
         <div className="space-y-4">
           <div>
             <TextArea
@@ -162,7 +197,6 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
             />
           </div>
           <div className="flex justify-end gap-3 mt-6">
-
             <Button
               type="button"
               variant="secondary"
@@ -172,7 +206,6 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
               Cancelar
             </Button>
 
-
             <Button
               type="button"
               variant="primary"
@@ -181,17 +214,27 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
             >
               Guardar Registro
             </Button>
-
           </div>
         </div>
       </Modal>
 
       <ul className="space-y-4 overflow-y-auto flex-grow pr-2">
         {filteredInteractions.map(interaction => (
-          <li key={interaction.id} className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 flex justify-between items-center transition-shadow hover:shadow-md">
+          <li
+            key={interaction.id}
+            className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 flex justify-between items-center transition-shadow hover:shadow-md"
+          >
             <div className="flex-grow mr-4">
               <p className="text-base text-gray-800">{interaction.comment}</p>
-              <p className="text-sm text-gray-500 mt-1">{new Date(interaction.createdAt).toLocaleString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {new Date(interaction.createdAt).toLocaleString('es-MX', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
             </div>
             {isAdmin && (
               <button
@@ -205,8 +248,8 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
             )}
           </li>
         ))}
-        {filteredInteractions.length === 0 && (
-          interactions.length > 0 ? (
+        {filteredInteractions.length === 0 &&
+          (interactions.length > 0 ? (
             <div className="p-4 text-center text-gray-500">
               <p>No se encontraron registros que coincidan con la búsqueda.</p>
             </div>
@@ -215,8 +258,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
               <p>No hay registros en el historial para esta oportunidad.</p>
               <p className="text-sm mt-1">¡Añade uno para no perder detalle!</p>
             </div>
-          )
-        )}
+          ))}
       </ul>
     </div>
   );

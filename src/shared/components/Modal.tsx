@@ -17,7 +17,7 @@ const Modal: React.FC<ModalProps> = ({
   onClose,
   children,
   maxWidth = 'max-w-4xl',
-  height = 'h-[95vh]',
+  height = 'h-auto',
   className = '',
   padding = 'p-4 sm:p-6',
   hideCloseButton = false,
@@ -31,7 +31,7 @@ const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={`bg-white rounded-lg shadow-xl w-full ${maxWidth} max-h-[92vh] ${height} relative flex flex-col cursor-default ${className}`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         {!hideCloseButton && (
           <button
@@ -41,9 +41,7 @@ const Modal: React.FC<ModalProps> = ({
             <X size={24} />
           </button>
         )}
-        <div className={`${padding} flex-grow h-full overflow-y-auto`}>
-          {children}
-        </div>
+        <div className={`${padding} overflow-y-auto min-h-0`}>{children}</div>
       </div>
     </div>
   );

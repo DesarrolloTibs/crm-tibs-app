@@ -36,7 +36,7 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
 
   const [notification, setNotification] = useState<{
     show: boolean;
-    type: 'success' | 'error' | 'warning' | 'confirmation';
+    type: 'loading' | 'success' | 'error' | 'warning' | 'confirmation';
     title: string;
     message: string;
   }>({
@@ -59,7 +59,7 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
   });
 
   const notify = (notif: {
-    type: 'success' | 'error' | 'warning' | 'confirmation';
+    type: 'loading' | 'success' | 'error' | 'warning' | 'confirmation';
     title: string;
     message: string;
   }) => {
@@ -92,7 +92,7 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
     const fetchTypes = async () => {
       try {
         const types = await getActivityTypes();
-        setActivityTypes(types.filter((t) => t.blnstatus !== false));
+        setActivityTypes(types.filter(t => t.blnstatus !== false));
       } catch (error) {
         console.error('Error al cargar tipos de actividad en ActivitiesTab:', error);
       }
@@ -102,6 +102,11 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
 
   const handleCreate = async (activity: Partial<Activity>) => {
     setLoading(true);
+    notify({
+      type: 'loading',
+      title: 'Creando actividad...',
+      message: 'Vinculando la actividad a la oportunidad.',
+    });
     try {
       await createActivity({ ...activity, opportunityId });
       setModalOpen(false);
@@ -126,9 +131,20 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
   const handleUpdate = async (activity: Partial<Activity>) => {
     if (!activity.id) return;
     setLoading(true);
+    notify({
+      type: 'loading',
+      title: 'Actualizando actividad...',
+      message: 'Guardando los cambios de la actividad.',
+    });
     try {
-      const { id, user: _u, opportunity: _o, userId: _uid, typeActivity: _ta, ...updateData } =
-        activity as Activity;
+      const {
+        id,
+        user: _u,
+        opportunity: _o,
+        userId: _uid,
+        typeActivity: _ta,
+        ...updateData
+      } = activity as Activity;
       await updateActivity(id, updateData);
       setEditing(null);
       setModalOpen(false);
@@ -157,6 +173,12 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
       title: '¿Eliminar Actividad?',
       description: `¿Estás seguro de que deseas eliminar la actividad '${activity.activity}'?`,
       onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, open: false }));
+        notify({
+          type: 'loading',
+          title: 'Eliminando actividad...',
+          message: 'Retirando la actividad de la oportunidad.',
+        });
         try {
           await deleteActivity(activity.id!);
           notify({
@@ -171,8 +193,6 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
             title: 'Error al Eliminar',
             message: 'No fue posible eliminar la actividad.',
           });
-        } finally {
-          setConfirmConfig((prev) => ({ ...prev, open: false }));
         }
       },
     });
@@ -188,13 +208,15 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
     setModalOpen(true);
   };
 
-  const filteredActivities = activities.filter((activity) => {
+  const filteredActivities = activities.filter(activity => {
     const search = searchTerm.toLowerCase().trim();
     if (!search) return true;
 
     const activityText = activity.activity?.toLowerCase() || '';
     const activityTypeText = activity.typeActivity?.strname?.toLowerCase() || '';
-    const dateText = activity.date ? new Date(activity.date).toLocaleString('es-MX').toLowerCase() : '';
+    const dateText = activity.date
+      ? new Date(activity.date).toLocaleString('es-MX').toLowerCase()
+      : '';
     const userText = activity.user?.username?.toLowerCase() || '';
 
     return (
@@ -221,7 +243,7 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
         onEdit: openEditModal,
         onDelete: handleDelete,
       }),
-    []
+    [],
   );
 
   return (
@@ -231,14 +253,14 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
         type={notification.type}
         title={notification.title}
         message={notification.message}
-        onConfirm={() => setNotification((prev) => ({ ...prev, show: false }))}
+        onConfirm={() => setNotification(prev => ({ ...prev, show: false }))}
       />
 
       <ConfirmModal
         open={confirmConfig.open}
         message={confirmConfig.description}
         onConfirm={confirmConfig.onConfirm}
-        onClose={() => setConfirmConfig((prev) => ({ ...prev, open: false }))}
+        onClose={() => setConfirmConfig(prev => ({ ...prev, open: false }))}
         confirmLabel="Eliminar"
         cancelLabel="Cancelar"
         variant="danger"
@@ -250,7 +272,7 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
             type="text"
             placeholder="Buscar en actividades..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             inputPrefix={<Search size={16} />}
             className="text-xs"
           />
@@ -277,7 +299,7 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ opportunityId, opp
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           pageSize={pageSize}
-          onPageSizeChange={(size) => {
+          onPageSizeChange={size => {
             setPageSize(size);
             setCurrentPage(1);
           }}

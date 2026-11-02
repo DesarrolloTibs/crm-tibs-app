@@ -34,12 +34,7 @@ const ProductsPage: React.FC = () => {
 
   const modalContent = () => {
     if (!editingProduct?.id) {
-      return (
-        <ProductForm
-          onSubmit={handleCreate}
-          onCancel={() => setIsFormModalOpen(false)}
-        />
-      );
+      return <ProductForm onSubmit={handleCreate} onCancel={() => setIsFormModalOpen(false)} />;
     }
     return (
       <Tabs
@@ -57,10 +52,7 @@ const ProductsPage: React.FC = () => {
           {
             label: 'Fichas Técnicas',
             content: (
-              <ProductFilesTab
-                product={editingProduct}
-                onUploadSuccess={updateEditingProduct}
-              />
+              <ProductFilesTab product={editingProduct} onUploadSuccess={updateEditingProduct} />
             ),
           },
         ]}
@@ -105,7 +97,7 @@ const ProductsPage: React.FC = () => {
 
       {/* Lazy Modal for Form / Tabs */}
       {isFormModalOpen && (
-        <Modal open onClose={() => setIsFormModalOpen(false)}>
+        <Modal open onClose={() => setIsFormModalOpen(false)} maxWidth="max-w-3xl">
           {modalContent()}
         </Modal>
       )}

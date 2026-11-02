@@ -1,5 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { getExpenses, createExpense, updateExpense, deleteExpense } from '@core/services/expensesService';
+import {
+  getExpenses,
+  createExpense,
+  updateExpense,
+  deleteExpense,
+} from '@core/services/expensesService';
 import { getUsers } from '@core/services/usersService';
 import type { Expense } from '@core/models/Expense';
 import type { User as UserModel } from '@core/models/User';
@@ -32,7 +37,7 @@ export function useExpenses() {
   const debouncedConcept = useDebounce(filters.concept, 250);
 
   // Reusable notification hook
-  const { notification, showSuccess, showError, showConfirmation } = useNotification();
+  const { notification, showLoading, showSuccess, showError, showConfirmation } = useNotification();
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
@@ -49,12 +54,12 @@ export function useExpenses() {
   useEffect(() => {
     fetchExpenses();
     getUsers()
-      .then((d) => setUsers(d.sort((a, b) => a.username.localeCompare(b.username))))
+      .then(d => setUsers(d.sort((a, b) => a.username.localeCompare(b.username))))
       .catch(console.error);
   }, [fetchExpenses, schemaName]);
 
   const handleCreate = async (data: Partial<Expense>) => {
-    setLoading(true);
+    showLoading('Registrando gasto...');
     try {
       await createExpense(data);
       setModalOpen(false);
@@ -62,14 +67,12 @@ export function useExpenses() {
       fetchExpenses();
     } catch {
       showError('No se pudo registrar el gasto');
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleUpdate = async (data: Partial<Expense>) => {
     if (!editingExpense?.id) return;
-    setLoading(true);
+    showLoading('Actualizando gasto...');
     try {
       await updateExpense(editingExpense.id, data);
       setModalOpen(false);
@@ -78,36 +81,35 @@ export function useExpenses() {
       fetchExpenses();
     } catch {
       showError('No se pudo actualizar el gasto');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleDelete = useCallback((expense: Expense) => {
-    showConfirmation({
-      title: 'Confirmar eliminación',
-      message: `¿Eliminar el gasto "${expense.concepto}"?`,
-      onConfirm: async () => {
-        if (!expense.id) return;
-        setLoading(true);
-        try {
-          await deleteExpense(expense.id);
-          showSuccess('El gasto ha sido eliminado.');
-          fetchExpenses();
-        } catch {
-          showError('No se pudo eliminar el gasto');
-        } finally {
-          setLoading(false);
-        }
-      },
-    });
-  }, [showConfirmation, showSuccess, showError, fetchExpenses]);
+  const handleDelete = useCallback(
+    (expense: Expense) => {
+      showConfirmation({
+        title: 'Confirmar eliminación',
+        message: `¿Eliminar el gasto "${expense.concepto}"?`,
+        onConfirm: async () => {
+          if (!expense.id) return;
+          showLoading('Eliminando gasto...');
+          try {
+            await deleteExpense(expense.id);
+            showSuccess('El gasto ha sido eliminado.');
+            fetchExpenses();
+          } catch {
+            showError('No se pudo eliminar el gasto');
+          }
+        },
+      });
+    },
+    [showConfirmation, showLoading, showSuccess, showError, fetchExpenses],
+  );
 
   const handleFilterChange = useCallback(
     <K extends keyof ExpenseFiltersState>(key: K, value: ExpenseFiltersState[K]) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
+      setFilters(prev => ({ ...prev, [key]: value }));
     },
-    []
+    [],
   );
 
   const handleClearFilters = useCallback(() => {
@@ -135,13 +137,13 @@ export function useExpenses() {
     () =>
       users
         .filter((u): u is UserModel & { id: string } => !!u.id)
-        .map((u) => ({ value: u.id, label: u.username })),
-    [users]
+        .map(u => ({ value: u.id, label: u.username })),
+    [users],
   );
 
   const filteredExpenses = useMemo(() => {
     const c = debouncedConcept.trim().toLowerCase();
-    return expenses.filter((e) => {
+    return expenses.filter(e => {
       const matchesConcept = !c || (e.concepto || '').toLowerCase().includes(c);
       const matchesUser = !filters.user || e.usuario?.id === filters.user;
       const matchesDate = !filters.date || e.fecha.startsWith(filters.date);
