@@ -71,7 +71,7 @@ const UsersPage: React.FC = () => {
 
       {/* Lazy Modal for User Form */}
       {modalOpen && (
-        <Modal open onClose={() => setModalOpen(false)}>
+        <Modal open onClose={() => setModalOpen(false)} maxWidth="max-w-xl">
           <UserForm
             initialData={editing || undefined}
             onSubmit={editing ? handleUpdate : handleCreate}
@@ -82,7 +82,7 @@ const UsersPage: React.FC = () => {
 
       {/* Lazy Modal for Profile Image Upload */}
       {uploadingUser && (
-        <Modal open onClose={closeUploadModal}>
+        <Modal open onClose={closeUploadModal} maxWidth="max-w-md">
           <ProfileImageUploadModal
             user={uploadingUser}
             onClose={closeUploadModal}

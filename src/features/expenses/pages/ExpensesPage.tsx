@@ -68,7 +68,7 @@ const ExpensesPage: React.FC = () => {
 
       {/* Lazy Modal for Form */}
       {modalOpen && (
-        <Modal open onClose={() => setModalOpen(false)}>
+        <Modal open onClose={() => setModalOpen(false)} maxWidth="max-w-xl">
           <ExpenseForm
             initialData={editingExpense}
             onSubmit={(data: Partial<Expense>) =>
@@ -81,7 +81,7 @@ const ExpensesPage: React.FC = () => {
 
       {/* Lazy Modal for Receipt Upload */}
       {uploadingExpense && (
-        <Modal open onClose={closeUploadModal}>
+        <Modal open onClose={closeUploadModal} maxWidth="max-w-md">
           <ReceiptUploadModal
             expense={uploadingExpense}
             onClose={closeUploadModal}

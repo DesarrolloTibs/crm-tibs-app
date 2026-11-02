@@ -90,7 +90,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
   // Sincronizar parámetro de búsqueda de pestaña
   const handleChangeTab = (tab: ClientsActiveTab) => {
     setActiveTab(tab);
-    setSearchParams((prev) => {
+    setSearchParams(prev => {
       const next = new URLSearchParams(prev);
       next.set('tab', tab);
       return next;
@@ -107,8 +107,10 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   // Estados de Filtros
-  const [contactFilters, setContactFilters] = useState<ContactFiltersState>(INITIAL_CONTACT_FILTERS);
-  const [companyFilters, setCompanyFilters] = useState<CompanyFiltersState>(INITIAL_COMPANY_FILTERS);
+  const [contactFilters, setContactFilters] =
+    useState<ContactFiltersState>(INITIAL_CONTACT_FILTERS);
+  const [companyFilters, setCompanyFilters] =
+    useState<CompanyFiltersState>(INITIAL_COMPANY_FILTERS);
 
   // Estados de Modales
   const [contactModalOpen, setContactModalOpen] = useState<boolean>(false);
@@ -133,7 +135,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
   // Notificación compartida
   const [notification, setNotification] = useState<{
     show: boolean;
-    type: 'success' | 'error' | 'warning' | 'confirmation';
+    type: 'loading' | 'success' | 'error' | 'warning' | 'confirmation';
     title: string;
     message: string;
     onConfirm?: () => void;
@@ -145,7 +147,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
   });
 
   const notify = (notif: {
-    type: 'success' | 'error' | 'warning' | 'confirmation';
+    type: 'loading' | 'success' | 'error' | 'warning' | 'confirmation';
     title: string;
     message: string;
   }) => {
@@ -154,7 +156,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
       type: notif.type,
       title: notif.title,
       message: notif.message,
-      onConfirm: () => setNotification((prev) => ({ ...prev, show: false })),
+      onConfirm: () => setNotification(prev => ({ ...prev, show: false })),
     });
   };
 
@@ -185,11 +187,11 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
       if (Array.isArray(usersData)) {
         setExecutives(
           usersData
-            .filter((u) => u.id)
-            .map((u) => ({
+            .filter(u => u.id)
+            .map(u => ({
               value: u.id!,
               label: u.username || 'Usuario sin nombre',
-            }))
+            })),
         );
       }
     } catch (err) {
@@ -197,7 +199,8 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
       notify({
         type: 'error',
         title: 'Error de Sincronización',
-        message: 'No fue posible sincronizar el catálogo de clientes y empresas. Por favor reintenta.',
+        message:
+          'No fue posible sincronizar el catálogo de clientes y empresas. Por favor reintenta.',
       });
     } finally {
       setLoading(false);
@@ -212,8 +215,8 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
   // Opciones de empresas formateadas para Select
   const companyOptions = useMemo(() => {
     return companies
-      .filter((c) => c.id && c.estatus !== false)
-      .map((c) => ({
+      .filter(c => c.id && c.estatus !== false)
+      .map(c => ({
         value: c.id!,
         label: c.nombre,
       }));
@@ -223,14 +226,14 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
   const contactStats = useMemo(() => calculateContactStats(clients), [clients]);
   const filteredContacts = useMemo(
     () => filterContacts(clients, contactFilters),
-    [clients, contactFilters]
+    [clients, contactFilters],
   );
 
   const handleContactFilterChange = <K extends keyof ContactFiltersState>(
     key: K,
-    value: ContactFiltersState[K]
+    value: ContactFiltersState[K],
   ) => {
-    setContactFilters((prev) => ({ ...prev, [key]: value }));
+    setContactFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const handleClearContactFilters = () => {
@@ -241,14 +244,14 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
   const companyStats = useMemo(() => calculateCompanyStats(companies), [companies]);
   const filteredCompanies = useMemo(
     () => filterCompanies(companies, companyFilters),
-    [companies, companyFilters]
+    [companies, companyFilters],
   );
 
   const handleCompanyFilterChange = <K extends keyof CompanyFiltersState>(
     key: K,
-    value: CompanyFiltersState[K]
+    value: CompanyFiltersState[K],
   ) => {
-    setCompanyFilters((prev) => ({ ...prev, [key]: value }));
+    setCompanyFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const handleClearCompanyFilters = () => {
@@ -270,6 +273,11 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
 
   const handleSubmitContact = async (formData: ContactFormData) => {
     setSubmitting(true);
+    notify({
+      type: 'loading',
+      title: editingClient?.id ? 'Actualizando contacto...' : 'Creando contacto...',
+      message: 'Guardando la información del contacto en el directorio.',
+    });
     try {
       if (editingClient?.id) {
         await updateClient(editingClient.id, formData as Client);
@@ -294,7 +302,8 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
       notify({
         type: 'error',
         title: 'Error al Guardar',
-        message: 'Ocurrió un error al intentar procesar el contacto. Verifica los datos e inténtalo de nuevo.',
+        message:
+          'Ocurrió un error al intentar procesar el contacto. Verifica los datos e inténtalo de nuevo.',
       });
     } finally {
       setSubmitting(false);
@@ -312,6 +321,12 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
         ? `¿Deseas habilitar a '${client.nombre} ${client.apellido}' para nuevas actividades y cotizaciones?`
         : `¿Deseas deshabilitar a '${client.nombre} ${client.apellido}'? Ya no aparecerá en selectores de nuevas oportunidades.`,
       onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, open: false }));
+        notify({
+          type: 'loading',
+          title: 'Actualizando estado...',
+          message: 'Actualizando el estatus del contacto.',
+        });
         try {
           await updateClientStatus(client.id!, newStatus);
           notify({
@@ -327,8 +342,6 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
             title: 'Error de Actualización',
             message: 'No fue posible actualizar el estado del contacto en el servidor.',
           });
-        } finally {
-          setConfirmConfig((prev) => ({ ...prev, open: false }));
         }
       },
     });
@@ -349,6 +362,11 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
 
   const handleSubmitCompany = async (formData: CompanyFormData) => {
     setSubmitting(true);
+    notify({
+      type: 'loading',
+      title: editingCompany?.id ? 'Actualizando empresa...' : 'Creando empresa...',
+      message: 'Guardando la información corporativa en el CRM.',
+    });
     try {
       if (editingCompany?.id) {
         await updateCompany(editingCompany.id, formData as Company);
@@ -391,6 +409,12 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
         ? `¿Deseas volver a habilitar a '${company.nombre}' para la emisión de contratos y prospectos?`
         : `¿Deseas suspender la cuenta '${company.nombre}'? Sus contactos y cotizaciones quedarán temporalmente bloqueados.`,
       onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, open: false }));
+        notify({
+          type: 'loading',
+          title: 'Actualizando estado...',
+          message: 'Actualizando el estatus de la empresa.',
+        });
         try {
           await updateCompanyStatus(company.id!, newStatus);
           notify({
@@ -406,8 +430,6 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
             title: 'Error de Actualización',
             message: 'No se pudo cambiar el estado de la empresa en el servidor.',
           });
-        } finally {
-          setConfirmConfig((prev) => ({ ...prev, open: false }));
         }
       },
     });
@@ -420,14 +442,14 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
         type={notification.type}
         title={notification.title}
         message={notification.message}
-        onConfirm={() => setNotification((prev) => ({ ...prev, show: false }))}
+        onConfirm={() => setNotification(prev => ({ ...prev, show: false }))}
       />
 
       <ConfirmModal
         open={confirmConfig.open}
         message={confirmConfig.description}
         onConfirm={confirmConfig.onConfirm}
-        onClose={() => setConfirmConfig((prev) => ({ ...prev, open: false }))}
+        onClose={() => setConfirmConfig(prev => ({ ...prev, open: false }))}
         confirmLabel="Confirmar"
         cancelLabel="Volver"
         variant="warning"
@@ -468,7 +490,10 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
               className="gap-2 !py-2 !px-3 text-xs"
               title="Sincronizar datos"
             >
-              <RefreshCw size={14} className={loading ? 'animate-spin text-indigo-600' : 'text-slate-500'} />
+              <RefreshCw
+                size={14}
+                className={loading ? 'animate-spin text-indigo-600' : 'text-slate-500'}
+              />
               <span className="hidden md:inline">Actualizar</span>
             </Button>
           </div>

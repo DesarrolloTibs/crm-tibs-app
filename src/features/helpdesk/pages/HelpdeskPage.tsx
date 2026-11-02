@@ -14,14 +14,50 @@ const HelpdeskPage: React.FC = () => {
 
   const badges = useMemo<SearchBadge[]>(() => {
     const list: SearchBadge[] = [];
-    if (hd.archivedFilter === 'archived') list.push({ id: 'archived', label: 'Archivados', icon: <Filter size={10} />, onRemove: () => hd.setArchivedFilter('active') });
-    if (hd.archivedFilter === 'all')      list.push({ id: 'all',      label: 'Todos',       icon: <Filter size={10} />, onRemove: () => hd.setArchivedFilter('active') });
-    if (hd.priorityFilter !== 'all')      list.push({ id: 'priority', label: hd.priorityFilter === 0 ? 'Sin prioridad' : hd.priorityFilter === 1 ? 'Baja' : hd.priorityFilter === 2 ? 'Media' : 'Alta', icon: <Star size={10} />, onRemove: () => hd.setPriorityFilter('all') });
-    if (hd.incidenceTypeFilter !== 'all') list.push({ id: 'incidence', label: hd.incidenceTypeFilter, icon: <Tag size={10} />, onRemove: () => hd.setIncidenceTypeFilter('all') });
+    if (hd.archivedFilter === 'archived')
+      list.push({
+        id: 'archived',
+        label: 'Archivados',
+        icon: <Filter size={10} />,
+        onRemove: () => hd.setArchivedFilter('active'),
+      });
+    if (hd.archivedFilter === 'all')
+      list.push({
+        id: 'all',
+        label: 'Todos',
+        icon: <Filter size={10} />,
+        onRemove: () => hd.setArchivedFilter('active'),
+      });
+    if (hd.priorityFilter !== 'all')
+      list.push({
+        id: 'priority',
+        label:
+          hd.priorityFilter === 0
+            ? 'Sin prioridad'
+            : hd.priorityFilter === 1
+              ? 'Baja'
+              : hd.priorityFilter === 2
+                ? 'Media'
+                : 'Alta',
+        icon: <Star size={10} />,
+        onRemove: () => hd.setPriorityFilter('all'),
+      });
+    if (hd.incidenceTypeFilter !== 'all')
+      list.push({
+        id: 'incidence',
+        label: hd.incidenceTypeFilter,
+        icon: <Tag size={10} />,
+        onRemove: () => hd.setIncidenceTypeFilter('all'),
+      });
     return list;
   }, [hd.archivedFilter, hd.priorityFilter, hd.incidenceTypeFilter]);
 
-  if (hd.loading) return <div className="flex justify-center items-center py-20"><Loader /></div>;
+  if (hd.loading)
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader />
+      </div>
+    );
 
   return (
     <div className="space-y-4">
@@ -35,11 +71,20 @@ const HelpdeskPage: React.FC = () => {
               <LifeBuoy size={20} className="stroke-[2.5]" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 leading-tight">{hd.helpdesk?.strname}</h1>
-              {hd.helpdesk?.strdescription && <p className="text-sm text-indigo-500 font-medium mt-0.5">{hd.helpdesk.strdescription}</p>}
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 leading-tight">
+                {hd.helpdesk?.strname}
+              </h1>
+              {hd.helpdesk?.strdescription && (
+                <p className="text-sm text-indigo-500 font-medium mt-0.5">
+                  {hd.helpdesk.strdescription}
+                </p>
+              )}
             </div>
           </div>
-          <button className="md:hidden p-2 text-gray-500 hover:text-indigo-600 bg-gray-100 rounded-full transition-colors ml-3" onClick={() => hd.setShowToolbar(!hd.showToolbar)}>
+          <button
+            className="md:hidden p-2 text-gray-500 hover:text-indigo-600 bg-gray-100 rounded-full transition-colors ml-3"
+            onClick={() => hd.setShowToolbar(!hd.showToolbar)}
+          >
             {hd.showToolbar ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
         </div>
@@ -75,9 +120,7 @@ const HelpdeskPage: React.FC = () => {
       </div>
 
       {/* Main content */}
-      {hd.actionLoading ? (
-        <div className="flex justify-center items-center py-20"><Loader /></div>
-      ) : hd.viewMode === 'kanban' ? (
+      {hd.viewMode === 'kanban' ? (
         <HelpdeskKanban
           sensors={hd.sensors}
           stages={hd.stages}

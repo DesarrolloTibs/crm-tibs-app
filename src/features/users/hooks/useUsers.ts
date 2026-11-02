@@ -32,26 +32,29 @@ export function useUsers() {
   const debouncedEmail = useDebounce(filters.email, 250);
 
   // Standard notification & confirmation modal hook
-  const { notification, showSuccess, showError, showConfirmation } = useNotification();
+  const { notification, showLoading, showSuccess, showError, showConfirmation } = useNotification();
 
-  const fetchUsers = useCallback(async (force = false) => {
-    setLoading(true);
-    try {
-      const res = await getUsers(force);
-      setUsers(Array.isArray(res) ? res : []);
-    } catch {
-      showError('No se pudieron cargar los usuarios');
-    } finally {
-      setLoading(false);
-    }
-  }, [showError]);
+  const fetchUsers = useCallback(
+    async (force = false) => {
+      setLoading(true);
+      try {
+        const res = await getUsers(force);
+        setUsers(Array.isArray(res) ? res : []);
+      } catch {
+        showError('No se pudieron cargar los usuarios');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [showError],
+  );
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers, schemaName]);
 
   const handleCreate = async (user: User) => {
-    setLoading(true);
+    showLoading('Registrando nuevo usuario...');
     try {
       const userData = { ...user };
       delete userData.id;
@@ -61,14 +64,12 @@ export function useUsers() {
       fetchUsers(true);
     } catch {
       showError('No se pudo crear el usuario');
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleUpdate = async (user: User) => {
     if (!user.id) return;
-    setLoading(true);
+    showLoading('Actualizando datos del usuario...');
     try {
       const { id, ...userData } = user;
       await updateUser(id, userData);
@@ -78,36 +79,38 @@ export function useUsers() {
       fetchUsers(true);
     } catch {
       showError('No se pudo actualizar el usuario');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleUpdateStatus = useCallback((user: User) => {
-    if (!user.id) return;
-    const isActivating = !user.isActive;
-    showConfirmation({
-      title: `¿${isActivating ? 'Reactivar' : 'Desactivar'} este usuario?`,
-      message: isActivating
-        ? 'El usuario podrá iniciar sesión.'
-        : 'El usuario no podrá iniciar sesión.',
-      onConfirm: async () => {
-        try {
-          await updateUserStatus(user.id!, isActivating);
-          showSuccess(`Usuario ${isActivating ? 'reactivado' : 'desactivado'} correctamente.`);
-          fetchUsers(true);
-        } catch {
-          showError(`No se pudo ${isActivating ? 'reactivar' : 'desactivar'} el usuario.`);
-        }
-      },
-    });
-  }, [showConfirmation, showSuccess, showError, fetchUsers]);
+  const handleUpdateStatus = useCallback(
+    (user: User) => {
+      if (!user.id) return;
+      const isActivating = !user.isActive;
+      showConfirmation({
+        title: `¿${isActivating ? 'Reactivar' : 'Desactivar'} este usuario?`,
+        message: isActivating
+          ? 'El usuario podrá iniciar sesión.'
+          : 'El usuario no podrá iniciar sesión.',
+        onConfirm: async () => {
+          showLoading(`${isActivating ? 'Reactivando' : 'Desactivando'} usuario...`);
+          try {
+            await updateUserStatus(user.id!, isActivating);
+            showSuccess(`Usuario ${isActivating ? 'reactivado' : 'desactivado'} correctamente.`);
+            fetchUsers(true);
+          } catch {
+            showError(`No se pudo ${isActivating ? 'reactivar' : 'desactivar'} el usuario.`);
+          }
+        },
+      });
+    },
+    [showConfirmation, showLoading, showSuccess, showError, fetchUsers],
+  );
 
   const handleFilterChange = useCallback(
     <K extends keyof UserFiltersState>(key: K, value: UserFiltersState[K]) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
+      setFilters(prev => ({ ...prev, [key]: value }));
     },
-    []
+    [],
   );
 
   const handleClearFilters = useCallback(() => {
@@ -149,7 +152,7 @@ export function useUsers() {
     const uName = debouncedUsername.trim().toLowerCase();
     const uEmail = debouncedEmail.trim().toLowerCase();
 
-    return users.filter((u) => {
+    return users.filter(u => {
       const matchesName = !uName || (u.username || '').toLowerCase().includes(uName);
       const matchesEmail = !uEmail || (u.email || '').toLowerCase().includes(uEmail);
       const matchesRole = !filters.role || u.role === filters.role;

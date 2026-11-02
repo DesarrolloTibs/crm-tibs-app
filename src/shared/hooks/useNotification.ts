@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-export type NotificationType = 'success' | 'error' | 'warning' | 'confirmation';
+export type NotificationType = 'loading' | 'success' | 'error' | 'warning' | 'confirmation';
 
 export interface NotificationState {
   show: boolean;
@@ -22,66 +22,96 @@ export function useNotification() {
   const [notification, setNotification] = useState<NotificationState>(DEFAULT_STATE);
 
   const hideNotification = useCallback(() => {
-    setNotification((prev) => ({ ...prev, show: false }));
+    setNotification(prev => ({ ...prev, show: false }));
   }, []);
 
-  const showSuccess = useCallback((message: string, title: string = '¡Éxito!') => {
-    setNotification({
-      show: true,
-      type: 'success',
-      title,
-      message,
-      onConfirm: hideNotification,
-      onCancel: hideNotification,
-    });
-  }, [hideNotification]);
+  const showLoading = useCallback(
+    (
+      message: string = 'Guardando los cambios, por favor espera...',
+      title: string = 'Procesando...',
+    ) => {
+      setNotification({
+        show: true,
+        type: 'loading',
+        title,
+        message,
+        onConfirm: undefined,
+        onCancel: undefined,
+      });
+    },
+    [],
+  );
 
-  const showError = useCallback((message: string, title: string = 'Error') => {
-    setNotification({
-      show: true,
-      type: 'error',
-      title,
-      message,
-      onConfirm: hideNotification,
-      onCancel: hideNotification,
-    });
-  }, [hideNotification]);
+  const showSuccess = useCallback(
+    (message: string, title: string = '¡Éxito!') => {
+      setNotification({
+        show: true,
+        type: 'success',
+        title,
+        message,
+        onConfirm: hideNotification,
+        onCancel: hideNotification,
+      });
+    },
+    [hideNotification],
+  );
 
-  const showWarning = useCallback((message: string, title: string = 'Advertencia') => {
-    setNotification({
-      show: true,
-      type: 'warning',
-      title,
-      message,
-      onConfirm: hideNotification,
-      onCancel: hideNotification,
-    });
-  }, [hideNotification]);
+  const showError = useCallback(
+    (message: string, title: string = 'Error') => {
+      setNotification({
+        show: true,
+        type: 'error',
+        title,
+        message,
+        onConfirm: hideNotification,
+        onCancel: hideNotification,
+      });
+    },
+    [hideNotification],
+  );
 
-  const showConfirmation = useCallback((params: {
-    title: string;
-    message: string;
-    onConfirm: () => void | Promise<void>;
-    onCancel?: () => void;
-  }) => {
-    setNotification({
-      show: true,
-      type: 'confirmation',
-      title: params.title,
-      message: params.message,
-      onConfirm: () => {
-        hideNotification();
-        params.onConfirm();
-      },
-      onCancel: () => {
-        hideNotification();
-        params.onCancel?.();
-      },
-    });
-  }, [hideNotification]);
+  const showWarning = useCallback(
+    (message: string, title: string = 'Advertencia') => {
+      setNotification({
+        show: true,
+        type: 'warning',
+        title,
+        message,
+        onConfirm: hideNotification,
+        onCancel: hideNotification,
+      });
+    },
+    [hideNotification],
+  );
+
+  const showConfirmation = useCallback(
+    (params: {
+      title: string;
+      message: string;
+      onConfirm: () => void | Promise<void>;
+      onCancel?: () => void;
+    }) => {
+      setNotification({
+        show: true,
+        type: 'confirmation',
+        title: params.title,
+        message: params.message,
+        onConfirm: () => {
+          hideNotification();
+          params.onConfirm();
+        },
+        onCancel: () => {
+          hideNotification();
+          params.onCancel?.();
+        },
+      });
+    },
+    [hideNotification],
+  );
 
   return {
     notification,
+    showLoading,
     showSuccess,
     showError,
     showWarning,

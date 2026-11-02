@@ -35,7 +35,7 @@ export function useProducts() {
   const debouncedNombre = useDebounce(filters.nombre, 250);
 
   // Reusable notification hook
-  const { notification, showSuccess, showError, showConfirmation } = useNotification();
+  const { notification, showLoading, showSuccess, showError, showConfirmation } = useNotification();
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -56,9 +56,9 @@ export function useProducts() {
   const handleCreate = async (
     productData: Partial<Product>,
     stagedCoverFile: File | null,
-    stagedSpecs: { id: string; file: File; title: string }[]
+    stagedSpecs: { id: string; file: File; title: string }[],
   ) => {
-    setLoading(true);
+    showLoading('Guardando producto y archivos adjuntos...');
     try {
       const newProduct = await createProduct(productData);
       if (stagedCoverFile && newProduct.id) {
@@ -74,17 +74,12 @@ export function useProducts() {
       fetchProducts();
     } catch {
       showError('No se pudo crear el producto.');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleUpdate = async (
-    productData: Partial<Product>,
-    stagedCoverFile: File | null
-  ) => {
+  const handleUpdate = async (productData: Partial<Product>, stagedCoverFile: File | null) => {
     if (!editingProduct?.id) return;
-    setLoading(true);
+    showLoading('Actualizando producto...');
     try {
       await updateProduct(editingProduct.id, productData);
       if (stagedCoverFile) {
@@ -96,8 +91,6 @@ export function useProducts() {
       fetchProducts();
     } catch {
       showError('No se pudo actualizar el producto.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -111,11 +104,10 @@ export function useProducts() {
           ? 'El producto volverá a estar disponible.'
           : 'El producto no se podrá seleccionar para nuevas oportunidades.',
         onConfirm: async () => {
+          showLoading(`${isActivating ? 'Activando' : 'Desactivando'} producto...`);
           try {
             await updateProductStatus(product.id!, isActivating);
-            showSuccess(
-              `Producto ${isActivating ? 'activado' : 'desactivado'} correctamente.`
-            );
+            showSuccess(`Producto ${isActivating ? 'activado' : 'desactivado'} correctamente.`);
             fetchProducts();
           } catch {
             showError('No se pudo cambiar el estado del producto.');
@@ -123,7 +115,7 @@ export function useProducts() {
         },
       });
     },
-    [showConfirmation, showSuccess, showError, fetchProducts]
+    [showConfirmation, showLoading, showSuccess, showError, fetchProducts],
   );
 
   const handleDeleteConfirm = useCallback(
@@ -133,27 +125,25 @@ export function useProducts() {
         message: `¿Estás seguro de eliminar "${product.nombre}"? Esto eliminará todos sus archivos y lo desasociará de oportunidades existentes.`,
         onConfirm: async () => {
           if (!product.id) return;
-          setLoading(true);
+          showLoading('Eliminando producto del catálogo...');
           try {
             await deleteProduct(product.id);
             showSuccess('El producto se ha eliminado correctamente.');
             fetchProducts();
           } catch {
             showError('No se pudo eliminar el producto.');
-          } finally {
-            setLoading(false);
           }
         },
       });
     },
-    [showConfirmation, showSuccess, showError, fetchProducts]
+    [showConfirmation, showLoading, showSuccess, showError, fetchProducts],
   );
 
   const handleFilterChange = useCallback(
     <K extends keyof ProductFiltersState>(key: K, value: ProductFiltersState[K]) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
+      setFilters(prev => ({ ...prev, [key]: value }));
     },
-    []
+    [],
   );
 
   const handleClearFilters = useCallback(() => {
@@ -172,22 +162,20 @@ export function useProducts() {
 
   const updateEditingProduct = useCallback((product: Product) => {
     setEditingProduct(product);
-    setProducts((prev) => (prev.map((p) => (p.id === product.id ? product : p))));
+    setProducts(prev => prev.map(p => (p.id === product.id ? product : p)));
   }, []);
 
   const filteredProducts = useMemo(() => {
     const q = debouncedNombre.trim().toLowerCase();
-    return products.filter((p) => {
+    return products.filter(p => {
       const matchesNombre =
-        !q ||
-        p.nombre.toLowerCase().includes(q) ||
-        (p.descripcion || '').toLowerCase().includes(q);
+        !q || p.nombre.toLowerCase().includes(q) || (p.descripcion || '').toLowerCase().includes(q);
       const matchesStatus =
         filters.status === 'all'
           ? true
           : filters.status === 'active'
-          ? p.status === true
-          : p.status === false;
+            ? p.status === true
+            : p.status === false;
       return matchesNombre && matchesStatus;
     });
   }, [products, debouncedNombre, filters.status]);

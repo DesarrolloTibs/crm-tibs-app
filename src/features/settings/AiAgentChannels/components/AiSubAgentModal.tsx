@@ -66,7 +66,7 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
     e.preventDefault();
     const toolKey = e.dataTransfer.getData('text/plain');
     if (toolKey && !subAgentTools.includes(toolKey)) {
-      setSubAgentTools((prev) => [...prev, toolKey]);
+      setSubAgentTools(prev => [...prev, toolKey]);
     }
   };
 
@@ -74,7 +74,7 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
     e.preventDefault();
     const toolKey = e.dataTransfer.getData('text/plain');
     if (toolKey && subAgentTools.includes(toolKey)) {
-      setSubAgentTools((prev) => prev.filter((t) => t !== toolKey));
+      setSubAgentTools(prev => prev.filter(t => t !== toolKey));
     }
   };
 
@@ -84,19 +84,22 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
 
   const addTool = (toolKey: string) => {
     if (!subAgentTools.includes(toolKey)) {
-      setSubAgentTools((prev) => [...prev, toolKey]);
+      setSubAgentTools(prev => [...prev, toolKey]);
     }
   };
 
   const removeTool = (toolKey: string) => {
-    setSubAgentTools((prev) => prev.filter((t) => t !== toolKey));
+    setSubAgentTools(prev => prev.filter(t => t !== toolKey));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
 
-    const normalizedKey = subAgentKey.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const normalizedKey = subAgentKey
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '');
 
     const candidateData: SubAgentFormData = {
       key: normalizedKey,
@@ -127,7 +130,7 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
   };
 
   return (
-    <Modal open={open} onClose={onClose} maxWidth="max-w-2xl" height="h-[95vh]">
+    <Modal open={open} onClose={onClose} maxWidth="max-w-2xl" height="h-auto">
       <div className="pb-4 border-b border-slate-150 flex justify-between items-center pr-8 text-left">
         <div>
           <h3 className="font-extrabold text-slate-800 text-base flex items-center gap-2">
@@ -135,7 +138,8 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
             {editingSubAgent ? `Editar Sub-Agente: ${subAgentName}` : 'Crear Nuevo Sub-Agente'}
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            Define los parámetros de comportamiento, directiva para el enrutador y asigna herramientas del CRM.
+            Define los parámetros de comportamiento, directiva para el enrutador y asigna
+            herramientas del CRM.
           </p>
         </div>
       </div>
@@ -148,14 +152,16 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
               id="subAgentKey"
               type="text"
               value={subAgentKey}
-              onChange={(e) =>
+              onChange={e =>
                 setSubAgentKey(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))
               }
               placeholder="Ej: soporte_tecnico"
               required
               disabled={!!editingSubAgent}
             />
-            {errors.key && <p className="text-rose-600 text-[11px] font-semibold mt-1">{errors.key}</p>}
+            {errors.key && (
+              <p className="text-rose-600 text-[11px] font-semibold mt-1">{errors.key}</p>
+            )}
           </div>
 
           <div>
@@ -164,11 +170,13 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
               id="subAgentName"
               type="text"
               value={subAgentName}
-              onChange={(e) => setSubAgentName(e.target.value)}
+              onChange={e => setSubAgentName(e.target.value)}
               placeholder="Ej: Agente de Soporte Técnico"
               required
             />
-            {errors.name && <p className="text-rose-600 text-[11px] font-semibold mt-1">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-rose-600 text-[11px] font-semibold mt-1">{errors.name}</p>
+            )}
           </div>
         </div>
 
@@ -178,7 +186,7 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
             id="subAgentDescription"
             type="text"
             value={subAgentDescription}
-            onChange={(e) => setSubAgentDescription(e.target.value)}
+            onChange={e => setSubAgentDescription(e.target.value)}
             placeholder="Ej: Úsalo cuando el cliente tenga problemas técnicos con su cuenta o reporte fallas."
             required
           />
@@ -197,7 +205,7 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
           <TextArea
             id="subAgentContext"
             value={subAgentContext}
-            onChange={(e) => setSubAgentContext(e.target.value)}
+            onChange={e => setSubAgentContext(e.target.value)}
             placeholder="Defina las directivas del sub-agente: tono de comunicación, políticas del departamento, reglas para cotizar, etc."
             rows={5}
             required
@@ -223,7 +231,7 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
             max="1.0"
             step="0.1"
             value={subAgentTemperature}
-            onChange={(e) => setSubAgentTemperature(parseFloat(e.target.value))}
+            onChange={e => setSubAgentTemperature(parseFloat(e.target.value))}
             className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
           />
           <div className="flex justify-between text-[11px] text-slate-400 font-medium">
@@ -232,7 +240,10 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
             <span>Creativo (1.0)</span>
           </div>
           <p className="text-[10px] text-slate-400 leading-relaxed">
-            Para agentes <strong>comerciales</strong> o de <strong>consulta de catálogo</strong>, se recomienda temperatura <strong>baja (0.1 — 0.3)</strong> para evitar alucinaciones. Para agentes <strong>conversacionales</strong>, una temperatura <strong>media (0.5 — 0.7)</strong> genera respuestas más fluidas.
+            Para agentes <strong>comerciales</strong> o de <strong>consulta de catálogo</strong>, se
+            recomienda temperatura <strong>baja (0.1 — 0.3)</strong> para evitar alucinaciones. Para
+            agentes <strong>conversacionales</strong>, una temperatura{' '}
+            <strong>media (0.5 — 0.7)</strong> genera respuestas más fluidas.
           </p>
         </div>
 
@@ -256,25 +267,27 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
                 Disponibles en el CRM
               </h5>
               <div className="space-y-2">
-                {AVAILABLE_TOOLS.filter((t) => !subAgentTools.includes(t.key)).map((tool) => (
+                {AVAILABLE_TOOLS.filter(t => !subAgentTools.includes(t.key)).map(tool => (
                   <div
                     key={tool.key}
                     draggable
-                    onDragStart={(e) => handleDragStart(e, tool.key)}
+                    onDragStart={e => handleDragStart(e, tool.key)}
                     onClick={() => addTool(tool.key)}
                     className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs hover:border-indigo-400 hover:shadow-xs transition-all cursor-grab active:cursor-grabbing text-xs flex justify-between items-center group select-none"
                     title="Arrastra o haz clic para agregar"
                   >
                     <div>
                       <span className="font-bold text-slate-700 block text-left">{tool.label}</span>
-                      <span className="text-[10px] text-slate-400 block text-left leading-normal">{tool.desc}</span>
+                      <span className="text-[10px] text-slate-400 block text-left leading-normal">
+                        {tool.desc}
+                      </span>
                     </div>
                     <span className="text-slate-300 font-extrabold group-hover:text-indigo-600 transition-colors text-base pr-1">
                       +
                     </span>
                   </div>
                 ))}
-                {AVAILABLE_TOOLS.filter((t) => !subAgentTools.includes(t.key)).length === 0 && (
+                {AVAILABLE_TOOLS.filter(t => !subAgentTools.includes(t.key)).length === 0 && (
                   <div className="text-[11px] text-slate-400 text-center py-10">
                     Todas las herramientas están asignadas
                   </div>
@@ -292,21 +305,25 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
                 Habilitadas para este Agente
               </h5>
               <div className="space-y-2">
-                {subAgentTools.map((toolKey) => {
-                  const tool = AVAILABLE_TOOLS.find((t) => t.key === toolKey);
+                {subAgentTools.map(toolKey => {
+                  const tool = AVAILABLE_TOOLS.find(t => t.key === toolKey);
                   if (!tool) return null;
                   return (
                     <div
                       key={toolKey}
                       draggable
-                      onDragStart={(e) => handleDragStart(e, toolKey)}
+                      onDragStart={e => handleDragStart(e, toolKey)}
                       onClick={() => removeTool(toolKey)}
                       className="bg-white border border-indigo-150 rounded-lg p-2.5 shadow-2xs hover:border-rose-400 hover:shadow-xs transition-all cursor-grab active:cursor-grabbing text-xs flex justify-between items-center group select-none"
                       title="Arrastra o haz clic para remover"
                     >
                       <div>
-                        <span className="font-bold text-indigo-950 block text-left">{tool.label}</span>
-                        <span className="text-[10px] text-indigo-600/80 block text-left leading-normal">{tool.desc}</span>
+                        <span className="font-bold text-indigo-950 block text-left">
+                          {tool.label}
+                        </span>
+                        <span className="text-[10px] text-indigo-600/80 block text-left leading-normal">
+                          {tool.desc}
+                        </span>
                       </div>
                       <span className="text-slate-300 font-extrabold group-hover:text-rose-500 transition-colors text-base pr-1">
                         ×
@@ -325,10 +342,20 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
         </div>
 
         <div className="flex justify-end gap-3 border-t border-slate-150 pt-4 mt-6">
-          <Button type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-xs font-bold">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-bold"
+          >
             Cancelar
           </Button>
-          <Button type="submit" variant="success" loading={saving} className="px-4 py-2 text-xs font-bold">
+          <Button
+            type="submit"
+            variant="success"
+            loading={saving}
+            className="px-4 py-2 text-xs font-bold"
+          >
             Guardar Sub-Agente
           </Button>
         </div>

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getTicketInteractions, createTicketInteraction, deleteTicketInteraction } from '@core/services/ticketInteractionsService';
+import {
+  getTicketInteractions,
+  createTicketInteraction,
+  deleteTicketInteraction,
+} from '@core/services/ticketInteractionsService';
 import { Plus, Search, Trash2 } from 'lucide-react';
 import type { TicketInteraction } from '@core/services/ticketInteractionsService';
 import { useAuth } from '@features/auth';
@@ -24,11 +28,11 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
 
   const [notification, setNotification] = useState({
     show: false,
-    type: 'success' as 'success' | 'error' | 'warning' | 'confirmation',
+    type: 'success' as 'loading' | 'success' | 'error' | 'warning' | 'confirmation',
     title: '',
     message: '',
-    onConfirm: () => { },
-    onCancel: () => { },
+    onConfirm: () => {},
+    onCancel: () => {},
   });
 
   const hideNotification = () => setNotification({ ...notification, show: false });
@@ -39,7 +43,7 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
       const data = await getTicketInteractions(ticketId);
       setInteractions(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Error fetching ticket interactions:", error);
+      console.error('Error fetching ticket interactions:', error);
       setNotification({
         show: true,
         type: 'error',
@@ -72,6 +76,14 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
     }
 
     try {
+      setNotification({
+        show: true,
+        type: 'loading',
+        title: 'Guardando registro...',
+        message: 'Añadiendo comentario al historial del ticket.',
+        onConfirm: () => {},
+        onCancel: () => {},
+      });
       const commentWithUser = `[${user?.username || 'Usuario'}] ${newInteractionComment}`;
       await createTicketInteraction({
         comment: commentWithUser,
@@ -107,12 +119,34 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
       title: '¿Estás seguro?',
       message: 'No podrás revertir esta acción.',
       onConfirm: async () => {
+        setNotification({
+          show: true,
+          type: 'loading',
+          title: 'Eliminando registro...',
+          message: 'Retirando comentario del historial del ticket.',
+          onConfirm: () => {},
+          onCancel: () => {},
+        });
         try {
           await deleteTicketInteraction(interactionId);
-          setNotification({ show: true, type: 'success', title: 'Eliminado', message: 'El registro ha sido eliminado.', onConfirm: hideNotification, onCancel: hideNotification });
+          setNotification({
+            show: true,
+            type: 'success',
+            title: 'Eliminado',
+            message: 'El registro ha sido eliminado.',
+            onConfirm: hideNotification,
+            onCancel: hideNotification,
+          });
           fetchInteractions();
         } catch (error) {
-          setNotification({ show: true, type: 'error', title: 'Error', message: 'No se pudo eliminar el registro.', onConfirm: hideNotification, onCancel: hideNotification });
+          setNotification({
+            show: true,
+            type: 'error',
+            title: 'Error',
+            message: 'No se pudo eliminar el registro.',
+            onConfirm: hideNotification,
+            onCancel: hideNotification,
+          });
         }
       },
       onCancel: hideNotification,
@@ -121,7 +155,7 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
 
   const filteredInteractions = Array.isArray(interactions)
     ? interactions.filter(interaction =>
-        interaction.comment.toLowerCase().includes(searchTerm.toLowerCase())
+        interaction.comment.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     : [];
 
@@ -151,8 +185,10 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
         </Button>
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Añadir al Historial del Ticket</h2>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-lg">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
+          Añadir al Historial del Ticket
+        </h2>
         <div className="space-y-4">
           <div>
             <TextArea
@@ -187,7 +223,10 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
 
       <ul className="space-y-4 overflow-y-auto flex-grow pr-2">
         {filteredInteractions.map(interaction => (
-          <li key={interaction.id} className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 flex justify-between items-center transition-shadow hover:shadow-md">
+          <li
+            key={interaction.id}
+            className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 flex justify-between items-center transition-shadow hover:shadow-md"
+          >
             <div className="flex-grow mr-4">
               <p className="text-base text-gray-800 whitespace-pre-wrap">{interaction.comment}</p>
               {interaction.createdAt && (
@@ -197,7 +236,7 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
                     month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   })}
                 </p>
               )}
@@ -214,8 +253,8 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
             )}
           </li>
         ))}
-        {filteredInteractions.length === 0 && (
-          (Array.isArray(interactions) && interactions.length > 0) ? (
+        {filteredInteractions.length === 0 &&
+          (Array.isArray(interactions) && interactions.length > 0 ? (
             <div className="p-4 text-center text-gray-500">
               <p>No se encontraron registros que coincidan con la búsqueda.</p>
             </div>
@@ -224,8 +263,7 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
               <p>No hay registros en el historial para este ticket.</p>
               <p className="text-sm mt-1">¡Añade uno para registrar un comentario o evento!</p>
             </div>
-          )
-        )}
+          ))}
       </ul>
     </div>
   );
