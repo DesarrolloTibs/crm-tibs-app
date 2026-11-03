@@ -607,8 +607,13 @@ export function useConversationsSocket() {
           (c.clientName || '').toLowerCase().includes(q) ||
           (c.externalId || '').toLowerCase().includes(q) ||
           (c.client?.nombre || '').toLowerCase().includes(q) ||
-          (c.assignedUser?.username || '').toLowerCase().includes(q);
-        const matchesChannel = selectedChannelFilter === 'all' || c.channel === selectedChannelFilter;
+          (c.assignedUser?.username || '').toLowerCase().includes(q) ||
+          (c.lastMessage?.content || '').toLowerCase().includes(q);
+        const matchesChannel =
+          selectedChannelFilter === 'all' ||
+          (selectedChannelFilter === 'messenger'
+            ? c.channel === 'messenger' || c.channel === 'facebook'
+            : c.channel === selectedChannelFilter);
         return matchesQuery && matchesChannel;
       })
       .sort((a, b) => {
