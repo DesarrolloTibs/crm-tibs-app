@@ -5,10 +5,7 @@ import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import WhatsAppBaseTemplateSettings from './WhatsAppBaseTemplateSettings';
 import type { ChannelConfig } from '@core/models/Conversation';
-import {
-  getMetaPublicConfig,
-  connectWhatsAppEmbedded,
-} from '@core/services/conversationsService';
+import { getMetaPublicConfig, connectWhatsAppEmbedded } from '@core/services/conversationsService';
 import { launchWhatsAppEmbeddedSignup } from '@shared/utils/facebookSdk';
 import { showToast } from '@shared/utils/toast';
 
@@ -45,13 +42,15 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
       const metaConfig = await getMetaPublicConfig();
 
       if (!metaConfig?.appId || !metaConfig?.whatsappConfigId) {
-        throw new Error('Falta configuración de Meta en el servidor (META_APP_ID o META_WHATSAPP_CONFIG_ID).');
+        throw new Error(
+          'Falta configuración de Meta en el servidor (META_APP_ID o META_WHATSAPP_CONFIG_ID).',
+        );
       }
 
       launchWhatsAppEmbeddedSignup({
         appId: metaConfig.appId,
         configId: metaConfig.whatsappConfigId,
-        onSuccess: async (metaData) => {
+        onSuccess: async metaData => {
           try {
             showToast.info('Validando activos y suscribiendo webhooks con Meta...');
             const result = await connectWhatsAppEmbedded({
@@ -61,11 +60,11 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
               name: editingChannel?.name || undefined,
             });
 
-            showToast.success(result.message || '¡WhatsApp vinculado con éxito!');
             onNotification(
               'success',
               '¡WhatsApp Conectado!',
-              `Se ha vinculado la línea ${result.verifiedName || result.channelConfig?.name || 'oficial'}.`
+              result.message ||
+                `Se ha vinculado la línea ${result.verifiedName || result.channelConfig?.name || 'oficial'}.`,
             );
 
             await onSave(result.channelConfig);
@@ -75,7 +74,6 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
               backendErr?.response?.data?.message ||
               backendErr?.message ||
               'Error vinculando la cuenta de WhatsApp en el servidor.';
-            showToast.error(errorMsg);
             onNotification('error', 'Error al conectar WhatsApp', errorMsg);
           } finally {
             setConnectingEmbedded(false);
@@ -170,7 +168,9 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
                   Conexión Simple Oficial
                 </span>
                 <h4 className="font-extrabold text-slate-800 text-sm mt-1">
-                  {editingChannel ? 'Reconectar o Actualizar con Meta' : 'Conectar con Meta WhatsApp'}
+                  {editingChannel
+                    ? 'Reconectar o Actualizar con Meta'
+                    : 'Conectar con Meta WhatsApp'}
                 </h4>
               </div>
               <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-md shadow-emerald-200">
@@ -186,9 +186,12 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
                   <span>Cuenta Actualmente Vinculada:</span>
                 </div>
                 <div className="text-[11px] text-slate-700 pl-5">
-                  <p><strong>Nombre:</strong> {editingChannel.name || 'Sin nombre'}</p>
+                  <p>
+                    <strong>Nombre:</strong> {editingChannel.name || 'Sin nombre'}
+                  </p>
                   <p className="font-mono text-[10px] text-slate-500">
-                    <strong>Phone Number ID:</strong> {editingChannel.phoneNumberId || 'No configurado'}
+                    <strong>Phone Number ID:</strong>{' '}
+                    {editingChannel.phoneNumberId || 'No configurado'}
                   </p>
                 </div>
               </div>
@@ -209,7 +212,9 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
                 ) : (
                   <>
                     <WhatsAppLogo size={16} />
-                    <span>{editingChannel ? 'Reconectar con WhatsApp' : 'Conectar con WhatsApp'}</span>
+                    <span>
+                      {editingChannel ? 'Reconectar con WhatsApp' : 'Conectar con WhatsApp'}
+                    </span>
                   </>
                 )}
               </button>
@@ -217,7 +222,12 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
           </div>
 
           <div className="flex justify-end pt-2">
-            <Button type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-xs font-bold">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-bold"
+            >
               Cerrar
             </Button>
           </div>

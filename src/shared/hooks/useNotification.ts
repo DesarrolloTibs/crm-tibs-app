@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { showToast } from '@shared/utils/toast';
 
 export type NotificationType = 'loading' | 'success' | 'error' | 'warning' | 'confirmation';
 
@@ -42,47 +43,20 @@ export function useNotification() {
     [],
   );
 
-  const showSuccess = useCallback(
-    (message: string, title: string = '¡Éxito!') => {
-      setNotification({
-        show: true,
-        type: 'success',
-        title,
-        message,
-        onConfirm: hideNotification,
-        onCancel: hideNotification,
-      });
-    },
-    [hideNotification],
-  );
+  const showSuccess = useCallback((message: string, title: string = '¡Éxito!') => {
+    setNotification(prev => (prev.show ? { ...prev, show: false } : prev));
+    showToast.success(message, title);
+  }, []);
 
-  const showError = useCallback(
-    (message: string, title: string = 'Error') => {
-      setNotification({
-        show: true,
-        type: 'error',
-        title,
-        message,
-        onConfirm: hideNotification,
-        onCancel: hideNotification,
-      });
-    },
-    [hideNotification],
-  );
+  const showError = useCallback((message: string, title: string = 'Error') => {
+    setNotification(prev => (prev.show ? { ...prev, show: false } : prev));
+    showToast.error(message, title);
+  }, []);
 
-  const showWarning = useCallback(
-    (message: string, title: string = 'Advertencia') => {
-      setNotification({
-        show: true,
-        type: 'warning',
-        title,
-        message,
-        onConfirm: hideNotification,
-        onCancel: hideNotification,
-      });
-    },
-    [hideNotification],
-  );
+  const showWarning = useCallback((message: string, title: string = 'Advertencia') => {
+    setNotification(prev => (prev.show ? { ...prev, show: false } : prev));
+    showToast.warning(message, title);
+  }, []);
 
   const showConfirmation = useCallback(
     (params: {
