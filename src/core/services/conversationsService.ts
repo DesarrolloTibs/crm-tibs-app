@@ -1,0 +1,141 @@
+import axiosInstance from '@core/axios/axiosInstance';
+import type {
+    Conversation,
+    Message,
+    WhatsAppTemplate,
+    SendTemplatePayload,
+    WhatsAppBaseTemplate,
+    UpsertBaseTemplateDto,
+    SelectExistingBaseTemplateDto,
+    ChannelConfig,
+} from '@core/models/Conversation';
+
+export type { ChannelConfig };
+
+const urlBase = (import.meta.env.VITE_BASE_URL || '') + '/api/conversations';
+
+export async function getConversations(): Promise<Conversation[]> {
+    const response = await axiosInstance.get(urlBase);
+    return response.data;
+}
+
+export async function getConversationMessages(id: string): Promise<Message[]> {
+    const response = await axiosInstance.get(`${urlBase}/${id}/messages`);
+    return response.data;
+}
+
+export async function sendMessage(id: string, content: string): Promise<Message> {
+    const response = await axiosInstance.post(`${urlBase}/${id}/messages`, { content });
+    return response.data;
+}
+
+export async function getWhatsAppTemplates(conversationId: string): Promise<WhatsAppTemplate[]> {
+    const response = await axiosInstance.get(`${urlBase}/${conversationId}/templates`);
+    return response.data;
+}
+
+export async function sendWhatsAppTemplate(conversationId: string, payload: SendTemplatePayload): Promise<Message> {
+    const response = await axiosInstance.post(`${urlBase}/${conversationId}/template-message`, payload);
+    return response.data;
+}
+
+export async function getChannelBaseTemplate(channelConfigId: string): Promise<WhatsAppBaseTemplate> {
+    const response = await axiosInstance.get(`${urlBase}/channels/${channelConfigId}/base-template`);
+    return response.data;
+}
+
+export async function saveChannelBaseTemplate(channelConfigId: string, payload: UpsertBaseTemplateDto): Promise<WhatsAppBaseTemplate> {
+    const response = await axiosInstance.put(`${urlBase}/channels/${channelConfigId}/base-template`, payload);
+    return response.data;
+}
+
+export async function selectExistingBaseTemplate(channelConfigId: string, payload: SelectExistingBaseTemplateDto): Promise<WhatsAppBaseTemplate> {
+    const response = await axiosInstance.post(`${urlBase}/channels/${channelConfigId}/select-base-template`, payload);
+    return response.data;
+}
+
+export async function getConversationBaseTemplate(conversationId: string): Promise<WhatsAppBaseTemplate> {
+    const response = await axiosInstance.get(`${urlBase}/${conversationId}/base-template`);
+    return response.data;
+}
+
+export async function toggleBotStatus(id: string, botActive: boolean): Promise<any> {
+    const response = await axiosInstance.patch(`${urlBase}/${id}/bot-status`, { botActive });
+    return response.data;
+}
+
+export async function assignConversation(id: string, assignedUserId: string): Promise<any> {
+    const response = await axiosInstance.patch(`${urlBase}/${id}/assign`, { assignedUserId });
+    return response.data;
+}
+
+export async function getAiAgentConfig(): Promise<any> {
+    const response = await axiosInstance.get(`${urlBase}/ai-config`);
+    return response.data;
+}
+
+export async function saveAiAgentConfig(config: any): Promise<any> {
+    const response = await axiosInstance.post(`${urlBase}/ai-config`, config);
+    return response.data;
+}
+
+export async function simulateIncomingMessage(channel: string, externalId: string, clientNickname: string, text: string): Promise<any> {
+    const response = await axiosInstance.post(`${urlBase}/test-receive`, {
+        channel,
+        externalId,
+        clientNickname,
+        text
+    });
+    return response.data;
+}
+
+export async function getChannelConfigs(): Promise<ChannelConfig[]> {
+    const response = await axiosInstance.get(`${urlBase}/channels`);
+    return response.data;
+}
+
+export async function getFacebookAuthUrl(channel?: 'facebook' | 'instagram'): Promise<{ authUrl: string }> {
+    const params = channel ? { channel } : undefined;
+    const response = await axiosInstance.get(`${urlBase}/oauth/facebook/auth-url`, { params });
+    return response.data;
+}
+
+export async function saveChannelConfig(config: any): Promise<ChannelConfig> {
+    const response = await axiosInstance.post(`${urlBase}/channels`, config);
+    return response.data;
+}
+
+export async function deleteChannelConfig(id: string): Promise<any> {
+    const response = await axiosInstance.delete(`${urlBase}/channels/${id}`);
+    return response.data;
+}
+
+export async function getSubAgents(): Promise<any[]> {
+    const response = await axiosInstance.get(`${urlBase}/sub-agents`);
+    return response.data;
+}
+
+export async function saveSubAgent(subAgent: any): Promise<any> {
+    const response = await axiosInstance.post(`${urlBase}/sub-agents`, subAgent);
+    return response.data;
+}
+
+export async function deleteSubAgent(id: string): Promise<any> {
+    const response = await axiosInstance.delete(`${urlBase}/sub-agents/${id}`);
+    return response.data;
+}
+
+export async function getMetaPublicConfig(): Promise<{ appId: string; whatsappConfigId: string }> {
+    const response = await axiosInstance.get(`${urlBase}/oauth/meta-config`);
+    return response.data;
+}
+
+export async function connectWhatsAppEmbedded(payload: {
+    code: string;
+    wabaId: string;
+    phoneNumberId: string;
+    name?: string;
+}): Promise<{ success: boolean; message: string; channelConfig: ChannelConfig; verifiedName?: string }> {
+    const response = await axiosInstance.post(`${urlBase}/oauth/whatsapp/embedded-callback`, payload);
+    return response.data;
+}

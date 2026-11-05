@@ -39,6 +39,6 @@ export interface Activity {
     contactIds?: string[];
     reminder?: ActivityReminder | null;
     externalEventId?: string | null;
-    externalProvider?: 'google' | 'outlook' | 'icloud' | null;
+    externalProvider?: 'google' | 'outlook' | null;
     externalLastSyncedAt?: string | null;
 }

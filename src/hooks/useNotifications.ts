@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createAppSocket, safeDisconnect } from '../core/socket/socketClient';
 import type { NotificationItem } from '../core/models/Notification';
-import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../services/notificationsService';
+import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@core/services/notificationsService';
 import { useAuth } from './useAuth';
 
 export const useNotifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -22,6 +23,10 @@ export const useNotifications = () => {
     }
   }, [user]);
 
+  const fetchNotificationsRef = useRef(fetchNotifications);
+  fetchNotificationsRef.current = fetchNotifications;
+  const isInitialConnectRef = useRef<boolean>(true);
+
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
@@ -30,16 +35,30 @@ export const useNotifications = () => {
     const userId = user?.id || user?.sub || (user as any)?.userId;
     if (!user || !userId) return;
 
-    const rawUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
-    const socketPath = rawUrl.includes('/backend') ? '/backend/socket.io' : '/socket.io';
-    const originUrl = rawUrl.replace(/\/backend\/?$/, '');
-    const socket: Socket = io(`${originUrl}/notifications`, {
-      path: socketPath,
+    const socket = createAppSocket({
+      namespace: 'notifications',
       query: { userId },
     });
 
     socket.on('connect', () => {
+      setIsWsConnected(true);
       socket.emit('register', { userId });
+      if (!isInitialConnectRef.current) {
+        console.log('[Notifications WS] Reconectado. Re-sincronizando notificaciones vía REST...');
+        fetchNotificationsRef.current();
+      } else {
+        isInitialConnectRef.current = false;
+      }
+    });
+
+    socket.on('disconnect', (reason) => {
+      setIsWsConnected(false);
+      console.warn('Desconexión en Notifications WebSocket:', reason);
+    });
+
+    socket.on('connect_error', (err) => {
+      setIsWsConnected(false);
+      console.warn('Error de conexión en Notifications WebSocket:', err.message);
     });
 
     socket.on('notification_received', (newNotification: NotificationItem) => {
@@ -47,7 +66,7 @@ export const useNotifications = () => {
     });
 
     return () => {
-      socket.disconnect();
+      safeDisconnect(socket);
     };
   }, [user?.id, user?.sub]);
 
@@ -81,5 +100,7 @@ export const useNotifications = () => {
     markAsRead: handleMarkAsRead,
     markAllAsRead: handleMarkAllAsRead,
     refresh: fetchNotifications,
+    isWsConnected,
+    isConnected: isWsConnected,
   };
 };

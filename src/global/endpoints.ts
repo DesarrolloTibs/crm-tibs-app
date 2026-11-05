@@ -1,7 +1,8 @@
-const urlBase = import.meta.env.VITE_BASE_URL + '/api/';
+const urlBase = (import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '') + '/api/';
 
 export const auth = {
     LOGIN: urlBase + 'auth/login',
+    REFRESH: urlBase + 'auth/refresh',
     FORGOT_PASSWORD: urlBase + 'auth/forgot-password',
     RESET_PASSWORD: urlBase + 'auth/reset-password',
 };
@@ -91,6 +92,9 @@ export const PLANS = {
 
 export const TENANTS = {
     TENANTS: urlBase + 'tenants',
+    COURTESY_OVERAGES: urlBase + 'tenants/courtesy-overages',
+    CONSUMPTION_BREAKDOWN: urlBase + 'tenants/consumption/breakdown',
+    BILLING_CYCLES: urlBase + 'tenants/billing-cycles',
 };
 
 

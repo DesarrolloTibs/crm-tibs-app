@@ -68,11 +68,11 @@ flowchart TD
 
 ## 🎛️ 1. Tablero Kanban y Sensores Drag & Drop
 
-Al igual que en el módulo de ventas, [`useHelpdesk.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useHelpdesk.ts) implementa [`@dnd-kit/core`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/package.json) con sensores de tolerancia (`PointerSensor` y `TouchSensor`).
-* **Visualización en Tiempo Real:** Al mover un ticket entre columnas, se dispara `updateTicket(ticketId, { stage_id })`, actualizando de inmediato la etapa de soporte.
-* **Cálculo de Días en Etapa:** Cada tarjeta [`TicketCard.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Helpdesk/TicketCard.tsx) calcula el tiempo transcurrido desde la última transición, advirtiendo visualmente si un caso ha superado el umbral tolerable de inactividad.
+Al igual que en el módulo de ventas, [`useHelpdesk.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useHelpdesk.ts) implementa [`@dnd-kit/core`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/package.json) con sensores de tolerancia (`PointerSensor` y `TouchSensor`) para su tablero Kanban, complementado por su vista de lista homologada:
 
----
+* **Visualización en Tiempo Real (Kanban):** Al mover un ticket entre columnas, se dispara `updateTicket(ticketId, { stage_id })`, actualizando de inmediato la etapa de soporte.
+* **Cálculo de Días en Etapa:** Cada tarjeta [`TicketCard.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Helpdesk/TicketCard.tsx) calcula el tiempo transcurrido desde la última transición, advirtiendo visualmente si un caso ha superado el umbral tolerable de inactividad.
+* **Vista de Lista Homologada ([`TicketsListTable.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Helpdesk/TicketsListTable.tsx)):** Construida sobre el componente compartido `Table` (`@tanstack/react-table` con variante `cards` por defecto o `flat`), integrando ordenamiento interactivo multivariable (folio, cliente, fecha de apertura, severidad y semáforo de días en etapa), semáforo SLA dinámico contra `intmaxdays`, alerta de tickets desatendidos (>24h sin responsable), estrellas de prioridad, acordeón móvil de detalles y paginación desacoplada.
 
 ## 🚦 2. Matriz de Prioridades y Severidad
 
@@ -114,3 +114,12 @@ En [`src/services/helpdeskCronService.ts`](file:///c:/Users/sopor/Proyectos/CRM/
 * [[CRM TIBS - Tablero Kanban & Pipeline Comercial]] — Destino de tickets convertidos a venta.
 * [[CRM TIBS - Modulo de Clientes, Empresas & CRM]] — Contactos y empresas que originan tickets.
 * [[CRM TIBS - Dashboard, Analitica & Reportes]] — Métricas agregadas de soporte y SLAs.
+
+
+---
+
+## 🖱️ Navegación y Desplazamiento Horizontal con Mouse en el Tablero Kanban
+Al igual que en el embudo comercial, el tablero de Mesa de Ayuda integra el hook [`useKanbanScroll`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useKanbanScroll.ts) y los controles [`KanbanScrollControls`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/KanbanScrollControls.tsx):
+* **Scroll vertical nativo con rueda del mouse:** No intercepta la rueda del ratón para permitir desplazamiento vertical estándar en la pantalla y tarjetas.
+* **Scrollbar interactiva (`.kanban-scrollbar`):** Visualización de barra de desplazamiento estilizada de 10px en lugar de `hide-scrollbar`.
+* **Botones flotantes de avance/retroceso:** Chevrons circulares a los extremos del tablero para avanzar etapa por etapa con un solo clic.

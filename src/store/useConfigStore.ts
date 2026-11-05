@@ -18,7 +18,8 @@ export interface TenantPlanInfo {
   allow_extra: boolean;
   logo: string | null;
   created_at: string;
-  total_queued_periods?: number;
+  total_queued_periods: number; // Conteo de períodos en cola (0 si no tiene)
+  coverage_until: string | null; // Fecha máxima proyectada de cobertura
   queued_periods_count?: number;
   plan?: {
     plan_id: number;
@@ -26,8 +27,10 @@ export interface TenantPlanInfo {
     price: number;
     tokens_limit: number;
     billing_period_months: number;
-  };
+  } | null;
 }
+
+export type Tenant = TenantPlanInfo;
 
 const getStoredTenant = (): SelectedTenant | null => {
   try {

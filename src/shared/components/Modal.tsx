@@ -1,0 +1,50 @@
+import React from 'react';
+import { X } from 'lucide-react';
+
+export interface ModalProps {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  maxWidth?: string;
+  height?: string;
+  className?: string;
+  padding?: string;
+  hideCloseButton?: boolean;
+}
+
+const Modal: React.FC<ModalProps> = ({
+  open,
+  onClose,
+  children,
+  maxWidth = 'max-w-4xl',
+  height = 'h-auto',
+  className = '',
+  padding = 'p-4 sm:p-6',
+  hideCloseButton = false,
+}) => {
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-2 sm:p-4 overflow-y-auto transition-opacity cursor-pointer"
+      onClick={onClose}
+    >
+      <div
+        className={`bg-white rounded-lg shadow-xl w-full ${maxWidth} max-h-[92vh] ${height} relative flex flex-col cursor-default ${className}`}
+        onClick={e => e.stopPropagation()}
+      >
+        {!hideCloseButton && (
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full p-1.5 transition-colors z-30"
+          >
+            <X size={24} />
+          </button>
+        )}
+        <div className={`${padding} overflow-y-auto min-h-0`}>{children}</div>
+      </div>
+    </div>
+  );
+};
+
+export default Modal;

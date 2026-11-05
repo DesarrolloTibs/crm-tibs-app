@@ -10,16 +10,55 @@
 }
 
 @layer utilities {
-    .hide-scrollbar::-webkit-scrollbar {
+    .hide-scrollbar::-webkit-scrollbar,
+    .no-scrollbar::-webkit-scrollbar {
         display: none;
     }
-    .hide-scrollbar {
+    .hide-scrollbar,
+    .no-scrollbar {
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
 
     .animate-slide-in-right {
         animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* Scrollbar horizontal estilizada para tableros Kanban */
+    .kanban-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+    .kanban-scrollbar::-webkit-scrollbar {
+        height: 10px;
+        width: 10px;
+    }
+    .kanban-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 9999px;
+    }
+    .kanban-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 9999px;
+        border: 2px solid #f1f5f9;
+    }
+    .kanban-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
 }
 

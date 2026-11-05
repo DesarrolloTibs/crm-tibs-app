@@ -1,28 +1,38 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import ClientsPage from './pages/ClientsPage';
-import PipelinePage from './pages/PipelinePage';
-import UsersPage from './pages/UsersPage';
-import ProtectedRoute from './core/guards/ProtectedRoute';
-import Layout from './components/Layout/Layout'; // Importar el Layout
-import '../src/components/Sidebar/animations.css' // Importar los estilos globales
-import ActivitiesPage from './pages/ActivitiesPage';
-import ExpensesPage from './pages/ExpensesPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import CompaniesPage from './pages/CompaniesPage';
-import SettingsPage from './pages/SettingsPage';
-import ProductsPage from './pages/ProductsPage';
-import HelpdeskPage from './pages/HelpdeskPage';
-import SupportTicketPage from './pages/SupportTicketPage';
-import DashboardPage from './pages/DashboardPage';
-import ConversationsPage from './pages/ConversationsPage';
+import ProtectedRoute from '@core/guards/ProtectedRoute';
+import { Layout } from '@app/layout';
+import '@app/layout/sidebar/animations.css';
+import { PwaUpdateNotification } from '@shared/components';
+import { LoginPage, ForgotPasswordPage, ResetPasswordPage } from '@features/auth';
+import { ClientsPage } from '@features/crm';
+import { PipelinePage } from '@features/pipeline';
+import { UsersPage } from '@features/users';
+import { ActivitiesPage } from '@features/activities';
+import { ExpensesPage } from '@features/expenses';
+import { ProductsPage } from '@features/products';
+import { HelpdeskPage, SupportTicketPage } from '@features/helpdesk';
+import { DashboardPage } from '@features/dashboard';
+import { ConversationsPage } from '@features/conversations';
+import { SettingsPage, OAuthCallbackPopup } from '@features/settings';
 
-const App: React.FC = () => (
-    <BrowserRouter>
-        <Routes>
-            <Route path="/login" element={<LoginPage />} />
+const isOAuthPopup = typeof window !== 'undefined' && (
+    window.location.search.includes('meta_oauth') ||
+    window.location.search.includes('oauth=') ||
+    window.name === 'meta-oauth-popup' ||
+    window.location.pathname === '/oauth/callback'
+);
+
+const App: React.FC = () => {
+    if (isOAuthPopup) {
+        return <OAuthCallbackPopup />;
+    }
+
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/oauth/callback" element={<OAuthCallbackPopup />} />
+                <Route path="/login" element={<LoginPage />} />
             <Route path="/support" element={<SupportTicketPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -41,7 +51,7 @@ const App: React.FC = () => (
                 element={
                     <ProtectedRoute>
                         <Layout>
-                            <CompaniesPage />
+                            <ClientsPage defaultTab="companies" />
                         </Layout>
                     </ProtectedRoute>
                 }
@@ -140,8 +150,10 @@ const App: React.FC = () => (
             />
             <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
+        <PwaUpdateNotification />
     </BrowserRouter>
-);
+    );
+};
 
 const CrmApp: React.FC = () => <App />;
 

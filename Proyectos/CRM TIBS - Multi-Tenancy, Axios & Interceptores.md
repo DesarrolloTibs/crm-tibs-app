@@ -81,7 +81,7 @@ axiosInstance.interceptors.request.use(
 ```
 
 > [!NOTE]
-> Cuando un usuario con rol `superadmin` utiliza el selector de inquilino [`TenantSelector.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Settings/TenantSelector.tsx), el cambio impacta inmediatamente a `configStore`. En la siguiente llamada HTTP, el interceptor inyecta el nuevo `schema_name`, conmutando de forma instantánea el contexto de datos sin recargar la aplicación.
+> Cuando un usuario con rol `superadmin` utiliza el selector de inquilino [`TenantSelector.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Navbar/TenantSelector.tsx), el cambio impacta inmediatamente a `configStore`. En la siguiente llamada HTTP, el interceptor inyecta el nuevo `schema_name`, conmutando de forma instantánea el contexto de datos sin recargar la aplicación.
 
 ---
 
