@@ -43,13 +43,42 @@ export const getExpenseById = async (id: string): Promise<Expense> => {
     return response.data;
 };
 
+/**
+ * Sanitiza el payload de un gasto antes de enviarlo a la API (POST o PATCH).
+ * Remueve metadatos (id, createdAt, usuario_id, receiptUrl) y relaciones (client, opportunity, usuario)
+ * para cumplir estrictamente con backend forbidNonWhitelisted: true.
+ */
+export function sanitizeExpensePayload(expense: Partial<Expense>): Record<string, any> {
+    const payload: Record<string, any> = {};
+
+    if (expense.fecha !== undefined) {
+        payload.fecha = expense.fecha;
+    }
+    if (expense.concepto !== undefined) {
+        payload.concepto = typeof expense.concepto === 'string' ? expense.concepto.trim() : expense.concepto;
+    }
+    if (expense.monto !== undefined) {
+        payload.monto = Number(expense.monto);
+    }
+    if ('client_id' in expense) {
+        payload.client_id = expense.client_id || null;
+    }
+    if ('opportunity_id' in expense) {
+        payload.opportunity_id = expense.opportunity_id || null;
+    }
+
+    return payload;
+}
+
 export const createExpense = async (expense: Partial<Expense>): Promise<Expense> => {
-    const response = await axiosInstance.post(EXPENSES.EXPENSES, expense);
+    const payload = sanitizeExpensePayload(expense);
+    const response = await axiosInstance.post(EXPENSES.EXPENSES, payload);
     return response.data;
 };
 
 export const updateExpense = async (id: string, expense: Partial<Expense>): Promise<Expense> => {
-    const response = await axiosInstance.patch(`${EXPENSES.EXPENSES}/${id}`, expense);
+    const payload = sanitizeExpensePayload(expense);
+    const response = await axiosInstance.patch(`${EXPENSES.EXPENSES}/${id}`, payload);
     return response.data;
 };
 
@@ -72,13 +101,13 @@ export const uploadReceipt = async (id: string, file: File): Promise<Expense> =>
 export const deleteReceipt = async (id: string): Promise<void> => {
     await axiosInstance.delete(`${EXPENSES.EXPENSES}/${id}/receipt`);
 };
+
 export const downloadReceipt = async (id: string, filename: string): Promise<void> => {
     const response = await axiosInstance.get(
         `${EXPENSES.EXPENSES}/${id}/receipt/download`,
         { responseType: 'blob' }
     );
 
-    // Create a link element, hide it, direct it towards the blob, and then 'click' it intentionally
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;

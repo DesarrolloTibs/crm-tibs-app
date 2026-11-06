@@ -83,20 +83,27 @@ El frontend utiliza [`jspdf`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/
 
 El módulo de egresos y fiscalización de gastos operativos permite registrar, categorizar y auditar desembolsos corporativos:
 
-* **Orquestador Principal ([`ExpensesPage.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/pages/ExpensesPage.tsx)):**
+* **Orquestador Principal ([`ExpensesPage.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/expenses/pages/ExpensesPage.tsx)):**
   - Integra la carga de gastos mediante `expensesService.ts`, barra de filtros superiores y modales interactivos.
-* **Tabla Homologada TanStack ([`ExpensesTable.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/Expense/ExpensesTable.tsx)):**
+* **Sanitización Estricta de Payloads (`expensesService.ts` & `ExpenseForm.tsx`):**
+  - Sanitización en cliente (`sanitizeExpensePayload`) para cumplir con `forbidNonWhitelisted: true` en el backend NestJS (evitando error 400 Bad Request).
+  - Al enviar `POST /api/expenses` o `PATCH /api/expenses/:id`, se descartan metadatos (`id`, `createdAt`, `usuario_id`, `receiptUrl`) y relaciones (`client`, `opportunity`, `usuario`).
+  - Solo se transmiten los campos editables: `fecha`, `concepto`, `monto` (como `Number`) y la asociación exclusiva mutua (`client_id` o `opportunity_id`, enviando `null` en el campo opuesto).
+* **Selector Dinámico y Formato de Clientes (`formatClientLabel`):**
+  - Formateo defensivo que evita concatenaciones con guiones fijos o vacíos (`Jonathan - -`). Agrupa `[nombre, apellido]` y solo agrega paréntesis con `[empresa, puesto]` si contienen datos válidos: `Nombre Completo (Empresa - Puesto)`.
+* **Tabla Homologada TanStack ([`ExpensesTable.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/expenses/components/ExpensesTable.tsx)):**
   - Implementada sobre el componente compartido `Table` (`src/components/shared/Table`) con variante `cards`.
   - Columnas estructuradas con `ColumnDef<Expense>`:
     - **Concepto / Descripción:** Detalle del gasto con categoría asociada.
     - **Importe Monetario:** Formateo en divisa con identificador de moneda (`MXN` / `USD`).
     - **Fecha:** Fecha del gasto formateada con soporte de ordenamiento interactivo.
     - **Responsable:** Usuario o ejecutivo que reportó el desembolso.
-    - **Comprobante:** Icono y enlace interactivo para visualizar o descargar la factura / recibo adjunto ([`ReceiptUploadModal.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/Expense/ReceiptUploadModal.tsx)).
+    - **Asociado A:** Badge contextual de Cliente o Oportunidad con nombre seguro.
+    - **Comprobante:** Icono y enlace interactivo para visualizar o descargar la factura / recibo adjunto ([`ReceiptUploadModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/expenses/components/ReceiptUploadModal.tsx)).
     - **Acciones:** Menú contextual para edición y confirmación de eliminación segura.
 * **Filtros y Formularios:**
-  - [`ExpenseFiltersBar.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/Expense/ExpenseFiltersBar.tsx): Filtrado por categoría, rango de fechas y buscador reactivo.
-  - [`ExpenseForm.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/Expense/ExpenseForm.tsx): Formulario reactivo para alta y actualización de gastos.
+  - [`ExpenseFiltersBar.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/expenses/components/ExpenseFiltersBar.tsx): Filtrado por usuario responsable, fecha y buscador reactivo por concepto.
+  - [`ExpenseForm.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/expenses/components/ExpenseForm.tsx): Formulario reactivo para alta y actualización limpia de gastos con selector de cliente / oportunidad.
 
 ---
 
