@@ -41,7 +41,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
           <div>
             <h3 className="text-lg font-black text-slate-800 tracking-tight">
               {editingClient
-                ? `Editar Contacto: ${editingClient.nombre} ${editingClient.apellido}`
+                ? `Editar Contacto: ${editingClient.nombre} ${editingClient.apellido || ''}`.trim()
                 : 'Nuevo Contacto / Prospecto'}
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">

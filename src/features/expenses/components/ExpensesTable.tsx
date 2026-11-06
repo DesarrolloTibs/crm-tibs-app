@@ -91,7 +91,7 @@ const ExpensesTable: React.FC<Props> = ({
             return (
               <span className="flex items-center text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm w-fit">
                 <Briefcase size={14} className="mr-1 shrink-0" />
-                Cliente: {expense.client.nombre} {expense.client.apellido}
+                Cliente: {`${expense.client.nombre} ${expense.client.apellido || ''}`.trim()}
               </span>
             );
           }

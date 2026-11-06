@@ -287,25 +287,25 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
           {opportunity.company ? (
             <p
               className="font-semibold text-slate-800 text-xs truncate flex items-center gap-1"
-              title={`${opportunity.company.nombre}${opportunity.contacts && opportunity.contacts.length > 0 ? ` - Contactos: ${opportunity.contacts.map(c => `${c.nombre} ${c.apellido}`).join(', ')}` : ''}`}
+              title={`${opportunity.company.nombre}${opportunity.contacts && opportunity.contacts.length > 0 ? ` - Contactos: ${opportunity.contacts.map(c => `${c.nombre} ${c.apellido || ''}`.trim()).join(', ')}` : ''}`}
             >
               <Building2 size={11} className="text-slate-400 shrink-0" />
               <span className="truncate">{opportunity.company.nombre}</span>
               {opportunity.contacts && opportunity.contacts.length > 0 && (
                 <span className="text-[10px] text-slate-500 font-normal truncate">
-                  ({opportunity.contacts.map(c => `${c.nombre} ${c.apellido}`).join(', ')})
+                  ({opportunity.contacts.map(c => `${c.nombre} ${c.apellido || ''}`.trim()).join(', ')})
                 </span>
               )}
             </p>
           ) : (
             <p
               className="font-semibold text-slate-800 text-xs truncate flex items-center gap-1"
-              title={opportunity.cliente ? `${opportunity.cliente.nombre} ${opportunity.cliente.apellido}${opportunity.empresa ? ` (${opportunity.empresa})` : ''}` : (opportunity.empresa || 'Sin empresa')}
+              title={opportunity.cliente ? `${`${opportunity.cliente.nombre} ${opportunity.cliente.apellido || ''}`.trim()}${opportunity.empresa ? ` (${opportunity.empresa})` : ''}` : (opportunity.empresa || 'Sin empresa')}
             >
               {opportunity.cliente ? (
                 <>
                   <User size={11} className="text-slate-400 shrink-0" />
-                  <span className="truncate">{opportunity.cliente.nombre} {opportunity.cliente.apellido}</span>
+                  <span className="truncate">{`${opportunity.cliente.nombre} ${opportunity.cliente.apellido || ''}`.trim()}</span>
                   {opportunity.empresa && (
                     <span className="text-[10px] text-slate-400 font-normal truncate">
                       ({opportunity.empresa})

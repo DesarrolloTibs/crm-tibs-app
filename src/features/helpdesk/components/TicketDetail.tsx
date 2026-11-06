@@ -136,7 +136,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
 
   const clientOptions = clients.map(c => ({
     value: c.id!,
-    label: `${c.nombre} ${c.apellido} (${c.company?.nombre || c.empresa || 'Sin empresa'})`,
+    label: `${`${c.nombre} ${c.apellido || ''}`.trim()} (${c.company?.nombre || c.empresa || 'Sin empresa'})`,
   }));
 
   const selectedClientValue = clientOptions.find(option => option.value === clienteId) || null;

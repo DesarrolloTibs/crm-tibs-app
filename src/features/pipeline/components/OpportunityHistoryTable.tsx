@@ -67,7 +67,7 @@ const OpportunityHistoryTable: React.FC<Props> = ({
         header: 'Cliente / Empresa',
         accessorFn: (opp) =>
           opp.company?.nombre ||
-          (opp.cliente ? `${opp.cliente.nombre} ${opp.cliente.apellido}` : '') ||
+          (opp.cliente ? `${opp.cliente.nombre} ${opp.cliente.apellido || ''}`.trim() : '') ||
           opp.empresa ||
           '',
         cell: ({ row }) => {
@@ -76,13 +76,13 @@ const OpportunityHistoryTable: React.FC<Props> = ({
             <div>
               <p className="text-gray-800 font-semibold">{opp.company.nombre}</p>
               <p className="text-gray-500 text-xs">
-                {opp.contacts?.map((c) => `${c.nombre} ${c.apellido}`).join(', ') || 'Sin contactos'}
+                {opp.contacts?.map((c) => `${c.nombre} ${c.apellido || ''}`.trim()).join(', ') || 'Sin contactos'}
               </p>
             </div>
           ) : (
             <div>
               <p className="text-gray-800 font-semibold">
-                {opp.cliente ? `${opp.cliente.nombre} ${opp.cliente.apellido}` : '-'}
+                {opp.cliente ? `${opp.cliente.nombre} ${opp.cliente.apellido || ''}`.trim() : '-'}
               </p>
               <p className="text-gray-500 text-xs">{opp.empresa || '-'}</p>
             </div>

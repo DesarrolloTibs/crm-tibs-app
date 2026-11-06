@@ -129,13 +129,12 @@ export const ContactForm: React.FC<ContactFormProps> = ({
 
     if (!isValid) {
       setErrors(validationErrors);
-      setTouched({
-        nombre: true,
-        apellido: true,
-        correo: true,
-        puesto: true,
-        ejecutivo_id: true,
-        category: true,
+      setTouched((prev) => {
+        const touchedFields: Record<string, boolean> = { ...prev, nombre: true };
+        Object.keys(validationErrors).forEach((key) => {
+          touchedFields[key] = true;
+        });
+        return touchedFields;
       });
       return;
     }
@@ -189,9 +188,9 @@ export const ContactForm: React.FC<ContactFormProps> = ({
 
           <FormField
             id="contact-apellido"
-            label="Apellido(s) *"
+            label="Apellido(s)"
             name="apellido"
-            value={formData.apellido}
+            value={formData.apellido || ''}
             onChange={handleChange}
             onBlur={() => handleBlur('apellido')}
             placeholder="Ej. Pérez Gómez"
@@ -203,10 +202,10 @@ export const ContactForm: React.FC<ContactFormProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             id="contact-correo"
-            label="Correo Electrónico *"
+            label="Correo Electrónico"
             name="correo"
             type="email"
-            value={formData.correo}
+            value={formData.correo || ''}
             onChange={handleChange}
             onBlur={() => handleBlur('correo')}
             placeholder="ejemplo@empresa.com"
@@ -260,9 +259,9 @@ export const ContactForm: React.FC<ContactFormProps> = ({
 
           <FormField
             id="contact-puesto"
-            label="Puesto o Cargo *"
+            label="Puesto o Cargo"
             name="puesto"
-            value={formData.puesto}
+            value={formData.puesto || ''}
             onChange={handleChange}
             onBlur={() => handleBlur('puesto')}
             placeholder="Ej. Director de Operaciones"
@@ -274,19 +273,18 @@ export const ContactForm: React.FC<ContactFormProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Select
-              label="Categoría del Contacto *"
+              label="Categoría del Contacto"
               id="contact-category"
               name="category"
               options={categoryOptions}
               value={categoryOptions.find((opt) => opt.value === formData.category)}
               onChange={handleCategoryChange}
-              required
             />
           </div>
 
           <div>
             <Select
-              label="Ejecutivo Asignado *"
+              label="Ejecutivo Asignado"
               inputId="contact-ejecutivo"
               name="ejecutivo_id"
               options={executives}
@@ -295,7 +293,6 @@ export const ContactForm: React.FC<ContactFormProps> = ({
               placeholder="-- Asignar Ejecutivo --"
               isClearable
               isSearchable
-              required
             />
             {touched.ejecutivo_id && errors.ejecutivo_id && (
               <p className="text-[11px] text-red-600 mt-1">{errors.ejecutivo_id}</p>
