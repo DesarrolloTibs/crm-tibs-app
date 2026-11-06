@@ -1,87 +1,182 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Select from '@shared/components/Select';
 import Input from '@shared/components/Input';
 import Button from '@shared/components/Button';
 import type { Expense } from '@core/models/Expense';
-import { getActiveClients } from '@core/services/clientsService';
-import { getAllOpportunities } from '@core/services/opportunitiesService'; // Assuming getAll exists or using getOpportunities
+import { getActiveClients, getClients } from '@core/services/clientsService';
+import { getAllOpportunities } from '@core/services/opportunitiesService';
 import type { Client } from '@core/models/Client';
 import type { Opportunity } from '@core/models/Opportunity';
 
 interface Props {
     initialData?: Expense;
-    onSubmit: (expense: Partial<Expense>) => void;
+    onSubmit: (expense: Partial<Expense>) => Promise<void> | void;
     onCancel: () => void;
 }
 
 type AssociationType = 'client' | 'opportunity';
 
-const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
-    const [form, setForm] = useState<Partial<Expense>>({
-        fecha: new Date().toISOString().split('T')[0],
-        concepto: '',
-        monto: 0,
-        client_id: '',
-        opportunity_id: '',
-        ...initialData
-    });
-
-    const [associationType, setAssociationType] = useState<AssociationType>(
-        initialData?.opportunity_id ? 'opportunity' : 'client'
+/**
+ * Extrae el client_id de initialData tolerando relaciones anidadas o variantes de nombres
+ */
+const getInitialClientId = (data?: Expense | null): string | null => {
+    if (!data) return null;
+    return (
+        data.client_id ||
+        (data as any).clientId ||
+        (data as any).cliente_id ||
+        data.client?.id ||
+        null
     );
+};
+
+/**
+ * Extrae el opportunity_id de initialData tolerando relaciones anidadas o variantes de nombres
+ */
+const getInitialOpportunityId = (data?: Expense | null): string | null => {
+    if (!data) return null;
+    return (
+        data.opportunity_id ||
+        (data as any).opportunityId ||
+        (data as any).oportunidad_id ||
+        data.opportunity?.id ||
+        null
+    );
+};
+
+/**
+ * Determina el tipo de asociación inicial según la presencia de oportunidad o cliente
+ */
+const getInitialAssociationType = (data?: Expense | null): AssociationType => {
+    if (!data) return 'client';
+    const oppId = getInitialOpportunityId(data);
+    if (oppId || data.opportunity) {
+        return 'opportunity';
+    }
+    return 'client';
+};
+
+/**
+ * Formatea de forma segura la etiqueta de selección de cliente evitando guiones colgantes
+ */
+const formatClientLabel = (client: Client) => {
+    const nombreCompleto = [client.nombre, client.apellido].map(s => s?.trim()).filter(Boolean).join(' ');
+    const detalles = [client.company?.nombre || client.empresa, client.puesto].map(s => s?.trim()).filter(Boolean).join(' - ');
+    return detalles ? `${nombreCompleto} (${detalles})` : nombreCompleto;
+};
+
+const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
+    const [form, setForm] = useState<{
+        fecha: string;
+        concepto: string;
+        monto: number | string;
+    }>(() => ({
+        fecha: initialData?.fecha ? initialData.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
+        concepto: initialData?.concepto || '',
+        monto: initialData?.monto !== undefined ? Number(initialData.monto) : 0,
+    }));
+
+    const [clientId, setClientId] = useState<string | null>(() => getInitialClientId(initialData));
+    const [opportunityId, setOpportunityId] = useState<string | null>(() => getInitialOpportunityId(initialData));
+    const [associationType, setAssociationType] = useState<AssociationType>(() => getInitialAssociationType(initialData));
 
     const [clients, setClients] = useState<Client[]>([]);
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Formatting date for input if editing
+    // Sincronizar estado cuando cambie initialData (al abrir o cambiar de registro en edición)
     useEffect(() => {
-        if (initialData?.fecha) {
-            setForm(prev => ({ ...prev, fecha: initialData.fecha.split('T')[0] }));
+        if (initialData) {
+            setForm({
+                fecha: initialData.fecha ? initialData.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
+                concepto: initialData.concepto || '',
+                monto: initialData.monto !== undefined ? Number(initialData.monto) : 0,
+            });
+            setClientId(getInitialClientId(initialData));
+            setOpportunityId(getInitialOpportunityId(initialData));
+            setAssociationType(getInitialAssociationType(initialData));
         }
     }, [initialData]);
 
     useEffect(() => {
+        let isMounted = true;
         const loadData = async () => {
-            // Load clients
+            // Cargar clientes
             try {
-                const clientsData = await getActiveClients();
-                setClients(clientsData);
+                let clientsData: Client[] = [];
+                try {
+                    clientsData = await getActiveClients();
+                } catch {
+                    clientsData = await getClients();
+                }
+                if (isMounted) setClients(Array.isArray(clientsData) ? clientsData : []);
             } catch (e) {
                 console.error("Error loading clients", e);
             }
 
-            // Load opportunities
+            // Cargar oportunidades
             try {
-                // Using getOpportunities assuming it returns all if no filter, or use a specific function if available
-                // I saw getOpportunities in the service file taking optional dates.
-                const oppsData = await getAllOpportunities(); // Using getAll if available provided in previous context
-                setOpportunities(oppsData);
+                const oppsData = await getAllOpportunities();
+                if (isMounted) setOpportunities(Array.isArray(oppsData) ? oppsData : []);
             } catch (e) {
                 console.error("Error loading opportunities", e);
             }
         };
         loadData();
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
-    const clientOptions = clients.map(c => ({ value: c.id, label: `${`${c.nombre} ${c.apellido || ''}`.trim()} - ${c.empresa || '-'}` }));
-    const opportunityOptions = opportunities.map(o => ({ value: o.id, label: `${o.nombre_proyecto} - ${o.empresa}` }));
+    // Opciones de clientes, asegurando que el cliente inicial esté disponible para preselección
+    const clientOptions = useMemo(() => {
+        const options = clients.map(c => ({
+            value: c.id!,
+            label: formatClientLabel(c),
+        }));
 
+        const initClientId = getInitialClientId(initialData);
+        if (initClientId && !options.some(o => o.value === initClientId)) {
+            const label = initialData?.client
+                ? formatClientLabel(initialData.client as any)
+                : 'Cliente actual';
+            options.unshift({
+                value: initClientId,
+                label,
+            });
+        }
+        return options;
+    }, [clients, initialData]);
+
+    // Opciones de oportunidades, asegurando que la oportunidad inicial esté disponible para preselección
+    const opportunityOptions = useMemo(() => {
+        const options = opportunities.map(o => ({
+            value: o.id!,
+            label: `${o.nombre_proyecto}${o.empresa ? ` - ${o.empresa}` : ''}`,
+        }));
+
+        const initOppId = getInitialOpportunityId(initialData);
+        if (initOppId && !options.some(o => o.value === initOppId)) {
+            const label = initialData?.opportunity?.nombre_proyecto || 'Oportunidad actual';
+            options.unshift({
+                value: initOppId,
+                label,
+            });
+        }
+        return options;
+    }, [opportunities, initialData]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSelectChange = (
-        option: { value: string; label: string } | null,
-        field: 'client_id' | 'opportunity_id'
-    ) => {
-        setForm(prev => ({
-            ...prev,
-            [field]: option ? option.value : '',
-            // Clear the other field to ensure mutual exclusivity logic on frontend state
-            [field === 'client_id' ? 'opportunity_id' : 'client_id']: null
-        }));
+    const handleClientChange = (option: { value: string; label: string } | null) => {
+        setClientId(option ? option.value : null);
+    };
+
+    const handleOpportunityChange = (option: { value: string; label: string } | null) => {
+        setOpportunityId(option ? option.value : null);
     };
 
     const handleAmountBlur = () => {
@@ -106,33 +201,27 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         setAssociationType(type);
     };
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isSubmitting) return;
 
-        // Prepare payload - remove empty strings to avoid sending both as valid keys
-        const payload: Partial<Expense> = {
-            ...form,
-            monto: Number(form.monto)
-        };
-
-        if (associationType === 'client' && !payload.client_id) {
+        if (associationType === 'client' && !clientId) {
             alert('Debes seleccionar un cliente');
             return;
         }
-        if (associationType === 'opportunity' && !payload.opportunity_id) {
+        if (associationType === 'opportunity' && !opportunityId) {
             alert('Debes seleccionar una oportunidad');
             return;
         }
 
-        // Clean up the object to send only the relevant ID
-        if (associationType === 'client') {
-            payload.opportunity_id = null;
-        } else {
-            payload.client_id = null;
-        }
+        // Sanitizar payload: enviar únicamente los campos editables sin metadatos ni relaciones
+        const payload: Partial<Expense> = {
+            fecha: form.fecha,
+            concepto: form.concepto.trim(),
+            monto: Number(form.monto),
+            client_id: associationType === 'client' ? clientId || null : null,
+            opportunity_id: associationType === 'opportunity' ? opportunityId || null : null,
+        };
 
         setIsSubmitting(true);
         try {
@@ -142,6 +231,15 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         }
     };
 
+    const selectedClientOption = useMemo(
+        () => clientOptions.find(c => c.value === clientId) || null,
+        [clientOptions, clientId]
+    );
+
+    const selectedOpportunityOption = useMemo(
+        () => opportunityOptions.find(o => o.value === opportunityId) || null,
+        [opportunityOptions, opportunityId]
+    );
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6 p-2">
@@ -177,8 +275,8 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                         <Select
                             label="Seleccionar Cliente"
                             options={clientOptions}
-                            value={clientOptions.find(c => c.value === form.client_id)}
-                            onChange={(opt) => handleSelectChange(opt, 'client_id')}
+                            value={selectedClientOption}
+                            onChange={handleClientChange}
                             placeholder="Buscar cliente..."
                             isClearable
                             isSearchable
@@ -189,8 +287,8 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                         <Select
                             label="Seleccionar Oportunidad"
                             options={opportunityOptions}
-                            value={opportunityOptions.find(o => o.value === form.opportunity_id)}
-                            onChange={(opt) => handleSelectChange(opt, 'opportunity_id')}
+                            value={selectedOpportunityOption}
+                            onChange={handleOpportunityChange}
                             placeholder="Buscar oportunidad..."
                             isClearable
                             isSearchable
@@ -243,7 +341,6 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                     Guardar Gasto
                 </Button>
             </div>
-
         </form>
     );
 };

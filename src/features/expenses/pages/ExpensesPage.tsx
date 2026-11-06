@@ -71,9 +71,13 @@ const ExpensesPage: React.FC = () => {
         <Modal open onClose={() => setModalOpen(false)} maxWidth="max-w-xl">
           <ExpenseForm
             initialData={editingExpense}
-            onSubmit={(data: Partial<Expense>) =>
-              editingExpense ? handleUpdate(data) : handleCreate(data)
-            }
+            onSubmit={async (data: Partial<Expense>) => {
+              if (editingExpense) {
+                await handleUpdate(data);
+              } else {
+                await handleCreate(data);
+              }
+            }}
             onCancel={() => setModalOpen(false)}
           />
         </Modal>
