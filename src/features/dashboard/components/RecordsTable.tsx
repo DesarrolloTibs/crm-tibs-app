@@ -89,7 +89,7 @@ const RecordsTable: React.FC<RecordsTableProps> = ({
               {(paginatedList as Opportunity[]).map(opp => (
                 <tr key={opp.id} className="border-b border-slate-100 hover:bg-slate-50/30 transition-colors">
                   <td className="p-3.5 font-bold text-slate-800 max-w-[200px] truncate">{opp.nombre_proyecto}</td>
-                  <td className="p-3.5">{opp.cliente ? `${opp.cliente.nombre} ${opp.cliente.apellido}` : opp.empresa || 'N/A'}</td>
+                  <td className="p-3.5">{opp.cliente ? `${opp.cliente.nombre} ${opp.cliente.apellido || ''}`.trim() : opp.empresa || 'N/A'}</td>
                   <td className="p-3.5">{opp.company?.nombre || opp.empresa || 'N/A'}</td>
                   <td className="p-3.5 text-slate-500">{opp.ejecutivo?.username || 'Sin asignar'}</td>
                   <td className="p-3.5">
@@ -144,7 +144,7 @@ const RecordsTable: React.FC<RecordsTableProps> = ({
                     </span>
                   </td>
                   <td className="p-3.5 text-slate-600">{t.tipo_incidencia||'Normal'}</td>
-                  <td className="p-3.5">{t.cliente?`${t.cliente.nombre} ${t.cliente.apellido}`:t.contactName||'N/A'}</td>
+                  <td className="p-3.5">{t.cliente ? `${t.cliente.nombre} ${t.cliente.apellido || ''}`.trim() : t.contactName || 'N/A'}</td>
                   <td className="p-3.5 text-slate-500">{t.responsable?.username||'Sin asignar'}</td>
                   <td className="p-3.5">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ backgroundColor: t.stage?.strcolor?t.stage.strcolor+'15':'#f1f5f9', color:t.stage?.strcolor||'#64748b' }}>

@@ -109,11 +109,15 @@ src/pages/Clients/
 
 ## 👤 1. Submódulo de Contactos (`src/pages/Clients/contacts/`)
 
-El catálogo de personas individuales y tomadores de decisiones opera a través de [`clientsService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/clientsService.ts):
+El catálogo de personas individuales y tomadores de decisiones opera a través de [`clientsService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/core/services/clientsService.ts):
 
 * **Validación Declarativa con Yup (`contacts.schema.ts`):**
-  - Esquema estricto `contactValidationSchema` que verifica obligatoriedad y límites de nombre, apellido, correo electrónico corporativo válido, teléfono mediante regex internacional, puesto de trabajo y categoría (`Contacto | Lead | Cliente`).
+  - Esquema `contactValidationSchema` bajo la regla de requeridos mínimos: **únicamente `nombre` es obligatorio (*)** con validación de 2 a 60 caracteres.
+  - Campos opcionales: `apellido` (sin asterisco ni regla required), `correo` (permite vacío o nulo; solo valida formato RFC/email si contiene texto), `telefono`, `puesto`, `category`, `ejecutivo_id` y `companyId`/`empresa`.
   - Runner asíncrono puro `validateContactForm` que devuelve los errores agrupados en `Record<string, string>`.
+* **Sanitización de Payloads (`clientsService.ts`):**
+  - Función centralizada `sanitizeClientPayload` ejecutada automáticamente en llamadas `POST /api/clients` (`createClient`) y `PATCH /api/clients/:id` (`updateClient`).
+  - Convierte campos vacíos `""` o cadenas en blanco a `null` de forma defensiva antes de la transmisión a la API.
 * **Indicadores Métricos KPI (`ContactsStatsBanner.tsx`):**
   - **Total de Contactos:** Número total de registros en la base de datos.
   - **Contactos Activos:** Disponibles para citas, tareas y asignación comercial.
@@ -121,7 +125,8 @@ El catálogo de personas individuales y tomadores de decisiones opera a través 
   - **Independientes:** Contactos sin cuenta empresarial asociada.
 * **Tabla Homologada TanStack (`ContactsTable.tsx` & `contacts.columns.tsx`):**
   - Integra el componente compartido `Table` (`src/components/shared/Table`) en variante `cards`.
-  - Avatar generado dinámicamente con las iniciales del contacto y diseño cromático según estado.
+  - Concatenación segura de nombre completo `${client.nombre} ${client.apellido || ''}`.trim() y fallback de avatar con iniciales.
+  - Fallbacks visuales para valores nulos o vacíos en comunicación (`"-"` o `"Sin correo"`), empresa (`"-"` o `"Independiente"`) y ejecutivo.
   - Insignia de categoría (`Badge`) con variaciones cromáticas (`success` para Cliente, `warning` para Lead, `info` para Contacto).
   - Paginación desacoplada integrada (`TablePagination`), sticky headers, buscador libre y filtros de categoría y estado activo/inactivo.
   - Inyección de dependencias de catálogo (`companies` y `executives`) pasadas limpiamente por props desde el orquestador, evitando consultas de red redundantes.
@@ -130,11 +135,15 @@ El catálogo de personas individuales y tomadores de decisiones opera a través 
 
 ## 🏢 2. Submódulo de Cuentas B2B / Empresas (`src/pages/Clients/companies/`)
 
-El catálogo de organizaciones corporativas opera a través de [`companiesService.ts`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/services/companiesService.ts):
+El catálogo de organizaciones corporativas opera a través de [`companiesService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/core/services/companiesService.ts):
 
 * **Validación Declarativa con Yup (`companies.schema.ts`):**
-  - Esquema estricto `companyValidationSchema` que audita razón social o nombre comercial (2 a 120 caracteres), correo general válido, formato de conmutador telefónico, longitud de sitio web y dirección fiscal.
+  - Esquema `companyValidationSchema` alineado a la regla de obligatoriedad mínima: **únicamente `nombre` (razón social / nombre comercial) es obligatorio (*)** entre 2 y 120 caracteres.
+  - Campos opcionales: `correo` (permite vacío o nulo; valida formato de email corporativo únicamente cuando contiene texto), `telefono`, `website`, `direccion` y `ejecutivo_id`.
   - Runner asíncrono puro `validateCompanyForm`.
+* **Sanitización de Payloads (`companiesService.ts`):**
+  - Función centralizada `sanitizeCompanyPayload` ejecutada automáticamente en llamadas `POST /api/companies` (`createCompany`) y `PATCH /api/companies/:id` (`updateCompany`).
+  - Convierte campos vacíos `""` o cadenas en blanco a `null` de forma defensiva antes de la transmisión a la API.
 * **Indicadores Métricos KPI (`CompaniesStatsBanner.tsx`):**
   - **Total Empresas B2B:** Volumen total de cuentas dadas de alta.
   - **Cuentas Activas:** Empresas habilitadas para cotizaciones y pipeline.
@@ -142,10 +151,11 @@ El catálogo de organizaciones corporativas opera a través de [`companiesServic
   - **Suspendidas / Inactivas:** Cuentas temporalmente deshabilitadas.
 * **Tabla Homologada TanStack (`CompaniesTable.tsx` & `companies.columns.tsx`):**
   - Integra el componente compartido `Table` (`src/components/shared/Table`) en variante `cards`.
-  - Identificación con icono corporativo violeta y desglose de dirección fiscal.
+  - Identificación con icono corporativo violeta y desglose de dirección fiscal con fallback `"-"`.
+  - Fallbacks visuales defensivos para valores ausentes en comunicación corporativa (`"-"` o `"Sin correo"`), sitio web y ejecutivo asignado.
   - Contador reactivo de contactos asociados (`X contactos`).
   - Enlace externo interactivo para navegación inmediata hacia el sitio web oficial.
-  - Conmutador reactivo de estado activo/suspendido con modal de confirmación ([`ConfirmModal.tsx`](file:///Users/eimvi/Documents/GitHub/crm-tibs-app/src/components/shared/ConfirmModal.tsx)).
+  - Conmutador reactivo de estado activo/suspendido con modal de confirmación ([`ConfirmModal.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/shared/ConfirmModal.tsx)).
 
 ---
 

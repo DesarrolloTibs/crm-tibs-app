@@ -42,7 +42,7 @@ export const getAllOpportunityContacts = (
   if (opp.cliente) {
     const fullName = `${opp.cliente.nombre || ''} ${opp.cliente.apellido || ''}`.trim();
     if (fullName) {
-      list.push({ id: opp.cliente.id, name: fullName, email: opp.cliente.correo });
+      list.push({ id: opp.cliente.id, name: fullName, email: opp.cliente.correo || undefined });
     }
   }
 
@@ -50,7 +50,7 @@ export const getAllOpportunityContacts = (
     opp.contacts.forEach(c => {
       const fullName = `${c.nombre || ''} ${c.apellido || ''}`.trim();
       if (fullName && !list.some(existing => existing.id && existing.id === c.id)) {
-        list.push({ id: c.id, name: fullName, email: c.correo });
+        list.push({ id: c.id, name: fullName, email: c.correo || undefined });
       }
     });
   }
@@ -59,7 +59,7 @@ export const getAllOpportunityContacts = (
     opp.company.contacts.forEach(c => {
       const fullName = `${c.nombre || ''} ${c.apellido || ''}`.trim();
       if (fullName && !list.some(existing => existing.id && existing.id === c.id)) {
-        list.push({ id: c.id, name: fullName, email: c.correo });
+        list.push({ id: c.id, name: fullName, email: c.correo || undefined });
       }
     });
   }

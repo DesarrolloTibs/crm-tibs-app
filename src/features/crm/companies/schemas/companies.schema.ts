@@ -5,6 +5,7 @@ export type { Company };
 
 /**
  * Esquema de validación Yup para creación y edición de Empresas / Cuentas B2B
+ * Únicamente el nombre es obligatorio (*). Todos los demás campos son 100% opcionales.
  */
 export const companyValidationSchema = yup.object().shape({
   nombre: yup
@@ -17,31 +18,36 @@ export const companyValidationSchema = yup.object().shape({
     .string()
     .trim()
     .nullable()
-    .transform((curr, orig) => (orig === '' ? null : curr))
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
     .email('Ingresa un correo electrónico corporativo válido'),
   telefono: yup
     .string()
     .trim()
     .nullable()
-    .transform((curr, orig) => (orig === '' ? null : curr))
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
     .matches(/^[0-9+\s().-]*$/, 'El formato de teléfono contiene caracteres no permitidos')
     .max(25, 'El teléfono no puede exceder 25 caracteres'),
   website: yup
     .string()
     .trim()
     .nullable()
-    .transform((curr, orig) => (orig === '' ? null : curr))
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
     .max(150, 'El sitio web no puede exceder 150 caracteres'),
   direccion: yup
     .string()
     .trim()
     .nullable()
-    .transform((curr, orig) => (orig === '' ? null : curr))
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
     .max(250, 'La dirección no puede exceder 250 caracteres'),
   ejecutivo_id: yup
     .string()
     .nullable()
-    .transform((curr, orig) => (orig === '' ? null : curr)),
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr)),
   estatus: yup
     .boolean()
     .default(true),

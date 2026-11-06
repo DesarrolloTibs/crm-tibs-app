@@ -6,6 +6,7 @@ export type { Client, ClientCategoryType };
 
 /**
  * Esquema de validación Yup para alta y edición de contactos/clientes
+ * Únicamente el nombre es obligatorio (*). Todos los demás campos son 100% opcionales.
  */
 export const contactValidationSchema = yup.object().shape({
   nombre: yup
@@ -17,43 +18,54 @@ export const contactValidationSchema = yup.object().shape({
   apellido: yup
     .string()
     .trim()
-    .required('El apellido del contacto es obligatorio')
-    .min(2, 'El apellido debe tener al menos 2 caracteres')
+    .nullable()
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
     .max(60, 'El apellido no puede exceder 60 caracteres'),
   correo: yup
     .string()
     .trim()
-    .required('El correo electrónico es obligatorio')
+    .nullable()
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
     .email('Ingresa un correo electrónico corporativo válido'),
   telefono: yup
     .string()
     .trim()
     .nullable()
-    .transform((curr, orig) => (orig === '' ? null : curr))
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
     .matches(/^[0-9+\s().-]*$/, 'El formato de teléfono contiene caracteres no permitidos')
     .max(25, 'El teléfono no puede exceder 25 caracteres'),
   puesto: yup
     .string()
     .trim()
-    .required('El cargo o puesto es obligatorio')
-    .min(2, 'El puesto debe contener al menos 2 caracteres')
+    .nullable()
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
     .max(80, 'El puesto no puede exceder 80 caracteres'),
   category: yup
     .mixed<ClientCategoryType>()
     .oneOf(Object.values(ClientCategory) as ClientCategoryType[], 'Selecciona una categoría válida')
+    .nullable()
+    .notRequired()
     .default(ClientCategory.CONTACTO),
   ejecutivo_id: yup
     .string()
     .trim()
-    .required('Debes asignar un ejecutivo responsable'),
+    .nullable()
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr)),
   companyId: yup
     .string()
     .nullable()
-    .transform((curr, orig) => (orig === '' ? null : curr)),
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr)),
   empresa: yup
     .string()
     .nullable()
-    .transform((curr, orig) => (orig === '' ? null : curr)),
+    .notRequired()
+    .transform((curr, orig) => (orig === '' || !curr ? null : curr)),
   estatus: yup
     .boolean()
     .default(true),

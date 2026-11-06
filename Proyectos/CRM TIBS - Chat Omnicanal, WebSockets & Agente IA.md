@@ -281,8 +281,19 @@ Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proy
 
 ## 🤖 7. Asistente Virtual Flotante (`WebChat.tsx`)
 
-Adicional a la consola omnicanal, el sistema incluye un asistente conversacional flotante disponible en toda la plataforma:
-* Consume el servicio [`webchatService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/webchatService.ts) vía `POST /api/webchat/query`.
+Adicional a la consola omnicanal, el sistema incluye un asistente conversacional flotante disponible en toda la plataforma ([`src/features/conversations/components/WebChat.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/conversations/components/WebChat.tsx)):
+* Consume el servicio [`webchatService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/core/services/webchatService.ts) mediante `queryWebChat` (`POST /api/webchat/query`) y `transcribeWebChatAudio` (`POST /api/webchat/transcribe`).
+* **Entrada Multimodal (Texto y Voz con `MediaRecorder`):**
+  * Incorpora un botón de micrófono junto al input de texto que captura audio vía `navigator.mediaDevices.getUserMedia({ audio: true })` y `MediaRecorder`.
+  * Durante la grabación activa, despliega una barra dedicada con indicador pulsante, cronómetro `mm:ss`, botón **Cancelar** y botón **Enviar**. Libera todas las pistas del micrófono (`stream.getTracks().forEach(track => track.stop())`) al enviar, cancelar, cerrar o desmontar el componente.
+  * **Flujo de Envío en 2 Pasos, Reproductor de Nota de Voz y Persistencia en Texto Plano:** Al detener y enviar la grabación, muestra el estado *"Transcribiendo audio..."*, envía el `Blob` en `FormData` (`audio`) a `POST /api/webchat/transcribe` (IBM Watson Speech to Text en backend) y, al recibir `{ text }`:
+    - Genera una `ObjectURL` local del `Blob` de audio grabado (`audioUrl`, revocada automáticamente al cerrar o desmontar) y llama a `handleSend(transcribedText, localAudioUrl)`.
+    - En la burbuja del usuario se muestra el encabezado **Nota de voz**, el reproductor nativo `<audio controls preload="metadata" />` y debajo el bloque **Transcripción:** en cursiva (`"{msg.content}"`), homologado con [`MessageFeed.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/conversations/components/MessageFeed.tsx).
+    - En el arreglo `conversationHistory` enviado a `POST /api/webchat/query` se envía estrictamente `{ role: 'user', content: text }` en texto plano.
+    - Si ocurre un error 400 (sin voz detectada) o denegación de permisos, muestra una alerta amigable sin disparar `POST /api/webchat/query` ni agregar mensajes vacíos.
+* **Memoria Completa de Sesión (`conversationHistory`) y Reinicio:**
+  * Envía el arreglo íntegro de mensajes `{ role: 'user' | 'assistant', content }` de la sesión activa en pantalla sin recortarlo (sincronizado vía `messagesRef`).
+  * Al cerrar la ventana del chat (botón `X`), se vacía por completo el historial y se revocan las URLs de audio en memoria para reiniciar la sesión con `conversationHistory: []`.
 * **Capacidades Analíticas:** Permite a los usuarios consultar en lenguaje natural sobre sus ventas, oportunidades ganadas, clientes con más compras o tickets pendientes.
 * **Redirección Reactiva (`dashboardRedirect`):** Si la respuesta de la IA determina que el usuario debe consultar una pantalla específica con filtros aplicados, la interfaz puede navegar reactivamente hacia `/dashboard?period=month`.
 

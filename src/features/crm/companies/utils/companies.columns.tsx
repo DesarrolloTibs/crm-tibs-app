@@ -49,7 +49,7 @@ export const getCompaniesColumns = ({
                 {company.nombre}
               </span>
               <span className="text-[11px] text-slate-400 block truncate font-medium">
-                {company.direccion || 'Sin dirección fiscal registrada'}
+                {company.direccion || '-'}
               </span>
             </div>
           </div>
@@ -85,9 +85,16 @@ export const getCompaniesColumns = ({
       header: 'Contacto Corporativo',
       cell: ({ row }) => {
         const company = row.original;
+        const hasEmail = Boolean(company.correo && company.correo.trim());
+        const hasPhone = Boolean(company.telefono && company.telefono.trim());
+
+        if (!hasEmail && !hasPhone) {
+          return <span className="text-xs text-slate-400 italic">-</span>;
+        }
+
         return (
           <div className="space-y-1">
-            {company.correo && (
+            {hasEmail ? (
               <div className="flex items-center gap-1.5 text-xs text-slate-600">
                 <Mail size={12} className="text-slate-400 shrink-0" />
                 <a
@@ -98,8 +105,10 @@ export const getCompaniesColumns = ({
                   {company.correo}
                 </a>
               </div>
+            ) : (
+              <span className="text-xs text-slate-400 italic block">Sin correo</span>
             )}
-            {company.telefono && (
+            {hasPhone && (
               <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono">
                 <Phone size={11} className="text-slate-400 shrink-0" />
                 <a
@@ -110,9 +119,6 @@ export const getCompaniesColumns = ({
                   {company.telefono}
                 </a>
               </div>
-            )}
-            {!company.correo && !company.telefono && (
-              <span className="text-xs text-slate-400 italic">No especificado</span>
             )}
           </div>
         );
@@ -127,7 +133,7 @@ export const getCompaniesColumns = ({
       header: 'Sitio Web',
       cell: ({ getValue }) => {
         const website = getValue<string>();
-        if (!website) {
+        if (!website || !website.trim()) {
           return <span className="text-xs text-slate-400 italic">-</span>;
         }
 
@@ -159,7 +165,7 @@ export const getCompaniesColumns = ({
         const executive = row.original.ejecutivo?.username;
         return (
           <span className="text-xs font-medium text-slate-600">
-            {executive || <span className="text-slate-400 italic">Sin asignar</span>}
+            {executive || <span className="text-slate-400 italic">-</span>}
           </span>
         );
       },

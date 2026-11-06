@@ -38,13 +38,44 @@ export async function getCompanies(forceRefresh = false): Promise<Company[]> {
   return promise;
 }
 
-export async function createCompany(company: Company): Promise<Company> {
-    const response = await axiosInstance.post(COMPANIES.COMPANIES, company);
+/**
+ * Sanitiza los campos de una empresa antes de enviarla a la API (POST o PATCH).
+ * Los campos vacíos ("") se convierten en null.
+ */
+export function sanitizeCompanyPayload(company: Partial<Company>): Partial<Company> {
+  const sanitized: Partial<Company> = { ...company };
+
+  if (sanitized.nombre !== undefined) {
+    sanitized.nombre = sanitized.nombre.trim();
+  }
+  if (sanitized.correo !== undefined) {
+    sanitized.correo = typeof sanitized.correo === 'string' ? sanitized.correo.trim() || null : null;
+  }
+  if (sanitized.telefono !== undefined) {
+    sanitized.telefono = typeof sanitized.telefono === 'string' ? sanitized.telefono.trim() || null : null;
+  }
+  if (sanitized.website !== undefined) {
+    sanitized.website = typeof sanitized.website === 'string' ? sanitized.website.trim() || null : null;
+  }
+  if (sanitized.direccion !== undefined) {
+    sanitized.direccion = typeof sanitized.direccion === 'string' ? sanitized.direccion.trim() || null : null;
+  }
+  if (sanitized.ejecutivo_id !== undefined) {
+    sanitized.ejecutivo_id = sanitized.ejecutivo_id || null;
+  }
+
+  return sanitized;
+}
+
+export async function createCompany(company: Company | Partial<Company>): Promise<Company> {
+    const payload = sanitizeCompanyPayload(company);
+    const response = await axiosInstance.post(COMPANIES.COMPANIES, payload);
     return response.data;
 }
 
-export async function updateCompany(id: string, company: Company): Promise<Company> {
-    const response = await axiosInstance.patch(`${COMPANIES.COMPANIES}/${id}`, company);
+export async function updateCompany(id: string, company: Company | Partial<Company>): Promise<Company> {
+    const payload = sanitizeCompanyPayload(company);
+    const response = await axiosInstance.patch(`${COMPANIES.COMPANIES}/${id}`, payload);
     return response.data;
 }
 

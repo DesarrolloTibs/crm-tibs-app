@@ -44,7 +44,7 @@ Toda solicitud se despacha a través de [`axiosInstance`](file:///c:/Users/sopor
 | [`ticketInteractionsService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/ticketInteractionsService.ts) | `getTicketInteractions`, `createTicketInteraction`, `deleteTicketInteraction` | `GET/POST/DELETE /api/ticket-interactions/*` | `TicketInteraction[]` |
 | [`ticketsService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/ticketsService.ts) | `getMainHelpdesk`, `updateMainHelpdesk`, `getActiveTicketStages`, `getTickets`, `getTicket`, `createTicket`, `updateTicket`, `deleteTicket`, `archiveTicket` | `GET/POST/PUT/DELETE/PATCH /api/tickets/*`, `/api/helpdesks/*` | `Helpdesk`, `TicketStage[]`, `Ticket[]` |
 | [`usersService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/usersService.ts) | `getUsers`, `getUserById`, `createUser`, `updateUser`, `deleteUser`, `getActiveUsers`, `updateUserStatus`, `uploadProfileImage` | `GET/POST/PUT/DELETE/PATCH /api/users/*` | `User[]`, `User` |
-| [`webchatService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/services/webchatService.ts) | `queryWebChat` | `POST /api/webchat/query` | `WebChatResponse` (`response`, `data`, `dashboardRedirect`) |
+| [`webchatService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/core/services/webchatService.ts) | `queryWebChat`, `transcribeWebChatAudio` | `POST /api/webchat/query`, `POST /api/webchat/transcribe` | `WebChatResponse` (`answer`, `data`, `dashboardRedirect`), `WebChatTranscribeResponse` (`text`, `transcript`) |
 
 ---
 

@@ -61,7 +61,7 @@ const TicketCard: React.FC<Props> = ({ ticket, onClick, isOverlay = false, onEdi
   const isDraggingStyle = isDragging && !isOverlay;
 
   // Customer Name and Company display
-  const customerName = cliente ? `${cliente.nombre} ${cliente.apellido}` : (contactName || 'Cliente Externo');
+  const customerName = cliente ? `${cliente.nombre} ${cliente.apellido || ''}`.trim() : (contactName || 'Cliente Externo');
   const companyName = cliente ? (cliente.company?.nombre || cliente.empresa) : (ticket.contactPhone ? `Tel: ${ticket.contactPhone}` : contactEmail);
 
   // Semáforo logic based on stage max days limit

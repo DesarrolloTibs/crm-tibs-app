@@ -293,7 +293,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const clientOptions = useMemo(() => clients.map(client => ({
     value: client.id!,
-    label: `${client.nombre} ${client.apellido} (${client.company?.nombre || client.empresa || 'Sin empresa'}) ${!client.estatus ? '(Inactivo)' : ''}`,
+    label: `${`${client.nombre} ${client.apellido || ''}`.trim()} (${client.company?.nombre || client.empresa || 'Sin empresa'}) ${!client.estatus ? '(Inactivo)' : ''}`,
     isDisabled: !client.estatus && client.id !== initialData?.cliente_id,
   })), [clients, initialData?.cliente_id]);
 

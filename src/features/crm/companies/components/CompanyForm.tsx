@@ -97,12 +97,12 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
 
     if (!isValid) {
       setErrors(validationErrors);
-      setTouched({
-        nombre: true,
-        correo: true,
-        telefono: true,
-        website: true,
-        direccion: true,
+      setTouched((prev) => {
+        const touchedFields: Record<string, boolean> = { ...prev, nombre: true };
+        Object.keys(validationErrors).forEach((key) => {
+          touchedFields[key] = true;
+        });
+        return touchedFields;
       });
       return;
     }

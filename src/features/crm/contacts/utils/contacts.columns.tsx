@@ -27,10 +27,10 @@ const getCategoryBadgeVariant = (category?: string): 'info' | 'warning' | 'succe
 /**
  * Obtiene las iniciales estilizadas para el avatar del contacto
  */
-const getInitials = (name?: string, lastName?: string): string => {
+const getInitials = (name?: string, lastName?: string | null): string => {
   const n = (name || '').trim().charAt(0).toUpperCase();
   const l = (lastName || '').trim().charAt(0).toUpperCase();
-  return `${n}${l}` || 'CL';
+  return `${n}${l}` || n || 'CL';
 };
 
 export const getContactsColumns = ({
@@ -42,10 +42,11 @@ export const getContactsColumns = ({
     {
       id: 'cliente',
       header: 'Contacto',
-      accessorFn: (row) => `${row.nombre || ''} ${row.apellido || ''}`,
+      accessorFn: (row) => `${row.nombre || ''} ${row.apellido || ''}`.trim(),
       cell: ({ row }) => {
         const client = row.original;
         const initials = getInitials(client.nombre, client.apellido);
+        const fullName = `${client.nombre || ''} ${client.apellido || ''}`.trim() || client.nombre || 'Sin nombre';
         const isActive = client.estatus !== false;
 
         return (
@@ -61,10 +62,10 @@ export const getContactsColumns = ({
             </div>
             <div className="min-w-0">
               <span className="font-bold text-slate-800 text-sm block truncate hover:text-indigo-600 transition-colors">
-                {client.nombre} {client.apellido}
+                {fullName}
               </span>
               <span className="text-[11px] text-slate-400 block truncate font-medium">
-                {client.puesto || 'Sin cargo asignado'}
+                {client.puesto || '-'}
               </span>
             </div>
           </div>
@@ -81,10 +82,10 @@ export const getContactsColumns = ({
       cell: ({ row }) => {
         const companyName = row.original.company?.nombre || row.original.empresa;
 
-        if (!companyName) {
+        if (!companyName || !companyName.trim()) {
           return (
             <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 italic">
-              Independiente
+              -
             </span>
           );
         }
@@ -109,19 +110,34 @@ export const getContactsColumns = ({
       header: 'Comunicación',
       cell: ({ row }) => {
         const client = row.original;
+        const hasEmail = Boolean(client.correo && client.correo.trim());
+        const hasPhone = Boolean(client.telefono && client.telefono.trim());
+
+        if (!hasEmail && !hasPhone) {
+          return (
+            <span className="text-xs text-slate-400 italic">
+              -
+            </span>
+          );
+        }
+
         return (
           <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-xs text-slate-600">
-              <Mail size={12} className="text-slate-400 shrink-0" />
-              <a
-                href={`mailto:${client.correo}`}
-                className="truncate max-w-[200px] hover:text-indigo-600 hover:underline"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {client.correo}
-              </a>
-            </div>
-            {client.telefono && (
+            {hasEmail ? (
+              <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                <Mail size={12} className="text-slate-400 shrink-0" />
+                <a
+                  href={`mailto:${client.correo}`}
+                  className="truncate max-w-[200px] hover:text-indigo-600 hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {client.correo}
+                </a>
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400 italic block">Sin correo</span>
+            )}
+            {hasPhone && (
               <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono">
                 <Phone size={11} className="text-slate-400 shrink-0" />
                 <a
@@ -164,7 +180,7 @@ export const getContactsColumns = ({
         const executive = row.original.ejecutivo?.username;
         return (
           <span className="text-xs font-medium text-slate-600">
-            {executive || <span className="text-slate-400 italic">Sin asignar</span>}
+            {executive || <span className="text-slate-400 italic">-</span>}
           </span>
         );
       },

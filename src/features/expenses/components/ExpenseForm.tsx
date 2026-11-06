@@ -63,7 +63,7 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         loadData();
     }, []);
 
-    const clientOptions = clients.map(c => ({ value: c.id, label: `${c.nombre} ${c.apellido} - ${c.empresa}` }));
+    const clientOptions = clients.map(c => ({ value: c.id, label: `${`${c.nombre} ${c.apellido || ''}`.trim()} - ${c.empresa || '-'}` }));
     const opportunityOptions = opportunities.map(o => ({ value: o.id, label: `${o.nombre_proyecto} - ${o.empresa}` }));
 
 

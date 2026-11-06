@@ -2,18 +2,21 @@ import React from 'react';
 import {
   MessageSquare,
   Search,
-  Smartphone,
-  Facebook,
-  Instagram,
-  Globe,
   Bot,
   User,
   RefreshCw,
   AlertTriangle,
   Clock,
   ShieldCheck,
+  X,
   Mic,
 } from 'lucide-react';
+import {
+  WhatsAppLogo,
+  InstagramLogo,
+  FacebookLogo,
+  WebchatLogo,
+} from '@shared/components/ChannelIcons';
 import type { ChannelFilter } from '../hooks/useConversationsSocket';
 import type { Conversation } from '@core/models/Conversation';
 import EmptyState from '@shared/components/EmptyState';
@@ -23,7 +26,6 @@ import {
   getWhatsAppWindowStatus,
   renderDeliveryStatusIcon,
 } from '../utils/messageUtils';
-import ConnectionStatusBadge from '@shared/components/ConnectionStatusBadge';
 
 interface ChatListSidebarProps {
   conversations: Conversation[];
@@ -38,179 +40,377 @@ interface ChatListSidebarProps {
   onRefresh: () => void;
 }
 
-const CHANNEL_FILTERS: { id: ChannelFilter; label: string; icon: React.ReactNode; activeClass: string }[] = [
-  { id: 'all',       label: 'Todos',     icon: null,                        activeClass: 'bg-blue-600 text-white' },
-  { id: 'webchat',   label: 'WebChat',   icon: <Globe size={12} />,         activeClass: 'bg-purple-600 text-white' },
-  { id: 'whatsapp',  label: 'WhatsApp',  icon: <Smartphone size={12} />,    activeClass: 'bg-emerald-600 text-white' },
-  { id: 'messenger', label: 'Messenger', icon: <Facebook size={12} />,      activeClass: 'bg-blue-500 text-white' },
-  { id: 'instagram', label: 'Instagram', icon: <Instagram size={12} />,     activeClass: 'bg-purple-500 text-white' },
+interface ChannelFilterItem {
+  id: ChannelFilter;
+  label: string;
+  shortLabel: string;
+  icon: (active: boolean) => React.ReactNode;
+  activeClass: string;
+}
+
+const CHANNEL_FILTERS: ChannelFilterItem[] = [
+  {
+    id: 'all',
+    label: 'Todos los canales',
+    shortLabel: 'Todos',
+    icon: (active) => <MessageSquare size={14} className={active ? 'text-white' : 'text-slate-600'} />,
+    activeClass: 'bg-blue-600 text-white shadow-xs',
+  },
+  {
+    id: 'whatsapp',
+    label: 'WhatsApp',
+    shortLabel: 'WhatsApp',
+    icon: (active) => <WhatsAppLogo size={14} className={active ? 'text-white' : 'text-emerald-600'} />,
+    activeClass: 'bg-emerald-600 text-white shadow-xs',
+  },
+  {
+    id: 'messenger',
+    label: 'Facebook Messenger',
+    shortLabel: 'Messenger',
+    icon: (active) => <FacebookLogo size={14} className={active ? 'text-white' : 'text-blue-600'} />,
+    activeClass: 'bg-blue-600 text-white shadow-xs',
+  },
+  {
+    id: 'instagram',
+    label: 'Instagram Direct',
+    shortLabel: 'Instagram',
+    icon: (active) => <InstagramLogo size={14} className={active ? 'text-white' : 'text-rose-600'} />,
+    activeClass: 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white shadow-xs',
+  },
+  {
+    id: 'webchat',
+    label: 'WebChat Asistente',
+    shortLabel: 'WebChat',
+    icon: (active) => <WebchatLogo size={14} className={active ? 'text-white' : 'text-purple-600'} />,
+    activeClass: 'bg-purple-600 text-white shadow-xs',
+  },
 ];
 
 export const getChannelIcon = (channel: string) => {
   switch (channel) {
-    case 'whatsapp':  return <span className="p-1.5 bg-emerald-500 rounded-lg text-white" title="WhatsApp"><Smartphone size={16} /></span>;
-    case 'messenger': return <span className="p-1.5 bg-blue-500 rounded-lg text-white" title="Messenger"><Facebook size={16} /></span>;
-    case 'instagram': return <span className="p-1.5 bg-gradient-to-tr from-amber-500 via-red-500 to-purple-600 rounded-lg text-white" title="Instagram"><Instagram size={16} /></span>;
-    case 'webchat':   return <span className="p-1.5 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-lg text-white" title="WebChat Público"><Globe size={16} /></span>;
-    default:          return <span className="p-1.5 bg-gray-500 rounded-lg text-white"><MessageSquare size={16} /></span>;
+    case 'whatsapp':
+      return (
+        <span
+          className="inline-flex items-center justify-center w-5 h-5 bg-emerald-500 rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
+          title="WhatsApp Oficial"
+        >
+          <WhatsAppLogo size={12} />
+        </span>
+      );
+    case 'messenger':
+    case 'facebook':
+      return (
+        <span
+          className="inline-flex items-center justify-center w-5 h-5 bg-[#1877F2] rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
+          title="Facebook Messenger"
+        >
+          <FacebookLogo size={12} />
+        </span>
+      );
+    case 'instagram':
+      return (
+        <span
+          className="inline-flex items-center justify-center w-5 h-5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
+          title="Instagram Direct"
+        >
+          <InstagramLogo size={12} />
+        </span>
+      );
+    case 'webchat':
+      return (
+        <span
+          className="inline-flex items-center justify-center w-5 h-5 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
+          title="WebChat Asistente"
+        >
+          <WebchatLogo size={12} />
+        </span>
+      );
+    default:
+      return (
+        <span
+          className="inline-flex items-center justify-center w-5 h-5 bg-slate-500 rounded-full text-white ring-2 ring-white shrink-0 shadow-2xs"
+          title="Mensajería"
+        >
+          <MessageSquare size={12} />
+        </span>
+      );
   }
 };
 
-export const getInitials = (name: string) => name.slice(0, 2).toUpperCase();
+export const getInitials = (name?: string): string => {
+  if (!name) return 'CL';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+};
 
-const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
-  conversations, selectedConv, searchQuery, selectedChannelFilter, unreadMap, isWsConnected,
-  onSearchChange, onChannelChange, onSelectConv, onRefresh,
-}) => (
-  <aside className={`w-full md:w-80 border-r border-gray-150 bg-slate-50/50 shrink-0 ${selectedConv ? 'hidden md:flex flex-col' : 'flex flex-col'}`}>
-    {/* Header */}
-    <div className="p-4 border-b border-gray-150 flex justify-between items-center gap-2">
-      <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-        <MessageSquare size={20} className="text-blue-700" /> Mensajería
-      </h2>
-      <div className="flex items-center gap-1.5">
-        {typeof isWsConnected === 'boolean' && (
-          <ConnectionStatusBadge isConnected={isWsConnected} />
-        )}
-        <button onClick={onRefresh} className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Actualizar chats">
-          <RefreshCw size={16} />
-        </button>
+export const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
+  conversations,
+  selectedConv,
+  searchQuery,
+  selectedChannelFilter,
+  unreadMap = {},
+  onSearchChange,
+  onChannelChange,
+  onSelectConv,
+  onRefresh,
+}) => {
+  const totalUnread = Object.values(unreadMap).reduce((acc, curr) => acc + (curr || 0), 0);
+
+  const getChannelUnread = (channelId: ChannelFilter) => {
+    if (channelId === 'all') return totalUnread;
+    return conversations
+      .filter((c) => {
+        if (channelId === 'messenger') return c.channel === 'messenger' || c.channel === 'facebook';
+        return c.channel === channelId;
+      })
+      .reduce((acc, c) => acc + (unreadMap[c.id] || 0), 0);
+  };
+
+  return (
+    <aside
+      className={`w-full md:w-[320px] lg:w-[340px] xl:w-[360px] md:min-w-[320px] md:max-w-[360px] shrink-0 border-r border-slate-200 bg-slate-50/40 ${
+        selectedConv ? 'hidden md:flex flex-col' : 'flex flex-col'
+      }`}
+    >
+      {/* Cabecera del sidebar con contador global llamativo */}
+      <div className="p-3.5 border-b border-slate-200 flex justify-between items-center gap-2 bg-white">
+        <h2 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+          <MessageSquare size={17} className="text-blue-600" />
+          <span>Bandeja de Chats</span>
+          {totalUnread > 0 && (
+            <span className="px-2 py-0.5 bg-rose-600 text-white text-[11px] font-black rounded-full shadow-xs animate-pulse">
+              {totalUnread > 99 ? '99+' : totalUnread}
+            </span>
+          )}
+        </h2>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={onRefresh}
+            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            title="Refrescar lista"
+          >
+            <RefreshCw size={15} />
+          </button>
+        </div>
       </div>
-    </div>
 
-    {/* Channel filter tabs */}
-    <div className="flex items-center gap-1 px-3 py-2 bg-white border-b border-gray-100 overflow-x-auto text-[11px] font-bold no-scrollbar">
-      {CHANNEL_FILTERS.map(({ id, label, icon, activeClass }) => (
-        <button
-          key={id}
-          onClick={() => onChannelChange(id)}
-          className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1 ${selectedChannelFilter === id ? activeClass : 'text-gray-500 hover:bg-gray-100'}`}
-        >
-          {icon}{label}
-        </button>
-      ))}
-    </div>
-
-    {/* Search */}
-    <div className="p-3 border-b border-gray-100 bg-white">
-      <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-lg focus-within:border-blue-500 focus-within:bg-white transition-all">
-        <Search size={16} className="text-gray-400 absolute left-3" />
-        <input
-          type="text"
-          placeholder="Buscar chats o contactos..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full py-2 pl-9 pr-3 text-sm bg-transparent border-0 outline-none text-gray-700 placeholder-gray-400"
-        />
-      </div>
-    </div>
-
-    {/* List */}
-    <div className="flex-grow overflow-y-auto no-scrollbar">
-      {conversations.length === 0 ? (
-        <EmptyState title="No se encontraron conversaciones" message="Intenta cambiar los filtros o el buscador." icon={<MessageSquare size={32} className="text-gray-300" />} />
-      ) : (
-        <ul className="divide-y divide-gray-100">
-          {conversations.map((conv) => {
-            const isSelected = selectedConv && selectedConv.id === conv.id;
-            const windowStatus = getWhatsAppWindowStatus(conv);
-            const lastMsg = conv.lastMessage;
-            const isOutgoingLastMsg = lastMsg && lastMsg.sender !== 'contact' && lastMsg.sender !== 'system';
-            const unreadCount = isSelected ? 0 : (unreadMap?.[conv.id] || 0);
-
+      {/* Selector de filtros de canal super compacto (altura h-8, sin desborde ni cortes) */}
+      <div className="px-2.5 py-2 bg-white border-b border-slate-100">
+        <div className="grid grid-cols-5 gap-1 p-0.5 bg-slate-100 rounded-lg">
+          {CHANNEL_FILTERS.map(({ id, label, shortLabel, icon, activeClass }) => {
+            const chUnread = getChannelUnread(id);
+            const isFilterActive = selectedChannelFilter === id;
             return (
-              <li
-                key={conv.id}
-                onClick={() => onSelectConv(conv)}
-                className={`p-4 flex gap-3 cursor-pointer transition-all hover:bg-blue-50/50 ${
-                  isSelected ? 'bg-blue-50 border-l-4 border-blue-600 pl-3' : 'border-l-4 border-transparent'
+              <button
+                key={id}
+                onClick={() => onChannelChange(id)}
+                title={`${label}${chUnread > 0 ? ` • ${chUnread} sin leer` : ''}`}
+                className={`relative flex items-center justify-center gap-1 h-7 rounded-md transition-all text-[11px] font-bold cursor-pointer ${
+                  isFilterActive
+                    ? `${activeClass} shadow-2xs scale-[1.02]`
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                 }`}
               >
-                <div className="w-11 h-11 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-sm shrink-0 border border-indigo-200">
-                  {getInitials(conv.clientName)}
-                </div>
-                <div className="flex-grow min-w-0">
-                  <div className="flex justify-between items-center gap-1">
-                    <span className={`text-sm truncate ${unreadCount > 0 ? 'font-extrabold text-gray-900' : 'font-bold text-gray-800'}`}>
-                      {conv.clientName}
-                    </span>
-                    <span className={`text-[10px] whitespace-nowrap ${unreadCount > 0 ? 'text-blue-600 font-bold' : 'text-gray-400 font-medium'}`}>
-                      {lastMsg ? formatSidebarDate(lastMsg.createdAt) : ''}
-                    </span>
+                {/* Ícono representativo */}
+                <span className="shrink-0">
+                  {icon(isFilterActive)}
+                </span>
+
+                {/* Texto corto */}
+                <span className="truncate max-w-[32px] sm:max-w-none">
+                  {shortLabel === 'Todos' ? 'Todo' : shortLabel === 'WhatsApp' ? 'WA' : shortLabel === 'Messenger' ? 'FB' : shortLabel === 'Instagram' ? 'IG' : 'Web'}
+                </span>
+
+                {/* Badge de mensajes no leídos del canal */}
+                {chUnread > 0 && (
+                  <span
+                    className={`absolute -top-1 -right-1 min-w-[15px] h-3.5 px-0.5 flex items-center justify-center text-[8px] font-black rounded-full shadow-2xs ring-1 ring-white animate-pulse ${
+                      isFilterActive ? 'bg-white text-slate-900' : 'bg-rose-500 text-white'
+                    }`}
+                  >
+                    {chUnread > 99 ? '99+' : chUnread}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Buscador reactivo */}
+      <div className="p-2.5 border-b border-slate-100 bg-white">
+        <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl focus-within:border-blue-500 focus-within:bg-white transition-all">
+          <Search size={14} className="text-slate-400 absolute left-3" />
+          <input
+            type="text"
+            placeholder="Buscar por contacto o mensaje..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-8 pr-8 py-1.5 text-xs bg-transparent focus:outline-none"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange('')}
+              className="absolute right-2 p-0.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
+              title="Limpiar búsqueda"
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Lista scrolleable de conversaciones */}
+      <div className="flex-grow overflow-y-auto divide-y divide-slate-100 hide-scrollbar no-scrollbar">
+        {conversations.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              icon={<MessageSquare className="w-8 h-8 text-slate-300" />}
+              title="Sin conversaciones"
+              message={
+                searchQuery || selectedChannelFilter !== 'all'
+                  ? 'No hay chats que coincidan con los filtros aplicados.'
+                  : 'Aún no se han recibido interacciones por este canal.'
+              }
+            />
+          </div>
+        ) : (
+          conversations.map((conv) => {
+            const isSelected = selectedConv?.id === conv.id;
+            const unreadCount = isSelected ? 0 : (unreadMap[conv.id] || 0);
+            const windowStatus = getWhatsAppWindowStatus(conv);
+
+            return (
+              <div
+                key={conv.id}
+                onClick={() => onSelectConv(conv)}
+                className={`p-3 transition-all cursor-pointer border-l-4 ${
+                  isSelected
+                    ? 'bg-blue-50/70 border-blue-600 shadow-2xs'
+                    : unreadCount > 0
+                    ? 'bg-blue-50/30 hover:bg-blue-50/50 border-blue-500'
+                    : 'bg-white hover:bg-slate-50 border-transparent'
+                }`}
+              >
+                <div className="flex items-start gap-2.5">
+                  {/* Avatar con insignia de canal superpuesta y punto de no leídos */}
+                  <div className="relative shrink-0 mt-0.5">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs border border-slate-200 shadow-2xs">
+                      {getInitials(conv.clientName)}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 flex items-center justify-center">
+                      {getChannelIcon(conv.channel)}
+                    </div>
+                    {unreadCount > 0 && (
+                      <span
+                        className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 border-2 border-white rounded-full shadow-xs ring-1 ring-rose-200"
+                        title={`${unreadCount} mensaje(s) pendiente(s)`}
+                      />
+                    )}
                   </div>
 
-                  {/* Mensaje + tick de entrega si es saliente + Badge No Leídos */}
-                  <div className="flex items-center justify-between gap-1 text-xs mt-1">
-                    <div className={`flex items-center gap-1 min-w-0 truncate font-medium ${unreadCount > 0 ? 'text-gray-800 font-bold' : 'text-gray-500'}`}>
-                      {isOutgoingLastMsg && (
-                        <span className="shrink-0 flex items-center">
-                          {renderDeliveryStatusIcon(lastMsg?.status, lastMsg?.errorMessage)}
+                  {/* Datos del contacto y último mensaje */}
+                  <div className="flex-grow min-w-0">
+                    <div className="flex justify-between items-start gap-1 mb-1">
+                      <h3
+                        className={`text-xs truncate ${
+                          unreadCount > 0
+                            ? 'font-black text-slate-900'
+                            : isSelected
+                            ? 'font-bold text-blue-950'
+                            : 'font-semibold text-slate-800'
+                        }`}
+                      >
+                        {conv.clientName}
+                      </h3>
+                      <div className="flex flex-col items-end shrink-0 gap-1 ml-2">
+                        <span
+                          className={`text-[10px] ${
+                            unreadCount > 0 ? 'text-blue-600 font-bold' : 'text-slate-400 font-medium'
+                          }`}
+                        >
+                          {formatSidebarDate(conv.lastMessage?.createdAt || conv.updatedAt || conv.createdAt)}
                         </span>
+
+                        {/* Badge de mensajes no leídos destacado y bien visible */}
+                        {unreadCount > 0 && (
+                          <span
+                            className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-blue-600 text-white text-[11px] font-black rounded-full shadow-sm ring-2 ring-white animate-pulse"
+                            title={`${unreadCount} mensajes sin leer`}
+                          >
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Preview de último mensaje con delivery status tick */}
+                    <div className="flex items-center gap-1 text-[11px] truncate mb-1.5">
+                      {conv.lastMessage && conv.lastMessage.sender !== 'contact' && (
+                        <span className="shrink-0">{renderDeliveryStatusIcon(conv.lastMessage.status, conv.lastMessage.errorMessage)}</span>
                       )}
-                      {lastMsg?.messageType === 'audio' || lastMsg?.mediaUrl ? (
+                      {conv.lastMessage?.messageType === 'audio' || conv.lastMessage?.mediaUrl ? (
                         <span className={`flex items-center gap-1 truncate ${
-                          unreadCount > 0 ? 'font-bold text-gray-800' : 'text-gray-500'
+                          unreadCount > 0 ? 'font-bold text-slate-800' : 'text-slate-500'
                         }`}>
                           <Mic size={12} className="shrink-0 text-indigo-500" />
                           <span className="truncate">
-                            Nota de voz{lastMsg?.content && lastMsg.content !== '[Nota de voz]' ? `: ${lastMsg.content}` : ''}
+                            Nota de voz{conv.lastMessage?.content && conv.lastMessage.content !== '[Nota de voz]' ? `: ${conv.lastMessage.content}` : ''}
                           </span>
                         </span>
                       ) : (
-                        <span className="truncate">
-                          {lastMsg ? lastMsg.content : 'Sin mensajes'}
+                        <span
+                          className={`truncate ${
+                            unreadCount > 0 ? 'font-bold text-slate-800' : 'text-slate-500'
+                          }`}
+                        >
+                          {conv.lastMessage?.content || 'Sin mensajes recientes'}
                         </span>
                       )}
                     </div>
-                    {unreadCount > 0 && (
-                      <span className="shrink-0 min-w-4.5 h-4.5 px-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                    )}
-                  </div>
 
-                  {/* Badge de Ventana de 23h para WhatsApp */}
-                  {windowStatus.isWhatsApp && (
-                    <div className="mt-1.5 flex items-center">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border shadow-2xs ${windowStatus.badgeClass}`}
-                        title={windowStatus.detailedExplanation}
-                      >
-                        {windowStatus.isExpired ? (
-                          <AlertTriangle size={11} className="shrink-0 text-rose-700" />
-                        ) : windowStatus.isWarning ? (
-                          <Clock size={11} className="shrink-0 text-amber-900" />
-                        ) : (
-                          <ShieldCheck size={11} className="shrink-0 text-emerald-800" />
-                        )}
-                        <span>{windowStatus.badgeText}</span>
-                      </span>
-                    </div>
-                  )}
+                    {/* Badges y estados de ventana de 23h / Bot IA */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {/* Estado del Bot IA */}
+                      {conv.botActive ? (
+                        <Badge variant="info" className="!text-[9px] !px-1.5 !py-0 flex items-center gap-1">
+                          <Bot size={10} /> Bot IA
+                        </Badge>
+                      ) : (
+                        <Badge variant="neutral" className="!text-[9px] !px-1.5 !py-0 flex items-center gap-1 text-slate-600">
+                          <User size={10} /> Asesor
+                        </Badge>
+                      )}
 
-                  <div className="flex justify-between items-center mt-2.5">
-                    <div className="flex items-center gap-1.5">
-                      {getChannelIcon(conv.channel)}
-                      <span className="text-[10px] text-gray-400 font-bold truncate max-w-[90px]">{conv.externalId}</span>
+                      {/* Pill de Ventana WhatsApp */}
+                      {windowStatus.isWhatsApp && (
+                        <span
+                          className={`inline-flex items-center gap-1 px-1.5 py-0 rounded text-[9px] font-bold border ${windowStatus.badgeClass}`}
+                          title={windowStatus.detailedExplanation}
+                        >
+                          {windowStatus.isExpired ? (
+                            <AlertTriangle size={9} className="text-rose-600 shrink-0" />
+                          ) : windowStatus.isWarning ? (
+                            <Clock size={9} className="text-amber-700 shrink-0 animate-pulse" />
+                          ) : (
+                            <ShieldCheck size={9} className="text-emerald-600 shrink-0" />
+                          )}
+                          <span className="truncate max-w-[85px]">{windowStatus.badgeText}</span>
+                        </span>
+                      )}
                     </div>
-                    {conv.botActive ? (
-                      <Badge variant="indigo" size="sm" className="text-[9px] py-0 px-1.5 flex items-center gap-1 font-black">
-                        <Bot size={10} /> Bot
-                      </Badge>
-                    ) : (
-                      <Badge variant="warning" size="sm" className="text-[9px] py-0 px-1.5 flex items-center gap-1 font-black">
-                        <User size={10} /> Humano
-                      </Badge>
-                    )}
                   </div>
                 </div>
-              </li>
+              </div>
             );
-          })}
-        </ul>
-      )}
-    </div>
-  </aside>
-);
+          })
+        )}
+      </div>
+    </aside>
+  );
+};
 
 export default ChatListSidebar;

@@ -96,12 +96,12 @@ const TicketsListTable: React.FC<Props> = ({
         header: 'Cliente / Contacto',
         accessorFn: (ticket) =>
           ticket.cliente
-            ? `${ticket.cliente.nombre} ${ticket.cliente.apellido} ${ticket.cliente.company?.nombre || ticket.cliente.empresa || ''}`
+            ? `${`${ticket.cliente.nombre} ${ticket.cliente.apellido || ''}`.trim()} ${ticket.cliente.company?.nombre || ticket.cliente.empresa || ''}`.trim()
             : ticket.contactName || ticket.contactEmail || '',
         cell: ({ row }) => {
           const ticket = row.original;
           const customerName = ticket.cliente
-            ? `${ticket.cliente.nombre} ${ticket.cliente.apellido}`
+            ? `${ticket.cliente.nombre} ${ticket.cliente.apellido || ''}`.trim()
             : ticket.contactName || 'Cliente Externo';
           const companyName = ticket.cliente
             ? ticket.cliente.company?.nombre || ticket.cliente.empresa

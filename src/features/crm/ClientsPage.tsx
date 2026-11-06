@@ -284,14 +284,14 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
         notify({
           type: 'success',
           title: 'Contacto Actualizado',
-          message: `El contacto '${formData.nombre} ${formData.apellido}' ha sido guardado exitosamente.`,
+          message: `El contacto '${`${formData.nombre} ${formData.apellido || ''}`.trim()}' ha sido guardado exitosamente.`,
         });
       } else {
         await createClient(formData as Client);
         notify({
           type: 'success',
           title: 'Contacto Creado',
-          message: `El contacto '${formData.nombre} ${formData.apellido}' fue dado de alta correctamente.`,
+          message: `El contacto '${`${formData.nombre} ${formData.apellido || ''}`.trim()}' fue dado de alta correctamente.`,
         });
       }
       setContactModalOpen(false);
@@ -318,8 +318,8 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
       open: true,
       title: newStatus ? '¿Activar Contacto?' : '¿Desactivar Contacto?',
       description: newStatus
-        ? `¿Deseas habilitar a '${client.nombre} ${client.apellido}' para nuevas actividades y cotizaciones?`
-        : `¿Deseas deshabilitar a '${client.nombre} ${client.apellido}'? Ya no aparecerá en selectores de nuevas oportunidades.`,
+        ? `¿Deseas habilitar a '${`${client.nombre} ${client.apellido || ''}`.trim()}' para nuevas actividades y cotizaciones?`
+        : `¿Deseas deshabilitar a '${`${client.nombre} ${client.apellido || ''}`.trim()}'? Ya no aparecerá en selectores de nuevas oportunidades.`,
       onConfirm: async () => {
         setConfirmConfig(prev => ({ ...prev, open: false }));
         notify({
@@ -332,7 +332,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ defaultTab = 'contacts
           notify({
             type: 'success',
             title: newStatus ? 'Contacto Activado' : 'Contacto Desactivado',
-            message: `El estado de '${client.nombre} ${client.apellido}' ha sido actualizado.`,
+            message: `El estado de '${`${client.nombre} ${client.apellido || ''}`.trim()}' ha sido actualizado.`,
           });
           await loadModuleData(true);
         } catch (err) {
