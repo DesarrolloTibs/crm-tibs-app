@@ -73,11 +73,12 @@ const DEFAULT_ACTIVE_OPTION: CycleSelectOption = {
 };
 
 export const MyCompanyPage: React.FC = () => {
-  const { isAdmin, isSuperAdmin } = useAuth();
+  const { user, isAdmin, isSuperAdmin } = useAuth();
   const { selectedTenant, setSelectedTenant } = useConfigStore();
 
   const tenantId = selectedTenant?.id;
-  const tenantSchema = selectedTenant?.schema_name;
+  // Para SuperAdmin usa el tenant del selector global; para Admin de Tenant usa su propio tenant del JWT
+  const tenantSchema = selectedTenant?.schema_name || (!isSuperAdmin ? user?.tenant : undefined);
 
   // Índice de sub-pestaña activa (Tabs compartidas)
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
@@ -222,7 +223,7 @@ export const MyCompanyPage: React.FC = () => {
     isFetchingBreakdownRef.current = true;
     lastFetchedBreakdownKeyRef.current = queryKey;
 
-    if (isManualRefresh) {
+    if (isManualRefresh || !hasFetchedBreakdownRef.current) {
       setLoading(true);
     }
     setError(null);
@@ -804,11 +805,15 @@ export const MyCompanyPage: React.FC = () => {
     >
       <div className="space-y-6 pt-2">
         {/* MENSAJE CUANDO NO HAY ORGANIZACIÓN SELECCIONADA */}
-        {!selectedTenant && !loading && (
+        {!tenantSchema && !loading && (
           <EmptyState
             icon={<Building2 className="w-8 h-8 text-slate-400" />}
             title="Sin Organización Seleccionada"
-            message="Seleccione una organización en la barra de navegación superior para visualizar su perfil, recursos y cuotas."
+            message={
+              isSuperAdmin
+                ? 'Seleccione una organización en la barra de navegación superior para visualizar su perfil, recursos y cuotas.'
+                : 'No se pudo identificar la organización de su sesión actual.'
+            }
             className="bg-slate-50/70 border border-slate-200 rounded-2xl my-4"
           />
         )}
@@ -836,7 +841,7 @@ export const MyCompanyPage: React.FC = () => {
         )}
 
         {/* CONTENIDO PRINCIPAL CUANDO HAY DATOS */}
-        {selectedTenant && breakdown && (
+        {tenantSchema && breakdown && (
           <div className="space-y-6">
             {/* SELECTOR DE PERÍODOS DE FACTURACIÓN Y BÚSQUEDA UNIFICADA */}
             <BillingCycleSelector

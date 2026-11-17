@@ -31,7 +31,6 @@ export const ActivitiesTable: React.FC<ActivitiesTableProps> = ({
   totalCount,
   loading,
   filters,
-  onClearFilters,
   onEdit,
   onDelete,
   currentPage,
@@ -132,26 +131,6 @@ export const ActivitiesTable: React.FC<ActivitiesTableProps> = ({
         onPageSizeChange={onPageSizeChange}
         totalCount={totalCount}
         filteredCount={filteredCount}
-        footerRow={
-          <tr>
-            <td colSpan={columns.length} className="px-4 py-3 bg-slate-50/80 border-t border-slate-200">
-              <div className="flex items-center justify-between text-xs text-slate-500 font-medium w-full">
-                <span>
-                  Mostrando <strong className="text-slate-800">{activities.length}</strong> de{' '}
-                  <strong className="text-slate-800">{totalCount}</strong> actividades registradas
-                </span>
-                {hasActiveFilters && onClearFilters && (
-                  <button
-                    onClick={onClearFilters}
-                    className="text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer"
-                  >
-                    Restablecer filtros
-                  </button>
-                )}
-              </div>
-            </td>
-          </tr>
-        }
       />
     </div>
   );

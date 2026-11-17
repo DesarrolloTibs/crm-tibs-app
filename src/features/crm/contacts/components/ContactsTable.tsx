@@ -21,12 +21,10 @@ interface ContactsTableProps {
 
 export const ContactsTable: React.FC<ContactsTableProps> = ({
   clients,
-  totalCount,
   loading,
   isAdmin,
   filters,
   onFilterChange,
-  onClearFilters,
   onEdit,
   onToggleStatus,
   onCreateNew,
@@ -159,32 +157,15 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
       <Table
         data={clients}
         columns={columns}
+        variant="cards"
         loading={loading}
+        enablePagination
+        initialPageSize={10}
         emptyTitle={hasActiveFilters ? 'Sin resultados para la búsqueda' : 'No hay contactos registrados'}
         emptyMessage={
           hasActiveFilters
             ? 'No encontramos contactos que coincidan con los criterios seleccionados. Prueba restableciendo los filtros.'
             : 'Comienza registrando tu primer contacto o prospecto comercial para iniciar el seguimiento.'
-        }
-        footerRow={
-          <tr>
-            <td colSpan={columns.length} className="px-4 py-3 bg-slate-50/80 border-t border-slate-200">
-              <div className="flex items-center justify-between text-xs text-slate-500 font-medium w-full">
-                <span>
-                  Mostrando <strong className="text-slate-800">{clients.length}</strong> de{' '}
-                  <strong className="text-slate-800">{totalCount}</strong> contactos registrados
-                </span>
-                {hasActiveFilters && (
-                  <button
-                    onClick={onClearFilters}
-                    className="text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer"
-                  >
-                    Restablecer vista
-                  </button>
-                )}
-              </div>
-            </td>
-          </tr>
         }
       />
     </div>

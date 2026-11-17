@@ -20,12 +20,10 @@ interface CompaniesTableProps {
 
 export const CompaniesTable: React.FC<CompaniesTableProps> = ({
   companies,
-  totalCount,
   loading,
   isAdmin,
   filters,
   onFilterChange,
-  onClearFilters,
   onEdit,
   onToggleStatus,
   onCreateNew,
@@ -139,32 +137,15 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
       <Table
         data={companies}
         columns={columns}
+        variant="cards"
         loading={loading}
+        enablePagination
+        initialPageSize={10}
         emptyTitle={hasActiveFilters ? 'Sin resultados para la búsqueda' : 'No hay empresas registradas'}
         emptyMessage={
           hasActiveFilters
             ? 'No encontramos empresas con los filtros especificados. Prueba restableciendo los filtros.'
             : 'Comienza dando de alta la primera cuenta corporativa para asociar prospectos y contratos.'
-        }
-        footerRow={
-          <tr>
-            <td colSpan={columns.length} className="px-4 py-3 bg-slate-50/80 border-t border-slate-200">
-              <div className="flex items-center justify-between text-xs text-slate-500 font-medium w-full">
-                <span>
-                  Mostrando <strong className="text-slate-800">{companies.length}</strong> de{' '}
-                  <strong className="text-slate-800">{totalCount}</strong> empresas registradas
-                </span>
-                {hasActiveFilters && (
-                  <button
-                    onClick={onClearFilters}
-                    className="text-violet-600 hover:text-violet-800 font-bold hover:underline cursor-pointer"
-                  >
-                    Restablecer vista
-                  </button>
-                )}
-              </div>
-            </td>
-          </tr>
         }
       />
     </div>
