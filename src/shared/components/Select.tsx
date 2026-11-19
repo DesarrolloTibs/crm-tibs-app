@@ -2,21 +2,26 @@ import React from 'react';
 import ReactSelect from 'react-select';
 import type { Props as SelectProps } from 'react-select';
 
+type SelectSize = 'default' | 'sm';
+
 interface CustomSelectProps extends SelectProps<any, boolean> {
     label?: string;
     error?: string;
+    size?: SelectSize;
 }
 
-export const getSelectStyles = (error?: string) => ({
+export const getSelectStyles = (error?: string, size: SelectSize = 'default') => {
+    const isSmall = size === 'sm';
+    return {
     control: (baseStyles: any, state: any) => ({
         ...baseStyles,
-        borderRadius: '1rem',
+        borderRadius: isSmall ? '0.75rem' : '1rem',
         borderColor: error ? '#fca5a5' : state.isFocused ? '#4f46e5' : '#e2e8f0',
         boxShadow: state.isFocused 
             ? '0 10px 15px -3px rgba(79, 70, 229, 0.1), 0 4px 6px -4px rgba(79, 70, 229, 0.1)' 
             : 'none',
-        minHeight: '54px',
-        backgroundColor: error ? 'rgba(254, 242, 242, 0.3)' : '#fff',
+        minHeight: isSmall ? '34px' : '54px',
+        backgroundColor: error ? 'rgba(254, 242, 242, 0.3)' : isSmall ? '#f8fafc' : '#fff',
         transition: 'all 0.3s ease',
         cursor: 'pointer',
         '&:hover': {
@@ -25,12 +30,15 @@ export const getSelectStyles = (error?: string) => ({
     }),
     valueContainer: (baseStyles: any) => ({
         ...baseStyles,
-        paddingLeft: '1rem',
+        paddingLeft: isSmall ? '0.625rem' : '1rem',
+        paddingTop: isSmall ? '0px' : baseStyles.paddingTop,
+        paddingBottom: isSmall ? '0px' : baseStyles.paddingBottom,
     }),
     singleValue: (baseStyles: any) => ({
         ...baseStyles,
         color: '#0f172a',
-        fontWeight: '500',
+        fontWeight: isSmall ? '600' : '500',
+        fontSize: isSmall ? '12px' : undefined,
     }),
     menu: (baseStyles: any) => ({
         ...baseStyles,
@@ -72,7 +80,8 @@ export const getSelectStyles = (error?: string) => ({
     dropdownIndicator: (baseStyles: any, state: any) => ({
         ...baseStyles,
         color: state.isFocused ? '#4f46e5' : '#94a3b8',
-        paddingRight: '12px',
+        paddingRight: isSmall ? '8px' : '12px',
+        paddingLeft: isSmall ? '2px' : baseStyles.paddingLeft,
         transition: 'color 0.3s ease',
         '&:hover': {
             color: '#4f46e5'
@@ -81,17 +90,20 @@ export const getSelectStyles = (error?: string) => ({
     placeholder: (baseStyles: any) => ({
         ...baseStyles,
         color: '#94a3b8',
-        fontWeight: '500'
+        fontWeight: '500',
+        fontSize: isSmall ? '12px' : undefined,
     }),
     menuPortal: (baseStyles: any) => ({
         ...baseStyles,
         zIndex: 9999
     })
-});
+    };
+};
 
 export const Select: React.FC<CustomSelectProps> = ({
     label,
     error,
+    size = 'default',
     ...props
 }) => {
     return (
@@ -104,10 +116,10 @@ export const Select: React.FC<CustomSelectProps> = ({
             <ReactSelect
                 placeholder="Seleccione una opción..."
                 isSearchable={false}
-                className="w-full text-sm font-medium text-slate-900"
+                className={`w-full font-medium text-slate-900 ${size === 'sm' ? 'text-xs' : 'text-sm'}`}
                 {...props}
                 styles={{
-                    ...getSelectStyles(error),
+                    ...getSelectStyles(error, size),
                     ...(props.styles || {})
                 }}
             />

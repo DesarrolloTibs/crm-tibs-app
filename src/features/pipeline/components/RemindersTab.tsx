@@ -9,6 +9,8 @@ import type { Reminder } from '@core/models/Reminder';
 import { useAuth } from '@features/auth';
 import Notification from '@shared/components/Notification';
 import Modal from '@shared/components/Modal';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
 
 interface RemindersTabProps {
   opportunityId: string;
@@ -163,24 +165,25 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
       <Notification {...notification} />
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-        <div className="relative flex-grow w-full sm:w-auto">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-            <Search size={20} />
-          </span>
-          <input
-            type="text"
-            placeholder="Buscar en recordatorios..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full border rounded-lg pl-10 pr-4 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <button
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm whitespace-nowrap"
+        <Input
+          type="text"
+          placeholder="Buscar en recordatorios..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          onClear={() => setSearchTerm('')}
+          clearTitle="Limpiar búsqueda"
+          inputPrefix={<Search size={16} />}
+          containerClassName="flex-grow w-full sm:w-auto"
+          className="!pl-10 bg-white"
+        />
+        <Button
+          size="sm"
+          variant="success"
+          className="gap-2 w-full sm:w-auto shadow-sm whitespace-nowrap hover:translate-y-0 !text-sm !font-medium"
           onClick={() => setModalOpen(true)}
         >
           <Plus size={18} /> Nuevo Recordatorio
-        </button>
+        </Button>
       </div>
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-lg">
@@ -189,52 +192,41 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
         </h2>
         <form onSubmit={handleAddReminder} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-            <div>
-              <label
-                htmlFor="newReminderTitle"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Título del Recordatorio
-              </label>
-              <input
-                id="newReminderTitle"
-                type="text"
-                value={newReminderTitle}
-                onChange={e => setNewReminderTitle(e.target.value)}
-                placeholder="Ej: Llamar al cliente para seguimiento"
-                className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="newReminderDate"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Fecha y Hora
-              </label>
-              <input
-                id="newReminderDate"
-                type="datetime-local"
-                value={newReminderDate}
-                onChange={e => setNewReminderDate(e.target.value)}
-                className="w-full border rounded px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-white appearance-none min-w-0"
-              />
-            </div>
+            <Input
+              id="newReminderTitle"
+              label="Título del Recordatorio"
+              type="text"
+              value={newReminderTitle}
+              onChange={e => setNewReminderTitle(e.target.value)}
+              placeholder="Ej: Llamar al cliente para seguimiento"
+              className="bg-white"
+            />
+            <Input
+              id="newReminderDate"
+              label="Fecha y Hora"
+              type="datetime-local"
+              value={newReminderDate}
+              onChange={e => setNewReminderDate(e.target.value)}
+              className="bg-white appearance-none min-w-0"
+            />
           </div>
           <div className="flex justify-end gap-3 mt-6">
-            <button
-              type="button"
+            <Button
+              size="sm"
+              variant="secondary"
               onClick={() => setModalOpen(false)}
-              className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors"
+              className="rounded-md !text-sm !font-normal hover:translate-y-0"
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              variant="primary"
+              className="rounded-md !text-sm !font-medium shadow-none hover:translate-y-0"
             >
               Guardar Recordatorio
-            </button>
+            </Button>
           </div>
         </form>
       </Modal>
@@ -258,13 +250,14 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
               </p>
             </div>
             {isAdmin && ( // Solo los administradores pueden eliminar recordatorios
-              <button
+              <Button
+                variant="ghost-danger"
                 onClick={() => handleDeleteReminder(reminder.id)}
-                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full transition-colors ml-4"
+                className="!p-2 hover:!bg-red-100 !rounded-full ml-4"
                 title="Eliminar recordatorio"
               >
                 <Trash2 size={20} />
-              </button>
+              </Button>
             )}
           </li>
         ))}

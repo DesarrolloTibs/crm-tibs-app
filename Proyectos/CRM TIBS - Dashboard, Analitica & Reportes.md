@@ -87,9 +87,9 @@ En el hook [`useDashboard.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app
 
 ## 🖱️ 3. Filtrado Cruzado Interactivo (*Drill-Down*)
 
-Una característica clave de [`useDashboard.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/hooks/useDashboard.ts) es la función `handleChartClick`:
+Una característica clave de [`useDashboard.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/dashboard/hooks/useDashboard.ts) es la función `handleChartClick`:
 * Al hacer clic sobre una barra de un mes específico (e.g. *"Agosto"*) o sobre una etapa en el gráfico de pastel (e.g. *"Propuesta"*), el dashboard activa un filtro secundario.
-* La tabla inferior de registros [`RecordsTable.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/components/Dashboard/RecordsTable.tsx) actualiza de inmediato su contenido para mostrar exclusivamente las oportunidades o tickets correspondientes al segmento seleccionado.
+* La tabla inferior de registros [`RecordsTable.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/dashboard/components/RecordsTable.tsx) está estandarizada sobre el componente compartido `<Table>` (variante `cards`, ordenamiento por columnas y `TablePagination` estándar a 10 registros por página por defecto, homologada con Clientes) y actualiza de inmediato su contenido para mostrar exclusivamente las oportunidades o tickets correspondientes al segmento seleccionado.
 
 ---
 

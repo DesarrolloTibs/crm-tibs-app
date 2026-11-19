@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { Building2, Search, X, Plus } from 'lucide-react';
+import { Building2, Search, Plus } from 'lucide-react';
 import Table from '@shared/components/Table';
 import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
 import type { Company, CompanyFiltersState } from '../schemas/companies.schema';
 import { getCompaniesColumns } from '../utils/companies.columns';
 
@@ -60,26 +61,18 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
         {/* Controles de Búsqueda, Filtros y Nueva Empresa */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Campo de Búsqueda */}
-          <div className="relative w-full sm:w-60">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => onFilterChange('search', e.target.value)}
-              placeholder="Buscar por razón social, correo, teléfono..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-violet-500 focus:bg-white transition-colors"
-            />
-            {filters.search && (
-              <Button
-                variant="icon"
-                onClick={() => onFilterChange('search', '')}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 !p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200"
-                title="Limpiar búsqueda"
-              >
-                <X size={12} />
-              </Button>
-            )}
-          </div>
+          <Input
+            size="sm"
+            type="text"
+            value={filters.search}
+            onChange={(e) => onFilterChange('search', e.target.value)}
+            onClear={() => onFilterChange('search', '')}
+            clearTitle="Limpiar búsqueda"
+            placeholder="Buscar por razón social, correo, teléfono..."
+            inputPrefix={<Search size={14} />}
+            containerClassName="w-full sm:w-60"
+            className="focus:border-violet-500"
+          />
 
           {/* Filtro de Estado */}
           <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs">

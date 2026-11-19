@@ -49,6 +49,7 @@ export interface DashboardSetters {
   setChart3Type: (v: ChartType) => void;
   setTableSearch: (v: string) => void;
   setCurrentPage: (v: number | ((prev: number) => number)) => void;
+  setPageSize: (size: number) => void;
   setShowFilters: (v: boolean) => void;
   setSelectedKpiId: (v: string | null) => void;
   setSelectedChartFilter: (v: DashboardFilters['selectedChartFilter']) => void;
@@ -98,7 +99,7 @@ export function useDashboard() {
   const [chart3Type, setChart3Type] = useState<ChartType>('pie');
   const [tableSearch, setTableSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 50;
+  const [pageSize, setPageSize] = useState<number>(10);
 
   // ── Reset interactive filters on tab/filter change ──
   useEffect(() => {
@@ -113,6 +114,10 @@ export function useDashboard() {
     setTableSearch('');
     setCurrentPage(1);
   }, [activeTab, selectedPipelineId, selectedHelpdeskId, selectedExecutiveId, datePeriod, startDate, endDate, currencyFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [tableSearch, selectedKpiId, selectedChartFilter]);
 
   // ── Fetch ──
   const fetchData = async () => {
@@ -329,7 +334,15 @@ export function useDashboard() {
     }
   }, [activeTab, visibleOpps, visibleTickets, selectedKpiId, currentIndicators, selectedChartFilter, tableSearch]);
 
-  const paginatedTableList = useMemo(() => tableDataList.slice((currentPage-1)*pageSize, currentPage*pageSize), [tableDataList, currentPage]);
+  const paginatedTableList = useMemo(
+    () =>
+      pageSize > 0
+        ? tableDataList.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+        : tableDataList,
+    [tableDataList, currentPage, pageSize]
+  );
+  const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(tableDataList.length / pageSize)) : 1;
+  const tableTotalCount = activeTab === 'commercial' ? visibleOpps.length : visibleTickets.length;
 
   // ── Chart aggregations ──
   const openOppsByMonth = useMemo(() => {
@@ -462,11 +475,11 @@ export function useDashboard() {
     activeTab, selectedPipelineId, selectedHelpdeskId, selectedExecutiveId,
     showFilters, datePeriod, startDate, endDate, currencyFilter,
     selectedKpiId, selectedChartFilter,
-    chart1Type, chart2Type, chart3Type, tableSearch, currentPage, pageSize,
+    chart1Type, chart2Type, chart3Type, tableSearch, currentPage, pageSize, totalPages, tableTotalCount,
     // setters
     setActiveTab, setSelectedPipelineId, setSelectedHelpdeskId, setSelectedExecutiveId,
     setShowFilters, setCurrencyFilter, setSelectedKpiId, setSelectedChartFilter,
-    setChart1Type, setChart2Type, setChart3Type, setTableSearch, setCurrentPage,
+    setChart1Type, setChart2Type, setChart3Type, setTableSearch, setCurrentPage, setPageSize,
     setStartDate, setEndDate,
     handleSelectPeriod, handleStartDateChange, handleEndDateChange, handleChartClick,
     handleExportPDF, handleExportExcel,

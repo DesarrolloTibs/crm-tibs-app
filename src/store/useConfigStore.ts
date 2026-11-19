@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 
+export type GlobalAiProvider = 'ibm' | 'azure_openai' | 'gemini';
+
 export interface SelectedTenant {
   id: number;
   name: string;
   schema_name: string;
   logo?: string | null;
   allow_extra?: boolean;
+  ibm_audio_enabled?: boolean;
 }
 
 export interface TenantPlanInfo {
@@ -16,11 +19,15 @@ export interface TenantPlanInfo {
   next_renewal_date: string | null;
   is_active: boolean;
   allow_extra: boolean;
+  ibm_audio_enabled: boolean;
   logo: string | null;
   created_at: string;
   total_queued_periods: number; // Conteo de períodos en cola (0 si no tiene)
   coverage_until: string | null; // Fecha máxima proyectada de cobertura
   queued_periods_count?: number;
+  global_ai_provider?: GlobalAiProvider;
+  uses_ibm_stt?: boolean;
+  audio_enabled?: boolean;
   plan?: {
     plan_id: number;
     plan_name: string;

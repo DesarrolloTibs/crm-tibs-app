@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { SubAgent } from '../schemas/aiAgent.schema';
 import { calculateInitialNodePositions } from '../utils/aiAgent.helpers';
+import Button from '@shared/components/Button';
 
 interface AiOrchestratorCanvasProps {
   subAgents: SubAgent[];
@@ -140,12 +141,13 @@ export const AiOrchestratorCanvas: React.FC<AiOrchestratorCanvasProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
+          <Button
+            size="xs"
+            variant="secondary"
             onClick={() => setIsMaximized(!isMaximized)}
             onMouseDown={(e) => e.stopPropagation()}
             title={isMaximized ? 'Cerrar pantalla completa' : 'Maximizar orquestador'}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-200 transition-all cursor-pointer shadow-2xs"
+            className="!text-[11px] bg-slate-50 hover:!bg-slate-100 border-slate-200 shadow-2xs hover:translate-y-0"
           >
             {isMaximized ? (
               <>
@@ -158,16 +160,17 @@ export const AiOrchestratorCanvas: React.FC<AiOrchestratorCanvasProps> = ({
                 <span>Maximizar</span>
               </>
             )}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            size="xs"
+            variant="indigo"
             onClick={onOpenCreateSubAgent}
             onMouseDown={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-[11px] font-bold rounded-lg shadow-xs transition-all cursor-pointer border-none"
+            className="!text-[11px] gap-1.5 !px-3 shadow-xs hover:translate-y-0"
           >
             <Plus size={13} />
             <span>Nuevo Sub-Agente</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -349,35 +352,35 @@ export const AiOrchestratorCanvas: React.FC<AiOrchestratorCanvasProps> = ({
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
+                  <Button
+                    variant="icon"
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleSubAgentStatus(agent);
                     }}
                     title={agent.isActive ? 'Desactivar sub-agente' : 'Activar sub-agente'}
-                    className={`w-7 h-7 flex items-center justify-center rounded-md transition-all cursor-pointer ${
+                    className={`w-7 h-7 !p-0 rounded-md ${
                       agent.isActive
-                        ? 'text-emerald-600 hover:bg-emerald-50'
-                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                        ? '!text-emerald-600 hover:!bg-emerald-50'
+                        : '!text-slate-400 hover:!text-slate-600 hover:!bg-slate-100'
                     }`}
                   >
                     <CheckCircle size={15} />
-                  </button>
+                  </Button>
                   {agent.id && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="icon"
                       onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
                         onDeleteSubAgent(agent.id!);
                       }}
                       title="Eliminar agente"
-                      className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all cursor-pointer"
+                      className="w-7 h-7 !p-0 !text-slate-400 hover:!text-rose-600 hover:!bg-rose-50 rounded-md"
                     >
                       <Trash2 size={15} />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>

@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { LayoutDashboard, Search, X } from 'lucide-react';
+import { LayoutDashboard, Search } from 'lucide-react';
 import Table from '@shared/components/Table';
 import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
 import type { DashboardIndicator, IndicatorTypeFilter } from '../schemas/dashboardIndicators.schema';
 import { getDashboardIndicatorsColumns } from '../utils/dashboardIndicators.columns';
 import { COLOR_OPTIONS } from '../utils/dashboardIndicators.helpers';
@@ -24,7 +25,6 @@ interface DashboardIndicatorsTableProps {
 
 export const DashboardIndicatorsTable: React.FC<DashboardIndicatorsTableProps> = ({
   indicators,
-  totalCount,
   loading,
   onEdit,
   onDelete,
@@ -49,12 +49,6 @@ export const DashboardIndicatorsTable: React.FC<DashboardIndicatorsTableProps> =
 
   const hasActiveFilters = searchTerm !== '' || typeFilter !== 'all' || colorFilter !== 'all';
 
-  const handleResetFilters = () => {
-    setSearchTerm('');
-    setTypeFilter('all');
-    setColorFilter('all');
-  };
-
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-5">
       {/* Encabezado y Controles de Búsqueda / Filtros */}
@@ -65,33 +59,24 @@ export const DashboardIndicatorsTable: React.FC<DashboardIndicatorsTableProps> =
             Tarjetas de Indicadores KPI ({activeModule === 'commercial' ? 'Pipeline Comercial' : 'Mesa de Ayuda'})
           </h4>
           <p className="text-xs text-slate-400 mt-0.5">
-            Configuración y mapeo de etapas para las tarjetas de analítica en tiempo real del dashboard superior.
+            Configuración y mapeo de etapas para las tarjetas en tiempo real; se actualizan reactivamente en el Dashboard principal.
           </p>
         </div>
 
         {/* Controles de Búsqueda y Filtros */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Buscador de texto */}
-          <div className="relative w-full sm:w-60">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar indicador..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
-            />
-            {searchTerm && (
-              <Button
-                variant="icon"
-                onClick={() => setSearchTerm('')}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 !p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200"
-                title="Limpiar búsqueda"
-              >
-                <X size={12} />
-              </Button>
-            )}
-          </div>
+          <Input
+            size="sm"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onClear={() => setSearchTerm('')}
+            clearTitle="Limpiar búsqueda"
+            placeholder="Buscar indicador..."
+            inputPrefix={<Search size={14} />}
+            containerClassName="w-full sm:w-60"
+          />
 
           {/* Filtro por Tipo (Solo relevante si es commercial) */}
           {activeModule === 'commercial' && (
@@ -181,34 +166,9 @@ export const DashboardIndicatorsTable: React.FC<DashboardIndicatorsTableProps> =
             : 'Aún no has creado tarjetas personalizadas para este módulo. Pulsa el botón superior para crear una.'
         }
         keyExtractor={(ind: DashboardIndicator) => ind.id || ind.title}
-        enablePagination={indicators.length > 8}
-        initialPageSize={8}
+        enablePagination
+        initialPageSize={10}
       />
-
-      {/* Resumen al pie de la tabla */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs text-slate-400 pt-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span>
-            Total en vista: <strong className="text-slate-700 font-bold">{indicators.length}</strong> de{' '}
-            <strong className="text-slate-700 font-bold">{totalCount}</strong> configurados
-          </span>
-          {hasActiveFilters && (
-            <>
-              <span className="text-slate-300">•</span>
-              <Button
-                variant="ghost"
-                onClick={handleResetFilters}
-                className="!text-xs !p-0 !h-auto text-indigo-600 hover:underline font-semibold"
-              >
-                Restablecer filtros
-              </Button>
-            </>
-          )}
-        </div>
-        <span className="text-[11px] text-slate-400">
-          Las tarjetas creadas se actualizan reactivamente en la cabecera del Dashboard principal.
-        </span>
-      </div>
     </div>
   );
 };

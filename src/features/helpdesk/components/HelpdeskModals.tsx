@@ -1,7 +1,9 @@
 import React from 'react';
-import { Settings2, LifeBuoy, AlertTriangle, X } from 'lucide-react';
+import { Settings2, LifeBuoy, AlertTriangle } from 'lucide-react';
 import Modal from '@shared/components/Modal';
+import Drawer from '@shared/components/Drawer';
 import Input from '@shared/components/Input';
+import Select from '@shared/components/Select';
 import TextArea from '@shared/components/TextArea';
 import Button from '@shared/components/Button';
 import TicketDetail from './TicketDetail';
@@ -77,37 +79,20 @@ const HelpdeskModals: React.FC<Props> = ({
 }) => (
   <>
     {/* Drawer: Configurar Mesa de Ayuda */}
-    {showStagesConfig && (
-      <div className="fixed inset-0 z-50 flex justify-end">
-        <div
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          onClick={() => setShowStagesConfig(false)}
-        />
-        <div className="relative w-full max-w-3xl h-full bg-white shadow-2xl flex flex-col animate-slide-in-right">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-center gap-2">
-              <Settings2 size={20} className="text-indigo-600" />
-              <h2 className="text-lg font-bold text-gray-800">Configurar Mesa de Ayuda</h2>
-            </div>
-            <button
-              onClick={() => setShowStagesConfig(false)}
-              className="p-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-200 transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-6">
-            <HelpdeskStagesSettings
-              onlyHelpdeskDetails={false}
-              onSaveSuccess={() => {
-                loadData();
-                setShowStagesConfig(false);
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    )}
+    <Drawer
+      open={showStagesConfig}
+      onClose={() => setShowStagesConfig(false)}
+      title="Configurar Mesa de Ayuda"
+      icon={<Settings2 size={20} className="text-indigo-600" />}
+    >
+      <HelpdeskStagesSettings
+        onlyHelpdeskDetails={false}
+        onSaveSuccess={() => {
+          loadData();
+          setShowStagesConfig(false);
+        }}
+      />
+    </Drawer>
 
     {/* Modal: Editar Etapa */}
     <Modal
@@ -149,21 +134,22 @@ const HelpdeskModals: React.FC<Props> = ({
               }}
               placeholder="Ej. 15 (dejar vacío para sin límite)"
             />
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-600 uppercase">
-                Tipo de Cierre / Etapa
-              </label>
-              <select
-                value={Number(editingStage.stage_type ?? 0)}
-                onChange={e =>
-                  setEditingStage({ ...editingStage, stage_type: Number(e.target.value) })
-                }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-              >
-                <option value={0}>Abierto / En Proceso (Default)</option>
-                <option value={1}>✓ Cerrado / Resuelto</option>
-              </select>
-            </div>
+            <Select
+              label="Tipo de Cierre / Etapa"
+              size="sm"
+              menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+              value={[
+                { value: 0, label: 'Abierto / En Proceso (Default)' },
+                { value: 1, label: '✓ Cerrado / Resuelto' },
+              ].find((opt) => opt.value === Number(editingStage.stage_type ?? 0))}
+              onChange={(selected: any) =>
+                setEditingStage({ ...editingStage, stage_type: Number(selected?.value ?? 0) })
+              }
+              options={[
+                { value: 0, label: 'Abierto / En Proceso (Default)' },
+                { value: 1, label: '✓ Cerrado / Resuelto' },
+              ]}
+            />
           </div>
           <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
             <Button type="button" onClick={() => setEditingStage(null)} variant="secondary">

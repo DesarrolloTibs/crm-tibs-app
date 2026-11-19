@@ -276,13 +276,15 @@ export const WhatsAppTemplateSelectorModal: React.FC<WhatsAppTemplateSelectorMod
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="icon"
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-150 rounded-full transition-colors cursor-pointer"
+            className="hover:!bg-gray-150 !rounded-full !p-2"
             title="Cerrar modal"
+            aria-label="Cerrar modal"
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Modal Content - 2 Columns */}
@@ -340,16 +342,17 @@ export const WhatsAppTemplateSelectorModal: React.FC<WhatsAppTemplateSelectorMod
 
               {/* Search Bar */}
               <div className="p-3 border-b border-gray-100">
-                <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-xl focus-within:border-emerald-500 focus-within:bg-white transition-all">
-                  <Search size={16} className="text-gray-400 absolute left-3" />
-                  <input
-                    type="text"
-                    placeholder="Buscar por nombre o contenido..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full py-2 pl-9 pr-3 text-xs bg-transparent border-0 outline-none text-gray-700 placeholder-gray-400 font-medium"
-                  />
-                </div>
+                <Input
+                  size="sm"
+                  type="text"
+                  placeholder="Buscar por nombre o contenido..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onClear={() => setSearchQuery('')}
+                  clearTitle="Limpiar búsqueda"
+                  inputPrefix={<Search size={14} />}
+                  className="font-medium focus:border-emerald-500"
+                />
               </div>
 
               {/* Templates List */}

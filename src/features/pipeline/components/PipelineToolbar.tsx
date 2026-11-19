@@ -74,9 +74,14 @@ const PipelineToolbar: React.FC<Props> = ({
         <h1 className="text-xl sm:text-2xl font-bold text-gray-800 leading-tight">{pipelineName}</h1>
         {pipelineDescription && <p className="text-sm text-gray-500 mt-0.5">{pipelineDescription}</p>}
       </div>
-      <button className="md:hidden p-2 text-gray-500 hover:text-indigo-600 bg-gray-100 rounded-full transition-colors" onClick={() => setShowToolbar(!showToolbar)}>
+      <Button
+        variant="icon"
+        className="md:hidden !p-2 !text-gray-500 hover:!text-indigo-600 bg-gray-100 !rounded-full"
+        onClick={() => setShowToolbar(!showToolbar)}
+        aria-label={showToolbar ? 'Ocultar herramientas' : 'Mostrar herramientas'}
+      >
         {showToolbar ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-      </button>
+      </Button>
     </div>
 
     <div className={`${showToolbar ? 'flex' : 'hidden'} md:flex flex-col sm:flex-row w-full md:w-auto gap-3`}>

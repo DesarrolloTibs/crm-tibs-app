@@ -1,6 +1,82 @@
 import axiosInstance from '@core/axios/axiosInstance';
-import type { TenantPlanInfo } from '@/store/useConfigStore';
+import type { GlobalAiProvider, TenantPlanInfo } from '@/store/useConfigStore';
 import { TENANTS } from '@/global/endpoints';
+
+export interface MyTenantInfo extends TenantPlanInfo {
+  global_ai_provider: GlobalAiProvider;
+  uses_ibm_stt: boolean;
+  audio_enabled: boolean;
+}
+
+export interface AudioUsageSummary {
+  total_requests: number;
+  successful_requests: number;
+  speech_detected_requests: number;
+  total_seconds: number;
+  total_minutes: number;
+  total_bytes: number;
+}
+
+export interface AudioUsageByTenant {
+  tenant_id: number | null;
+  tenant_name?: string | null;
+  tenant_schema?: string | null;
+  schema_name?: string | null;
+  ibm_audio_enabled?: boolean;
+  total_requests: number;
+  successful_requests?: number;
+  speech_detected_requests?: number;
+  total_seconds: number;
+  total_minutes: number;
+  total_bytes?: number;
+}
+
+export interface AudioUsageByChannel {
+  channel: string;
+  total_requests: number;
+  successful_requests?: number;
+  speech_detected_requests?: number;
+  total_seconds: number;
+  total_minutes: number;
+  total_bytes?: number;
+}
+
+export interface AudioUsageLog {
+  id: number | string;
+  tenant_id?: number | null;
+  tenant_name?: string | null;
+  schema_name?: string | null;
+  tenant_schema?: string | null;
+  channel?: string | null;
+  provider?: string | null;
+  status?: string | null;
+  success?: boolean;
+  has_speech?: boolean;
+  speech_detected?: boolean;
+  error_message?: string | null;
+  duration_seconds?: number;
+  audio_bytes?: number;
+  mime_type?: string | null;
+  conversation_id?: string | null;
+  message_id?: string | null;
+  user_id?: string | null;
+  client_id?: string | null;
+  created_at?: string;
+}
+
+export interface AudioUsageReportParams {
+  tenantId?: number;
+  schemaName?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface AudioUsageReportResponse {
+  summary: AudioUsageSummary;
+  by_tenant: AudioUsageByTenant[];
+  by_channel: AudioUsageByChannel[];
+  recent_logs: AudioUsageLog[];
+}
 
 export interface ProvisionTenantPayload {
   tenantName: string;
@@ -259,7 +335,7 @@ export const getTenantById = async (id: number): Promise<TenantPlanInfo> => {
   return raw;
 };
 
-export const getMyTenantInfo = async (schemaName?: string): Promise<TenantPlanInfo | null> => {
+export const getMyTenantInfo = async (schemaName?: string): Promise<MyTenantInfo | null> => {
   const response = await axiosInstance.get(`${TENANTS.TENANTS}/my-tenant`, {
     params: schemaName ? { schemaName } : {},
   });
@@ -506,6 +582,43 @@ export const updateAllowExtra = async (
   breakdownCache = {};
   const raw = (response.data as any)?.data ?? response.data;
   return raw;
+};
+
+/**
+ * Habilita o deshabilita el add-on de soporte de audio (IBM Speech-to-Text) para un tenant (solo SuperAdmin).
+ */
+export const updateTenantIbmAudio = async (
+  tenantId: number,
+  ibmAudioEnabled: boolean
+): Promise<TenantPlanInfo> => {
+  const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}/ibm-audio`, {
+    ibm_audio_enabled: ibmAudioEnabled,
+  });
+  clearTenantsCache();
+  consumptionCache = {};
+  breakdownCache = {};
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw?.tenant ?? raw;
+};
+
+/**
+ * Obtiene el reporte interno de uso/duración de audio IBM Speech-to-Text (solo SuperAdmin).
+ */
+export const getAudioUsageReport = async (
+  params?: AudioUsageReportParams
+): Promise<AudioUsageReportResponse> => {
+  const queryParams: Record<string, any> = {};
+  if (params?.startDate) queryParams.startDate = params.startDate;
+  if (params?.endDate) queryParams.endDate = params.endDate;
+  if (params?.schemaName) queryParams.schemaName = params.schemaName;
+
+  const url = params?.tenantId
+    ? `${TENANTS.TENANTS}/${params.tenantId}/audio-usage`
+    : TENANTS.AUDIO_USAGE;
+
+  const response = await axiosInstance.get(url, { params: queryParams });
+  const raw = (response.data as any)?.data ?? response.data;
+  return raw as AudioUsageReportResponse;
 };
 
 export const getCourtesyOveragesReport = async (): Promise<CourtesyOveragesReportResponse> => {

@@ -1,5 +1,5 @@
 export type MessageDeliveryStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
-export type MessageType = 'text' | 'template' | 'document' | 'image' | 'audio';
+export type MessageType = 'text' | 'template' | 'document' | 'image' | 'audio' | 'audio_unsupported';
 
 export interface Message {
   id: string;

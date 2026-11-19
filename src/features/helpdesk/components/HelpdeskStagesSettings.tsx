@@ -6,6 +6,8 @@ import Notification from '@shared/components/Notification';
 import Loader from '@shared/components/Loader';
 import Input from '@shared/components/Input';
 import Button from '@shared/components/Button';
+import Select from '@shared/components/Select';
+import Switch from '@shared/components/Switch';
 
 interface Props {
   onSaveSuccess?: () => void;
@@ -400,32 +402,32 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
                     />
 
                     {/* Stage Type Selector */}
-                    <div className="w-36 shrink-0">
-                      <select
-                        value={Number(stage.stage_type ?? 0)}
-                        onChange={e => handleStageTypeChange(idx, Number(e.target.value))}
-                        className={`w-full text-xs font-semibold rounded-lg px-2 py-1.5 border transition-all cursor-pointer outline-none focus:ring-2 focus:ring-indigo-400 ${
-                          Number(stage.stage_type) === 1
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold'
-                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
-                        }`}
-                        title="Tipo de etapa / Estado de cierre"
-                      >
-                        <option value={0}>Abierto / Proceso</option>
-                        <option value={1}>✓ Resuelto (Cierre)</option>
-                      </select>
+                    <div className="w-40 shrink-0">
+                      <Select
+                        size="sm"
+                        menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+                        value={[
+                          { value: 0, label: 'Abierto / Proceso' },
+                          { value: 1, label: '✓ Resuelto (Cierre)' },
+                        ].find((opt) => opt.value === Number(stage.stage_type ?? 0))}
+                        onChange={(selected: any) =>
+                          handleStageTypeChange(idx, Number(selected?.value ?? 0))
+                        }
+                        options={[
+                          { value: 0, label: 'Abierto / Proceso' },
+                          { value: 1, label: '✓ Resuelto (Cierre)' },
+                        ]}
+                      />
                     </div>
 
                     {/* Active toggle */}
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0" title="Activo/Inactivo">
-                      <input
-                        type="checkbox"
-                        checked={stage.blnstatus}
-                        onChange={e => updateStageField(idx, 'blnstatus', e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:ring-1 peer-focus:ring-indigo-400 rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
+                    <Switch
+                      size="sm"
+                      color="indigo"
+                      checked={stage.blnstatus}
+                      onChange={(checked) => updateStageField(idx, 'blnstatus', checked)}
+                      title="Activo/Inactivo"
+                    />
 
                     {/* Initial/Secondary/Inactive badge */}
                     <div className="w-[42px] text-center shrink-0">

@@ -2,6 +2,7 @@ import { Edit2, Trash2, Tag, FolderKanban } from 'lucide-react';
 import type { ColumnDef } from '@shared/components/Table';
 import Button from '@shared/components/Button';
 import Badge from '@shared/components/Badge';
+import Switch from '@shared/components/Switch';
 import type { OpportunityCatalogOption } from '../schemas/opportunityCatalogs.schema';
 
 interface OpportunityCatalogsColumnsCallbacks {
@@ -98,32 +99,17 @@ export const getOpportunityCatalogsColumns = ({
       const isActive = option.blnstatus;
 
       return (
-        <div className="flex items-center justify-center gap-2.5">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleStatus(option);
-            }}
-            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              isActive ? 'bg-indigo-600' : 'bg-slate-200'
-            }`}
-            title={isActive ? 'Desactivar opción' : 'Activar opción'}
-          >
-            <span
-              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
-                isActive ? 'translate-x-4' : 'translate-x-0'
-              }`}
-            />
-          </button>
-          <Badge
-            variant={isActive ? 'success' : 'neutral'}
+        <div
+          className="flex items-center justify-center gap-2.5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Switch
             size="sm"
-            dot
-            className="font-bold shadow-2xs"
-          >
-            {isActive ? 'Activo' : 'Inactivo'}
-          </Badge>
+            color="indigo"
+            checked={isActive}
+            onChange={() => onToggleStatus(option)}
+            title={isActive ? 'Desactivar opción' : 'Activar opción'}
+          />
         </div>
       );
     },

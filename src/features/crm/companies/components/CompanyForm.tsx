@@ -5,7 +5,9 @@ import { validateCompanyForm, INITIAL_COMPANY_FORM } from '../utils/companies.he
 import Button from '@shared/components/Button';
 import FormField from '@shared/components/FormField';
 import Select from '@shared/components/Select';
-import { Building2, Mail, Phone, Globe, MapPin, Check } from 'lucide-react';
+import TextArea from '@shared/components/TextArea';
+import Switch from '@shared/components/Switch';
+import { Building2, Mail, Phone, Globe, Check } from 'lucide-react';
 
 interface CompanyFormProps {
   initialData?: Company | null;
@@ -208,63 +210,34 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
           </p>
         </div>
 
-        <div className="space-y-1">
-          <label
-            htmlFor="company-direccion"
-            className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1"
-          >
-            Dirección Fiscal o Completa
-          </label>
-          <div className="relative">
-            <div className="absolute top-3 left-3 pointer-events-none text-slate-400">
-              <MapPin size={16} />
-            </div>
-            <textarea
-              id="company-direccion"
-              name="direccion"
-              rows={3}
-              value={formData.direccion || ''}
-              onChange={handleChange}
-              onBlur={() => handleBlur('direccion')}
-              placeholder="Ej. Av. Insurgentes Sur 1602, Crédito Constructor, Benito Juárez, CDMX"
-              className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
-            />
-          </div>
-          {touched.direccion && errors.direccion && (
-            <p className="text-[11px] text-red-600 mt-1">{errors.direccion}</p>
-          )}
-        </div>
+        <TextArea
+          id="company-direccion"
+          label="Dirección Fiscal o Completa"
+          name="direccion"
+          rows={3}
+          value={formData.direccion || ''}
+          onChange={handleChange}
+          onBlur={() => handleBlur('direccion')}
+          placeholder="Ej. Av. Insurgentes Sur 1602, Crédito Constructor, Benito Juárez, CDMX"
+          error={touched.direccion ? errors.direccion : undefined}
+          className="!py-2.5 !px-3.5 !text-xs !bg-slate-50 !rounded-xl focus:!bg-white shadow-none focus:shadow-none min-h-[84px]"
+        />
       </div>
 
       {/* Switch de Estado */}
-      <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200/80 rounded-2xl">
-        <div>
-          <span className="text-xs font-bold text-slate-800 block">
-            Estado de Operación
-          </span>
-          <span className="text-[11px] text-slate-500">
-            {formData.estatus
-              ? 'La empresa está activa para facturación, oportunidades y gestión comercial.'
-              : 'La empresa está suspendida; los asesores no podrán emitir cotizaciones hacia esta cuenta.'}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          role="switch"
-          aria-checked={formData.estatus}
-          onClick={handleToggleStatus}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-violet-600 focus:ring-offset-2 ${
-            formData.estatus ? 'bg-emerald-600' : 'bg-slate-300'
-          }`}
-        >
-          <span
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-              formData.estatus ? 'translate-x-5' : 'translate-x-0'
-            }`}
-          />
-        </button>
-      </div>
+      <Switch
+        id="company-status-switch"
+        checked={formData.estatus}
+        onChange={handleToggleStatus}
+        color="emerald"
+        label="Estado de Operación"
+        description={
+          formData.estatus
+            ? 'La empresa está activa para facturación, oportunidades y gestión comercial.'
+            : 'La empresa está suspendida; los asesores no podrán emitir cotizaciones hacia esta cuenta.'
+        }
+        className="!p-4 !rounded-2xl"
+      />
 
       {/* Botones de Acción */}
       <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">

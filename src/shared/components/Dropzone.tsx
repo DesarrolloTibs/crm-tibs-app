@@ -11,6 +11,7 @@ interface DropzoneProps {
   buttonText?: string;
   icon?: React.ReactNode;
   className?: string;
+  children?: React.ReactNode;
 }
 
 export const Dropzone: React.FC<DropzoneProps> = ({
@@ -23,6 +24,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
   buttonText = 'Buscar archivo',
   icon = <UploadCloud size={30} className="text-indigo-500 mb-2 animate-bounce" style={{ animationDuration: '3s' }} />,
   className = '',
+  children,
 }) => {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +32,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       onFilesSelected(Array.from(e.target.files));
+      e.target.value = '';
     }
   };
 
@@ -77,11 +80,17 @@ export const Dropzone: React.FC<DropzoneProps> = ({
           onChange={handleFileChange}
         />
         <label htmlFor={id} className="cursor-pointer flex flex-col items-center select-none w-full">
-          {icon}
-          <span className="text-sm font-semibold text-slate-700">{helpText}</span>
-          <span className="mt-4 inline-flex items-center text-[10px] uppercase tracking-widest bg-white border border-slate-200 text-indigo-600 px-4 py-2.5 rounded-xl font-bold shadow-md shadow-indigo-500/5 hover:-translate-y-0.5 transition-all hover:bg-indigo-50 cursor-pointer">
-            {buttonText}
-          </span>
+          {children ? (
+            children
+          ) : (
+            <>
+              {icon}
+              <span className="text-sm font-semibold text-slate-700">{helpText}</span>
+              <span className="mt-4 inline-flex items-center text-[10px] uppercase tracking-widest bg-white border border-slate-200 text-indigo-600 px-4 py-2.5 rounded-xl font-bold shadow-md shadow-indigo-500/5 hover:-translate-y-0.5 transition-all hover:bg-indigo-50 cursor-pointer">
+                {buttonText}
+              </span>
+            </>
+          )}
         </label>
       </div>
     </div>

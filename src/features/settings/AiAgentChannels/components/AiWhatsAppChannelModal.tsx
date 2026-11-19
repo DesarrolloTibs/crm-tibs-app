@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Sparkles, CheckCircle2 } from 'lucide-react';
 import { WhatsAppLogo } from '@shared/components/ChannelIcons';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
@@ -198,26 +198,18 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
             )}
 
             <div className="mt-5">
-              <button
-                type="button"
+              <Button
+                variant="success"
                 onClick={handleConnectEmbedded}
-                disabled={connectingEmbedded}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                loading={connectingEmbedded}
+                loadingText="Conectando con Meta WhatsApp..."
+                className="w-full !bg-emerald-600 hover:!bg-emerald-700 !font-extrabold !text-xs !py-3 !px-4 shadow-emerald-600/20 gap-2 !normal-case !tracking-normal"
               >
-                {connectingEmbedded ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    <span>Conectando con Meta WhatsApp...</span>
-                  </>
-                ) : (
-                  <>
-                    <WhatsAppLogo size={16} />
-                    <span>
-                      {editingChannel ? 'Reconectar con WhatsApp' : 'Conectar con WhatsApp'}
-                    </span>
-                  </>
-                )}
-              </button>
+                <WhatsAppLogo size={16} />
+                <span>
+                  {editingChannel ? 'Reconectar con WhatsApp' : 'Conectar con WhatsApp'}
+                </span>
+              </Button>
             </div>
           </div>
 

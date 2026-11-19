@@ -1,6 +1,7 @@
 import axiosInstance from '@core/axios/axiosInstance';
+import { WEBCHAT } from '@/global/endpoints';
 
-const urlBase = (import.meta.env.VITE_BASE_URL || '') + '/api/webchat';
+export type WebChatAiProvider = 'ibm' | 'azure_openai' | 'gemini';
 
 export interface WebChatMessage {
     role: 'user' | 'assistant';
@@ -25,6 +26,21 @@ export interface WebChatResponse {
 export interface WebChatTranscribeResponse {
     text: string;
     transcript: string;
+    durationSeconds?: number;
+}
+
+export interface WebChatAudioStatus {
+    globalProvider: WebChatAiProvider;
+    rawModelProvider: string;
+    usesIbmStt: boolean;
+    ibmAudioEnabled: boolean;
+    audioEnabled: boolean;
+    transcribeEndpointEnabled: boolean;
+}
+
+export async function getWebChatAudioStatus(): Promise<WebChatAudioStatus> {
+    const response = await axiosInstance.get<WebChatAudioStatus>(WEBCHAT.AUDIO_STATUS);
+    return response.data;
 }
 
 export async function queryWebChat(
@@ -32,7 +48,7 @@ export async function queryWebChat(
     conversationHistory?: WebChatMessage[]
 ): Promise<WebChatResponse> {
     const response = await axiosInstance.post<WebChatResponse>(
-        `${urlBase}/query`,
+        WEBCHAT.QUERY,
         { question, conversationHistory },
         { timeout: 60000 }
     );
@@ -52,7 +68,7 @@ export async function transcribeWebChatAudio(
     formData.append('audio', audioBlob, `voice-note.${ext}`);
 
     const response = await axiosInstance.post<WebChatTranscribeResponse>(
-        `${urlBase}/transcribe`,
+        WEBCHAT.TRANSCRIBE,
         formData,
         {
             headers: {

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle, ShieldAlert, LogIn } from 'lucide-react';
 import LoginBackground from '../components/LoginBackground';
+import Loader from '@shared/components/Loader';
 import { useForgotPassword } from '../hooks/useAuthForms';
 import '../components/Login.css';
 
@@ -54,7 +55,7 @@ const ForgotPasswordPage: React.FC = () => {
                 )}
 
                 <button type="submit" className="login-btn-premium py-5" disabled={loading}>
-                  {loading ? <div className="flex items-center gap-3"><div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>ENVIANDO...</div> : 'ENVIAR ENLACE DE RECUPERACIÓN'}
+                  {loading ? <div className="flex items-center gap-3"><Loader inline size="sm" colorClassName="text-white" />ENVIANDO...</div> : 'ENVIAR ENLACE DE RECUPERACIÓN'}
                 </button>
               </form>
             </>

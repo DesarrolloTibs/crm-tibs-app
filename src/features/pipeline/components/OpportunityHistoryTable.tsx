@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { Opportunity } from '@core/models/Opportunity';
 import { Edit, Trash2, Archive, ArchiveRestore, Check, X } from 'lucide-react';
 import Table, { type ColumnDef } from '@shared/components/Table';
+import Button from '@shared/components/Button';
 
 import OpportunityChannelBadge from './OpportunityChannelBadge';
 
@@ -201,41 +202,41 @@ const OpportunityHistoryTable: React.FC<Props> = ({
           const opp = row.original;
           return (
             <div className="flex space-x-1 justify-end">
-              <button
-                type="button"
+              <Button
+                variant="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   onArchive(opp);
                 }}
-                className="p-2 text-gray-500 hover:text-yellow-600 hover:bg-yellow-100 rounded-full transition-colors cursor-pointer"
+                className="!p-2 !text-gray-500 hover:!text-yellow-600 hover:!bg-yellow-100 !rounded-full"
                 title={opp.archived ? 'Desarchivar' : 'Archivar'}
               >
                 {opp.archived ? <ArchiveRestore size={18} /> : <Archive size={18} />}
-              </button>
+              </Button>
               {isAdmin && (
                 <>
-                  <button
-                    type="button"
+                  <Button
+                    variant="icon"
                     onClick={(e) => {
                       e.stopPropagation();
                       onEdit(opp);
                     }}
-                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full transition-colors cursor-pointer"
+                    className="!p-2 !text-gray-500 hover:!text-blue-600 hover:!bg-blue-100 !rounded-full"
                     title="Editar"
                   >
                     <Edit size={18} />
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="icon"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(opp);
                     }}
-                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
+                    className="!p-2 !text-gray-500 hover:!text-red-600 hover:!bg-red-100 !rounded-full"
                     title="Eliminar"
                   >
                     <Trash2 size={18} />
-                  </button>
+                  </Button>
                 </>
               )}
             </div>

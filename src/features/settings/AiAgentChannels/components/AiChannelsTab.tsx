@@ -91,16 +91,17 @@ export const AiChannelsTab: React.FC<AiChannelsTabProps> = ({
             </p>
           </div>
 
-          <button
-            type="button"
+          <Button
+            size="xs"
+            variant="secondary"
             onClick={onRefreshChannels}
             disabled={isLoadingChannels}
-            className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 rounded-xl transition-all cursor-pointer disabled:opacity-50 shadow-2xs"
+            className="self-start sm:self-auto gap-1.5 !px-3 !font-bold !text-slate-600 hover:!text-indigo-600 bg-slate-50 hover:!bg-indigo-50 border-slate-200 hover:border-indigo-200 rounded-xl shadow-2xs hover:translate-y-0"
             title="Sincronizar canales en tiempo real"
           >
             <RefreshCw size={13} className={isLoadingChannels ? 'animate-spin text-indigo-600' : ''} />
             <span>{isLoadingChannels ? 'Sincronizando...' : 'Sincronizar Canales'}</span>
-          </button>
+          </Button>
         </div>
 
         {/* Tarjetas Comerciales: 4 Columnas Responsivas */}
@@ -179,14 +180,14 @@ export const AiChannelsTab: React.FC<AiChannelsTabProps> = ({
                 {isLoadingChannels ? 'Cargando...' : whatsappConfig ? 'Configurar / Editar' : 'Link Account'}
               </Button>
               {whatsappConfig && !isLoadingChannels && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost-danger"
                   onClick={() => onDeleteChannel(whatsappConfig.id)}
-                  className="p-2 border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                  className="!p-2 border border-rose-200 !text-rose-500 hover:!bg-rose-50 !rounded-xl"
                   title="Desconectar cuenta"
                 >
                   <Trash2 size={16} />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -265,14 +266,14 @@ export const AiChannelsTab: React.FC<AiChannelsTabProps> = ({
                   : 'Conectar con Meta'}
               </Button>
               {facebookConfig && !isLoadingChannels && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost-danger"
                   onClick={() => onDeleteChannel(facebookConfig.id)}
-                  className="p-2 border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                  className="!p-2 border border-rose-200 !text-rose-500 hover:!bg-rose-50 !rounded-xl"
                   title="Desconectar página"
                 >
                   <Trash2 size={16} />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -352,14 +353,14 @@ export const AiChannelsTab: React.FC<AiChannelsTabProps> = ({
                   : 'Conectar con Meta'}
               </Button>
               {instagramConfig && !isLoadingChannels && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost-danger"
                   onClick={() => onDeleteChannel(instagramConfig.id)}
-                  className="p-2 border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                  className="!p-2 border border-rose-200 !text-rose-500 hover:!bg-rose-50 !rounded-xl"
                   title="Desconectar cuenta"
                 >
                   <Trash2 size={16} />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -412,15 +413,15 @@ export const AiChannelsTab: React.FC<AiChannelsTabProps> = ({
                       <strong className="text-slate-400 font-bold uppercase tracking-wider text-[9px] block">
                         CLAVE PÚBLICA (TENANT KEY)
                       </strong>
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() => handleCopyKey(webchatConfig.id)}
-                        className="text-[10px] text-purple-600 hover:text-purple-800 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        className="!text-[10px] !text-purple-600 hover:!text-purple-800 hover:!bg-purple-50 !font-bold gap-1 !px-1.5 !py-0.5"
                         title="Copiar Tenant Key"
                       >
                         {copiedKey ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
                         <span>{copiedKey ? 'Copiado' : 'Copiar'}</span>
-                      </button>
+                      </Button>
                     </div>
                     <div className="text-[10px] text-slate-700 font-mono bg-white border border-slate-200 rounded-lg px-2 py-1 mt-1 truncate select-all" title={webchatConfig.id}>
                       {webchatConfig.id}
@@ -433,15 +434,15 @@ export const AiChannelsTab: React.FC<AiChannelsTabProps> = ({
                       <strong className="text-slate-400 font-bold uppercase tracking-wider text-[9px] block">
                         CÓDIGO DE INSERCIÓN WEB
                       </strong>
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() => handleCopySnippet(webchatConfig.id)}
-                        className="text-[10px] text-purple-600 hover:text-purple-800 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        className="!text-[10px] !text-purple-600 hover:!text-purple-800 hover:!bg-purple-50 !font-bold gap-1 !px-1.5 !py-0.5"
                         title="Copiar Script HTML"
                       >
                         {copiedSnippet ? <Check size={11} className="text-emerald-600" /> : <Code size={11} />}
                         <span>{copiedSnippet ? 'Copiado' : 'Copiar script'}</span>
-                      </button>
+                      </Button>
                     </div>
                     <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">
                       Pega la etiqueta antes del cierre de <code className="text-purple-700 bg-purple-50 px-1 rounded">&lt;/body&gt;</code> en tu web externa.
@@ -471,14 +472,14 @@ export const AiChannelsTab: React.FC<AiChannelsTabProps> = ({
                       ? 'Pausar Widget'
                       : 'Activar Widget'}
                   </Button>
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost-danger"
                     onClick={() => onDeleteChannel(webchatConfig.id)}
-                    className="p-2 border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                    className="!p-2 border border-rose-200 !text-rose-500 hover:!bg-rose-50 !rounded-xl"
                     title="Eliminar canal"
                   >
                     <Trash2 size={16} />
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <Button

@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import Button from './Button';
 
 export interface ModalProps {
   open: boolean;
@@ -34,12 +35,14 @@ const Modal: React.FC<ModalProps> = ({
         onClick={e => e.stopPropagation()}
       >
         {!hideCloseButton && (
-          <button
+          <Button
+            variant="icon"
             onClick={onClose}
-            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full p-1.5 transition-colors z-30"
+            aria-label="Cerrar modal"
+            className="absolute top-3 right-3 !text-gray-500 hover:!text-gray-800 hover:!bg-gray-100 !rounded-full !p-1.5 z-30"
           >
             <X size={24} />
-          </button>
+          </Button>
         )}
         <div className={`${padding} overflow-y-auto min-h-0`}>{children}</div>
       </div>

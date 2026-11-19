@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { ClipboardList, Search, X } from 'lucide-react';
+import { ClipboardList, Search } from 'lucide-react';
 import Table from '@shared/components/Table';
 import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
 import type { TypeActivity } from '../schemas/activityTypes.schema';
 import { getActivityTypesColumns } from '../utils/activityTypes.columns';
 
@@ -19,7 +20,6 @@ interface ActivityTypesTableProps {
 
 export const ActivityTypesTable: React.FC<ActivityTypesTableProps> = ({
   types,
-  totalCount,
   loading,
   onEdit,
   onDelete,
@@ -53,26 +53,17 @@ export const ActivityTypesTable: React.FC<ActivityTypesTableProps> = ({
 
         {/* Controles de Búsqueda y Filtro de Estado estilo Mi Empresa */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="relative w-full sm:w-64">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar tipo por nombre..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
-            />
-            {searchTerm && (
-              <Button
-                variant="icon"
-                onClick={() => setSearchTerm('')}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 !p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200"
-                title="Limpiar búsqueda"
-              >
-                <X size={12} />
-              </Button>
-            )}
-          </div>
+          <Input
+            size="sm"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onClear={() => setSearchTerm('')}
+            clearTitle="Limpiar búsqueda"
+            placeholder="Buscar tipo por nombre..."
+            inputPrefix={<Search size={14} />}
+            containerClassName="w-full sm:w-64"
+          />
 
           <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs">
             <Button
@@ -130,34 +121,9 @@ export const ActivityTypesTable: React.FC<ActivityTypesTableProps> = ({
             : 'No hay tipos de actividad registrados en el sistema.'
         }
         keyExtractor={(t: TypeActivity) => t.id}
-        enablePagination={types.length > 8}
-        initialPageSize={8}
+        enablePagination
+        initialPageSize={10}
       />
-
-      {/* Resumen al pie de la tabla idéntico a Mi Empresa */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs text-slate-400 pt-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span>
-            Total en vista: <strong className="text-slate-700 font-bold">{types.length}</strong> de{' '}
-            <strong className="text-slate-700 font-bold">{totalCount}</strong> registradas
-          </span>
-          {(searchTerm || statusFilter !== 'all') && (
-            <>
-              <span className="text-slate-300">•</span>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setSearchTerm('');
-                  setStatusFilter('all');
-                }}
-                className="!text-indigo-600 hover:!text-indigo-800 !p-1 !text-xs font-semibold"
-              >
-                Limpiar filtros
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
     </div>
   );
 };

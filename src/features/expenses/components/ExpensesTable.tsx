@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { Expense } from '@core/models/Expense';
 import { Edit, Trash2, Inbox, Calendar, Briefcase } from 'lucide-react';
 import Table, { type ColumnDef } from '@shared/components/Table';
+import Button from '@shared/components/Button';
 import { formatCurrency } from '@shared/utils/formatters';
 
 interface Props {
@@ -121,12 +122,13 @@ const ExpensesTable: React.FC<Props> = ({
           const expense = row.original;
           return (
             <div className="flex space-x-1 justify-end">
-              <button
+              <Button
+                variant="icon"
                 onClick={() => onUploadReceipt(expense)}
-                className={`p-2 rounded-full cursor-pointer transition-colors ${
+                className={`!p-2 !rounded-full ${
                   expense.receiptUrl
-                    ? 'text-green-600 hover:bg-green-100'
-                    : 'text-gray-400 hover:text-blue-600 hover:bg-blue-100'
+                    ? '!text-green-600 hover:!bg-green-100'
+                    : '!text-gray-400 hover:!text-blue-600 hover:!bg-blue-100'
                 }`}
                 title={
                   expense.receiptUrl
@@ -140,21 +142,23 @@ const ExpensesTable: React.FC<Props> = ({
                     <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-green-500 ring-2 ring-white"></span>
                   )}
                 </div>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="icon"
                 onClick={() => onEdit(expense)}
-                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full cursor-pointer transition-colors"
+                className="!p-2 !text-gray-500 hover:!text-blue-600 hover:!bg-blue-100 !rounded-full"
                 title="Editar"
               >
                 <Edit size={18} />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="icon"
                 onClick={() => onDelete(expense)}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full cursor-pointer transition-colors"
+                className="!p-2 !text-gray-500 hover:!text-red-600 hover:!bg-red-100 !rounded-full"
                 title="Eliminar"
               >
                 <Trash2 size={18} />
-              </button>
+              </Button>
             </div>
           );
         },

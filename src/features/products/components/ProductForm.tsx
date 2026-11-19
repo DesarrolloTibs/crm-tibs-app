@@ -240,14 +240,14 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
           
           {coverPreview ? (
             <div className="border border-slate-200 rounded-2xl p-3 bg-white shadow-sm flex flex-col items-center justify-center relative h-64 w-full">
-              <button
-                type="button"
+              <Button
+                variant="icon"
                 onClick={removeCover}
-                className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-full transition-colors cursor-pointer"
+                className="absolute top-2 right-2 !p-1.5 bg-red-100 !text-red-600 hover:!bg-red-200 !rounded-full"
                 title="Quitar portada"
               >
                 <X size={16} />
-              </button>
+              </Button>
               <img
                 src={coverPreview}
                 alt="Vista previa de portada"
@@ -310,23 +310,24 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-1 flex-grow">
-                      <Tag size={12} className="text-slate-400 mr-1 flex-shrink-0" />
-                      <input
-                        type="text"
-                        placeholder="Título / Etiqueta (Ej. Hoja Técnica)"
-                        value={sf.title}
-                        onChange={(e) => updateStagedSpecTitle(sf.id, e.target.value)}
-                        className="text-xs w-full focus:outline-none text-slate-700 bg-transparent"
-                      />
-                    </div>
-                    <button
-                      type="button"
+                    <Input
+                      size="sm"
+                      type="text"
+                      placeholder="Título / Etiqueta (Ej. Hoja Técnica)"
+                      value={sf.title}
+                      onChange={(e) => updateStagedSpecTitle(sf.id, e.target.value)}
+                      inputPrefix={<Tag size={12} />}
+                      containerClassName="flex-grow"
+                      className="bg-white"
+                    />
+                    <Button
+                      variant="icon"
                       onClick={() => removeStagedSpec(sf.id)}
-                      className="p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+                      className="!p-1 hover:!text-red-500 !rounded-full flex-shrink-0"
+                      title="Quitar ficha"
                     >
                       <X size={16} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}

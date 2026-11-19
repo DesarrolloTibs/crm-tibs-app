@@ -117,13 +117,14 @@ const ReceiptUploadModal: React.FC<ReceiptUploadModalProps> = ({
         <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <h4 className="text-sm font-semibold text-gray-700 mb-2">Comprobante Actual</h4>
           <div className="flex items-center">
-            <button
+            <Button
+              variant="ghost"
               onClick={handleDownload}
-              className="flex items-center text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded-md transition-colors"
+              className="gap-2 !text-blue-600 hover:!text-blue-800 hover:!bg-blue-50 !px-3 !py-1.5"
             >
-              <Download size={16} className="mr-2" />
+              <Download size={16} />
               Descargar Comprobante
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -134,12 +135,14 @@ const ReceiptUploadModal: React.FC<ReceiptUploadModalProps> = ({
             <Paperclip size={18} className="text-gray-600 mr-2 flex-shrink-0" />{' '}
             <span className="text-sm text-gray-800 truncate">{selectedFile.name}</span>
           </div>
-          <button
+          <Button
+            variant="icon"
             onClick={() => setSelectedFile(null)}
-            className="p-1 text-gray-500 hover:text-red-600 rounded-full"
+            className="!p-1 !text-gray-500 hover:!text-red-600 !rounded-full"
+            title="Quitar archivo"
           >
             <X size={18} />
-          </button>
+          </Button>
         </div>
       )}
 

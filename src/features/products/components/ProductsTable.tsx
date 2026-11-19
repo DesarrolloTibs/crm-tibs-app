@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { Product } from '@core/models/Product';
 import { Edit, Trash2, UserCheck, UserX, Package } from 'lucide-react';
 import Table, { type ColumnDef } from '@shared/components/Table';
+import Button from '@shared/components/Button';
 import { formatCurrency } from '@shared/utils/formatters';
 
 interface Props {
@@ -169,32 +170,35 @@ const ProductsTable: React.FC<Props> = ({
           const product = row.original;
           return (
             <div className="flex justify-end items-center gap-1.5">
-              <button
+              <Button
+                variant="icon"
                 onClick={() => onEdit(product)}
-                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors cursor-pointer"
+                className="!p-2 !text-gray-500 hover:!text-blue-600 hover:!bg-blue-50 !rounded-full"
                 title="Editar producto"
               >
                 <Edit size={18} />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="icon"
                 onClick={() => onUpdateStatus(product)}
-                className={`p-2 text-gray-500 rounded-full transition-colors cursor-pointer ${
+                className={`!p-2 !text-gray-500 !rounded-full ${
                   product.status
-                    ? 'hover:text-yellow-600 hover:bg-yellow-50'
-                    : 'hover:text-green-600 hover:bg-green-50'
+                    ? 'hover:!text-yellow-600 hover:!bg-yellow-50'
+                    : 'hover:!text-green-600 hover:!bg-green-50'
                 }`}
                 title={product.status ? 'Desactivar producto' : 'Activar producto'}
               >
                 {product.status ? <UserX size={18} /> : <UserCheck size={18} />}
-              </button>
+              </Button>
               {isAdmin && (
-                <button
+                <Button
+                  variant="icon"
                   onClick={() => onDelete(product)}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
+                  className="!p-2 !text-gray-500 hover:!text-red-600 hover:!bg-red-50 !rounded-full"
                   title="Eliminar producto físicamente"
                 >
                   <Trash2 size={18} />
-                </button>
+                </Button>
               )}
             </div>
           );

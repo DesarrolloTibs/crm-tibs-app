@@ -22,6 +22,7 @@ import Input from '@shared/components/Input';
 import TextArea from '@shared/components/TextArea';
 import Select from '@shared/components/Select';
 import Button from '@shared/components/Button';
+import Loader from '@shared/components/Loader';
 import StageStepper from '@shared/components/StageStepper';
 
 interface Props {
@@ -913,7 +914,8 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                                   <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs font-bold text-slate-700">Cantidad:</span>
-                                      <input
+                                      <Input
+                                        size="sm"
                                         type="number"
                                         min="1"
                                         value={currentQty}
@@ -921,7 +923,8 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                                           const val = Math.max(1, parseInt(e.target.value) || 1);
                                           setProductQuantities(prev => ({ ...prev, [p.id!]: val }));
                                         }}
-                                        className="w-16 h-8 px-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 text-center focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        containerClassName="w-16"
+                                        className="h-8 text-center font-bold text-slate-800 bg-white border-slate-300"
                                       />
                                       <span className="text-xs text-slate-500 font-medium">
                                         {p.unidadMedida || 'Pieza'}(s)
@@ -967,7 +970,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                                       </div>
                                       <span className="text-[10px] font-bold text-indigo-600 group-hover:translate-x-0.5 transition-transform flex-shrink-0 flex items-center gap-1">
                                         {downloadingFileId === file.id ? (
-                                          <div className="w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                          <Loader inline size="xs" colorClassName="text-indigo-500" />
                                         ) : (
                                           <span>Descargar →</span>
                                         )}

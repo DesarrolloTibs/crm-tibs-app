@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@features/auth';
 import { Users, Briefcase, BarChart3, LogOut, ClipboardList, DollarSign, Settings, Package, LifeBuoy, LayoutDashboard, MessageSquare } from 'lucide-react';
+import Button from '@shared/components/Button';
 
 interface Props {
     isSidebarOpen: boolean;
@@ -54,12 +55,13 @@ const Sidebar: React.FC<Props> = ({ isSidebarOpen, toggleSidebar }) => {
                 </ul>
             </nav>
             <div className="p-4 border-t border-slate-100 bg-slate-50/30">
-                <button
+                <Button
+                    variant="ghost-danger"
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 transition-all duration-200 text-sm font-extrabold uppercase tracking-widest border border-transparent hover:border-red-100 cursor-pointer"
+                    className="w-full !justify-start gap-3 !px-4 !py-2.5 !rounded-xl !text-sm !font-extrabold uppercase tracking-widest border border-transparent hover:border-red-100"
                 >
                     <LogOut size={18} /> Cerrar Sesión
-                </button>
+                </Button>
             </div>
         </aside>
     );

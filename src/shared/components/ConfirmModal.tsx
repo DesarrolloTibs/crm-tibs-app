@@ -1,4 +1,6 @@
 import React from 'react';
+import { X } from 'lucide-react';
+import Button from './Button';
 
 interface ConfirmModalProps {
   open: boolean;
@@ -21,35 +23,37 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 }) => {
   if (!open) return null;
 
-  const confirmStyles =
-    variant === 'danger'
-      ? 'bg-red-600 hover:bg-red-700 text-white'
-      : 'bg-yellow-500 hover:bg-yellow-600 text-white';
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-6 min-w-[350px] max-w-sm w-full relative">
-        <button
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl leading-none"
+        <Button
+          variant="icon"
+          className="absolute top-3 right-3 !text-gray-400 hover:!text-gray-700 !rounded-full !p-1"
           onClick={onClose}
           aria-label="Cerrar"
         >
-          &times;
-        </button>
-        <div className="mb-5 text-base text-slate-700 leading-relaxed">{message}</div>
+          <X size={18} />
+        </Button>
+        <div className="mb-5 text-base text-slate-700 leading-relaxed pr-4">{message}</div>
         <div className="flex justify-end gap-2">
-          <button
-            className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition-colors"
+          <Button
+            size="sm"
+            variant="secondary"
+            className="rounded-xl bg-slate-100 border-transparent hover:bg-slate-200"
             onClick={onClose}
           >
             {cancelLabel}
-          </button>
-          <button
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${confirmStyles}`}
+          </Button>
+          <Button
+            size="sm"
+            variant={variant === 'danger' ? 'danger' : 'primary'}
+            className={`rounded-xl shadow-none hover:translate-y-0 ${
+              variant === 'warning' ? '!bg-yellow-500 hover:!bg-yellow-600' : ''
+            }`}
             onClick={onConfirm}
           >
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

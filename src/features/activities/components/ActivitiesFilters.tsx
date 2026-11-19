@@ -8,6 +8,7 @@ import {
 import UnifiedSearchBar, { type SearchBadge } from '@shared/components/UnifiedSearchBar';
 import Button from '@shared/components/Button';
 import Select from '@shared/components/Select';
+import Input from '@shared/components/Input';
 import type {
   TypeActivity,
   ActivityFiltersState,
@@ -200,11 +201,12 @@ export const ActivitiesFilters: React.FC<ActivitiesFiltersProps> = ({
             <h4 className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1.5 select-none flex items-center gap-1">
               <CalendarDays size={10} /> Fecha
             </h4>
-            <input
+            <Input
+              size="sm"
               type="date"
               value={filters.date}
               onChange={(e) => onFilterChange('date', e.target.value)}
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 focus:outline-none focus:border-indigo-500 cursor-pointer font-medium"
+              className="cursor-pointer font-medium"
             />
           </div>
 

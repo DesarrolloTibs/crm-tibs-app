@@ -8,8 +8,8 @@ import {
   AlertTriangle,
   Clock,
   ShieldCheck,
-  X,
   Mic,
+  MicOff,
 } from 'lucide-react';
 import {
   WhatsAppLogo,
@@ -21,6 +21,8 @@ import type { ChannelFilter } from '../hooks/useConversationsSocket';
 import type { Conversation } from '@core/models/Conversation';
 import EmptyState from '@shared/components/EmptyState';
 import Badge from '@shared/components/Badge';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
 import {
   formatSidebarDate,
   getWhatsAppWindowStatus,
@@ -187,13 +189,14 @@ export const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
           )}
         </h2>
         <div className="flex items-center gap-1.5">
-          <button
+          <Button
+            variant="icon"
             onClick={onRefresh}
-            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="hover:!text-slate-600"
             title="Refrescar lista"
           >
             <RefreshCw size={15} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -242,25 +245,17 @@ export const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
 
       {/* Buscador reactivo */}
       <div className="p-2.5 border-b border-slate-100 bg-white">
-        <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl focus-within:border-blue-500 focus-within:bg-white transition-all">
-          <Search size={14} className="text-slate-400 absolute left-3" />
-          <input
-            type="text"
-            placeholder="Buscar por contacto o mensaje..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-8 pr-8 py-1.5 text-xs bg-transparent focus:outline-none"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => onSearchChange('')}
-              className="absolute right-2 p-0.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
-              title="Limpiar búsqueda"
-            >
-              <X size={12} />
-            </button>
-          )}
-        </div>
+        <Input
+          size="sm"
+          type="text"
+          placeholder="Buscar por contacto o mensaje..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          onClear={() => onSearchChange('')}
+          clearTitle="Limpiar búsqueda"
+          inputPrefix={<Search size={14} />}
+          className="focus:border-blue-500"
+        />
       </div>
 
       {/* Lista scrolleable de conversaciones */}
@@ -352,7 +347,19 @@ export const ChatListSidebar: React.FC<ChatListSidebarProps> = ({
                       {conv.lastMessage && conv.lastMessage.sender !== 'contact' && (
                         <span className="shrink-0">{renderDeliveryStatusIcon(conv.lastMessage.status, conv.lastMessage.errorMessage)}</span>
                       )}
-                      {conv.lastMessage?.messageType === 'audio' || conv.lastMessage?.mediaUrl ? (
+                      {conv.lastMessage?.messageType === 'audio_unsupported' ||
+                      conv.lastMessage?.content === '[Nota de voz no procesada - Soporte de audio deshabilitado]' ? (
+                        <span
+                          className={`flex items-center gap-1 truncate ${
+                            unreadCount > 0 ? 'font-bold text-amber-800' : 'text-amber-700/90'
+                          }`}
+                        >
+                          <MicOff size={12} className="shrink-0 text-amber-600" />
+                          <span className="truncate">
+                            Nota de voz no procesada (audio deshabilitado)
+                          </span>
+                        </span>
+                      ) : conv.lastMessage?.messageType === 'audio' || conv.lastMessage?.mediaUrl ? (
                         <span className={`flex items-center gap-1 truncate ${
                           unreadCount > 0 ? 'font-bold text-slate-800' : 'text-slate-500'
                         }`}>

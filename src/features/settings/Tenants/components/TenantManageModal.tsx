@@ -17,6 +17,7 @@ import type {
   TenantGeneralFormData,
   RenewalQueueResponse,
   RenewalQueueItem,
+  GlobalAiProviderMeta,
 } from '../schemas/tenants.schema';
 
 interface TenantManageModalProps {
@@ -42,6 +43,7 @@ interface TenantManageModalProps {
   queueLoading: boolean;
   queueSubmitting: boolean;
   submitting: boolean;
+  globalAiProvider?: GlobalAiProviderMeta | null;
 }
 
 export const TenantManageModal: React.FC<TenantManageModalProps> = ({
@@ -60,6 +62,7 @@ export const TenantManageModal: React.FC<TenantManageModalProps> = ({
   queueLoading,
   queueSubmitting,
   submitting,
+  globalAiProvider = null,
 }) => {
   if (!tenant) return null;
 
@@ -159,6 +162,7 @@ export const TenantManageModal: React.FC<TenantManageModalProps> = ({
               onSubmit={onUpdateGeneral}
               onClose={onClose}
               submitting={submitting}
+              globalAiProvider={globalAiProvider}
             />
           )}
 

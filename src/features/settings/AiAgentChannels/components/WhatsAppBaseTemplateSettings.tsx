@@ -26,6 +26,8 @@ import {
 import Loader from '@shared/components/Loader';
 import Button from '@shared/components/Button';
 import Badge from '@shared/components/Badge';
+import TextArea from '@shared/components/TextArea';
+import Input from '@shared/components/Input';
 import { useFormValidation } from '@shared/components/useFormValidation';
 import {
   whatsappBaseTemplateSchema,
@@ -388,7 +390,8 @@ export const WhatsAppBaseTemplateSettings: React.FC<WhatsAppBaseTemplateSettings
                 {headerText.length} / 60
               </span>
             </div>
-            <input
+            <Input
+              size="sm"
               type="text"
               value={headerText}
               onChange={(e) => {
@@ -397,10 +400,10 @@ export const WhatsAppBaseTemplateSettings: React.FC<WhatsAppBaseTemplateSettings
               }}
               placeholder="Ej: Mensaje Importante o Notificación"
               maxLength={60}
-              className={`w-full py-2 px-3 bg-gray-50 border rounded-xl text-xs text-gray-800 outline-none transition-all font-medium ${
+              className={`font-medium ${
                 errors.headerText
-                  ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
-                  : 'border-gray-200 focus:border-emerald-500 focus:bg-white'
+                  ? '!border-rose-400 !bg-rose-50/20 focus:!border-rose-500 focus:!ring-rose-500/20'
+                  : 'bg-gray-50 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20 focus:bg-white'
               }`}
             />
             {errors.headerText && (
@@ -426,7 +429,7 @@ export const WhatsAppBaseTemplateSettings: React.FC<WhatsAppBaseTemplateSettings
               </span>
             </div>
 
-            <textarea
+            <TextArea
               ref={textareaRef}
               value={bodyText}
               onChange={(e) => handleBodyChange(e.target.value)}
@@ -443,10 +446,10 @@ export const WhatsAppBaseTemplateSettings: React.FC<WhatsAppBaseTemplateSettings
               rows={4}
               placeholder="Hola {{1}}, te saluda {{3}} de {{2}}..."
               maxLength={1024}
-              className={`w-full py-2.5 px-3 bg-gray-50 border rounded-xl text-xs text-gray-800 outline-none transition-all font-medium leading-relaxed resize-none ${
+              className={`!py-2.5 !px-3 !bg-gray-50 !rounded-xl !text-xs !text-gray-800 !min-h-[96px] font-medium leading-relaxed resize-none focus:!bg-white shadow-none focus:shadow-none ${
                 errors.bodyText
-                  ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
-                  : 'border-gray-200 focus:border-emerald-500 focus:bg-white'
+                  ? '!border-rose-400 !bg-rose-50/20 focus:!border-rose-500'
+                  : '!border-gray-200 focus:!border-emerald-500'
               }`}
               required
             />
@@ -535,7 +538,8 @@ export const WhatsAppBaseTemplateSettings: React.FC<WhatsAppBaseTemplateSettings
                 {footerText.length} / 60
               </span>
             </div>
-            <input
+            <Input
+              size="sm"
               type="text"
               value={footerText}
               onChange={(e) => {
@@ -544,10 +548,10 @@ export const WhatsAppBaseTemplateSettings: React.FC<WhatsAppBaseTemplateSettings
               }}
               placeholder="Ej: Responde a este mensaje para continuar"
               maxLength={60}
-              className={`w-full py-2 px-3 bg-gray-50 border rounded-xl text-xs text-gray-800 outline-none transition-all font-medium ${
+              className={`font-medium ${
                 errors.footerText
-                  ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
-                  : 'border-gray-200 focus:border-emerald-500 focus:bg-white'
+                  ? '!border-rose-400 !bg-rose-50/20 focus:!border-rose-500 focus:!ring-rose-500/20'
+                  : 'bg-gray-50 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20 focus:bg-white'
               }`}
             />
             {errors.footerText && (

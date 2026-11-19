@@ -3,6 +3,7 @@ import { login } from '@core/services/authService';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, LogIn, ShieldAlert, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import LoginBackground from './LoginBackground';
+import Loader from '@shared/components/Loader';
 import './Login.css';
 
 
@@ -169,7 +170,7 @@ const Login: React.FC = () => {
                         >
                             {loading ? (
                                 <div className="flex items-center gap-3">
-                                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                    <Loader inline size="sm" colorClassName="text-white" />
                                     AUTENTICANDO...
                                 </div>
                             ) : (

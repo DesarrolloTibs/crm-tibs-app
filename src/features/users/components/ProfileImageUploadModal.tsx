@@ -92,12 +92,14 @@ const ProfileImageUploadModal: React.FC<ProfileImageUploadModalProps> = ({
             <Paperclip size={18} className="text-gray-600 mr-2 flex-shrink-0" />{' '}
             <span className="text-sm text-gray-800 truncate">{selectedFile.name}</span>
           </div>
-          <button
+          <Button
+            variant="icon"
             onClick={() => setSelectedFile(null)}
-            className="p-1 text-gray-500 hover:text-red-600 rounded-full"
+            className="!p-1 !text-gray-500 hover:!text-red-600 !rounded-full"
+            title="Quitar archivo"
           >
             <X size={18} />
-          </button>
+          </Button>
         </div>
       )}
 

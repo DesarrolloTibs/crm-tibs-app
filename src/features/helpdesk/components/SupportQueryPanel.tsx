@@ -80,9 +80,13 @@ const SupportQueryPanel: React.FC<Props> = ({ activeTabMobile, setActiveTabMobil
         ) : (
           <div className="animate-in fade-in duration-500 flex flex-col h-full">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-              <button onClick={() => { setQueriedTickets(null); setQueryError(''); }} className="flex items-center gap-1 text-[10px] font-black text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">
+              <Button
+                variant="ghost"
+                onClick={() => { setQueriedTickets(null); setQueryError(''); }}
+                className="gap-1 !text-[10px] !font-black !text-slate-500 hover:!text-indigo-600 hover:!bg-slate-100 uppercase tracking-widest !px-2 !py-1"
+              >
                 <ArrowLeft size={12} className="stroke-[3]" /> Nueva Consulta
-              </button>
+              </Button>
               <span className="bg-slate-100 text-slate-600 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
                 {queriedTickets.length} {queriedTickets.length === 1 ? 'Resultado' : 'Resultados'}
               </span>

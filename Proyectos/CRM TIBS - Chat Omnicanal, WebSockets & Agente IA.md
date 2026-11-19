@@ -266,31 +266,36 @@ Implementado en [`WhatsAppBaseTemplateSettings.tsx`](file:///c:/Users/sopor/Proy
 
 #### 🎙️ 6. Soporte de Notas de Voz y Reproducción de Audio (`MessageFeed.tsx` & `ChatListSidebar.tsx`)
 * **Modelo Tipado (`src/core/models/Conversation.ts`):**
-  * `MessageType` incluye `'audio'`.
+  * `MessageType` incluye `'audio'` y `'audio_unsupported'`.
   * La interfaz `Message` incorpora `mediaUrl?: string | null`, `mediaMimeType?: string | null` y `mediaDuration?: number | null`.
 * **Reproductor Integrado en el Feed de Conversación (`MessageFeed.tsx`):**
-  * Detecta mensajes de audio (`msg.messageType === 'audio'` o `msg.mediaUrl`).
+  * Detecta mensajes de audio procesados (`msg.messageType === 'audio'` o `msg.mediaUrl` cuando no es `audio_unsupported`).
   * Resuelve la URL absoluta mediante `VITE_BASE_URL` (ej. `http://localhost:3091/uploads/conversations/audios/...`).
   * Despliega un reproductor nativo con `<audio controls preload="metadata" />` con controles de reproducción, barra de tiempo y volumen.
+  * **Notas de Voz No Soportadas (`messageType: 'audio_unsupported'`, `mediaUrl: null`):** Cuando un contacto envía audio por canales externos (WhatsApp, Messenger, Instagram) bajo proveedor IBM con el add-on deshabilitado, se renderiza una burbuja informativa limpia con icono `MicOff` (*"Nota de voz no procesada — Soporte de audio deshabilitado..."*) sin renderizar un `<audio>` roto ni generar errores de reproducción.
   * **Transcripción de Respaldo:** Si el mensaje cuenta con transcripción textual (`content`), se visualiza debajo del reproductor como bloque de referencia con formato itálico y encabezado sutil *"Transcripción:"*.
   * **Autonomía Operativa:** Si el agente de IA está desactivado (`botActive = false`), el asesor comercial puede escuchar la nota de voz original directamente con un solo clic.
 * **Previsualización en la Barra Lateral (`ChatListSidebar.tsx`):**
-  * Si el último mensaje es de tipo audio, muestra el icono de micrófono `Mic` acompañado de la etiqueta *"Nota de voz: ..."*, permitiendo identificar rápidamente los mensajes de voz pendientes en la lista de chats.
+  * Si el último mensaje es de tipo `'audio_unsupported'`, despliega el icono `MicOff` y la etiqueta limpia *"Nota de voz no procesada (audio deshabilitado)"*.
+  * Si el último mensaje es de tipo `'audio'`, muestra el icono de micrófono `Mic` acompañado de la etiqueta *"Nota de voz: ..."*, permitiendo identificar rápidamente los mensajes de voz pendientes en la lista de chats.
 
 ---
 
 ## 🤖 7. Asistente Virtual Flotante (`WebChat.tsx`)
 
 Adicional a la consola omnicanal, el sistema incluye un asistente conversacional flotante disponible en toda la plataforma ([`src/features/conversations/components/WebChat.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/conversations/components/WebChat.tsx)):
-* Consume el servicio [`webchatService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/core/services/webchatService.ts) mediante `queryWebChat` (`POST /api/webchat/query`) y `transcribeWebChatAudio` (`POST /api/webchat/transcribe`).
+* Consume el servicio [`webchatService.ts`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/core/services/webchatService.ts) mediante `getWebChatAudioStatus` (`GET /api/webchat/audio-status`), `queryWebChat` (`POST /api/webchat/query`) y `transcribeWebChatAudio` (`POST /api/webchat/transcribe`).
+* **Control Dinámico de Disponibilidad de Audio (`GET /api/webchat/audio-status`):**
+  * Al inicializar, al abrir el WebChat, al conmutar `selected_tenant` (como `SuperAdmin`) o tras actualizar la configuración de audio/proveedor (`webchatAudioStatusChanged`), consulta `getWebChatAudioStatus()` para obtener `{ globalProvider, rawModelProvider, usesIbmStt, ibmAudioEnabled, audioEnabled, transcribeEndpointEnabled }`.
+  * Si `transcribeEndpointEnabled === false` (por ejemplo, proveedor global `ibm` con `ibmAudioEnabled === false`, o mientras un proveedor multimodal como `gemini` / `azure_openai` no soporte `/transcribe`), deshabilita el botón de micrófono (`MicOff` + tooltip explicativo + barra de aviso sutil `.webchat-voice-disabled-hint`) e impide iniciar `MediaRecorder`.
 * **Entrada Multimodal (Texto y Voz con `MediaRecorder`):**
-  * Incorpora un botón de micrófono junto al input de texto que captura audio vía `navigator.mediaDevices.getUserMedia({ audio: true })` y `MediaRecorder`.
+  * Incorpora un botón de micrófono junto al input de texto que captura audio vía `navigator.mediaDevices.getUserMedia({ audio: true })` y `MediaRecorder` cuando `transcribeEndpointEnabled === true`.
   * Durante la grabación activa, despliega una barra dedicada con indicador pulsante, cronómetro `mm:ss`, botón **Cancelar** y botón **Enviar**. Libera todas las pistas del micrófono (`stream.getTracks().forEach(track => track.stop())`) al enviar, cancelar, cerrar o desmontar el componente.
-  * **Flujo de Envío en 2 Pasos, Reproductor de Nota de Voz y Persistencia en Texto Plano:** Al detener y enviar la grabación, muestra el estado *"Transcribiendo audio..."*, envía el `Blob` en `FormData` (`audio`) a `POST /api/webchat/transcribe` (IBM Watson Speech to Text en backend) y, al recibir `{ text }`:
+  * **Flujo de Envío en 2 Pasos, Reproductor de Nota de Voz y Persistencia en Texto Plano:** Al detener y enviar la grabación, muestra el estado *"Transcribiendo audio..."*, envía el `Blob` en `FormData` (`audio`) a `POST /api/webchat/transcribe` (IBM Watson Speech to Text en backend, sin descontar tokens de la cuota) y, al recibir `{ text }`:
     - Genera una `ObjectURL` local del `Blob` de audio grabado (`audioUrl`, revocada automáticamente al cerrar o desmontar) y llama a `handleSend(transcribedText, localAudioUrl)`.
     - En la burbuja del usuario se muestra el encabezado **Nota de voz**, el reproductor nativo `<audio controls preload="metadata" />` y debajo el bloque **Transcripción:** en cursiva (`"{msg.content}"`), homologado con [`MessageFeed.tsx`](file:///c:/Users/sopor/Proyectos/CRM/crm-tibs-app/src/features/conversations/components/MessageFeed.tsx).
     - En el arreglo `conversationHistory` enviado a `POST /api/webchat/query` se envía estrictamente `{ role: 'user', content: text }` en texto plano.
-    - Si ocurre un error 400 (sin voz detectada) o denegación de permisos, muestra una alerta amigable sin disparar `POST /api/webchat/query` ni agregar mensajes vacíos.
+    - Si ocurre un error `400` (sin voz detectada), `403` (add-on deshabilitado para la organización), `501` (proveedor multimodal sin `/transcribe`) o denegación de permisos, actualiza el estado local de audio si aplica, muestra una alerta amigable y **nunca** invoca `POST /api/webchat/query` ni agrega mensajes vacíos.
 * **Memoria Completa de Sesión (`conversationHistory`) y Reinicio:**
   * Envía el arreglo íntegro de mensajes `{ role: 'user' | 'assistant', content }` de la sesión activa en pantalla sin recortarlo (sincronizado vía `messagesRef`).
   * Al cerrar la ventana del chat (botón `X`), se vacía por completo el historial y se revocan las URLs de audio en memoria para reiniciar la sesión con `conversationHistory: []`.

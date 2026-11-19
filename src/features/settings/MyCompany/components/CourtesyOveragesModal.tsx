@@ -107,14 +107,14 @@ export const CourtesyOveragesModal: React.FC<CourtesyOveragesModalProps> = ({
               <RefreshCw size={14} className={loading ? 'animate-spin text-indigo-600' : 'text-slate-500'} />
             </Button>
 
-            <button
-              type="button"
+            <Button
+              variant="icon"
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer ml-0.5 border border-transparent hover:border-slate-200"
+              className="!rounded-xl !text-slate-400 hover:!text-slate-700 hover:!bg-slate-100 ml-0.5 border border-transparent hover:border-slate-200"
               title="Cerrar ventana de auditoría"
             >
               <X size={18} />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -169,8 +169,8 @@ export const CourtesyOveragesModal: React.FC<CourtesyOveragesModalProps> = ({
               maxHeight="420px"
               minHeight="180px"
               keyExtractor={(item: CourtesyOverageTenantReport) => String(item.tenant_id)}
-              enablePagination={report.report.length > 8}
-              initialPageSize={8}
+              enablePagination
+              initialPageSize={10}
             />
           </div>
         )}

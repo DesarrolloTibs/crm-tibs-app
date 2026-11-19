@@ -242,14 +242,15 @@ const TicketInteractionsTab: React.FC<TicketInteractionsTabProps> = ({ ticketId 
               )}
             </div>
             {isAdmin && (
-              <button
+              <Button
+                variant="ghost-danger"
                 onClick={() => handleDeleteInteraction(interaction.id!)}
-                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full transition-colors ml-4 cursor-pointer"
+                className="!p-2 hover:!bg-red-100 !rounded-full ml-4"
                 aria-label="Eliminar registro del historial"
                 title="Eliminar registro del historial"
               >
                 <Trash2 size={20} />
-              </button>
+              </Button>
             )}
           </li>
         ))}

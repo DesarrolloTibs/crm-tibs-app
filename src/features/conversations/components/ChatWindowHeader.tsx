@@ -1,6 +1,9 @@
 import React from 'react';
 import { ArrowLeft, Bot, Users, Clock, AlertTriangle, ShieldCheck } from 'lucide-react';
 import type { Conversation } from '@core/models/Conversation';
+import Select from '@shared/components/Select';
+import Button from '@shared/components/Button';
+import Switch from '@shared/components/Switch';
 import { getChannelIcon, getInitials } from './ChatListSidebar';
 import { getWhatsAppWindowStatus } from '../utils/messageUtils';
 
@@ -27,13 +30,14 @@ const ChatWindowHeader: React.FC<ChatWindowHeaderProps> = ({
     <header className="p-4 border-b border-gray-150 bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xs">
       {/* Left: back + avatar + info + window status pill */}
       <div className="flex items-center gap-3">
-        <button
+        <Button
+          variant="icon"
           onClick={onBack}
-          className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer mr-1"
+          className="md:hidden !p-2 !text-gray-600 mr-1"
           title="Volver al listado"
         >
           <ArrowLeft size={20} />
-        </button>
+        </Button>
         <div className="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-base shrink-0">
           {getInitials(conv.clientName)}
         </div>
@@ -79,19 +83,26 @@ const ChatWindowHeader: React.FC<ChatWindowHeaderProps> = ({
       <div className="flex flex-wrap items-center gap-2.5 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
       {/* Executive selector */}
       <div className="flex items-center gap-2">
-        <Users size={16} className="text-gray-400" />
-        <select
-          value={conv.assignedUserId || ''}
-          onChange={(e) => onAssignUser(e.target.value)}
-          className="py-1 px-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white outline-none focus:border-blue-500 transition-colors"
-        >
-          {!conv.assignedUserId && (
-            <option value="" disabled hidden>-- Seleccionar Ejecutivo --</option>
-          )}
-          {allUsers.map((u: any) => (
-            <option key={u.id} value={u.id}>{u.username} ({u.role})</option>
-          ))}
-        </select>
+        <Users size={16} className="text-gray-400 shrink-0" />
+        <div className="w-48 sm:w-56">
+          <Select
+            size="sm"
+            isSearchable={allUsers.length > 6}
+            placeholder="-- Seleccionar Ejecutivo --"
+            value={
+              allUsers
+                .map((u: any) => ({ value: u.id, label: `${u.username} (${u.role})` }))
+                .find((opt) => opt.value === conv.assignedUserId) || null
+            }
+            onChange={(selected: any) => {
+              if (selected?.value) onAssignUser(selected.value);
+            }}
+            options={allUsers.map((u: any) => ({
+              value: u.id,
+              label: `${u.username} (${u.role})`,
+            }))}
+          />
+        </div>
       </div>
 
       {/* Bot toggle */}
@@ -100,12 +111,12 @@ const ChatWindowHeader: React.FC<ChatWindowHeaderProps> = ({
           <Bot size={14} className={conv.botActive ? 'text-blue-600' : 'text-gray-400'} />
           Bot IA
         </span>
-        <button
-          onClick={onToggleBot}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${conv.botActive ? 'bg-blue-600' : 'bg-gray-300'}`}
-        >
-          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${conv.botActive ? 'translate-x-6' : 'translate-x-1'}`} />
-        </button>
+        <Switch
+          checked={Boolean(conv.botActive)}
+          onChange={() => onToggleBot()}
+          color="blue"
+          title={conv.botActive ? 'Desactivar Bot IA' : 'Activar Bot IA'}
+        />
       </div>
     </div>
   </header>

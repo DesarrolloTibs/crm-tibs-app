@@ -7,6 +7,7 @@ import Button from '@shared/components/Button';
 import FormField from '@shared/components/FormField';
 import Select from '@shared/components/Select';
 import CreatableSelect from '@shared/components/CreatableSelect';
+import Switch from '@shared/components/Switch';
 import { User, Mail, Phone, Briefcase, Check } from 'lucide-react';
 
 interface ContactFormProps {
@@ -314,21 +315,11 @@ export const ContactForm: React.FC<ContactFormProps> = ({
           </span>
         </div>
 
-        <button
-          type="button"
-          role="switch"
-          aria-checked={formData.estatus}
-          onClick={handleToggleStatus}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${
-            formData.estatus ? 'bg-emerald-600' : 'bg-slate-300'
-          }`}
-        >
-          <span
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-              formData.estatus ? 'translate-x-5' : 'translate-x-0'
-            }`}
-          />
-        </button>
+        <Switch
+          checked={Boolean(formData.estatus)}
+          onChange={() => handleToggleStatus()}
+          color="emerald"
+        />
       </div>
 
       {/* Botones de Acción */}

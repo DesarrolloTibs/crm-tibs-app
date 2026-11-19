@@ -9,6 +9,7 @@ import {
 import Button from '@shared/components/Button';
 import Input from '@shared/components/Input';
 import Select from '@shared/components/Select';
+import Switch from '@shared/components/Switch';
 import { AiOrchestratorCanvas } from './AiOrchestratorCanvas';
 import { AiSubAgentsTable } from './AiSubAgentsTable';
 import type { SubAgent, SubAgentStatusFilter } from '../schemas/aiAgent.schema';
@@ -101,18 +102,14 @@ export const AiGeneralTab: React.FC<AiGeneralTabProps> = ({
           </div>
         </div>
 
-        <label className="relative inline-flex items-center cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            className="sr-only peer"
-          />
-          <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
-          <span className="ml-3 text-xs font-bold text-slate-700">
-            {isActive ? 'Activo' : 'Inactivo'}
-          </span>
-        </label>
+        <Switch
+          id="ai-general-active-toggle"
+          checked={isActive}
+          onChange={setIsActive}
+          size="lg"
+          color="indigo"
+          statusLabel={isActive ? 'Activo' : 'Inactivo'}
+        />
       </div>
 
       {/* Selector de Modo de Vista (Lienzo Gráfico vs Tabla TanStack) */}

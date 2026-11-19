@@ -10,6 +10,7 @@ import Select from '@shared/components/Select';
 import Input from '@shared/components/Input';
 import TextArea from '@shared/components/TextArea';
 import Button from '@shared/components/Button';
+import Loader from '@shared/components/Loader';
 import type { SingleValue } from 'react-select';
 import { User as UserIcon, LifeBuoy, AlertTriangle, ArrowRight, ShieldAlert } from 'lucide-react';
 import TicketInteractionsTab from './TicketInteractionsTab';
@@ -178,11 +179,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
 
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <Loader className="py-12 h-auto" colorClassName="text-indigo-500" />;
   }
 
   return (

@@ -1,7 +1,17 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@features/auth';
-import { queryWebChat, transcribeWebChatAudio } from '@core/services/webchatService';
-import type { WebChatMessage, WebChatResponse, DashboardRedirect } from '@core/services/webchatService';
+import { useConfigStore } from '@/store/useConfigStore';
+import {
+  getWebChatAudioStatus,
+  queryWebChat,
+  transcribeWebChatAudio,
+} from '@core/services/webchatService';
+import type {
+  WebChatAudioStatus,
+  WebChatMessage,
+  WebChatResponse,
+  DashboardRedirect,
+} from '@core/services/webchatService';
 import {
   MessageSquare,
   Send,
@@ -10,6 +20,7 @@ import {
   Maximize2,
   Minimize2,
   Mic,
+  MicOff,
   Trash2,
   Loader2,
   AlertCircle,
@@ -59,6 +70,8 @@ const getSupportedAudioMimeType = (): string => {
 
 const WebChat: React.FC = () => {
   const { user, isAdmin } = useAuth();
+  const { selectedTenant } = useConfigStore();
+  const activeTenantSchema = selectedTenant?.schema_name || 'public';
 
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -67,7 +80,9 @@ const WebChat: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Estados de grabación y transcripción de voz
+  // Estados de disponibilidad de audio, grabación y transcripción de voz
+  const [audioStatus, setAudioStatus] = useState<WebChatAudioStatus | null>(null);
+  const [loadingAudioStatus, setLoadingAudioStatus] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -76,6 +91,8 @@ const WebChat: React.FC = () => {
   const messagesRef = useRef<ChatMessage[]>([]);
   const audioObjectUrlsRef = useRef<string[]>([]);
   const isSendingRef = useRef(false);
+  const audioStatusRequestIdRef = useRef(0);
+  const prevIsOpenRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -163,6 +180,99 @@ const WebChat: React.FC = () => {
     setIsRecording(false);
     setRecordingSeconds(0);
   }, [cleanupMediaResources]);
+
+  const fetchAudioStatus = useCallback(async () => {
+    if (!user) return;
+    const requestId = ++audioStatusRequestIdRef.current;
+    setLoadingAudioStatus(true);
+    try {
+      const status = await getWebChatAudioStatus();
+      if (requestId === audioStatusRequestIdRef.current) {
+        setAudioStatus(status);
+      }
+    } catch (err) {
+      if (requestId === audioStatusRequestIdRef.current) {
+        console.warn('No se pudo verificar el estado de audio del WebChat:', err);
+        setAudioStatus(null);
+      }
+    } finally {
+      if (requestId === audioStatusRequestIdRef.current) {
+        setLoadingAudioStatus(false);
+      }
+    }
+  }, [user]);
+
+  // Consultar estado de audio al inicializar o cuando cambie el usuario / tenant activo
+  useEffect(() => {
+    if (!user) {
+      setAudioStatus(null);
+      return;
+    }
+    fetchAudioStatus();
+  }, [user?.id, user?.sub, activeTenantSchema, fetchAudioStatus]);
+
+  // Refrescar estado de audio únicamente al abrir el WebChat (transición false -> true)
+  useEffect(() => {
+    if (isOpen && !prevIsOpenRef.current && user) {
+      fetchAudioStatus();
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, user, fetchAudioStatus]);
+
+  // Escuchar cambios de configuración de audio/proveedor o cambio de tenant entre pestañas
+  useEffect(() => {
+    if (!user) return;
+    const handleStatusRefresh = () => {
+      fetchAudioStatus();
+    };
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'selected_tenant') {
+        fetchAudioStatus();
+      }
+    };
+    window.addEventListener('webchatAudioStatusChanged', handleStatusRefresh);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('webchatAudioStatusChanged', handleStatusRefresh);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [user, fetchAudioStatus]);
+
+  // Limpiar errores previos de voz al cambiar de tenant activo
+  useEffect(() => {
+    setVoiceFeedbackError(null);
+  }, [activeTenantSchema]);
+
+  // Detener grabación si la transcripción pasa a estar deshabilitada
+  useEffect(() => {
+    if (audioStatus && !audioStatus.transcribeEndpointEnabled && isRecording) {
+      cancelRecording();
+    }
+  }, [audioStatus, isRecording, cancelRecording]);
+
+  const isTranscribeEnabled = Boolean(audioStatus?.transcribeEndpointEnabled);
+
+  const disabledVoiceReason = useMemo(() => {
+    if (loadingAudioStatus && !audioStatus) {
+      return 'Verificando disponibilidad de entrada por voz...';
+    }
+    if (!audioStatus) {
+      return 'Entrada por voz no disponible temporalmente.';
+    }
+    if (audioStatus.transcribeEndpointEnabled) {
+      return 'Grabar consulta por voz';
+    }
+    if (audioStatus.globalProvider === 'ibm' && !audioStatus.ibmAudioEnabled) {
+      return 'Soporte de audio deshabilitado para esta organización.';
+    }
+    if (audioStatus.globalProvider === 'gemini') {
+      return 'Notas de voz deshabilitadas temporalmente con Google Gemini.';
+    }
+    if (audioStatus.globalProvider === 'azure_openai') {
+      return 'Notas de voz deshabilitadas temporalmente con Azure OpenAI.';
+    }
+    return 'Grabación de notas de voz no disponible.';
+  }, [audioStatus, loadingAudioStatus]);
 
   const handleClose = useCallback(() => {
     if (isRecording) {
@@ -255,6 +365,12 @@ const WebChat: React.FC = () => {
   const startRecording = useCallback(async () => {
     if (isLoading || isTranscribing || isRecording || isSendingRef.current) return;
 
+    if (!audioStatus?.transcribeEndpointEnabled) {
+      setVoiceFeedbackError(disabledVoiceReason);
+      showToast.warning(disabledVoiceReason);
+      return;
+    }
+
     setVoiceFeedbackError(null);
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -327,15 +443,54 @@ const WebChat: React.FC = () => {
           setIsTranscribing(false);
           await handleSend(transcribedText, localAudioUrl);
         } catch (err: any) {
-          const backendMessage =
+          const statusCode = err?.response?.status;
+          const rawMsg =
             err?.response?.data?.message ||
-            err?.response?.data?.error ||
-            'No se pudo transcribir el audio. Intenta grabar nuevamente.';
-          const friendlyMessage = Array.isArray(backendMessage)
-            ? backendMessage.join('. ')
-            : String(backendMessage);
-          setVoiceFeedbackError(friendlyMessage);
-          showToast.warning(friendlyMessage);
+            err?.response?.data?.error;
+          const parsedMsg = Array.isArray(rawMsg)
+            ? rawMsg.join('. ')
+            : rawMsg
+              ? String(rawMsg)
+              : '';
+
+          if (statusCode === 403) {
+            const forbiddenMsg =
+              parsedMsg ||
+              'El soporte de audio (IBM Speech-to-Text) no está habilitado para esta organización. Por favor escribe tu consulta por texto.';
+            setAudioStatus((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    ibmAudioEnabled: false,
+                    audioEnabled: false,
+                    transcribeEndpointEnabled: false,
+                  }
+                : {
+                    globalProvider: 'ibm',
+                    rawModelProvider: 'watsonx',
+                    usesIbmStt: true,
+                    ibmAudioEnabled: false,
+                    audioEnabled: false,
+                    transcribeEndpointEnabled: false,
+                  }
+            );
+            setVoiceFeedbackError(forbiddenMsg);
+            showToast.warning(forbiddenMsg);
+          } else if (statusCode === 501) {
+            const notImplementedMsg =
+              parsedMsg ||
+              'La transcripción de notas de voz aún no está disponible para el proveedor de IA actual. Por favor escribe tu consulta por texto.';
+            setAudioStatus((prev) =>
+              prev ? { ...prev, transcribeEndpointEnabled: false } : prev
+            );
+            setVoiceFeedbackError(notImplementedMsg);
+            showToast.warning(notImplementedMsg);
+          } else {
+            const friendlyMessage =
+              parsedMsg || 'No se pudo transcribir el audio. Intenta grabar nuevamente.';
+            setVoiceFeedbackError(friendlyMessage);
+            showToast.warning(friendlyMessage);
+          }
         } finally {
           setIsTranscribing(false);
         }
@@ -363,7 +518,15 @@ const WebChat: React.FC = () => {
       setVoiceFeedbackError(msg);
       showToast.warning(msg);
     }
-  }, [isLoading, isTranscribing, isRecording, cleanupMediaResources, handleSend]);
+  }, [
+    isLoading,
+    isTranscribing,
+    isRecording,
+    audioStatus,
+    disabledVoiceReason,
+    cleanupMediaResources,
+    handleSend,
+  ]);
 
   /**
    * Detiene la grabación activa y dispara la transcripción + envío.
@@ -648,6 +811,7 @@ const WebChat: React.FC = () => {
   if (!user) return null;
 
   const isBusy = isLoading || isTranscribing;
+  const isMicDisabled = isBusy || loadingAudioStatus || !isTranscribeEnabled;
 
   return (
     <>
@@ -707,7 +871,7 @@ const WebChat: React.FC = () => {
                 </div>
                 <h3>¡Hola, {user.username}!</h3>
                 <p>
-                  Soy tu asistente de consultas del CRM. Pregúntame por texto o voz sobre oportunidades, clientes, actividades, gastos, tickets o productos.
+                  Soy tu asistente de consultas del CRM. Pregúntame {isTranscribeEnabled ? 'por texto o voz' : 'por texto'} sobre oportunidades, clientes, actividades, gastos, tickets o productos.
                 </p>
                 <div className="webchat-suggestions">
                   {SUGGESTION_CHIPS.map((chip, idx) => (
@@ -808,6 +972,18 @@ const WebChat: React.FC = () => {
             </div>
           )}
 
+          {/* Aviso sutil cuando el audio está deshabilitado */}
+          {!loadingAudioStatus && audioStatus && !audioStatus.transcribeEndpointEnabled && !isRecording && (
+            <div
+              className="webchat-voice-disabled-hint"
+              id="webchat-voice-disabled-hint"
+              title={disabledVoiceReason}
+            >
+              <MicOff size={12} className="shrink-0" />
+              <span>{disabledVoiceReason}</span>
+            </div>
+          )}
+
           {/* Input Area */}
           <div className="webchat-input-area">
             {isRecording ? (
@@ -856,13 +1032,20 @@ const WebChat: React.FC = () => {
                 />
                 <button
                   type="button"
-                  className="webchat-mic-btn"
+                  className={`webchat-mic-btn ${!isTranscribeEnabled && !loadingAudioStatus ? 'disabled-voice' : ''}`}
                   onClick={startRecording}
-                  disabled={isBusy}
-                  title="Grabar consulta por voz"
+                  disabled={isMicDisabled}
+                  title={disabledVoiceReason}
+                  aria-label={disabledVoiceReason}
                   id="webchat-mic-btn"
                 >
-                  {isTranscribing ? <Loader2 className="webchat-spin-icon" /> : <Mic />}
+                  {isTranscribing ? (
+                    <Loader2 className="webchat-spin-icon" />
+                  ) : !loadingAudioStatus && audioStatus && !isTranscribeEnabled ? (
+                    <MicOff />
+                  ) : (
+                    <Mic />
+                  )}
                 </button>
                 <button
                   type="button"

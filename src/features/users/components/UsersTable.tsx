@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { User } from '@core/models/User';
 import { Edit, UserCheck, UserX, Camera } from 'lucide-react';
 import Table, { type ColumnDef } from '@shared/components/Table';
+import Button from '@shared/components/Button';
 
 interface Props {
   users: User[];
@@ -125,31 +126,34 @@ const UsersTable: React.FC<Props> = ({
           if (!isAdmin) return null;
           return (
             <div className="flex space-x-1 justify-end">
-              <button
+              <Button
+                variant="icon"
                 onClick={() => onEdit(user)}
-                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full cursor-pointer transition-colors"
+                className="!p-2 !text-gray-500 hover:!text-blue-600 hover:!bg-blue-100 !rounded-full"
                 title="Editar"
               >
                 <Edit size={18} />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="icon"
                 onClick={() => onUploadImage(user)}
-                className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-100 rounded-full cursor-pointer transition-colors"
+                className="!p-2 !text-gray-500 hover:!text-purple-600 hover:!bg-purple-100 !rounded-full"
                 title="Subir imagen de perfil"
               >
                 <Camera size={18} />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="icon"
                 onClick={() => onUpdateStatus(user)}
-                className={`p-2 text-gray-500 rounded-full cursor-pointer transition-colors ${
+                className={`!p-2 !text-gray-500 !rounded-full ${
                   user.isActive
-                    ? 'hover:text-yellow-600 hover:bg-yellow-100'
-                    : 'hover:text-green-600 hover:bg-green-100'
+                    ? 'hover:!text-yellow-600 hover:!bg-yellow-100'
+                    : 'hover:!text-green-600 hover:!bg-green-100'
                 }`}
                 title={user.isActive ? 'Desactivar' : 'Reactivar'}
               >
                 {user.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
-              </button>
+              </Button>
             </div>
           );
         },

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import Button from '@shared/components/Button';
 import Badge from '@shared/components/Badge';
+import Dropzone from '@shared/components/Dropzone';
 import type { TenantConsumptionData } from '../schemas/myCompany.schema';
 import { uploadTenantLogo } from '@core/services/tenantsService';
 import { useConfigStore } from '@/store/useConfigStore';
@@ -36,16 +37,15 @@ export const CompanyProfileCard: React.FC<CompanyProfileCardProps> = ({
 
   const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3091';
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleLogoSelected = (files: File[]) => {
+    const file = files[0];
+    if (!file) return;
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleUploadLogo = async () => {
@@ -111,8 +111,14 @@ export const CompanyProfileCard: React.FC<CompanyProfileCardProps> = ({
           </div>
         </div>
 
-        {/* Preview del Logo */}
-        <div className="flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-all">
+        {/* Dropzone unificado con Preview del Logo */}
+        <Dropzone
+          id="logo-upload-input-modular"
+          accept="image/*"
+          multiple={false}
+          onFilesSelected={handleLogoSelected}
+          className="!p-5 !min-h-[140px] !bg-slate-50/50 hover:!bg-slate-50 !border-slate-200"
+        >
           {logoPreview ? (
             <div className="flex flex-col items-center gap-3">
               <div className="w-48 h-20 flex items-center justify-center p-2.5 bg-white rounded-xl shadow-xs border border-slate-200">
@@ -122,57 +128,46 @@ export const CompanyProfileCard: React.FC<CompanyProfileCardProps> = ({
                   className="max-h-full max-w-full object-contain"
                 />
               </div>
-              <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xs">
-                <CheckCircle2 size={12} /> Logo Activo
-              </span>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xs">
+                  <CheckCircle2 size={12} /> Logo Activo
+                </span>
+                <span className="text-[11px] text-indigo-600 font-bold bg-white border border-indigo-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-2xs">
+                  <Upload size={11} /> {logoFile ? 'Cambiar Imagen' : 'Seleccionar Logo'}
+                </span>
+              </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center text-center gap-2 py-4">
+            <div className="flex flex-col items-center text-center gap-2 py-2">
               <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-xs">
                 <Building2 size={26} />
               </div>
               <p className="text-xs font-bold text-slate-700">Sin logo asignado</p>
-              <p className="text-[11px] text-slate-400">Formatos recomendados: PNG, JPG o SVG</p>
+              <p className="text-[11px] text-slate-400">Arrastra tu imagen o haz clic para elegir (PNG, JPG o SVG)</p>
+              <span className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-2xs">
+                <Upload size={13} /> Seleccionar Logo
+              </span>
             </div>
           )}
-        </div>
+        </Dropzone>
 
-        {/* Controles de Carga */}
-        <div className="space-y-3 pt-1">
-          <input
-            type="file"
-            id="logo-upload-input-modular"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-
-          <div className="flex gap-2">
-            <label
-              htmlFor="logo-upload-input-modular"
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer transition-colors shadow-2xs"
-            >
-              <Upload size={14} />
-              <span>{logoFile ? 'Cambiar Imagen' : 'Seleccionar Logo'}</span>
-            </label>
-
-            {logoFile && (
-              <Button
-                variant="indigo"
-                onClick={handleUploadLogo}
-                loading={uploadingLogo}
-                className="!py-2 !px-4 text-xs font-bold shadow-xs"
-              >
-                Guardar
-              </Button>
-            )}
-          </div>
-
-          {logoFile && (
+        {logoFile && (
+          <div className="flex items-center justify-between gap-2 pt-1">
             <p className="text-[11px] text-indigo-600 font-semibold truncate">
               Archivo listo: {logoFile.name}
             </p>
-          )}
+            <Button
+              variant="indigo"
+              onClick={handleUploadLogo}
+              loading={uploadingLogo}
+              className="!py-2 !px-4 text-xs font-bold shadow-xs shrink-0"
+            >
+              Guardar
+            </Button>
+          </div>
+        )}
+
+        <div className="space-y-2 pt-1">
 
           <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
             <Lightbulb size={14} className="text-amber-500 shrink-0" />

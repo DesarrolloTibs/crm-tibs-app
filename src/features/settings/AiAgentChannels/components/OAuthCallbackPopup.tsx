@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
+import Button from '@shared/components/Button';
 
 export const OAuthCallbackPopup: React.FC = () => {
   const params = new URLSearchParams(window.location.search);
@@ -88,13 +89,14 @@ export const OAuthCallbackPopup: React.FC = () => {
           </p>
         </div>
 
-        <button
-          type="button"
+        <Button
+          size="sm"
+          variant="primary"
           onClick={() => window.close()}
-          className="w-full py-2.5 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors cursor-pointer shadow-sm"
+          className="w-full py-2.5 !font-bold rounded-xl shadow-sm hover:translate-y-0"
         >
           Cerrar esta ventana
-        </button>
+        </Button>
       </div>
     </div>
   );

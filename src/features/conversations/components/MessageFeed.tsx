@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ShieldAlert, Bot, Mic } from 'lucide-react';
+import { ShieldAlert, Bot, Mic, MicOff } from 'lucide-react';
 import { WhatsAppLogo } from '@shared/components/ChannelIcons';
 import type { Message } from '@core/models/Conversation';
 import { getInitials } from './ChatListSidebar';
@@ -46,10 +46,14 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
             const isContact = msg.sender === 'contact';
             const isBot = msg.sender === 'agent' || msg.sender === 'bot';
             const isTemplate = msg.messageType === 'template' || msg.content?.includes('[Plantilla WhatsApp:');
-            const isAudio = msg.messageType === 'audio' || Boolean(msg.mediaUrl);
-            const audioSrc = msg.mediaUrl
-              ? (msg.mediaUrl.startsWith('http') ? msg.mediaUrl : `${baseUrl}${msg.mediaUrl.startsWith('/') ? '' : '/'}${msg.mediaUrl}`)
-              : null;
+            const isAudioUnsupported =
+              msg.messageType === 'audio_unsupported' ||
+              msg.content === '[Nota de voz no procesada - Soporte de audio deshabilitado]';
+            const isAudio = !isAudioUnsupported && (msg.messageType === 'audio' || Boolean(msg.mediaUrl));
+            const audioSrc =
+              !isAudioUnsupported && msg.mediaUrl
+                ? (msg.mediaUrl.startsWith('http') ? msg.mediaUrl : `${baseUrl}${msg.mediaUrl.startsWith('/') ? '' : '/'}${msg.mediaUrl}`)
+                : null;
 
             return (
               <div
@@ -80,13 +84,15 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
                 <div className="flex flex-col gap-0.5 max-w-full">
                   <div
                     className={`rounded-2xl px-4 py-2.5 text-sm font-medium shadow-xs leading-relaxed ${
-                      isContact
-                        ? 'bg-white text-gray-800 border border-gray-150 rounded-bl-xs'
-                        : isTemplate
-                          ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-br-xs border border-emerald-500/50'
-                          : isBot
-                            ? 'bg-blue-600 text-white rounded-br-xs'
-                            : 'bg-emerald-600 text-white rounded-br-xs'
+                      isAudioUnsupported
+                        ? 'bg-amber-50/90 text-amber-950 border border-amber-200/80 rounded-bl-xs'
+                        : isContact
+                          ? 'bg-white text-gray-800 border border-gray-150 rounded-bl-xs'
+                          : isTemplate
+                            ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-br-xs border border-emerald-500/50'
+                            : isBot
+                              ? 'bg-blue-600 text-white rounded-br-xs'
+                              : 'bg-emerald-600 text-white rounded-br-xs'
                     }`}
                   >
                     {isTemplate ? (
@@ -96,6 +102,23 @@ const MessageFeed: React.FC<MessageFeedProps> = ({ messages, messagesEndRef }) =
                           <span>Plantilla de WhatsApp</span>
                         </div>
                         {renderMessageContent(msg.content)}
+                      </div>
+                    ) : isAudioUnsupported ? (
+                      <div className="flex items-start gap-2.5 min-w-[220px] max-w-[320px]">
+                        <div className="p-1.5 rounded-lg bg-amber-100 text-amber-700 border border-amber-200/80 shrink-0 mt-0.5">
+                          <MicOff size={14} />
+                        </div>
+                        <div className="flex flex-col gap-0.5 text-left">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 select-none">
+                            Nota de voz no procesada
+                          </span>
+                          <span className="text-xs text-amber-900/90 leading-snug font-normal">
+                            {msg.content &&
+                            msg.content !== '[Nota de voz no procesada - Soporte de audio deshabilitado]'
+                              ? msg.content
+                              : 'Soporte de audio deshabilitado para esta organización. Se solicitó al contacto enviar su mensaje por texto.'}
+                          </span>
+                        </div>
                       </div>
                     ) : isAudio ? (
                       <div className="flex flex-col gap-1.5 min-w-[240px] max-w-[320px]">

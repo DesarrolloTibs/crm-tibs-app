@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Building2, Plus, RefreshCw } from 'lucide-react';
+import { Building2, Plus, RefreshCw, Mic } from 'lucide-react';
+import { useAuth } from '@features/auth';
+import { showToast } from '@shared/utils/toast';
 
 // Componentes Compartidos del Sistema
 import SettingsContainer from '@shared/components/SettingsContainer';
@@ -12,6 +14,7 @@ import { TenantsStatsBanner } from './components/TenantsStatsBanner';
 import { TenantsTable } from './components/TenantsTable';
 import { TenantProvisionModal } from './components/TenantProvisionModal';
 import { TenantManageModal } from './components/TenantManageModal';
+import { TenantAudioUsageModal } from './components/TenantAudioUsageModal';
 
 // Esquemas y Tipos
 import type {
@@ -23,10 +26,16 @@ import type {
   TenantGeneralFormData,
   RenewalQueueResponse,
   RenewalQueueItem,
+  GlobalAiProviderMeta,
+  AudioUsageReportResponse,
 } from './schemas/tenants.schema';
 
 // Utilidades y Helpers
-import { filterTenants, calculateTenantStats } from './utils/tenants.helpers';
+import {
+  filterTenants,
+  calculateTenantStats,
+  resolveGlobalAiProviderMeta,
+} from './utils/tenants.helpers';
 
 // Servicios API
 import {
@@ -37,18 +46,38 @@ import {
   enqueueTenantRenewal,
   removeQueueItem,
   updateAllowExtra,
+  updateTenantIbmAudio,
+  getAudioUsageReport,
   deleteTenant,
   getTenantRenewalQueue,
 } from '@core/services/tenantsService';
+import { getAiAgentConfig } from '@core/services/conversationsService';
 import { getPlans } from '@core/services/plansService';
 import { useConfigStore } from '@/store/useConfigStore';
 
 export const TenantsPage: React.FC = () => {
+  const { isSuperAdmin } = useAuth();
   const { tenants, setTenants } = useConfigStore();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [togglingExtraId, setTogglingExtraId] = useState<number | null>(null);
+  const [togglingIbmAudioId, setTogglingIbmAudioId] = useState<number | null>(null);
+  const [globalAiProvider, setGlobalAiProvider] = useState<GlobalAiProviderMeta | null>(null);
+
+  // Modal de Auditoría de Uso de Audio (SuperAdmin)
+  const [showAudioUsageModal, setShowAudioUsageModal] = useState<boolean>(false);
+  const [audioUsageReport, setAudioUsageReport] = useState<AudioUsageReportResponse | null>(null);
+  const [audioUsageLoading, setAudioUsageLoading] = useState<boolean>(false);
+  const [audioUsageFilters, setAudioUsageFilters] = useState<{
+    tenantId: number | null;
+    startDate: string;
+    endDate: string;
+  }>({
+    tenantId: null,
+    startDate: '',
+    endDate: '',
+  });
 
   // Resumen de períodos en cola por tenant
   const [queueSummaries, setQueueSummaries] = useState<
@@ -114,12 +143,17 @@ export const TenantsPage: React.FC = () => {
 
     try {
       if (isManual) setLoading(true);
-      const [tenantsData, plansData] = await Promise.all([getTenants(true), getPlans()]);
+      const [tenantsData, plansData, aiConfig] = await Promise.all([
+        getTenants(true),
+        getPlans(),
+        isSuperAdmin ? getAiAgentConfig().catch(() => null) : Promise.resolve(null),
+      ]);
       const validTenants = Array.isArray(tenantsData) ? tenantsData : [];
       const validPlans = Array.isArray(plansData) ? plansData : [];
 
       setTenants(validTenants);
       setPlans(validPlans);
+      setGlobalAiProvider(resolveGlobalAiProviderMeta(aiConfig));
 
       // Poblar métricas de cola directamente con los datos consolidados de GET /api/tenants (sin peticiones N+1)
       const directSummaries: Record<number, { total: number; coverageUntil: string | null }> = {};
@@ -143,7 +177,7 @@ export const TenantsPage: React.FC = () => {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [setTenants]);
+  }, [setTenants, isSuperAdmin]);
 
   useEffect(() => {
     loadData();
@@ -219,12 +253,21 @@ export const TenantsPage: React.FC = () => {
   const handleUpdateGeneral = async (data: TenantGeneralFormData) => {
     if (!manageTenant) return;
     setSubmitting(true);
+    let baseUpdated = false;
     try {
       await updateTenant(manageTenant.id, {
         name: data.name,
         is_active: data.is_active,
         allow_extra: data.allow_extra,
       });
+      baseUpdated = true;
+
+      const prevIbmAudio = Boolean(manageTenant.ibm_audio_enabled);
+      const nextIbmAudio = Boolean(data.ibm_audio_enabled);
+      if (isSuperAdmin && nextIbmAudio !== prevIbmAudio) {
+        await updateTenantIbmAudio(manageTenant.id, nextIbmAudio);
+        window.dispatchEvent(new CustomEvent('webchatAudioStatusChanged'));
+      }
 
       setManageTenant(null);
       await loadData();
@@ -235,6 +278,9 @@ export const TenantsPage: React.FC = () => {
         message: `Los datos generales de "${data.name}" se actualizaron correctamente.`,
       });
     } catch (err: any) {
+      if (baseUpdated) {
+        await loadData();
+      }
       console.error('Error al actualizar organización:', err);
       const errorMsg =
         err.response?.data?.message || err.message || 'Error al guardar los cambios generales.';
@@ -375,6 +421,78 @@ export const TenantsPage: React.FC = () => {
     }
   };
 
+  // Toggle rápido de Add-on IBM Speech-to-Text en la tabla (exclusivo SuperAdmin)
+  const handleToggleIbmAudio = async (tenant: TenantPlanInfo) => {
+    if (!isSuperAdmin) return;
+    setTogglingIbmAudioId(tenant.id);
+    try {
+      const nextValue = !Boolean(tenant.ibm_audio_enabled);
+      await updateTenantIbmAudio(tenant.id, nextValue);
+      window.dispatchEvent(new CustomEvent('webchatAudioStatusChanged'));
+      await loadData();
+      showToast.success(
+        nextValue
+          ? `Audio IBM STT habilitado para "${tenant.name}".`
+          : `Audio IBM STT deshabilitado para "${tenant.name}".`
+      );
+    } catch (err: any) {
+      console.error('Error al modificar soporte de audio IBM:', err);
+      const errorMsg =
+        err.response?.data?.message || err.message || 'Error al cambiar el soporte de audio IBM.';
+      notify({
+        type: 'error',
+        title: 'Error de Configuración',
+        message: Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg,
+      });
+    } finally {
+      setTogglingIbmAudioId(null);
+    }
+  };
+
+  // Cargar reporte de auditoría de uso de audio (SuperAdmin)
+  const fetchAudioUsage = useCallback(
+    async (filtersToApply: { tenantId: number | null; startDate: string; endDate: string }) => {
+      if (!isSuperAdmin) return;
+      setAudioUsageLoading(true);
+      try {
+        const data = await getAudioUsageReport({
+          tenantId: filtersToApply.tenantId ?? undefined,
+          startDate: filtersToApply.startDate || undefined,
+          endDate: filtersToApply.endDate || undefined,
+        });
+        setAudioUsageReport(data);
+      } catch (err: any) {
+        console.error('Error al cargar auditoría de audio:', err);
+        setAudioUsageReport(null);
+        notify({
+          type: 'error',
+          title: 'Error de Auditoría',
+          message:
+            err?.response?.data?.message ||
+            'No se pudo obtener el reporte de uso de audio desde el servidor.',
+        });
+      } finally {
+        setAudioUsageLoading(false);
+      }
+    },
+    [isSuperAdmin]
+  );
+
+  const handleOpenAudioUsageModal = () => {
+    if (!isSuperAdmin) return;
+    setShowAudioUsageModal(true);
+    fetchAudioUsage(audioUsageFilters);
+  };
+
+  const handleAudioUsageFilterChange = (nextFilters: {
+    tenantId: number | null;
+    startDate: string;
+    endDate: string;
+  }) => {
+    setAudioUsageFilters(nextFilters);
+    fetchAudioUsage(nextFilters);
+  };
+
   // Confirmar eliminación de tenant
   const handleConfirmDeleteTenant = async () => {
     if (!deletingTenant) return;
@@ -427,7 +545,19 @@ export const TenantsPage: React.FC = () => {
       description="Supervisa inquilinos multitenant, aprovisiona esquemas de base de datos, gestiona suscripciones, cupos de tokens y colas de renovación."
       icon={<Building2 size={20} />}
       rightAction={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {isSuperAdmin && (
+            <Button
+              variant="indigo"
+              onClick={handleOpenAudioUsageModal}
+              title="Consultar auditoría de consumo de minutos de audio (IBM Speech-to-Text)"
+              className="!py-2 !px-3 !text-xs !normal-case !tracking-normal gap-1.5 shadow-2xs font-bold"
+            >
+              <Mic size={14} />
+              <span className="hidden sm:inline">Auditoría de Audio</span>
+            </Button>
+          )}
+
           <Button
             variant="secondary"
             onClick={() => loadData(true)}
@@ -465,9 +595,12 @@ export const TenantsPage: React.FC = () => {
           onEdit={(t) => handleOpenManageModal(t, 'general')}
           onDelete={(t) => setDeletingTenant(t)}
           onToggleAllowExtra={handleToggleAllowExtra}
+          onToggleIbmAudio={handleToggleIbmAudio}
           onOpenQueue={handleOpenQueue}
           queueSummaries={queueSummaries}
           togglingExtraId={togglingExtraId}
+          togglingIbmAudioId={togglingIbmAudioId}
+          isSuperAdmin={isSuperAdmin}
           searchTerm={filters.search}
           setSearchTerm={(term) => setFilters((prev) => ({ ...prev, search: term }))}
           statusFilter={filters.status}
@@ -501,7 +634,24 @@ export const TenantsPage: React.FC = () => {
         queueLoading={queueLoading}
         queueSubmitting={queueSubmitting}
         submitting={submitting}
+        globalAiProvider={globalAiProvider}
       />
+
+      {/* MODAL DE AUDITORÍA DE USO DE AUDIO IBM STT (SOLO SUPERADMIN) */}
+      {isSuperAdmin && (
+        <TenantAudioUsageModal
+          open={showAudioUsageModal}
+          onClose={() => setShowAudioUsageModal(false)}
+          tenants={tenants}
+          report={audioUsageReport}
+          loading={audioUsageLoading}
+          selectedTenantId={audioUsageFilters.tenantId}
+          startDate={audioUsageFilters.startDate}
+          endDate={audioUsageFilters.endDate}
+          onFilterChange={handleAudioUsageFilterChange}
+          onReload={() => fetchAudioUsage(audioUsageFilters)}
+        />
+      )}
 
       {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE ORGANIZACIÓN */}
       <ConfirmModal

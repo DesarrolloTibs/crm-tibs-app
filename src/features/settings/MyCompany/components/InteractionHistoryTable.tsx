@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { Activity, Search, X, FileSpreadsheet, FileText, Calendar } from 'lucide-react';
 import Table from '@shared/components/Table';
 import Badge from '@shared/components/Badge';
+import Input from '@shared/components/Input';
+import Button from '@shared/components/Button';
 import type { RecentTransaction } from '../schemas/myCompany.schema';
 import { getInteractionHistoryColumns } from '../utils/interactionHistory.columns';
 import { formatShortDate, formatFriendlyDate, formatNumber, formatTokensCompact } from '../utils/myCompany.helpers';
@@ -51,26 +53,17 @@ export const InteractionHistoryTable: React.FC<InteractionHistoryTableProps> = (
 
         {/* Controles de Búsqueda y Filtro */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="relative w-full sm:w-72">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={transactionSearch}
-              onChange={e => setTransactionSearch(e.target.value)}
-              placeholder="Buscar por fecha, canal, origen, acción..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
-            />
-            {transactionSearch && (
-              <button
-                type="button"
-                onClick={() => setTransactionSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition-colors cursor-pointer"
-                title="Limpiar búsqueda"
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
+          <Input
+            size="sm"
+            type="text"
+            value={transactionSearch}
+            onChange={e => setTransactionSearch(e.target.value)}
+            onClear={() => setTransactionSearch('')}
+            clearTitle="Limpiar búsqueda"
+            inputPrefix={<Search size={14} />}
+            placeholder="Buscar por fecha, canal, origen, acción..."
+            containerClassName="w-full sm:w-72"
+          />
 
           <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs">
             <button
@@ -110,26 +103,28 @@ export const InteractionHistoryTable: React.FC<InteractionHistoryTableProps> = (
 
           {/* Botones de Exportación exclusivos del Historial de Interacciones */}
           <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
-            <button
-              type="button"
+            <Button
+              size="xs"
+              variant="secondary"
               onClick={onExportExcel}
               disabled={!transactions || transactions.length === 0}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-emerald-700 bg-white hover:bg-emerald-50 shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="gap-1.5 !py-1 border-slate-200 !font-semibold !text-emerald-700 hover:!bg-emerald-50 shadow-xs hover:translate-y-0"
               title="Exportar historial de interacciones a Excel (.xlsx)"
             >
               <FileSpreadsheet size={13} />
               <span>Excel</span>
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              size="xs"
+              variant="secondary"
               onClick={onExportPDF}
               disabled={!transactions || transactions.length === 0}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-rose-700 bg-white hover:bg-rose-50 shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="gap-1.5 !py-1 border-slate-200 !font-semibold !text-rose-700 hover:!bg-rose-50 shadow-xs hover:translate-y-0"
               title="Exportar historial de interacciones a PDF"
             >
               <FileText size={13} />
               <span>PDF</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -153,15 +148,15 @@ export const InteractionHistoryTable: React.FC<InteractionHistoryTableProps> = (
             </span>
           </div>
 
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={onClearDateFilter}
-            className="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-900 font-bold px-2 py-1 rounded-lg hover:bg-indigo-100 transition-colors cursor-pointer text-xs self-start sm:self-auto"
+            className="gap-1.5 !text-indigo-600 hover:!text-indigo-900 !font-bold hover:!bg-indigo-100 self-start sm:self-auto"
             title="Quitar filtro de día y visualizar todas las actividades"
           >
             <X size={13} />
             <span>Quitar filtro de día (Ver todos)</span>
-          </button>
+          </Button>
         </div>
       )}
 
@@ -187,7 +182,7 @@ export const InteractionHistoryTable: React.FC<InteractionHistoryTableProps> = (
             : "No hay actividades registradas en este período."
         }
         keyExtractor={(tx: RecentTransaction) => tx.id}
-        enablePagination={transactions.length > 10}
+        enablePagination
         initialPageSize={10}
         footerRow={({ visibleData }) => {
           const visibleTotalTokens = visibleData.reduce((acc, tx) => acc + (tx.total_tokens || 0), 0);
@@ -219,24 +214,6 @@ export const InteractionHistoryTable: React.FC<InteractionHistoryTableProps> = (
           );
         }}
       />
-
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs text-slate-400 pt-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span>
-            Total en vista: <strong className="text-slate-700 font-bold">{transactions.length}</strong> registros
-            {selectedDateFilter && (
-              <span className="text-indigo-600 font-medium ml-1">
-                (del {formatShortDate(selectedDateFilter)})
-              </span>
-            )}
-          </span>
-          <span className="text-slate-300">•</span>
-          <span>
-            Suma de recursos: <strong className="font-mono font-bold text-slate-700">{formatNumber(totalTokensInView)}</strong> tokens
-          </span>
-        </div>
-        <span className="text-slate-500 font-medium">Tope de auditoría: 50 actividades recientes</span>
-      </div>
     </div>
   );
 };

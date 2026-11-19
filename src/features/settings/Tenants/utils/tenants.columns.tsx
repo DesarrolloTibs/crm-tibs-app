@@ -5,30 +5,37 @@ import {
   ToggleRight,
   Pencil,
   Trash2,
-  RefreshCw,
   Building2,
+  Mic,
 } from 'lucide-react';
 import type { ColumnDef } from '@shared/components/Table';
 import Button from '@shared/components/Button';
 import Badge from '@shared/components/Badge';
+import Loader from '@shared/components/Loader';
 import type { TenantPlanInfo } from '../schemas/tenants.schema';
 
 interface TenantsColumnsCallbacks {
   onEdit: (tenant: TenantPlanInfo) => void;
   onDelete: (tenant: TenantPlanInfo) => void;
   onToggleAllowExtra: (tenant: TenantPlanInfo) => void;
+  onToggleIbmAudio?: (tenant: TenantPlanInfo) => void;
   onOpenQueue: (tenant: TenantPlanInfo) => void;
   queueSummaries: Record<number, { total: number; coverageUntil: string | null }>;
   togglingExtraId: number | null;
+  togglingIbmAudioId?: number | null;
+  isSuperAdmin?: boolean;
 }
 
 export const getTenantsColumns = ({
   onEdit,
   onDelete,
   onToggleAllowExtra,
+  onToggleIbmAudio,
   onOpenQueue,
   queueSummaries,
   togglingExtraId,
+  togglingIbmAudioId,
+  isSuperAdmin = false,
 }: TenantsColumnsCallbacks): ColumnDef<TenantPlanInfo, unknown>[] => [
   {
     id: 'name',
@@ -160,7 +167,7 @@ export const getTenantsColumns = ({
           }`}
         >
           {isToggling ? (
-            <RefreshCw size={14} className="animate-spin text-slate-500" />
+            <Loader inline size="xs" colorClassName="text-slate-500" />
           ) : t.allow_extra ? (
             <ToggleRight size={16} />
           ) : (
@@ -176,6 +183,52 @@ export const getTenantsColumns = ({
       cellClassName: 'text-left',
     },
   },
+  ...(isSuperAdmin && onToggleIbmAudio
+    ? [
+        {
+          id: 'ibm_audio_enabled',
+          header: 'Audio (IBM STT)',
+          cell: ({ row }: { row: { original: TenantPlanInfo } }) => {
+            const t = row.original;
+            const enabled = Boolean(t.ibm_audio_enabled);
+            const isToggling = togglingIbmAudioId === t.id;
+
+            return (
+              <Button
+                variant="ghost"
+                disabled={isToggling}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleIbmAudio(t);
+                }}
+                title={
+                  enabled
+                    ? 'Add-on IBM Speech-to-Text habilitado (costo adicional, sin descontar tokens). Clic para deshabilitar.'
+                    : 'Add-on IBM Speech-to-Text deshabilitado. Clic para habilitar (costo adicional al plan, aplica con proveedor IBM, sin descontar tokens).'
+                }
+                className={`flex items-center gap-1.5 !text-xs !font-semibold !px-2.5 !py-1 !rounded-lg transition-all shadow-2xs ${
+                  enabled
+                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:!bg-indigo-100'
+                    : 'bg-slate-100 text-slate-500 border border-slate-200 hover:!bg-slate-200'
+                }`}
+              >
+                {isToggling ? (
+                  <Loader inline size="xs" colorClassName="text-slate-500" />
+                ) : (
+                  <Mic size={13} className={enabled ? 'text-indigo-600' : 'text-slate-400'} />
+                )}
+                <span>{enabled ? 'Habilitado' : 'Deshabilitado'}</span>
+              </Button>
+            );
+          },
+          meta: {
+            mobileLabel: 'Audio (IBM STT)',
+            headerClassName: 'text-left min-w-[145px]',
+            cellClassName: 'text-left',
+          },
+        } as ColumnDef<TenantPlanInfo, unknown>,
+      ]
+    : []),
   {
     id: 'is_active',
     header: 'Estado',

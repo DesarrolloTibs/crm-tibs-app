@@ -3,6 +3,7 @@ import { LifeBuoy, ChevronUp, ChevronDown, Filter, Tag, Star } from 'lucide-reac
 import { useHelpdesk } from '../hooks/useHelpdesk';
 import Notification from '@shared/components/Notification';
 import Loader from '@shared/components/Loader';
+import Button from '@shared/components/Button';
 import TicketsListTable from '../components/TicketsListTable';
 import HelpdeskToolbar from '../components/HelpdeskToolbar';
 import HelpdeskKanban from '../components/HelpdeskKanban';
@@ -81,12 +82,14 @@ const HelpdeskPage: React.FC = () => {
               )}
             </div>
           </div>
-          <button
-            className="md:hidden p-2 text-gray-500 hover:text-indigo-600 bg-gray-100 rounded-full transition-colors ml-3"
+          <Button
+            variant="icon"
+            className="md:hidden !p-2 !text-gray-500 hover:!text-indigo-600 bg-gray-100 !rounded-full ml-3"
             onClick={() => hd.setShowToolbar(!hd.showToolbar)}
+            aria-label={hd.showToolbar ? 'Ocultar herramientas' : 'Mostrar herramientas'}
           >
             {hd.showToolbar ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </button>
+          </Button>
         </div>
 
         {hd.showToolbar && (

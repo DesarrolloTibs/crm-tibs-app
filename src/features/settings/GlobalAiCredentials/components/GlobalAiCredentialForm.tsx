@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Button from '@shared/components/Button';
 import FormField from '@shared/components/FormField';
+import Switch from '@shared/components/Switch';
 import type {
   LlmProviderItem,
   GlobalAiConfig,
@@ -204,14 +205,14 @@ export const GlobalAiCredentialForm: React.FC<GlobalAiCredentialFormProps> = ({
               error={touched.geminiApiKey ? errors.geminiApiKey : undefined}
               className="!py-3 !pr-10 !rounded-xl font-mono text-xs"
             />
-            <button
-              type="button"
+            <Button
+              variant="icon"
               onClick={() => setShowSecret((prev) => !prev)}
-              className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 p-1"
+              className="absolute right-3 top-[34px] !p-1"
               title={showSecret ? 'Ocultar llave' : 'Mostrar llave'}
             >
               {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
+            </Button>
           </div>
 
           <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 border border-slate-200 p-3 rounded-xl">
@@ -251,14 +252,14 @@ export const GlobalAiCredentialForm: React.FC<GlobalAiCredentialFormProps> = ({
               error={touched.openaiApiKey ? errors.openaiApiKey : undefined}
               className="!py-3 !pr-10 !rounded-xl font-mono text-xs"
             />
-            <button
-              type="button"
+            <Button
+              variant="icon"
               onClick={() => setShowSecret((prev) => !prev)}
-              className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 p-1"
+              className="absolute right-3 top-[34px] !p-1"
               title={showSecret ? 'Ocultar llave' : 'Mostrar llave'}
             >
               {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
+            </Button>
           </div>
 
           <div className="space-y-1">
@@ -328,14 +329,14 @@ export const GlobalAiCredentialForm: React.FC<GlobalAiCredentialFormProps> = ({
               error={touched.watsonxApiKey ? errors.watsonxApiKey : undefined}
               className="!py-3 !pr-10 !rounded-xl font-mono text-xs"
             />
-            <button
-              type="button"
+            <Button
+              variant="icon"
               onClick={() => setShowSecret((prev) => !prev)}
-              className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 p-1"
+              className="absolute right-3 top-[34px] !p-1"
               title={showSecret ? 'Ocultar llave' : 'Mostrar llave'}
             >
               {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -385,30 +386,14 @@ export const GlobalAiCredentialForm: React.FC<GlobalAiCredentialFormProps> = ({
       )}
 
       {/* Switch: Activar como motor global de la plataforma */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 flex items-start justify-between gap-4">
-        <div className="space-y-0.5">
-          <label
-            htmlFor="set-default-toggle"
-            className="text-xs font-bold text-slate-800 cursor-pointer select-none block"
-          >
-            Establecer como motor LLM activo en todo el CRM
-          </label>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
-            Si se activa, todas las peticiones del Agente IA y de los canales omnicanal en todos los tenants utilizarán este motor para procesar inferencias.
-          </p>
-        </div>
-
-        <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-          <input
-            id="set-default-toggle"
-            type="checkbox"
-            checked={formData.isDefault}
-            onChange={(e) => setFormData((prev) => ({ ...prev, isDefault: e.target.checked }))}
-            className="sr-only peer"
-          />
-          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600" />
-        </label>
-      </div>
+      <Switch
+        id="set-default-toggle"
+        checked={formData.isDefault}
+        onChange={(checked) => setFormData((prev) => ({ ...prev, isDefault: checked }))}
+        label="Establecer como motor LLM activo en todo el CRM"
+        description="Si se activa, todas las peticiones del Agente IA y de los canales omnicanal en todos los tenants utilizarán este motor para procesar inferencias."
+        className="bg-white rounded-2xl border-slate-200/90 p-4 gap-4"
+      />
 
       {/* Botones de Acción */}
       <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">

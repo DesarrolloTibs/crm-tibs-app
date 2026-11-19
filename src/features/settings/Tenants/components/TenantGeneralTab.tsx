@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Database, Check } from 'lucide-react';
+import { Building2, Database, Check, Mic, Info, Sparkles } from 'lucide-react';
 import Button from '@shared/components/Button';
+import Badge from '@shared/components/Badge';
 import FormField from '@shared/components/FormField';
-import type { TenantPlanInfo, TenantGeneralFormData } from '../schemas/tenants.schema';
+import Switch from '@shared/components/Switch';
+import Input from '@shared/components/Input';
+import { useAuth } from '@features/auth';
+import type {
+  TenantPlanInfo,
+  TenantGeneralFormData,
+  GlobalAiProviderMeta,
+} from '../schemas/tenants.schema';
 import { validateTenantGeneralForm } from '../utils/tenants.helpers';
 
 interface TenantGeneralTabProps {
@@ -10,6 +18,7 @@ interface TenantGeneralTabProps {
   onSubmit: (data: TenantGeneralFormData) => Promise<void>;
   onClose: () => void;
   submitting: boolean;
+  globalAiProvider?: GlobalAiProviderMeta | null;
 }
 
 export const TenantGeneralTab: React.FC<TenantGeneralTabProps> = ({
@@ -17,11 +26,15 @@ export const TenantGeneralTab: React.FC<TenantGeneralTabProps> = ({
   onSubmit,
   onClose,
   submitting,
+  globalAiProvider = null,
 }) => {
+  const { isSuperAdmin } = useAuth();
+
   const [formData, setFormData] = useState<TenantGeneralFormData>({
     name: tenant.name,
     is_active: tenant.is_active,
     allow_extra: tenant.allow_extra,
+    ibm_audio_enabled: Boolean(tenant.ibm_audio_enabled),
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -32,6 +45,7 @@ export const TenantGeneralTab: React.FC<TenantGeneralTabProps> = ({
       name: tenant.name,
       is_active: tenant.is_active,
       allow_extra: tenant.allow_extra,
+      ibm_audio_enabled: Boolean(tenant.ibm_audio_enabled),
     });
     setErrors({});
     setTouched({});
@@ -91,17 +105,14 @@ export const TenantGeneralTab: React.FC<TenantGeneralTabProps> = ({
         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
           Esquema de Base de Datos
         </label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-            <Database size={16} />
-          </div>
-          <input
-            type="text"
-            disabled
-            value={tenant.schema_name}
-            className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-500 cursor-not-allowed select-all"
-          />
-        </div>
+        <Input
+          size="sm"
+          type="text"
+          disabled
+          value={tenant.schema_name}
+          inputPrefix={<Database size={15} />}
+          className="!py-2.5 !pl-9 font-mono text-slate-500 cursor-not-allowed select-all"
+        />
         <p className="text-[11px] text-slate-400 ml-1">
           Identificador inmutable asignado en PostgreSQL para aislamiento multitenant.
         </p>
@@ -109,45 +120,95 @@ export const TenantGeneralTab: React.FC<TenantGeneralTabProps> = ({
 
       {/* Switches de Estado y Excedente */}
       <div className="space-y-3 pt-2">
-        <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-start justify-between gap-3">
-          <div>
-            <div className="text-xs font-bold text-slate-800">
-              Organización Activa
-            </div>
-            <div className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-              Permite a los usuarios y administradores iniciar sesión en la plataforma y consumir recursos.
-            </div>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-            <input
-              type="checkbox"
-              checked={formData.is_active}
-              onChange={(e) => setFormData((prev) => ({ ...prev, is_active: e.target.checked }))}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600" />
-          </label>
-        </div>
+        <Switch
+          id="tenant-is-active-switch"
+          checked={formData.is_active}
+          onChange={(checked) => setFormData((prev) => ({ ...prev, is_active: checked }))}
+          color="emerald"
+          label="Organización Activa"
+          description="Permite a los usuarios y administradores iniciar sesión en la plataforma y consumir recursos."
+        />
 
-        <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-start justify-between gap-3">
-          <div>
-            <div className="text-xs font-bold text-slate-800">
-              Permitir Consumo Excedente de Tokens
+        <Switch
+          id="tenant-allow-extra-switch"
+          checked={formData.allow_extra}
+          onChange={(checked) => setFormData((prev) => ({ ...prev, allow_extra: checked }))}
+          color="indigo"
+          label="Permitir Consumo Excedente de Tokens"
+          description="Habilita el margen de sobreconsumo (sobrefacturación autorizada) cuando la organización agote su cuota mensual contratada."
+        />
+
+        {/* Add-on IBM Speech-to-Text (Exclusivo SuperAdmin) */}
+        {isSuperAdmin && (
+          <div className="p-4 bg-gradient-to-br from-indigo-50/70 via-white to-amber-50/40 border border-indigo-200/80 rounded-xl space-y-3 shadow-2xs">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="p-1 rounded-lg bg-indigo-100 text-indigo-700 inline-flex items-center justify-center">
+                    <Mic size={13} />
+                  </span>
+                  <span className="text-xs font-bold text-slate-800">
+                    Soporte de Audio (IBM Speech-to-Text)
+                  </span>
+                  <Badge variant={formData.ibm_audio_enabled ? 'indigo' : 'neutral'} size="sm">
+                    {formData.ibm_audio_enabled ? 'Add-on Activo' : 'Add-on Inactivo'}
+                  </Badge>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Habilita la transcripción de notas de voz en WebChat interno y canales externos (WhatsApp, Messenger e Instagram) mediante IBM Speech-to-Text.
+                </p>
+              </div>
+
+              <Switch
+                id="tenant-ibm-audio-switch"
+                checked={Boolean(formData.ibm_audio_enabled)}
+                onChange={(checked) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    ibm_audio_enabled: checked,
+                  }))
+                }
+                color="indigo"
+                title="Habilitar o deshabilitar Soporte de Audio (IBM Speech-to-Text)"
+                className="mt-0.5"
+              />
             </div>
-            <div className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-              Habilita el margen de sobreconsumo (sobrefacturación autorizada) cuando la organización agote su cuota mensual contratada.
+
+            {/* Aclaración visual destacada del add-on */}
+            <div className="p-3 rounded-lg bg-amber-50/90 border border-amber-200/90 text-[11px] text-amber-950 space-y-1.5">
+              <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                <Info size={13} className="text-amber-700 shrink-0" />
+                <span>Condiciones comerciales y técnicas del Add-on</span>
+              </div>
+              <ul className="list-disc pl-4 space-y-1 text-amber-900/90 leading-snug">
+                <li>
+                  <strong>Costo adicional al plan:</strong> Este complemento de audio tiene facturación adicional a la suscripción base de la organización.
+                </li>
+                <li>
+                  <strong>Aplica con proveedor global IBM:</strong> Opera cuando el proveedor global de IA de la plataforma es <strong>IBM (WatsonX)</strong>.
+                </li>
+                <li>
+                  <strong>Sin descuento de cuota de tokens:</strong> La transcripción de voz a texto <strong>no consume tokens de la cuota del cliente</strong> (únicamente se consumen tokens al procesar el texto transcrito con el LLM).
+                </li>
+              </ul>
+
+              {globalAiProvider && (
+                <div className="pt-1.5 mt-1.5 border-t border-amber-200/70 flex flex-wrap items-center gap-1.5">
+                  <Sparkles size={12} className={globalAiProvider.isIbm ? 'text-indigo-600' : 'text-sky-600'} />
+                  <span className="font-semibold text-slate-700">Proveedor global activo:</span>
+                  <Badge variant={globalAiProvider.isIbm ? 'indigo' : 'info'} size="sm">
+                    {globalAiProvider.label}
+                  </Badge>
+                  <span className="text-[10px] text-slate-600">
+                    {globalAiProvider.isIbm
+                      ? '(Aplica inmediatamente en la plataforma)'
+                      : '(Motor multimodal activo; este add-on aplicará si la plataforma opera con IBM)'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-            <input
-              type="checkbox"
-              checked={formData.allow_extra}
-              onChange={(e) => setFormData((prev) => ({ ...prev, allow_extra: e.target.checked }))}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600" />
-          </label>
-        </div>
+        )}
       </div>
 
       {/* Acciones */}

@@ -1,22 +1,45 @@
 import * as yup from 'yup';
-import type { TenantPlanInfo } from '@/store/useConfigStore';
+import type { GlobalAiProvider, TenantPlanInfo } from '@/store/useConfigStore';
 import type { Plan } from '@core/services/plansService';
 import type {
+  MyTenantInfo,
   ProvisionTenantPayload,
   RenewalQueueResponse,
   RenewalQueueItem,
   UpdateTenantPlanPayload,
+  AudioUsageSummary,
+  AudioUsageByTenant,
+  AudioUsageByChannel,
+  AudioUsageLog,
+  AudioUsageReportParams,
+  AudioUsageReportResponse,
 } from '@core/services/tenantsService';
 
 export type {
+  GlobalAiProvider,
   TenantPlanInfo,
   TenantPlanInfo as Tenant,
+  MyTenantInfo,
   Plan,
   ProvisionTenantPayload,
   RenewalQueueResponse,
   RenewalQueueItem,
   UpdateTenantPlanPayload,
+  AudioUsageSummary,
+  AudioUsageByTenant,
+  AudioUsageByChannel,
+  AudioUsageLog,
+  AudioUsageReportParams,
+  AudioUsageReportResponse,
 };
+
+export interface GlobalAiProviderMeta {
+  provider: GlobalAiProvider | 'unknown';
+  rawProvider: string;
+  label: string;
+  isIbm: boolean;
+  isMultimodal: boolean;
+}
 
 /**
  * Esquema Yup para provisión de nueva organización
@@ -68,6 +91,9 @@ export const tenantGeneralValidationSchema = yup.object().shape({
   allow_extra: yup
     .boolean()
     .default(false),
+  ibm_audio_enabled: yup
+    .boolean()
+    .default(false),
 });
 
 export type TenantGeneralFormData = yup.InferType<typeof tenantGeneralValidationSchema>;
@@ -112,7 +138,7 @@ export type TenantEnqueueFormData = yup.InferType<typeof tenantEnqueueValidation
 /**
  * Filtros de estado disponibles para la tabla
  */
-export type TenantStatusFilter = 'all' | 'active' | 'inactive' | 'with_queue' | 'allow_extra';
+export type TenantStatusFilter = 'all' | 'active' | 'inactive' | 'with_queue' | 'allow_extra' | 'ibm_audio';
 
 export interface TenantFilterState {
   search: string;

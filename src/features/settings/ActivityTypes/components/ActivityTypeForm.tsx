@@ -3,6 +3,7 @@ import type { TypeActivity, ActivityTypeFormData } from '../schemas/activityType
 import { validateActivityTypeForm } from '../utils/activityTypes.helpers';
 import Button from '@shared/components/Button';
 import FormField from '@shared/components/FormField';
+import Switch from '@shared/components/Switch';
 import { Tag, Check } from 'lucide-react';
 
 interface ActivityTypeFormProps {
@@ -101,30 +102,14 @@ export const ActivityTypeForm: React.FC<ActivityTypeFormProps> = ({
       </div>
 
       {/* Toggle de Estado Activo / Inactivo */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 flex items-start justify-between gap-4">
-        <div className="space-y-0.5">
-          <label
-            htmlFor="activity-type-status-toggle"
-            className="text-xs font-bold text-slate-800 cursor-pointer select-none block"
-          >
-            Habilitado para selección
-          </label>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
-            Si está activo, los ejecutivos podrán seleccionar esta tipología al crear o modificar actividades. Si lo desactivas, se mantendrá en el historial pero no se ofrecerá para nuevos registros.
-          </p>
-        </div>
-
-        <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-          <input
-            id="activity-type-status-toggle"
-            type="checkbox"
-            checked={formData.blnstatus}
-            onChange={handleToggleStatus}
-            className="sr-only peer"
-          />
-          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600" />
-        </label>
-      </div>
+      <Switch
+        id="activity-type-status-toggle"
+        checked={formData.blnstatus}
+        onChange={handleToggleStatus}
+        label="Habilitado para selección"
+        description="Si está activo, los ejecutivos podrán seleccionar esta tipología al crear o modificar actividades. Si lo desactivas, se mantendrá en el historial pero no se ofrecerá para nuevos registros."
+        className="bg-white rounded-2xl border-slate-200/90 p-4 gap-4"
+      />
 
       {/* Acciones de Guardar / Cancelar */}
       <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">

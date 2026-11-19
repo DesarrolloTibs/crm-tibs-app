@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import Button from '@shared/components/Button';
 import Select from '@shared/components/Select';
+import Input from '@shared/components/Input';
+import Loader from '@shared/components/Loader';
 import type {
   TenantPlanInfo,
   Plan,
@@ -122,7 +124,7 @@ export const TenantRenewalQueueTab: React.FC<TenantRenewalQueueTabProps> = ({
 
         {queueLoading ? (
           <div className="p-6 text-center text-slate-400 text-xs flex items-center justify-center gap-2 bg-slate-50 rounded-xl border border-slate-100">
-            <RefreshCw size={14} className="animate-spin text-amber-500" />
+            <Loader inline size="xs" colorClassName="text-amber-500" />
             Calculando proyecciones de cola...
           </div>
         ) : !queueData?.items || queueData.items.length === 0 ? (
@@ -240,13 +242,15 @@ export const TenantRenewalQueueTab: React.FC<TenantRenewalQueueTabProps> = ({
                   {num} {num === 1 ? 'período' : 'períodos'}
                 </Button>
               ))}
-              <input
+              <Input
+                size="sm"
                 type="number"
                 min={1}
                 max={60}
                 value={queuePeriodsCount}
                 onChange={(e) => setQueuePeriodsCount(Math.max(1, Number(e.target.value)))}
-                className="w-16 px-2 py-1.5 border border-slate-200 rounded-lg text-xs text-center focus:outline-none focus:border-indigo-500 bg-white"
+                containerClassName="w-16"
+                className="text-center bg-white"
               />
             </div>
             <div className="text-[11px] text-slate-500 mt-1">

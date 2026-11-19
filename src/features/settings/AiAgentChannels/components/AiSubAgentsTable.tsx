@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { Sliders, Search, X, Plus, Brain } from 'lucide-react';
+import { Sliders, Search, Plus, Brain } from 'lucide-react';
 import Table from '@shared/components/Table';
 import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
 import type { SubAgent, SubAgentStatusFilter } from '../schemas/aiAgent.schema';
 import { getSubAgentsColumns } from '../utils/subAgents.columns';
 
@@ -22,7 +23,6 @@ interface AiSubAgentsTableProps {
 
 export const AiSubAgentsTable: React.FC<AiSubAgentsTableProps> = ({
   subAgents,
-  totalCount,
   loading,
   onEdit,
   onDelete,
@@ -59,26 +59,17 @@ export const AiSubAgentsTable: React.FC<AiSubAgentsTableProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="relative w-full sm:w-60">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por nombre o clave..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
-            />
-            {searchTerm && (
-              <Button
-                variant="icon"
-                onClick={() => setSearchTerm('')}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 !p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200"
-                title="Limpiar búsqueda"
-              >
-                <X size={12} />
-              </Button>
-            )}
-          </div>
+          <Input
+            size="sm"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onClear={() => setSearchTerm('')}
+            clearTitle="Limpiar búsqueda"
+            placeholder="Buscar por nombre o clave..."
+            inputPrefix={<Search size={14} />}
+            containerClassName="w-full sm:w-60"
+          />
 
           <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs">
             <Button
@@ -121,26 +112,28 @@ export const AiSubAgentsTable: React.FC<AiSubAgentsTableProps> = ({
 
           {/* Directivas del Router */}
           {onOpenRouterModal && (
-            <button
-              type="button"
+            <Button
+              size="xs"
+              variant="secondary"
               onClick={onOpenRouterModal}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-200 transition-all cursor-pointer shadow-2xs"
+              className="!text-[11px] bg-slate-50 hover:!bg-slate-100 border-slate-200 shadow-2xs hover:translate-y-0"
               title="Configurar directivas del Router Principal"
             >
               <Brain size={12} className="text-indigo-600" />
               <span>Router</span>
-            </button>
+            </Button>
           )}
 
           {/* Botón "+ Nuevo Sub-Agente" */}
-          <button
-            type="button"
+          <Button
+            size="xs"
+            variant="indigo"
             onClick={onCreate}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-[11px] font-bold rounded-lg shadow-xs transition-all cursor-pointer border-none"
+            className="!text-[11px] gap-1.5 !px-3 shadow-xs hover:translate-y-0"
           >
             <Plus size={13} />
             <span>Nuevo Sub-Agente</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -159,29 +152,9 @@ export const AiSubAgentsTable: React.FC<AiSubAgentsTableProps> = ({
             : 'No hay sub-agentes registrados en este tenant.'
         }
         keyExtractor={(agent: SubAgent) => agent.id || agent.key}
-        enablePagination={subAgents.length > 6}
-        initialPageSize={6}
+        enablePagination
+        initialPageSize={10}
       />
-
-      {/* Footer de resumen */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs text-slate-400 pt-1">
-        <span>
-          Visualizando <strong className="text-slate-700 font-bold">{subAgents.length}</strong> de{' '}
-          <strong className="text-slate-700 font-bold">{totalCount}</strong> sub-agentes configurados
-        </span>
-        {(searchTerm || statusFilter !== 'all') && (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setSearchTerm('');
-              setStatusFilter('all');
-            }}
-            className="!text-xs !p-0 !h-auto text-indigo-600 hover:underline"
-          >
-            Restablecer filtros
-          </Button>
-        )}
-      </div>
     </div>
   );
 };

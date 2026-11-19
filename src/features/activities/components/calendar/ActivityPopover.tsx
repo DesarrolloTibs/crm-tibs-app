@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Calendar, Clock, User, Briefcase, Edit, Trash2, Building, Bell } from 'lucide-react';
 import type { Activity } from '../../schemas/activities.schema';
 import { getActivityColor } from '../../../../utils/activityColors';
+import Button from '@shared/components/Button';
 
 interface ActivityPopoverProps {
   activity: Activity;
@@ -69,14 +70,15 @@ export const ActivityPopover: React.FC<ActivityPopoverProps> = ({
           >
             {typeName || 'Sin tipo'}
           </span>
-          <button
+          <Button
+            variant="icon"
             onClick={onClose}
-            className="transition-colors rounded-full p-0.5 hover:bg-black/10 cursor-pointer"
+            className="!rounded-full !p-0.5 hover:!bg-black/10"
             style={{ color: color.text }}
             aria-label="Cerrar"
           >
             <X size={15} />
-          </button>
+          </Button>
         </div>
 
         {/* Cuerpo con detalles */}
@@ -150,21 +152,23 @@ export const ActivityPopover: React.FC<ActivityPopoverProps> = ({
 
         {/* Footer de acciones */}
         <div className="border-t border-slate-100 px-4 py-3 flex justify-end gap-2 bg-slate-50">
-          <button
+          <Button
+            variant="ghost-danger"
             onClick={onDelete}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+            className="gap-1.5 !px-3 !py-1.5 !rounded-xl"
           >
             <Trash2 size={14} />
             Eliminar
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={onEdit}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-colors border hover:brightness-95 cursor-pointer"
+            className="gap-1.5 !px-3 !py-1.5 !text-xs !font-bold !rounded-xl border hover:brightness-95"
             style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text }}
           >
             <Edit size={14} />
             Editar
-          </button>
+          </Button>
         </div>
       </div>
     </>

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Lock, CheckCircle, AlertTriangle, Eye, EyeOff, ArrowLeft, LogIn, ShieldAlert } from 'lucide-react';
 import LoginBackground from '../components/LoginBackground';
 import Button from '@shared/components/Button';
+import Loader from '@shared/components/Loader';
 import { useResetPassword } from '../hooks/useAuthForms';
 import '../components/Login.css';
 
@@ -96,7 +97,7 @@ const ResetPasswordPage: React.FC = () => {
                 )}
 
                 <button type="submit" className="login-btn-premium !bg-rose-600 hover:!bg-rose-700 py-5" disabled={loading}>
-                  {loading ? <div className="flex items-center gap-3"><div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>PROCESANDO...</div> : 'ESTABLECER NUEVA CONTRASEÑA'}
+                  {loading ? <div className="flex items-center gap-3"><Loader inline size="sm" colorClassName="text-white" />PROCESANDO...</div> : 'ESTABLECER NUEVA CONTRASEÑA'}
                 </button>
               </form>
             </>

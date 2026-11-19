@@ -1,5 +1,5 @@
 import React from 'react';
-import Input from './Input';
+import Input, { type InputProps } from './Input';
 import TextArea from './TextArea';
 
 interface FormFieldProps {
@@ -46,7 +46,7 @@ const FormField: React.FC<FormFieldProps> = ({
       label={label}
       error={error}
       inputPrefix={inputPrefix}
-      {...(rest as React.InputHTMLAttributes<HTMLInputElement>)}
+      {...(rest as InputProps)}
     />
   );
 };

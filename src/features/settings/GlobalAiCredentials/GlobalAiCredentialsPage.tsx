@@ -185,6 +185,7 @@ export const GlobalAiCredentialsPage: React.FC = () => {
 
       await saveAiAgentConfig(updatedConfig);
       setConfig(updatedConfig);
+      window.dispatchEvent(new CustomEvent('webchatAudioStatusChanged'));
 
       setModalOpen(false);
       setEditingProvider(null);
@@ -221,6 +222,7 @@ export const GlobalAiCredentialsPage: React.FC = () => {
 
       await saveAiAgentConfig(updatedConfig);
       setConfig(updatedConfig);
+      window.dispatchEvent(new CustomEvent('webchatAudioStatusChanged'));
 
       notify({
         type: 'success',
@@ -262,6 +264,7 @@ export const GlobalAiCredentialsPage: React.FC = () => {
 
       await saveAiAgentConfig(updatedConfig);
       setConfig(updatedConfig);
+      window.dispatchEvent(new CustomEvent('webchatAudioStatusChanged'));
 
       notify({
         type: 'success',

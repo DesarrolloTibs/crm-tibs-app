@@ -5,6 +5,9 @@ import { ArrowUp, ArrowDown, Plus, Trash2, Save, Info, Check, Sliders } from 'lu
 import Notification from '@shared/components/Notification';
 import Loader from '@shared/components/Loader';
 import Button from '@shared/components/Button';
+import Select from '@shared/components/Select';
+import Switch from '@shared/components/Switch';
+import Input from '@shared/components/Input';
 
 interface Props {
   onSaveSuccess?: () => void;
@@ -292,27 +295,25 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
           <div className="bg-gray-50/50 border border-gray-100 rounded-xl p-5 flex flex-col gap-4">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Detalles del Pipeline</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600 uppercase">Nombre del Pipeline</label>
-                <input
-                  type="text"
-                  value={pipelineName}
-                  onChange={e => setPipelineName(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                  placeholder="Ej. Pipeline Principal"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600 uppercase">Descripción</label>
-                <input
-                  type="text"
-                  value={pipelineDescription}
-                  onChange={e => setPipelineDescription(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                  placeholder="Descripción breve del pipeline"
-                />
-              </div>
+              <Input
+                size="sm"
+                label="Nombre del Pipeline"
+                type="text"
+                value={pipelineName}
+                onChange={e => setPipelineName(e.target.value)}
+                className="bg-white text-sm py-2 rounded-lg"
+                placeholder="Ej. Pipeline Principal"
+                required
+              />
+              <Input
+                size="sm"
+                label="Descripción"
+                type="text"
+                value={pipelineDescription}
+                onChange={e => setPipelineDescription(e.target.value)}
+                className="bg-white text-sm py-2 rounded-lg"
+                placeholder="Descripción breve del pipeline"
+              />
             </div>
           </div>
 
@@ -321,14 +322,15 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
             <div className="flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Etapas del Proceso</h3>
               {!onlyPipelineDetails && (
-                <button
-                  type="button"
+                <Button
+                  size="xs"
+                  variant="primary"
                   onClick={handleAddStage}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm"
+                  className="gap-1.5 shadow-sm hover:translate-y-0"
                 >
                   <Plus size={14} />
                   Agregar Etapa
-                </button>
+                </Button>
               )}
             </div>
 
@@ -383,17 +385,20 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                     </div>
 
                     {/* Name */}
-                    <input
+                    <Input
+                      size="sm"
                       type="text"
                       value={stage.strname}
                       onChange={e => updateStageField(idx, 'strname', e.target.value)}
                       placeholder="Nombre de la etapa…"
-                      className="flex-1 min-w-0 border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium bg-white"
+                      containerClassName="flex-1 min-w-0"
+                      className="text-sm font-medium bg-white rounded-lg"
                       required
                     />
 
                     {/* Days limit */}
-                    <input
+                    <Input
+                      size="sm"
                       type="number"
                       min="0"
                       placeholder="∞"
@@ -402,40 +407,40 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                         const val = e.target.value;
                         updateStageField(idx, 'intmaxdays', val === '' ? null : parseInt(val, 10));
                       }}
-                      className="w-16 shrink-0 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center font-medium bg-white"
+                      containerClassName="w-16 shrink-0"
+                      className="text-sm text-center font-medium bg-white rounded-lg !px-2"
                       title="Días límite en etapa (vacío = sin límite)"
                     />
 
                     {/* Stage Type Selector */}
-                    <div className="w-36 shrink-0">
-                      <select
-                        value={Number(stage.stage_type ?? 0)}
-                        onChange={e => handleStageTypeChange(idx, Number(e.target.value))}
-                        className={`w-full text-xs font-semibold rounded-lg px-2 py-1.5 border transition-all cursor-pointer outline-none focus:ring-2 focus:ring-blue-400 ${
-                          Number(stage.stage_type) === 1
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold'
-                            : Number(stage.stage_type) === 2
-                            ? 'bg-rose-50 text-rose-700 border-rose-300 font-bold'
-                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
-                        }`}
-                        title="Tipo de etapa / Cierre de oportunidad"
-                      >
-                        <option value={0}>Abierta / Proceso</option>
-                        <option value={1}>✓ Ganada (Éxito)</option>
-                        <option value={2}>✕ Perdida (Cierre)</option>
-                      </select>
+                    <div className="w-44 shrink-0">
+                      <Select
+                        size="sm"
+                        menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+                        value={[
+                          { value: 0, label: 'Abierta / Proceso' },
+                          { value: 1, label: '✓ Ganada (Éxito)' },
+                          { value: 2, label: '✕ Perdida (Cierre)' },
+                        ].find((opt) => opt.value === Number(stage.stage_type ?? 0))}
+                        onChange={(selected: any) =>
+                          handleStageTypeChange(idx, Number(selected?.value ?? 0))
+                        }
+                        options={[
+                          { value: 0, label: 'Abierta / Proceso' },
+                          { value: 1, label: '✓ Ganada (Éxito)' },
+                          { value: 2, label: '✕ Perdida (Cierre)' },
+                        ]}
+                      />
                     </div>
 
                     {/* Active toggle */}
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0" title="Activo/Inactivo">
-                      <input
-                        type="checkbox"
-                        checked={stage.blnstatus}
-                        onChange={e => updateStageField(idx, 'blnstatus', e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:ring-1 peer-focus:ring-blue-400 rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    <Switch
+                      size="sm"
+                      color="blue"
+                      checked={stage.blnstatus}
+                      onChange={(checked) => updateStageField(idx, 'blnstatus', checked)}
+                      title="Activo/Inactivo"
+                    />
 
                     {/* Initial/Secondary/Inactive badge */}
                     <div className="w-[42px] text-center shrink-0">
@@ -469,22 +474,26 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
 
           {/* Form Actions */}
           <div className="flex justify-end gap-3 border-t border-gray-100 pt-5 mt-4">
-            <button
-              type="button"
+            <Button
+              size="sm"
+              variant="secondary"
               onClick={loadData}
               disabled={saving}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              className="!text-sm !font-normal hover:bg-gray-100 hover:translate-y-0"
             >
               Restablecer
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
               type="submit"
-              disabled={saving}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm"
+              variant="primary"
+              loading={saving}
+              loadingText="Guardando..."
+              className="!text-sm gap-2 shadow-sm hover:translate-y-0"
             >
               <Save size={16} />
-              {saving ? 'Guardando...' : 'Guardar Cambios'}
-            </button>
+              Guardar Cambios
+            </Button>
           </div>
         </form>
       </div>

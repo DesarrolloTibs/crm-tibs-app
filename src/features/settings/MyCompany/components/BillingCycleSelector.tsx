@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import Badge from '@shared/components/Badge';
 import Button from '@shared/components/Button';
+import Input from '@shared/components/Input';
 import UnifiedSearchBar, { type SearchBadge } from '@shared/components/UnifiedSearchBar';
 import type { TenantBillingCycle, TenantConsumptionData, CycleSelectOption } from '../schemas/myCompany.schema';
 import { formatCycleDate } from '../utils/myCompany.helpers';
@@ -245,28 +246,22 @@ export const BillingCycleSelector: React.FC<BillingCycleSelectorProps> = ({
                         onClick={e => e.stopPropagation()}
                       >
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-white border border-slate-200 rounded-lg p-1.5 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
-                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                              Desde
-                            </label>
-                            <input
-                              type="date"
-                              value={draftStartDate}
-                              onChange={e => setDraftStartDate(e.target.value)}
-                              className="w-full bg-transparent text-xs font-semibold text-slate-800 outline-none cursor-pointer p-0"
-                            />
-                          </div>
-                          <div className="bg-white border border-slate-200 rounded-lg p-1.5 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
-                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                              Hasta
-                            </label>
-                            <input
-                              type="date"
-                              value={draftEndDate}
-                              onChange={e => setDraftEndDate(e.target.value)}
-                              className="w-full bg-transparent text-xs font-semibold text-slate-800 outline-none cursor-pointer p-0"
-                            />
-                          </div>
+                          <Input
+                            size="sm"
+                            type="date"
+                            label="Desde"
+                            value={draftStartDate}
+                            onChange={e => setDraftStartDate(e.target.value)}
+                            className="bg-white font-semibold cursor-pointer"
+                          />
+                          <Input
+                            size="sm"
+                            type="date"
+                            label="Hasta"
+                            value={draftEndDate}
+                            onChange={e => setDraftEndDate(e.target.value)}
+                            className="bg-white font-semibold cursor-pointer"
+                          />
                         </div>
 
                         <Button

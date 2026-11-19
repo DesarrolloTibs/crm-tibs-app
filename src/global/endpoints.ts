@@ -84,6 +84,8 @@ export const REPORTS = {
 
 export const WEBCHAT = {
     QUERY: urlBase + 'webchat/query',
+    TRANSCRIBE: urlBase + 'webchat/transcribe',
+    AUDIO_STATUS: urlBase + 'webchat/audio-status',
 };
 
 export const PLANS = {
@@ -95,6 +97,7 @@ export const TENANTS = {
     COURTESY_OVERAGES: urlBase + 'tenants/courtesy-overages',
     CONSUMPTION_BREAKDOWN: urlBase + 'tenants/consumption/breakdown',
     BILLING_CYCLES: urlBase + 'tenants/billing-cycles',
+    AUDIO_USAGE: urlBase + 'tenants/audio-usage',
 };
 
 

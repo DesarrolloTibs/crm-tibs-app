@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Edit, Trash2, Building2, Archive, ArchiveRestore, MoreVertical, Mail, User, Clock } from 'lucide-react';
 import Popover from './Popover';
 import OpportunityChannelBadge from './OpportunityChannelBadge';
+import Button from '@shared/components/Button';
 
 
 interface Props {
@@ -212,22 +213,25 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
       {/* Actions Menu Popover */}
       {(isAdmin || isOwner) && (
         <div className="absolute top-2.5 right-2.5 z-20" ref={menuRef}>
-          <button
-            className="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          <Button
+            variant="icon"
+            className="!p-1.5 !text-gray-500 hover:!text-gray-800 hover:!bg-gray-200 !rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
               setIsMenuOpen(!isMenuOpen);
             }}
             aria-haspopup="true"
             aria-expanded={isMenuOpen}
+            aria-label="Opciones de oportunidad"
           >
             <MoreVertical size={16} />
-          </button>
+          </Button>
           {isMenuOpen && (
             <div className="absolute top-0 right-full mr-2 flex items-center space-x-1 bg-white p-1 rounded-full shadow-lg border border-gray-100 z-30">
               {(isAdmin || isOwner) && (
-                <button
-                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full cursor-pointer"
+                <Button
+                  variant="icon"
+                  className="!p-1.5 !text-gray-500 hover:!text-blue-600 hover:!bg-blue-100 !rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(opportunity);
@@ -236,11 +240,12 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
                   title="Editar"
                 >
                   <Edit size={16} />
-                </button>
+                </Button>
               )}
               {(isAdmin || isOwner) && (
-                <button
-                  className="p-1.5 text-gray-500 hover:text-yellow-600 hover:bg-yellow-100 rounded-full cursor-pointer"
+                <Button
+                  variant="icon"
+                  className="!p-1.5 !text-gray-500 hover:!text-yellow-600 hover:!bg-yellow-100 !rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onArchive(opportunity);
@@ -249,11 +254,12 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
                   title={opportunity.archived ? 'Desarchivar' : 'Archivar'}
                 >
                   {opportunity.archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
-                </button>
+                </Button>
               )}
               {isAdmin && (
-                <button
-                  className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full cursor-pointer"
+                <Button
+                  variant="icon"
+                  className="!p-1.5 !text-gray-500 hover:!text-red-600 hover:!bg-red-100 !rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(opportunity);
@@ -262,7 +268,7 @@ const OpportunityCard: React.FC<Props> = ({ opportunity, onEdit, onDelete, onArc
                   title="Eliminar"
                 >
                   <Trash2 size={16} />
-                </button>
+                </Button>
               )}
             </div>
           )}

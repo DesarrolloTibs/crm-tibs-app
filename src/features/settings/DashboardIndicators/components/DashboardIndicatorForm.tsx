@@ -202,10 +202,10 @@ export const DashboardIndicatorForm: React.FC<DashboardIndicatorFormProps> = ({
             Etapas Monitoreadas ({formData.stage_ids.length} seleccionada{formData.stage_ids.length !== 1 ? 's' : ''})
           </label>
           {stages.length > 0 && (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               onClick={handleSelectAllStages}
-              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
+              className="!text-[11px] !font-bold !text-indigo-600 hover:!text-indigo-700 hover:!bg-indigo-50 gap-1 !px-2 !py-1"
             >
               {allStagesSelected ? (
                 <>
@@ -216,7 +216,7 @@ export const DashboardIndicatorForm: React.FC<DashboardIndicatorFormProps> = ({
                   <CheckSquare size={13} /> Seleccionar todas
                 </>
               )}
-            </button>
+            </Button>
           )}
         </div>
 

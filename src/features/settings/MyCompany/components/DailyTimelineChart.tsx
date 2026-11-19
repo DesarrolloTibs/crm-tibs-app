@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { TrendingUp, Calendar, X, Check } from 'lucide-react';
 import Badge from '@shared/components/Badge';
 import EmptyState from '@shared/components/EmptyState';
+import Button from '@shared/components/Button';
 import type { DailyTimelineConsumption } from '../schemas/myCompany.schema';
 import {
   formatNumber,
@@ -59,17 +60,17 @@ export const DailyTimelineChart: React.FC<DailyTimelineChartProps> = ({
                   </span>
                 )}
               </span>
-              <button
-                type="button"
+              <Button
+                variant="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   onClearDateFilter?.();
                 }}
-                className="ml-0.5 text-indigo-600 hover:text-indigo-900 p-0.5 rounded-full hover:bg-indigo-200/60 transition-colors cursor-pointer"
+                className="ml-0.5 !text-indigo-600 hover:!text-indigo-900 !p-0.5 !rounded-full hover:!bg-indigo-200/60"
                 title="Quitar filtro de día (ver todos)"
               >
                 <X size={12} />
-              </button>
+              </Button>
             </div>
           )}
 
@@ -194,13 +195,13 @@ export const DailyTimelineChart: React.FC<DailyTimelineChartProps> = ({
               💡 Haz clic sobre cualquier tarjeta de día para ver sus interacciones en el historial inferior.
             </span>
             {selectedDate && (
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 onClick={onClearDateFilter}
-                className="text-indigo-600 hover:text-indigo-800 font-bold transition-colors cursor-pointer"
+                className="!text-indigo-600 hover:!text-indigo-800 hover:!bg-indigo-50 !font-bold !px-2 !py-0.5"
               >
                 Quitar selección y mostrar todo el período
-              </button>
+              </Button>
             )}
           </div>
         </div>

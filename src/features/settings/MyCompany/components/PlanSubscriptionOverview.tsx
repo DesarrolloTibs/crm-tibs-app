@@ -4,6 +4,7 @@ import {
   Zap, ShieldPlus, ShieldAlert, AlertTriangle, Database
 } from 'lucide-react';
 import Badge from '@shared/components/Badge';
+import Switch from '@shared/components/Switch';
 import type { TenantConsumptionData } from '../schemas/myCompany.schema';
 import {
   formatNumber,
@@ -209,23 +210,13 @@ export const PlanSubscriptionOverview: React.FC<PlanSubscriptionOverviewProps> =
                 <span className={`text-[11px] font-bold ${allowExtra ? 'text-purple-700' : 'text-slate-400'}`}>
                   {allowExtra ? 'Habilitado' : 'Bloqueado'}
                 </span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={allowExtra}
-                  onClick={onToggleExtra}
+                <Switch
+                  checked={allowExtra}
+                  onChange={() => onToggleExtra()}
                   disabled={togglingExtra || isHistorical}
+                  color="indigo"
                   title={isHistorical ? 'No se puede modificar la cuota en consultas de períodos cerrados' : 'Habilitar/Deshabilitar consumo extra'}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${
-                    allowExtra ? 'bg-purple-600' : 'bg-slate-300'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                      allowExtra ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
+                />
               </div>
             </div>
 

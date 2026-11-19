@@ -4,6 +4,7 @@ import { User, Building2, Clock, AlertTriangle, MoreVertical, Edit, Archive, Arc
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useAuth } from '@features/auth';
+import Button from '@shared/components/Button';
 
 interface Props {
   ticket: Ticket;
@@ -120,22 +121,25 @@ const TicketCard: React.FC<Props> = ({ ticket, onClick, isOverlay = false, onEdi
       {/* Actions Menu Popover */}
       {(onEdit || onArchive || onDelete) && canDrag && (
         <div className="absolute top-2.5 right-2.5 z-20" ref={menuRef}>
-          <button
-            className="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          <Button
+            variant="icon"
+            className="!p-1.5 !text-gray-500 hover:!text-gray-800 hover:!bg-gray-200 !rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
               setIsMenuOpen(!isMenuOpen);
             }}
             aria-haspopup="true"
             aria-expanded={isMenuOpen}
+            aria-label="Opciones del ticket"
           >
             <MoreVertical size={16} />
-          </button>
+          </Button>
           {isMenuOpen && (
             <div className="absolute top-0 right-full mr-2 flex items-center space-x-1 bg-white p-1 rounded-full shadow-lg border border-gray-100 z-30">
               {onEdit && (
-                <button
-                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full cursor-pointer"
+                <Button
+                  variant="icon"
+                  className="!p-1.5 !text-gray-500 hover:!text-blue-600 hover:!bg-blue-100 !rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(ticket);
@@ -144,11 +148,12 @@ const TicketCard: React.FC<Props> = ({ ticket, onClick, isOverlay = false, onEdi
                   title="Editar"
                 >
                   <Edit size={16} />
-                </button>
+                </Button>
               )}
               {onArchive && (
-                <button
-                  className="p-1.5 text-gray-500 hover:text-yellow-600 hover:bg-yellow-100 rounded-full cursor-pointer"
+                <Button
+                  variant="icon"
+                  className="!p-1.5 !text-gray-500 hover:!text-yellow-600 hover:!bg-yellow-100 !rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onArchive(ticket);
@@ -157,11 +162,12 @@ const TicketCard: React.FC<Props> = ({ ticket, onClick, isOverlay = false, onEdi
                   title={ticket.archived ? 'Desarchivar' : 'Archivar'}
                 >
                   {ticket.archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
-                </button>
+                </Button>
               )}
               {onDelete && isAdmin && (
-                <button
-                  className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full cursor-pointer"
+                <Button
+                  variant="icon"
+                  className="!p-1.5 !text-gray-500 hover:!text-red-600 hover:!bg-red-100 !rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(ticket);
@@ -170,7 +176,7 @@ const TicketCard: React.FC<Props> = ({ ticket, onClick, isOverlay = false, onEdi
                   title="Eliminar"
                 >
                   <Trash2 size={16} />
-                </button>
+                </Button>
               )}
             </div>
           )}
