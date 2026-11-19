@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import { validateWithSchema } from '@shared/utils/yupValidation';
 import type {
   GlobalAiConfig,
   LlmProviderItem,
@@ -200,20 +201,5 @@ export const validateGlobalAiForm = async (
  */
 export const validateGlobalAiParameters = async (
   values: Partial<GlobalAiParametersFormData>
-): Promise<{ isValid: boolean; errors: Record<string, string> }> => {
-  try {
-    await globalAiParametersValidationSchema.validate(values, { abortEarly: false });
-    return { isValid: true, errors: {} };
-  } catch (err) {
-    if (err instanceof yup.ValidationError) {
-      const errors: Record<string, string> = {};
-      err.inner.forEach((error) => {
-        if (error.path && !errors[error.path]) {
-          errors[error.path] = error.message;
-        }
-      });
-      return { isValid: false, errors };
-    }
-    return { isValid: false, errors: { form: 'Error de validación inesperado' } };
-  }
-};
+): Promise<{ isValid: boolean; errors: Record<string, string> }> =>
+  validateWithSchema(globalAiParametersValidationSchema, values);

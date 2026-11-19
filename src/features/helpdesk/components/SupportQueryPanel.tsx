@@ -5,6 +5,12 @@ import Input from '@shared/components/Input';
 import Button from '@shared/components/Button';
 import { LoginBackground } from '@features/auth';
 import type { Ticket } from '@core/models/Ticket';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import {
+  supportQueryValidationSchema,
+  type SupportQueryFormValues,
+} from '../schemas/helpdesk.schema';
 
 const getStageBadgeStyles = (stageName: string, customColor?: string | null) => {
   if (customColor) return { backgroundColor: `${customColor}15`, color: customColor, borderColor: `${customColor}30` };
@@ -27,10 +33,17 @@ const SupportQueryPanel: React.FC<Props> = ({ activeTabMobile, setActiveTabMobil
   const [queryError, setQueryError] = useState('');
   const [queriedTickets, setQueriedTickets] = useState<Ticket[] | null>(null);
 
+  const { errors, setErrors, clearError } = useFormValidation<SupportQueryFormValues>();
+
   const handleQuerySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setQueryError('');
+    const result = await validateWithSchema(supportQueryValidationSchema, { queryValue });
+    if (!result.isValid) {
+      setErrors(result.errors as Partial<Record<keyof SupportQueryFormValues, string>>);
+      return;
+    }
     const value = queryValue.trim();
-    if (!value) { setQueryError('Por favor, ingresa un correo o número de ticket.'); return; }
     setQueryLoading(true);
     setQueryError('');
     setQueriedTickets(null);
@@ -67,8 +80,8 @@ const SupportQueryPanel: React.FC<Props> = ({ activeTabMobile, setActiveTabMobil
               <h2 className="text-2xl font-black text-slate-900 tracking-tight">Consulta de Estatus</h2>
               <p className="text-slate-500 text-xs mt-2 max-w-xs mx-auto leading-relaxed">Ingresa tu correo electrónico registrado o número de ticket para conocer su estado de resolución.</p>
             </div>
-            <form onSubmit={handleQuerySubmit} className="space-y-4">
-              <Input label="Correo o Número de Ticket *" type="text" placeholder="Ej: correo@empresa.com o #00001" value={queryValue} onChange={e => setQueryValue(e.target.value)} required />
+            <form noValidate onSubmit={handleQuerySubmit} className="space-y-4">
+              <Input label="Correo o Número de Ticket *" type="text" placeholder="Ej: correo@empresa.com o #00001" value={queryValue} onChange={e => { setQueryValue(e.target.value); clearError('queryValue'); }} error={errors.queryValue} required />
               {queryError && (
                 <div className="bg-transparent border border-rose-200 text-rose-600 text-[10px] font-black uppercase tracking-widest text-center py-2.5 px-4 rounded-xl flex items-center justify-center gap-2">
                   <ShieldAlert size={14} className="stroke-[3]" /> {queryError}

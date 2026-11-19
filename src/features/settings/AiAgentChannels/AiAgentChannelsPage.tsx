@@ -19,11 +19,13 @@ import { AiSubAgentModal } from './components/AiSubAgentModal';
 import { AiWhatsAppChannelModal } from './components/AiWhatsAppChannelModal';
 
 // Esquemas, Tipos y Helpers
-import type {
-  SubAgent,
-  ChannelConfig,
-  NotificationState,
+import {
+  aiAgentConfigValidationSchema,
+  type SubAgent,
+  type ChannelConfig,
+  type NotificationState,
 } from './schemas/aiAgent.schema';
+import { validateWithSchema } from '@shared/utils/yupValidation';
 import { calculateAiAgentStats } from './utils/aiAgent.helpers';
 
 // Servicios API
@@ -83,6 +85,9 @@ export const AiAgentChannelsPage: React.FC = () => {
   const [historyMessageLimit, setHistoryMessageLimit] = useState(10);
   const [maxNewTokens, setMaxNewTokens] = useState(7000);
   const [defaultUserId, setDefaultUserId] = useState('');
+  const [generalErrors, setGeneralErrors] = useState<
+    Partial<Record<'temperature' | 'historyMessageLimit' | 'defaultUserId' | 'reminderOffsetMinutes', string>>
+  >({});
 
   // Modales
   const [isRouterModalOpen, setIsRouterModalOpen] = useState(false);
@@ -339,6 +344,22 @@ export const AiAgentChannelsPage: React.FC = () => {
   // Guardar Configuración General
   const handleSaveGeneralConfig = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validation = await validateWithSchema(aiAgentConfigValidationSchema, {
+      isActive,
+      temperature,
+      historyMessageLimit,
+      defaultUserId,
+      reminderOffsetMinutes,
+    });
+    if (!validation.isValid) {
+      setGeneralErrors(
+        validation.errors as Partial<
+          Record<'temperature' | 'historyMessageLimit' | 'defaultUserId' | 'reminderOffsetMinutes', string>
+        >
+      );
+      return;
+    }
+    setGeneralErrors({});
     try {
       setSaving(true);
       await saveAiAgentConfig({
@@ -734,11 +755,21 @@ export const AiAgentChannelsPage: React.FC = () => {
             temperature={temperature}
             setTemperature={setTemperature}
             historyMessageLimit={historyMessageLimit}
-            setHistoryMessageLimit={setHistoryMessageLimit}
+            setHistoryMessageLimit={(val) => {
+              setHistoryMessageLimit(val);
+              setGeneralErrors((prev) => ({ ...prev, historyMessageLimit: undefined }));
+            }}
             defaultUserId={defaultUserId}
-            setDefaultUserId={setDefaultUserId}
+            setDefaultUserId={(val) => {
+              setDefaultUserId(val);
+              setGeneralErrors((prev) => ({ ...prev, defaultUserId: undefined }));
+            }}
             reminderOffsetMinutes={reminderOffsetMinutes}
-            setReminderOffsetMinutes={setReminderOffsetMinutes}
+            setReminderOffsetMinutes={(val) => {
+              setReminderOffsetMinutes(val);
+              setGeneralErrors((prev) => ({ ...prev, reminderOffsetMinutes: undefined }));
+            }}
+            generalErrors={generalErrors}
             users={users}
             subAgents={subAgents}
             onOpenCreateSubAgent={handleOpenCreateSubAgent}

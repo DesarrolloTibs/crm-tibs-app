@@ -5,6 +5,12 @@ import Input from '@shared/components/Input';
 import TextArea from '@shared/components/TextArea';
 import Button from '@shared/components/Button';
 import Dropzone from '@shared/components/Dropzone';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import {
+  productValidationSchema,
+  type ProductFormValidationValues,
+} from '../schemas/products.schema';
 
 interface StagedSpecFile {
   id: string;
@@ -30,6 +36,7 @@ interface ProductFormState {
 
 const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
   const baseUrl = import.meta.env.VITE_BASE_URL || '';
+  const { errors, setErrors, setError, clearError } = useFormValidation<ProductFormValidationValues>();
 
   const [formData, setFormData] = useState<ProductFormState>({
     nombre: '',
@@ -89,6 +96,18 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         ...prev,
         [name]: value,
       }));
+      clearError(name as keyof ProductFormValidationValues);
+    }
+  };
+
+  const handleFieldBlur = async (field: keyof ProductFormValidationValues) => {
+    try {
+      await productValidationSchema.validateAt(field, formData);
+      clearError(field);
+    } catch (err: any) {
+      if (err?.message) {
+        setError(field, err.message);
+      }
     }
   };
 
@@ -112,17 +131,25 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     e.preventDefault();
     if (isSubmitting) return;
 
-    if (!formData.nombre?.trim()) {
-      alert('Por favor, ingresa el nombre del producto.');
+    const result = await validateWithSchema(productValidationSchema, {
+      nombre: formData.nombre,
+      descripcion: formData.descripcion,
+      precioBase: formData.precioBase,
+      unidadMedida: formData.unidadMedida,
+      observaciones: formData.observaciones,
+      status: formData.status,
+    });
+    if (!result.isValid) {
+      setErrors(result.errors as Partial<Record<keyof ProductFormValidationValues, string>>);
       return;
     }
 
     const parsedData: Partial<Product> = {
-      nombre: formData.nombre,
-      descripcion: formData.descripcion,
+      nombre: formData.nombre.trim(),
+      descripcion: formData.descripcion.trim(),
       precioBase: formData.precioBase !== '' ? Number(formData.precioBase) : 0,
-      unidadMedida: formData.unidadMedida || 'Pieza',
-      observaciones: formData.observaciones || null,
+      unidadMedida: formData.unidadMedida.trim() || 'Pieza',
+      observaciones: formData.observaciones?.trim() || null,
       status: formData.status,
       imagenPortada: formData.imagenPortada,
     };
@@ -137,7 +164,7 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
 
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-2">
+    <form noValidate onSubmit={handleSubmit} className="space-y-6 p-2">
       <h3 className="text-xl font-bold text-gray-800 border-b border-gray-100 pb-3">
         {initialData ? 'Editar Producto' : 'Nuevo Producto'}
       </h3>
@@ -153,6 +180,8 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
               name="nombre"
               value={formData.nombre}
               onChange={handleChange}
+              onBlur={() => handleFieldBlur('nombre')}
+              error={errors.nombre}
               placeholder="Ej: Licencia Anual Qlik Sense"
               required
             />
@@ -165,6 +194,8 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
               name="descripcion"
               value={formData.descripcion || ''}
               onChange={handleChange}
+              onBlur={() => handleFieldBlur('descripcion')}
+              error={errors.descripcion}
               placeholder="Describe las características principales del producto..."
               rows={3}
             />
@@ -181,6 +212,8 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                 step="0.01"
                 value={formData.precioBase}
                 onChange={handleChange}
+                onBlur={() => handleFieldBlur('precioBase')}
+                error={errors.precioBase}
                 placeholder="0.00"
                 inputPrefix={<DollarSign size={16} />}
                 className="text-right"
@@ -196,6 +229,8 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                 name="unidadMedida"
                 value={formData.unidadMedida}
                 onChange={handleChange}
+                onBlur={() => handleFieldBlur('unidadMedida')}
+                error={errors.unidadMedida}
                 placeholder="Ej: Pieza, Servicio, Licencia, Hora..."
                 required
               />
@@ -212,6 +247,8 @@ const ProductForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
               name="observaciones"
               value={formData.observaciones || ''}
               onChange={handleChange}
+              onBlur={() => handleFieldBlur('observaciones')}
+              error={errors.observaciones}
               placeholder="Ej: No incluye IVA, no incluye instalación, precio refleja configuración básica..."
               rows={2}
             />

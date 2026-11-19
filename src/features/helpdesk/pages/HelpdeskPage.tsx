@@ -135,16 +135,29 @@ const HelpdeskPage: React.FC = () => {
           activeStage={hd.activeStage}
           isAdmin={hd.isAdmin}
           isAddingStage={hd.isAddingStage}
-          setIsAddingStage={hd.setIsAddingStage}
+          setIsAddingStage={(val) => {
+            hd.setIsAddingStage(val);
+            if (!val) hd.setNewStageErrors({});
+          }}
           newStageName={hd.newStageName}
-          setNewStageName={hd.setNewStageName}
+          setNewStageName={(val) => {
+            hd.setNewStageName(val);
+            hd.setNewStageErrors((prev) => ({ ...prev, strname: undefined }));
+          }}
           newStageMaxDays={hd.newStageMaxDays}
-          setNewStageMaxDays={hd.setNewStageMaxDays}
+          setNewStageMaxDays={(val) => {
+            hd.setNewStageMaxDays(val);
+            hd.setNewStageErrors((prev) => ({ ...prev, intmaxdays: undefined }));
+          }}
+          newStageErrors={hd.newStageErrors}
           addStageInputRef={hd.addStageInputRef}
           onDragStart={hd.handleDragStart}
           onDragEnd={hd.handleDragEnd}
           onClickTicket={hd.setSelectedTicket}
-          onEditStage={hd.setEditingStage}
+          onEditStage={(stage) => {
+            hd.setEditStageErrors({});
+            hd.setEditingStage(stage);
+          }}
           onDisableStage={hd.handleDisableStage}
           onAddTicket={(_stageId: string) => hd.setIsCreatingTicket(true)}
           onDeleteTicket={hd.handleDeleteTicket}
@@ -167,11 +180,19 @@ const HelpdeskPage: React.FC = () => {
 
       <HelpdeskModals
         editingStage={hd.editingStage}
-        setEditingStage={hd.setEditingStage}
+        setEditingStage={(val) => {
+          hd.setEditingStage(val);
+          hd.setEditStageErrors({});
+        }}
+        editStageErrors={hd.editStageErrors}
         onSaveStage={hd.handleSaveStage}
         resolutionTicketInfo={hd.resolutionTicketInfo}
         resolutionNotesTemp={hd.resolutionNotesTemp}
-        setResolutionNotesTemp={hd.setResolutionNotesTemp}
+        setResolutionNotesTemp={(val) => {
+          hd.setResolutionNotesTemp(val);
+          hd.setResolutionErrors({});
+        }}
+        resolutionErrors={hd.resolutionErrors}
         onResolutionSubmit={hd.handleResolutionSubmit}
         onResolutionCancel={hd.handleResolutionCancel}
         selectedTicket={hd.selectedTicket}

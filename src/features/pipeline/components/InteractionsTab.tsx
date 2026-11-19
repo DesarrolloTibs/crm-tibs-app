@@ -12,6 +12,9 @@ import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Input from '@shared/components/Input';
 import TextArea from '@shared/components/TextArea';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import { interactionValidationSchema } from '../schemas/pipeline.schema';
 interface InteractionsTabProps {
   opportunityId: string;
 }
@@ -21,6 +24,7 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
   const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [newInteractionComment, setNewInteractionComment] = useState('');
+  const { errors, setErrors, clearError, clearErrors } = useFormValidation<{ comment: string }>();
   const [searchTerm, setSearchTerm] = useState('');
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -62,15 +66,11 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
 
   const handleAddInteraction = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!newInteractionComment) {
-      setNotification({
-        show: true,
-        type: 'warning',
-        title: 'Atención',
-        message: 'El comentario es obligatorio.',
-        onConfirm: hideNotification,
-        onCancel: hideNotification,
-      });
+    const result = await validateWithSchema(interactionValidationSchema, {
+      comment: newInteractionComment,
+    });
+    if (!result.isValid) {
+      setErrors(result.errors as Partial<Record<'comment', string>>);
       return;
     }
 
@@ -185,13 +185,17 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
         <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
           Añadir al Historial
         </h2>
-        <div className="space-y-4">
+        <form noValidate onSubmit={handleAddInteraction} className="space-y-4">
           <div>
             <TextArea
               id="newInteractionComment"
               label="Nuevo Comentario"
               value={newInteractionComment}
-              onChange={e => setNewInteractionComment(e.target.value)}
+              onChange={e => {
+                setNewInteractionComment(e.target.value);
+                clearError('comment');
+              }}
+              error={errors.comment}
               placeholder="Añadir un comentario o registrar un evento..."
               rows={4}
             />
@@ -201,21 +205,23 @@ const InteractionsTab: React.FC<InteractionsTabProps> = ({ opportunityId }) => {
               type="button"
               variant="secondary"
               className="px-6 py-3"
-              onClick={() => setModalOpen(false)}
+              onClick={() => {
+                setModalOpen(false);
+                clearErrors();
+              }}
             >
               Cancelar
             </Button>
 
             <Button
-              type="button"
+              type="submit"
               variant="primary"
               className="px-6 py-3"
-              onClick={() => handleAddInteraction()}
             >
               Guardar Registro
             </Button>
           </div>
-        </div>
+        </form>
       </Modal>
 
       <ul className="space-y-4 overflow-y-auto flex-grow pr-2">

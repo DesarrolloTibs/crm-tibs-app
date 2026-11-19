@@ -7,7 +7,18 @@ import { useForgotPassword } from '../hooks/useAuthForms';
 import '../components/Login.css';
 
 const ForgotPasswordPage: React.FC = () => {
-  const { email, setEmail, loading, error, setError, success, handleSubmit, navigate } = useForgotPassword();
+  const {
+    email,
+    setEmail,
+    loading,
+    error,
+    setError,
+    fieldErrors,
+    clearFieldError,
+    success,
+    handleSubmit,
+    navigate,
+  } = useForgotPassword();
 
   return (
     <div className="flex min-h-screen w-full overflow-hidden bg-white">
@@ -39,13 +50,27 @@ const ForgotPasswordPage: React.FC = () => {
                 <p className="text-blue-600 text-[11px] font-black uppercase tracking-[0.3em] mt-2">Billy Sales & Services • Seguridad</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} noValidate className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Tu Correo Institucional</label>
                   <div className="relative group">
-                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-blue-600'}`} size={18} />
-                    <input type="email" placeholder="usuario@empresa.com" value={email} onChange={e => { setEmail(e.target.value); if (error) setError(''); }} className={`login-input-premium pl-12 ${error ? 'border-rose-300 bg-rose-50/30' : ''}`} required />
+                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error || fieldErrors.email ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-blue-600'}`} size={18} />
+                    <input
+                      type="email"
+                      placeholder="usuario@empresa.com"
+                      value={email}
+                      onChange={e => {
+                        setEmail(e.target.value);
+                        if (error) setError('');
+                        clearFieldError('email');
+                      }}
+                      className={`login-input-premium pl-12 ${error || fieldErrors.email ? 'border-rose-300 bg-rose-50/30' : ''}`}
+                      required
+                    />
                   </div>
+                  {fieldErrors.email && (
+                    <p className="text-rose-600 text-[11px] font-medium ml-1">{fieldErrors.email}</p>
+                  )}
                 </div>
 
                 {error && (

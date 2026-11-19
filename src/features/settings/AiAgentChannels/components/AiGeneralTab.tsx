@@ -26,6 +26,9 @@ interface AiGeneralTabProps {
   setDefaultUserId: (val: string) => void;
   reminderOffsetMinutes: number;
   setReminderOffsetMinutes: (val: number) => void;
+  generalErrors?: Partial<
+    Record<'temperature' | 'historyMessageLimit' | 'defaultUserId' | 'reminderOffsetMinutes', string>
+  >;
   users: any[];
   subAgents: SubAgent[];
   onOpenCreateSubAgent: () => void;
@@ -49,6 +52,7 @@ export const AiGeneralTab: React.FC<AiGeneralTabProps> = ({
   setDefaultUserId,
   reminderOffsetMinutes,
   setReminderOffsetMinutes,
+  generalErrors,
   users,
   subAgents,
   onOpenCreateSubAgent,
@@ -85,7 +89,7 @@ export const AiGeneralTab: React.FC<AiGeneralTabProps> = ({
   });
 
   return (
-    <form onSubmit={onSaveGeneralConfig} className="space-y-6 text-left w-full">
+    <form noValidate onSubmit={onSaveGeneralConfig} className="space-y-6 text-left w-full">
       {/* Switch Principal de Respuesta Automática */}
       <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3.5">
@@ -212,6 +216,9 @@ export const AiGeneralTab: React.FC<AiGeneralTabProps> = ({
             <span>Equilibrado (0.5)</span>
             <span>Creativo (1.0)</span>
           </div>
+          {generalErrors?.temperature && (
+            <p className="text-rose-600 text-[10px] font-medium mt-1 ml-1">{generalErrors.temperature}</p>
+          )}
         </div>
 
         {/* Límite de Historial */}
@@ -231,7 +238,11 @@ export const AiGeneralTab: React.FC<AiGeneralTabProps> = ({
             min={3}
             max={50}
             value={historyMessageLimit}
-            onChange={(e) => setHistoryMessageLimit(parseInt(e.target.value, 10) || 10)}
+            onChange={(e) => {
+              const raw = e.target.value;
+              setHistoryMessageLimit(raw === '' ? 0 : Number(raw));
+            }}
+            error={generalErrors?.historyMessageLimit}
             placeholder="Ej: 10"
           />
         </div>
@@ -259,6 +270,7 @@ export const AiGeneralTab: React.FC<AiGeneralTabProps> = ({
               value={userOptions.find((opt) => opt.value === defaultUserId)}
               onChange={(selected) => setDefaultUserId(selected ? selected.value : '')}
               options={userOptions}
+              error={generalErrors?.defaultUserId}
               isClearable
               placeholder="-- Seleccionar Ejecutivo --"
             />
@@ -278,6 +290,7 @@ export const AiGeneralTab: React.FC<AiGeneralTabProps> = ({
                 if (selected) setReminderOffsetMinutes(selected.value);
               }}
               options={REMINDER_OFFSET_OPTIONS}
+              error={generalErrors?.reminderOffsetMinutes}
               isSearchable={false}
             />
           </div>

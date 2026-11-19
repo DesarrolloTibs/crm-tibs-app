@@ -8,6 +8,9 @@ import Input from '@shared/components/Input';
 import Button from '@shared/components/Button';
 import Select from '@shared/components/Select';
 import Switch from '@shared/components/Switch';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import { helpdeskSettingsValidationSchema } from '../schemas/helpdesk.schema';
 
 interface Props {
   onSaveSuccess?: () => void;
@@ -15,6 +18,7 @@ interface Props {
 }
 
 const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDetails = false }) => {
+  const { errors, setErrors, clearError } = useFormValidation<Record<string, string>>();
   const [helpdeskName, setHelpdeskName] = useState('');
   const [helpdeskDescription, setHelpdeskDescription] = useState('');
   const [stages, setStages] = useState<TicketStage[]>([]);
@@ -161,11 +165,22 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!helpdeskName.trim()) {
-      showError('El nombre de la mesa de ayuda no puede estar vacío.');
+    const validation = await validateWithSchema(helpdeskSettingsValidationSchema, {
+      helpdeskName,
+      helpdeskDescription,
+      stages: stages.map(s => ({
+        strname: s.strname,
+        intmaxdays: s.intmaxdays !== undefined && s.intmaxdays !== null ? Number(s.intmaxdays) : null,
+        stage_type: Number(s.stage_type ?? 0),
+      })),
+    });
+
+    if (!validation.isValid) {
+      setErrors(validation.errors);
       return;
     }
 
+    setErrors({});
     setSaving(true);
     try {
       // 1. Debe existir al menos una etapa activa
@@ -284,7 +299,7 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-6">
           {/* Helpdesk Details Form */}
           <div className="bg-gray-50/50 border border-gray-100 rounded-xl p-5 flex flex-col gap-4">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Detalles de la Mesa de Ayuda</h3>
@@ -294,7 +309,11 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
                   label="Nombre de la Mesa de Ayuda"
                   type="text"
                   value={helpdeskName}
-                  onChange={e => setHelpdeskName(e.target.value)}
+                  onChange={e => {
+                    setHelpdeskName(e.target.value);
+                    clearError('helpdeskName');
+                  }}
+                  error={errors.helpdeskName}
                   placeholder="Ej. Mesa de Ayuda Principal"
                   required
                 />
@@ -304,7 +323,11 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
                   label="Descripción"
                   type="text"
                   value={helpdeskDescription}
-                  onChange={e => setHelpdeskDescription(e.target.value)}
+                  onChange={e => {
+                    setHelpdeskDescription(e.target.value);
+                    clearError('helpdeskDescription');
+                  }}
+                  error={errors.helpdeskDescription}
                   placeholder="Descripción breve de la mesa"
                 />
               </div>
@@ -381,9 +404,14 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
                     <Input
                       type="text"
                       value={stage.strname}
-                      onChange={e => updateStageField(idx, 'strname', e.target.value)}
+                      onChange={e => {
+                        updateStageField(idx, 'strname', e.target.value);
+                        clearError(`stages[${idx}].strname`);
+                      }}
+                      error={errors[`stages[${idx}].strname`]}
                       placeholder="Nombre de la etapa…"
-                      className="flex-1 min-w-0 !py-1.5 !px-2.5 !rounded-lg shadow-none focus:shadow-none hover:border-slate-350"
+                      containerClassName="flex-1 min-w-0"
+                      className="!py-1.5 !px-2.5 !rounded-lg shadow-none focus:shadow-none hover:border-slate-350"
                       required
                     />
 
@@ -395,9 +423,12 @@ const HelpdeskStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyHelpdeskDe
                       value={stage.intmaxdays !== undefined && stage.intmaxdays !== null ? stage.intmaxdays : ''}
                       onChange={e => {
                         const val = e.target.value;
-                        updateStageField(idx, 'intmaxdays', val === '' ? null : parseInt(val, 10));
+                        updateStageField(idx, 'intmaxdays', val === '' ? null : Number(val));
+                        clearError(`stages[${idx}].intmaxdays`);
                       }}
-                      className="w-16 shrink-0 !py-1.5 !px-2 !rounded-lg text-center shadow-none focus:shadow-none hover:border-slate-350"
+                      error={errors[`stages[${idx}].intmaxdays`]}
+                      containerClassName="w-16 shrink-0"
+                      className="!py-1.5 !px-2 !rounded-lg text-center shadow-none focus:shadow-none hover:border-slate-350"
                       title="Días límite en etapa (vacío = sin límite)"
                     />
 

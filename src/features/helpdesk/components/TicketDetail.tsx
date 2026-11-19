@@ -12,8 +12,14 @@ import TextArea from '@shared/components/TextArea';
 import Button from '@shared/components/Button';
 import Loader from '@shared/components/Loader';
 import type { SingleValue } from 'react-select';
-import { User as UserIcon, LifeBuoy, AlertTriangle, ArrowRight, ShieldAlert } from 'lucide-react';
+import { User as UserIcon, LifeBuoy, AlertTriangle, ArrowRight } from 'lucide-react';
 import TicketInteractionsTab from './TicketInteractionsTab';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import {
+  ticketDetailValidationSchema,
+  type TicketDetailFormValues,
+} from '../schemas/helpdesk.schema';
 
 interface Props {
   ticket?: Ticket;
@@ -37,6 +43,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
   const [loading, setLoading] = useState(true);
 
   // Form states
+  const { errors, setErrors, clearError } = useFormValidation<TicketDetailFormValues>();
   const [title, setTitle] = useState(ticket?.strtitle || '');
   const [incidenceType, setIncidenceType] = useState(ticket?.tipo_incidencia || 'Soporte Técnico');
   const [description, setDescription] = useState(ticket?.description || '');
@@ -53,7 +60,6 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
   const [companyName, setCompanyName] = useState(ticket?.cliente ? (ticket.cliente.company?.nombre || ticket.cliente.empresa || '') : '');
 
   const [activeTab, setActiveTab] = useState<'desc' | 'resol' | 'history'>('desc');
-  const [validationError, setValidationError] = useState('');
 
 
   useEffect(() => {
@@ -95,22 +101,39 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    setValidationError('');
+
+    const valuesToValidate: TicketDetailFormValues = {
+      strtitle: title,
+      description,
+      tipo_incidencia: incidenceType,
+      contactName,
+      contactEmail,
+      contactPhone,
+      isResolvedStage,
+      notas_resolucion: notasResolucion,
+    };
+
+    const result = await validateWithSchema(ticketDetailValidationSchema, valuesToValidate);
+    if (!result.isValid) {
+      setErrors(result.errors as Partial<Record<keyof TicketDetailFormValues, string>>);
+      const hasMainFieldErrors = Boolean(
+        result.errors.strtitle ||
+          result.errors.tipo_incidencia ||
+          result.errors.contactName ||
+          result.errors.contactEmail ||
+          result.errors.contactPhone
+      );
+      if (result.errors.description && !hasMainFieldErrors) {
+        setActiveTab('desc');
+      } else if (result.errors.notas_resolucion && !hasMainFieldErrors && !result.errors.description) {
+        setActiveTab('resol');
+      }
+      return;
+    }
 
     const cleanTitle = (title || '').trim();
     const cleanDesc = (description || '').trim();
     const cleanNotas = (notasResolucion || '').trim();
-
-    if (!cleanTitle || !cleanDesc) {
-      setValidationError('El Asunto y la Descripción del problema son obligatorios.');
-      return;
-    }
-
-    if (isResolvedStage && !cleanNotas) {
-      setValidationError('Las notas de resolución son obligatorias para poder resolver el ticket.');
-      setActiveTab('resol');
-      return;
-    }
 
     const payload: Partial<Ticket> = {
       strtitle: cleanTitle,
@@ -183,7 +206,7 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form noValidate onSubmit={handleSubmit} className="space-y-6">
       {/* Barra superior de fases y acciones rápidas */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
         <div className="flex flex-wrap gap-2 items-center">
@@ -227,7 +250,8 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
         id="ticket_title"
         type="text"
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        onChange={e => { setTitle(e.target.value); clearError('strtitle'); }}
+        error={errors.strtitle}
         placeholder="Ej: Falla en servidor de base de datos"
         required
       />
@@ -257,9 +281,10 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
             label="Tipo de Incidencia *"
             inputId="tipo_incidencia_select"
             value={incidenceTypeOptions.find(opt => opt.value === incidenceType) || incidenceTypeOptions[0]}
-            onChange={(val: any) => setIncidenceType(val ? val.value : 'Soporte Técnico')}
+            onChange={(val: any) => { setIncidenceType(val ? val.value : 'Soporte Técnico'); clearError('tipo_incidencia'); }}
             options={incidenceTypeOptions}
             placeholder="Seleccione el tipo de incidencia..."
+            error={errors.tipo_incidencia}
             isSearchable={false}
           />
 
@@ -316,7 +341,8 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
               label="Nombre de Contacto"
               type="text"
               value={contactName}
-              onChange={e => setContactName(e.target.value)}
+              onChange={e => { setContactName(e.target.value); clearError('contactName'); }}
+              error={errors.contactName}
               placeholder="Nombre del cliente"
             />
             <Input
@@ -324,7 +350,8 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
               label="Correo de Contacto"
               type="email"
               value={contactEmail}
-              onChange={e => setContactEmail(e.target.value)}
+              onChange={e => { setContactEmail(e.target.value); clearError('contactEmail'); }}
+              error={errors.contactEmail}
               placeholder="correo@empresa.com"
             />
           </div>
@@ -335,7 +362,8 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
               label="Teléfono"
               type="text"
               value={contactPhone}
-              onChange={e => setContactPhone(e.target.value)}
+              onChange={e => { setContactPhone(e.target.value); clearError('contactPhone'); }}
+              error={errors.contactPhone}
               placeholder="Teléfono de contacto"
             />
             <Input
@@ -400,9 +428,10 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
             <div className="space-y-1">
               <TextArea
                 value={description}
-                onChange={e => setDescription(e.target.value)}
+                onChange={e => { setDescription(e.target.value); clearError('description'); }}
                 placeholder="Por favor describe detalladamente la incidencia..."
                 className="w-full min-h-[140px]"
+                error={errors.description}
                 required
               />
             </div>
@@ -416,10 +445,10 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
               )}
               <TextArea
                 value={notasResolucion}
-                onChange={e => setNotasResolucion(e.target.value)}
+                onChange={e => { setNotasResolucion(e.target.value); clearError('notas_resolucion'); }}
                 placeholder="Ingresa las notas y comentarios sobre la resolución de este ticket..."
                 className="w-full min-h-[140px]"
-                error={isResolvedStage && !notasResolucion.trim() ? 'Las notas de resolución son obligatorias.' : undefined}
+                error={errors.notas_resolucion}
               />
             </div>
           ) : (
@@ -427,14 +456,6 @@ const TicketDetail: React.FC<Props> = ({ ticket, stages, onSave, onCancel, onCon
           )}
         </div>
       </div>
-
-      {/* Alertas de Validación del Cliente */}
-      {validationError && (
-        <div className="flex gap-2 border border-red-200 bg-red-50/30 text-red-600 text-xs font-bold uppercase tracking-wider py-3.5 px-4 rounded-xl items-center justify-center animate-in slide-in-from-top-2">
-          <ShieldAlert size={16} className="stroke-[2.5]" />
-          {validationError}
-        </div>
-      )}
 
       {/* Botones de acción */}
       <div className="flex justify-end items-center border-t border-slate-100 pt-5">

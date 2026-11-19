@@ -84,13 +84,23 @@ export const globalAiCredentialsValidationSchema = yup.object().shape({
 
   geminiApiKey: yup.string().when('providerId', {
     is: 'gemini',
-    then: (schema) => schema.trim().required('La API Key de Google Gemini es obligatoria'),
+    then: (schema) =>
+      schema
+        .trim()
+        .required('La API Key de Google Gemini es obligatoria')
+        .min(6, 'La API Key de Google Gemini es demasiado corta')
+        .max(255, 'La API Key no puede exceder los 255 caracteres'),
     otherwise: (schema) => schema.optional(),
   }),
 
   openaiApiKey: yup.string().when('providerId', {
     is: 'openai',
-    then: (schema) => schema.trim().required('La API Key de OpenAI / Azure es obligatoria'),
+    then: (schema) =>
+      schema
+        .trim()
+        .required('La API Key de OpenAI / Azure es obligatoria')
+        .min(6, 'La API Key de OpenAI / Azure es demasiado corta')
+        .max(255, 'La API Key no puede exceder los 255 caracteres'),
     otherwise: (schema) => schema.optional(),
   }),
 
@@ -99,6 +109,7 @@ export const globalAiCredentialsValidationSchema = yup.object().shape({
     then: (schema) =>
       schema
         .trim()
+        .max(255, 'El endpoint no puede exceder los 255 caracteres')
         .test('is-valid-url-or-empty', 'El endpoint debe tener formato URL válido (ej. https://...)', (val) => {
           if (!val) return true;
           try {
@@ -113,19 +124,34 @@ export const globalAiCredentialsValidationSchema = yup.object().shape({
 
   watsonxApiKey: yup.string().when('providerId', {
     is: 'watsonx',
-    then: (schema) => schema.trim().required('La API Key de IBM Cloud (WatsonX) es obligatoria'),
+    then: (schema) =>
+      schema
+        .trim()
+        .required('La API Key de IBM Cloud (WatsonX) es obligatoria')
+        .min(6, 'La API Key de WatsonX es demasiado corta')
+        .max(255, 'La API Key no puede exceder los 255 caracteres'),
     otherwise: (schema) => schema.optional(),
   }),
 
   watsonxProjectId: yup.string().when('providerId', {
     is: 'watsonx',
-    then: (schema) => schema.trim().required('El Project ID de WatsonX es obligatorio'),
+    then: (schema) =>
+      schema
+        .trim()
+        .required('El Project ID de WatsonX es obligatorio')
+        .min(4, 'El Project ID de WatsonX es demasiado corto')
+        .max(150, 'El Project ID no puede exceder los 150 caracteres'),
     otherwise: (schema) => schema.optional(),
   }),
 
   watsonxRegion: yup.string().when('providerId', {
     is: 'watsonx',
-    then: (schema) => schema.trim().required('La región o endpoint de WatsonX es obligatoria'),
+    then: (schema) =>
+      schema
+        .trim()
+        .required('La región o endpoint de WatsonX es obligatoria')
+        .min(2, 'La región o endpoint debe tener al menos 2 caracteres')
+        .max(150, 'La región o endpoint no puede exceder los 150 caracteres'),
     otherwise: (schema) => schema.optional(),
   }),
 });
@@ -142,10 +168,13 @@ export const globalAiParametersValidationSchema = yup.object().shape({
     .string()
     .trim()
     .required('El nombre del modelo es obligatorio')
-    .min(2, 'Debe tener al menos 2 caracteres'),
+    .min(2, 'Debe tener al menos 2 caracteres')
+    .max(120, 'El nombre del modelo no puede exceder los 120 caracteres'),
   maxNewTokens: yup
     .number()
-    .typeError('Los tokens máximos deben ser un número')
+    .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? NaN : val))
+    .typeError('Los tokens máximos deben ser un número entero')
+    .integer('Los tokens máximos deben ser un número entero')
     .required('El límite de tokens es obligatorio')
     .min(100, 'El límite mínimo es de 100 tokens')
     .max(32768, 'El límite máximo recomendado es de 32,768 tokens'),

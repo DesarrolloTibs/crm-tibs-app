@@ -27,6 +27,7 @@ interface Props {
   setNewStageName: (v: string) => void;
   newStageMaxDays: string;
   setNewStageMaxDays: (v: string) => void;
+  newStageErrors?: Partial<Record<'strname' | 'intmaxdays', string>>;
   addStageInputRef: React.RefObject<HTMLInputElement | null>;
   onDragStart: (e: DragStartEvent) => void;
   onDragEnd: (e: DragEndEvent) => void;
@@ -43,7 +44,7 @@ const PipelineKanban: React.FC<Props> = ({
   sensors, activeStages, visibleStageIds, filteredOpportunities, foldedStageIds,
   setFoldedStageIds, activeOpportunity, activeStage, stages, isAdmin,
   isAddingStage, setIsAddingStage, newStageName, setNewStageName,
-  newStageMaxDays, setNewStageMaxDays, addStageInputRef,
+  newStageMaxDays, setNewStageMaxDays, newStageErrors, addStageInputRef,
   onDragStart, onDragEnd, onEditOpportunity, onDeleteOpportunity, onArchiveOpportunity,
   onEditStage, onDisableStage, onAddOpportunity, onCreateStage,
 }) => {
@@ -101,9 +102,9 @@ const PipelineKanban: React.FC<Props> = ({
           ) : (
             <div className="flex flex-col w-[85vw] md:w-[330px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-h-[220px] h-fit snap-center">
               <h3 className="font-semibold text-slate-800 text-[14px] uppercase tracking-wider mb-3">Nueva Etapa</h3>
-              <form onSubmit={onCreateStage} className="flex flex-col gap-3">
-                <Input label="Nombre" ref={addStageInputRef} type="text" value={newStageName} onChange={e => setNewStageName(e.target.value)} placeholder="Nombre de la etapa..." required />
-                <Input label="Límite de días (opcional)" type="number" min="0" value={newStageMaxDays} onChange={e => setNewStageMaxDays(e.target.value)} placeholder="Ej. 15 (vacío = sin límite)" />
+              <form noValidate onSubmit={onCreateStage} className="flex flex-col gap-3">
+                <Input label="Nombre" ref={addStageInputRef} type="text" value={newStageName} onChange={e => setNewStageName(e.target.value)} error={newStageErrors?.strname} placeholder="Nombre de la etapa..." required />
+                <Input label="Límite de días (opcional)" type="number" min="0" value={newStageMaxDays} onChange={e => setNewStageMaxDays(e.target.value)} error={newStageErrors?.intmaxdays} placeholder="Ej. 15 (vacío = sin límite)" />
                 <div className="flex items-center gap-2 mt-1">
                   <Button type="submit" variant="indigo" className="flex-1">Añadir</Button>
                   <Button type="button" onClick={() => { setIsAddingStage(false); setNewStageName(''); setNewStageMaxDays(''); }} variant="secondary" className="flex-1">Cancelar</Button>

@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Sparkles, Calendar, Zap, Check } from 'lucide-react';
 import Button from '@shared/components/Button';
 import Select from '@shared/components/Select';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
 import type { TenantPlanInfo, Plan } from '../schemas/tenants.schema';
+import { validateTenantPlanForm } from '../utils/tenants.helpers';
 
 interface TenantPlanTabProps {
   tenant: TenantPlanInfo;
@@ -27,6 +29,10 @@ export const TenantPlanTab: React.FC<TenantPlanTabProps> = ({
   submitting,
 }) => {
   const initialPlanId = tenant.plan_id || (plans[0]?.plan_id ?? 1);
+  const { errors, setErrors, clearError } = useFormValidation<{
+    planId: string;
+    planApplicationMode: string;
+  }>();
   const [assignPlanId, setAssignPlanId] = useState<number>(initialPlanId);
   const [assignAllowExtra, setAssignAllowExtra] = useState<boolean>(tenant.allow_extra);
   const [planApplicationMode, setPlanApplicationMode] = useState<
@@ -48,6 +54,17 @@ export const TenantPlanTab: React.FC<TenantPlanTabProps> = ({
     const resolvedImmediatePolicy =
       planApplicationMode === 'immediate_keep' ? 'keep_current_date' : 'reset_date';
 
+    const validation = await validateTenantPlanForm({
+      planId: assignPlanId,
+      planApplicationMode,
+      updateQueuedPlans: resolvedChangeType === 'immediate' ? updateQueuedPlans : false,
+      assignAllowExtra,
+    });
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      return;
+    }
+
     await onSubmit({
       planId: assignPlanId,
       changeType: resolvedChangeType,
@@ -59,7 +76,7 @@ export const TenantPlanTab: React.FC<TenantPlanTabProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form noValidate onSubmit={handleSubmit} className="space-y-4">
       {/* Selector de Plan y Duración */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
@@ -72,10 +89,17 @@ export const TenantPlanTab: React.FC<TenantPlanTabProps> = ({
           <Select
             inputId="assignPlanId"
             value={planOptions.find((opt) => opt.value === assignPlanId)}
-            onChange={(selected: any) => selected && setAssignPlanId(Number(selected.value))}
+            onChange={(selected: any) => {
+              if (selected) {
+                setAssignPlanId(Number(selected.value));
+                clearError('planId');
+                clearError('planApplicationMode');
+              }
+            }}
             options={planOptions}
             isSearchable={false}
             placeholder="Seleccione un plan..."
+            error={errors.planId || errors.planApplicationMode}
           />
         </div>
 

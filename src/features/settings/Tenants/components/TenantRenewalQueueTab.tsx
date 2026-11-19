@@ -13,12 +13,14 @@ import Button from '@shared/components/Button';
 import Select from '@shared/components/Select';
 import Input from '@shared/components/Input';
 import Loader from '@shared/components/Loader';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
 import type {
   TenantPlanInfo,
   Plan,
   RenewalQueueResponse,
   RenewalQueueItem,
 } from '../schemas/tenants.schema';
+import { validateTenantEnqueueForm } from '../utils/tenants.helpers';
 
 interface TenantRenewalQueueTabProps {
   tenant: TenantPlanInfo;
@@ -44,6 +46,7 @@ export const TenantRenewalQueueTab: React.FC<TenantRenewalQueueTabProps> = ({
   onClose,
 }) => {
   const initialPlanId = tenant.plan_id || (plans[0]?.plan_id ?? 1);
+  const { errors, setErrors, clearError } = useFormValidation<{ planId: string; periodsCount: string }>();
   const [queuePlanId, setQueuePlanId] = useState<number>(initialPlanId);
   const [queuePeriodsCount, setQueuePeriodsCount] = useState<number>(1);
 
@@ -57,6 +60,14 @@ export const TenantRenewalQueueTab: React.FC<TenantRenewalQueueTabProps> = ({
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validation = await validateTenantEnqueueForm({
+      planId: queuePlanId,
+      periodsCount: queuePeriodsCount,
+    });
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      return;
+    }
     await onEnqueueSubmit({
       planId: queuePlanId,
       periodsCount: queuePeriodsCount,
@@ -186,7 +197,7 @@ export const TenantRenewalQueueTab: React.FC<TenantRenewalQueueTabProps> = ({
           Encolar Nuevos Períodos Prepagados
         </h4>
 
-        <form onSubmit={handleFormSubmit} className="space-y-3">
+        <form noValidate onSubmit={handleFormSubmit} className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label
@@ -198,10 +209,16 @@ export const TenantRenewalQueueTab: React.FC<TenantRenewalQueueTabProps> = ({
               <Select
                 inputId="queuePlanId"
                 value={planOptions.find((opt) => opt.value === queuePlanId)}
-                onChange={(selected: any) => selected && setQueuePlanId(Number(selected.value))}
+                onChange={(selected: any) => {
+                  if (selected) {
+                    setQueuePlanId(Number(selected.value));
+                    clearError('planId');
+                  }
+                }}
                 options={planOptions}
                 isSearchable={false}
                 placeholder="Seleccione un plan a encolar..."
+                error={errors.planId}
               />
             </div>
 
@@ -232,7 +249,10 @@ export const TenantRenewalQueueTab: React.FC<TenantRenewalQueueTabProps> = ({
                   key={num}
                   variant="ghost"
                   type="button"
-                  onClick={() => setQueuePeriodsCount(num)}
+                  onClick={() => {
+                    setQueuePeriodsCount(num);
+                    clearError('periodsCount');
+                  }}
                   className={`!px-3 !py-1.5 !text-xs !font-semibold !rounded-lg border transition-all ${
                     queuePeriodsCount === num
                       ? '!bg-indigo-600 !text-white !border-indigo-600 shadow-2xs'
@@ -248,7 +268,12 @@ export const TenantRenewalQueueTab: React.FC<TenantRenewalQueueTabProps> = ({
                 min={1}
                 max={60}
                 value={queuePeriodsCount}
-                onChange={(e) => setQueuePeriodsCount(Math.max(1, Number(e.target.value)))}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setQueuePeriodsCount(raw === '' ? 0 : Number(raw));
+                  clearError('periodsCount');
+                }}
+                error={errors.periodsCount}
                 containerClassName="w-16"
                 className="text-center bg-white"
               />

@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import { validateWithSchema } from '@shared/utils/yupValidation';
 import type {
   TenantPlanInfo,
   TenantFilterState,
@@ -230,66 +231,21 @@ export const validateProvisionForm = async (
  */
 export const validateTenantGeneralForm = async (
   values: Partial<TenantGeneralFormData>
-): Promise<{ isValid: boolean; errors: Record<string, string> }> => {
-  try {
-    await tenantGeneralValidationSchema.validate(values, { abortEarly: false });
-    return { isValid: true, errors: {} };
-  } catch (err) {
-    if (err instanceof yup.ValidationError) {
-      const errors: Record<string, string> = {};
-      err.inner.forEach((error) => {
-        if (error.path && !errors[error.path]) {
-          errors[error.path] = error.message;
-        }
-      });
-      return { isValid: false, errors };
-    }
-    return { isValid: false, errors: { form: 'Error de validación inesperado' } };
-  }
-};
+): Promise<{ isValid: boolean; errors: Record<string, string> }> =>
+  validateWithSchema(tenantGeneralValidationSchema, values);
 
 /**
  * Validador asíncrono para el formulario de cambio de plan
  */
 export const validateTenantPlanForm = async (
   values: Partial<TenantPlanFormData>
-): Promise<{ isValid: boolean; errors: Record<string, string> }> => {
-  try {
-    await tenantPlanValidationSchema.validate(values, { abortEarly: false });
-    return { isValid: true, errors: {} };
-  } catch (err) {
-    if (err instanceof yup.ValidationError) {
-      const errors: Record<string, string> = {};
-      err.inner.forEach((error) => {
-        if (error.path && !errors[error.path]) {
-          errors[error.path] = error.message;
-        }
-      });
-      return { isValid: false, errors };
-    }
-    return { isValid: false, errors: { form: 'Error de validación inesperado' } };
-  }
-};
+): Promise<{ isValid: boolean; errors: Record<string, string> }> =>
+  validateWithSchema(tenantPlanValidationSchema, values);
 
 /**
  * Validador asíncrono para encolar renovación
  */
 export const validateTenantEnqueueForm = async (
   values: Partial<TenantEnqueueFormData>
-): Promise<{ isValid: boolean; errors: Record<string, string> }> => {
-  try {
-    await tenantEnqueueValidationSchema.validate(values, { abortEarly: false });
-    return { isValid: true, errors: {} };
-  } catch (err) {
-    if (err instanceof yup.ValidationError) {
-      const errors: Record<string, string> = {};
-      err.inner.forEach((error) => {
-        if (error.path && !errors[error.path]) {
-          errors[error.path] = error.message;
-        }
-      });
-      return { isValid: false, errors };
-    }
-    return { isValid: false, errors: { form: 'Error de validación inesperado' } };
-  }
-};
+): Promise<{ isValid: boolean; errors: Record<string, string> }> =>
+  validateWithSchema(tenantEnqueueValidationSchema, values);

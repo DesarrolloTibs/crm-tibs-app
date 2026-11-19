@@ -33,6 +33,7 @@ interface Props {
   // Edit stage modal
   editingStage: Stage | null;
   setEditingStage: (s: Stage | null) => void;
+  editStageErrors?: Partial<Record<'strname' | 'intmaxdays', string>>;
   onSaveStage: (e: React.FormEvent) => void;
 
   // Settings drawer
@@ -56,6 +57,7 @@ const PipelineModals: React.FC<Props> = ({
   onConfirmDelete,
   editingStage,
   setEditingStage,
+  editStageErrors,
   onSaveStage,
   showStagesConfig,
   setShowStagesConfig,
@@ -147,7 +149,7 @@ const PipelineModals: React.FC<Props> = ({
         height="h-auto"
       >
         {editingStage && (
-          <form onSubmit={onSaveStage} className="space-y-6 p-2">
+          <form noValidate onSubmit={onSaveStage} className="space-y-6 p-2">
             <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
               <Settings2 size={18} className="text-indigo-600" /> Editar Etapa:{' '}
               {editingStage.strname || 'Nueva'}
@@ -158,6 +160,7 @@ const PipelineModals: React.FC<Props> = ({
                 type="text"
                 value={editingStage.strname}
                 onChange={e => setEditingStage({ ...editingStage, strname: e.target.value })}
+                error={editStageErrors?.strname}
                 placeholder="Ej. Propuesta"
                 required
               />
@@ -174,9 +177,10 @@ const PipelineModals: React.FC<Props> = ({
                   const v = e.target.value;
                   setEditingStage({
                     ...editingStage,
-                    intmaxdays: v === '' ? null : parseInt(v, 10),
+                    intmaxdays: v === '' ? null : Number(v),
                   });
                 }}
+                error={editStageErrors?.intmaxdays}
                 placeholder="Ej. 15 (dejar vacío para sin límite)"
               />
               <Select

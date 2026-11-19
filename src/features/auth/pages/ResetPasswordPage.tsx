@@ -12,7 +12,8 @@ const ResetPasswordPage: React.FC = () => {
   const token = searchParams.get('token');
   const {
     password, setPassword, confirmPassword, setConfirmPassword,
-    showPassword, setShowPassword, loading, error, setError, success,
+    showPassword, setShowPassword, loading, error, setError,
+    fieldErrors, clearFieldError, success,
     handleSubmit, navigate,
   } = useResetPassword(token);
 
@@ -60,25 +61,31 @@ const ResetPasswordPage: React.FC = () => {
                 <p className="text-rose-600 text-[11px] font-black uppercase tracking-[0.3em] mt-2">Billy Sales & Services • Seguridad</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} noValidate className="space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-2 relative group">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Nueva Contraseña</label>
                     <div className="relative">
-                      <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-rose-500'}`} size={18} />
-                      <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={e => { setPassword(e.target.value); if (error) setError(''); }} className={`login-input-premium pl-12 pr-12 focus:border-rose-500 focus:ring-rose-500 ${error ? 'border-rose-300 bg-rose-50/30' : ''}`} required />
+                      <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error || fieldErrors.password ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-rose-500'}`} size={18} />
+                      <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={e => { setPassword(e.target.value); if (error) setError(''); clearFieldError('password'); }} className={`login-input-premium pl-12 pr-12 focus:border-rose-500 focus:ring-rose-500 ${error || fieldErrors.password ? 'border-rose-300 bg-rose-50/30' : ''}`} required />
                       <Button variant="icon" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 !text-slate-300 hover:!text-rose-500" tabIndex={-1}>
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </Button>
                     </div>
+                    {fieldErrors.password && (
+                      <p className="text-rose-600 text-[11px] font-medium ml-1">{fieldErrors.password}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2 relative group">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Confirmar Contraseña</label>
                     <div className="relative">
-                      <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-rose-500'}`} size={18} />
-                      <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); if (error) setError(''); }} className={`login-input-premium pl-12 pr-12 focus:border-rose-500 focus:ring-rose-500 ${error ? 'border-rose-300 bg-rose-50/30' : ''}`} required />
+                      <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error || fieldErrors.confirmPassword ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-rose-500'}`} size={18} />
+                      <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); if (error) setError(''); clearFieldError('confirmPassword'); }} className={`login-input-premium pl-12 pr-12 focus:border-rose-500 focus:ring-rose-500 ${error || fieldErrors.confirmPassword ? 'border-rose-300 bg-rose-50/30' : ''}`} required />
                     </div>
+                    {fieldErrors.confirmPassword && (
+                      <p className="text-rose-600 text-[11px] font-medium ml-1">{fieldErrors.confirmPassword}</p>
+                    )}
                   </div>
                 </div>
 

@@ -15,12 +15,14 @@ interface Props {
   // Editing stage modal
   editingStage: TicketStage | null;
   setEditingStage: (s: TicketStage | null) => void;
+  editStageErrors?: Partial<Record<'strname' | 'intmaxdays', string>>;
   onSaveStage: (e: React.FormEvent) => void;
 
   // Resolution modal
   resolutionTicketInfo: { ticketId: string; overStageId: string } | null;
   resolutionNotesTemp: string;
   setResolutionNotesTemp: (v: string) => void;
+  resolutionErrors?: Partial<Record<'notas_resolucion', string>>;
   onResolutionSubmit: (e: React.FormEvent) => void;
   onResolutionCancel: () => void;
 
@@ -53,10 +55,12 @@ interface Props {
 const HelpdeskModals: React.FC<Props> = ({
   editingStage,
   setEditingStage,
+  editStageErrors,
   onSaveStage,
   resolutionTicketInfo,
   resolutionNotesTemp,
   setResolutionNotesTemp,
+  resolutionErrors,
   onResolutionSubmit,
   onResolutionCancel,
   selectedTicket,
@@ -102,7 +106,7 @@ const HelpdeskModals: React.FC<Props> = ({
       height="h-auto"
     >
       {editingStage && (
-        <form onSubmit={onSaveStage} className="space-y-6 p-2">
+        <form noValidate onSubmit={onSaveStage} className="space-y-6 p-2">
           <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
             <Settings2 size={18} className="text-indigo-600" />
             Editar Etapa: {editingStage.strname || 'Nueva'}
@@ -113,6 +117,7 @@ const HelpdeskModals: React.FC<Props> = ({
               type="text"
               value={editingStage.strname}
               onChange={e => setEditingStage({ ...editingStage, strname: e.target.value })}
+              error={editStageErrors?.strname}
               placeholder="Ej. En Espera"
               required
             />
@@ -129,9 +134,10 @@ const HelpdeskModals: React.FC<Props> = ({
                 const val = e.target.value;
                 setEditingStage({
                   ...editingStage,
-                  intmaxdays: val === '' ? null : parseInt(val, 10),
+                  intmaxdays: val === '' ? null : Number(val),
                 });
               }}
+              error={editStageErrors?.intmaxdays}
               placeholder="Ej. 15 (dejar vacío para sin límite)"
             />
             <Select
@@ -171,7 +177,7 @@ const HelpdeskModals: React.FC<Props> = ({
       height="h-auto"
     >
       {resolutionTicketInfo && (
-        <form onSubmit={onResolutionSubmit} className="space-y-4 p-2">
+        <form noValidate onSubmit={onResolutionSubmit} className="space-y-4 p-2">
           <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
             <LifeBuoy size={18} className="text-indigo-600" /> Notas de Resolución
           </h3>
@@ -186,6 +192,7 @@ const HelpdeskModals: React.FC<Props> = ({
             label="Comentarios / Notas"
             value={resolutionNotesTemp}
             onChange={e => setResolutionNotesTemp(e.target.value)}
+            error={resolutionErrors?.notas_resolucion}
             placeholder="Describe detalladamente cómo se resolvió la incidencia..."
             className="w-full min-h-[100px]"
             required

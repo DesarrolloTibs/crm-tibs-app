@@ -74,6 +74,7 @@ export const activityValidationSchema = yup.object().shape({
         schema
           .trim()
           .required('El título del recordatorio es obligatorio')
+          .min(2, 'El título del recordatorio debe tener al menos 2 caracteres')
           .max(100, 'El título no puede exceder 100 caracteres'),
       otherwise: (schema) => schema.notRequired(),
     }),
@@ -81,7 +82,10 @@ export const activityValidationSchema = yup.object().shape({
     .string()
     .when('reminderEnabled', {
       is: true,
-      then: (schema) => schema.required('La fecha y hora del recordatorio es obligatoria'),
+      then: (schema) =>
+        schema
+          .required('La fecha y hora del recordatorio es obligatoria')
+          .test('valid-date', 'Ingresa una fecha y hora válida', (val) => !val || !isNaN(new Date(val).getTime())),
       otherwise: (schema) => schema.notRequired(),
     }),
 });

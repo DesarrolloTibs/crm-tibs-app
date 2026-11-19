@@ -11,6 +11,9 @@ import Notification from '@shared/components/Notification';
 import Modal from '@shared/components/Modal';
 import Input from '@shared/components/Input';
 import Button from '@shared/components/Button';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import { reminderValidationSchema } from '../schemas/pipeline.schema';
 
 interface RemindersTabProps {
   opportunityId: string;
@@ -24,6 +27,7 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
   const [newReminderDate, setNewReminderDate] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const { errors, setErrors, clearError, clearErrors } = useFormValidation<{ title: string; date: string }>();
   const [modalOpen, setModalOpen] = useState(false);
 
   const [notification, setNotification] = useState({
@@ -63,15 +67,12 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
 
   const handleAddReminder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newReminderTitle || !newReminderDate) {
-      setNotification({
-        show: true,
-        type: 'warning',
-        title: 'Atención',
-        message: 'El título y la fecha son obligatorios.',
-        onConfirm: hideNotification,
-        onCancel: hideNotification,
-      });
+    const result = await validateWithSchema(reminderValidationSchema, {
+      title: newReminderTitle,
+      date: newReminderDate,
+    });
+    if (!result.isValid) {
+      setErrors(result.errors as Partial<Record<'title' | 'date', string>>);
       return;
     }
 
@@ -85,7 +86,7 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
         onCancel: () => {},
       });
       await createReminder({
-        title: newReminderTitle,
+        title: newReminderTitle.trim(),
         date: new Date(newReminderDate).toISOString(),
         opportunity_id: opportunityId,
       });
@@ -180,24 +181,38 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
           size="sm"
           variant="success"
           className="gap-2 w-full sm:w-auto shadow-sm whitespace-nowrap hover:translate-y-0 !text-sm !font-medium"
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            clearErrors();
+            setModalOpen(true);
+          }}
         >
           <Plus size={18} /> Nuevo Recordatorio
         </Button>
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-lg">
+      <Modal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          clearErrors();
+        }}
+        maxWidth="max-w-lg"
+      >
         <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
           Añadir Recordatorio
         </h2>
-        <form onSubmit={handleAddReminder} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+        <form noValidate onSubmit={handleAddReminder} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             <Input
               id="newReminderTitle"
               label="Título del Recordatorio"
               type="text"
               value={newReminderTitle}
-              onChange={e => setNewReminderTitle(e.target.value)}
+              onChange={e => {
+                setNewReminderTitle(e.target.value);
+                clearError('title');
+              }}
+              error={errors.title}
               placeholder="Ej: Llamar al cliente para seguimiento"
               className="bg-white"
             />
@@ -206,7 +221,11 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
               label="Fecha y Hora"
               type="datetime-local"
               value={newReminderDate}
-              onChange={e => setNewReminderDate(e.target.value)}
+              onChange={e => {
+                setNewReminderDate(e.target.value);
+                clearError('date');
+              }}
+              error={errors.date}
               className="bg-white appearance-none min-w-0"
             />
           </div>
@@ -214,7 +233,10 @@ const RemindersTab: React.FC<RemindersTabProps> = ({ opportunityId }) => {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => setModalOpen(false)}
+              onClick={() => {
+                setModalOpen(false);
+                clearErrors();
+              }}
               className="rounded-md !text-sm !font-normal hover:translate-y-0"
             >
               Cancelar

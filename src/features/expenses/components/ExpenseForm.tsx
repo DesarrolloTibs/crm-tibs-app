@@ -7,6 +7,9 @@ import { getActiveClients, getClients } from '@core/services/clientsService';
 import { getAllOpportunities } from '@core/services/opportunitiesService';
 import type { Client } from '@core/models/Client';
 import type { Opportunity } from '@core/models/Opportunity';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import { expenseValidationSchema, type ExpenseFormValues } from '../schemas/expenses.schema';
 
 interface Props {
     initialData?: Expense;
@@ -66,6 +69,7 @@ const formatClientLabel = (client: Client) => {
 };
 
 const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
+    const { errors, setErrors, clearError } = useFormValidation<ExpenseFormValues>();
     const [form, setForm] = useState<{
         fecha: string;
         concepto: string;
@@ -73,7 +77,7 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     }>(() => ({
         fecha: initialData?.fecha ? initialData.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
         concepto: initialData?.concepto || '',
-        monto: initialData?.monto !== undefined ? Number(initialData.monto) : 0,
+        monto: initialData?.monto !== undefined ? Number(initialData.monto) : '',
     }));
 
     const [clientId, setClientId] = useState<string | null>(() => getInitialClientId(initialData));
@@ -169,14 +173,17 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
+        clearError(name as keyof ExpenseFormValues);
     };
 
     const handleClientChange = (option: { value: string; label: string } | null) => {
         setClientId(option ? option.value : null);
+        clearError('client_id');
     };
 
     const handleOpportunityChange = (option: { value: string; label: string } | null) => {
         setOpportunityId(option ? option.value : null);
+        clearError('opportunity_id');
     };
 
     const handleAmountBlur = () => {
@@ -199,18 +206,26 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
 
     const handleAssociationTypeChange = (type: AssociationType) => {
         setAssociationType(type);
+        clearError('client_id');
+        clearError('opportunity_id');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isSubmitting) return;
 
-        if (associationType === 'client' && !clientId) {
-            alert('Debes seleccionar un cliente');
-            return;
-        }
-        if (associationType === 'opportunity' && !opportunityId) {
-            alert('Debes seleccionar una oportunidad');
+        const valuesToValidate: ExpenseFormValues = {
+            associationType,
+            client_id: associationType === 'client' ? clientId || null : null,
+            opportunity_id: associationType === 'opportunity' ? opportunityId || null : null,
+            fecha: form.fecha,
+            monto: form.monto,
+            concepto: form.concepto,
+        };
+
+        const result = await validateWithSchema(expenseValidationSchema, valuesToValidate);
+        if (!result.isValid) {
+            setErrors(result.errors as Partial<Record<keyof ExpenseFormValues, string>>);
             return;
         }
 
@@ -242,7 +257,7 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     );
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 p-2">
+        <form noValidate onSubmit={handleSubmit} className="space-y-6 p-2">
             <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Registrar'} Gasto</h2>
 
             <div className="border-b border-gray-200 pb-4 mb-4">
@@ -278,6 +293,7 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                             value={selectedClientOption}
                             onChange={handleClientChange}
                             placeholder="Buscar cliente..."
+                            error={errors.client_id}
                             isClearable
                             isSearchable
                         />
@@ -290,6 +306,7 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                             value={selectedOpportunityOption}
                             onChange={handleOpportunityChange}
                             placeholder="Buscar oportunidad..."
+                            error={errors.opportunity_id}
                             isClearable
                             isSearchable
                         />
@@ -304,6 +321,7 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                     name="fecha"
                     value={form.fecha}
                     onChange={handleChange}
+                    error={errors.fecha}
                     required
                 />
                 <Input
@@ -312,6 +330,7 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                     name="monto"
                     value={form.monto}
                     onChange={handleChange}
+                    error={errors.monto}
                     required
                     min="0"
                     step="0.01"
@@ -327,6 +346,7 @@ const ExpenseForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                         name="concepto"
                         value={form.concepto}
                         onChange={handleChange}
+                        error={errors.concepto}
                         required
                         placeholder="Descripción del gasto"
                     />

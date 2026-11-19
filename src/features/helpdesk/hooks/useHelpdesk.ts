@@ -17,6 +17,11 @@ import {
 import { createOpportunity } from '@core/services/opportunitiesService';
 import { getActiveStages } from '@core/services/pipelinesService';
 import type { Helpdesk, TicketStage, Ticket } from '@core/models/Ticket';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import {
+  helpdeskStageValidationSchema,
+  ticketResolutionValidationSchema,
+} from '../schemas/helpdesk.schema';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -93,11 +98,13 @@ export function useHelpdesk() {
   const [isCreatingTicket, setIsCreatingTicket] = useState(false);
   const [ticketToConvert, setTicketToConvert] = useState<Ticket | null>(null);
   const [editingStage, setEditingStage] = useState<TicketStage | null>(null);
+  const [editStageErrors, setEditStageErrors] = useState<Partial<Record<'strname' | 'intmaxdays', string>>>({});
   const [resolutionTicketInfo, setResolutionTicketInfo] = useState<{
     ticketId: string;
     overStageId: string;
   } | null>(null);
   const [resolutionNotesTemp, setResolutionNotesTemp] = useState('');
+  const [resolutionErrors, setResolutionErrors] = useState<Partial<Record<'notas_resolucion', string>>>({});
 
   // ── DnD state ──
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
@@ -115,6 +122,7 @@ export function useHelpdesk() {
   const [isAddingStage, setIsAddingStage] = useState(false);
   const [newStageName, setNewStageName] = useState('');
   const [newStageMaxDays, setNewStageMaxDays] = useState('');
+  const [newStageErrors, setNewStageErrors] = useState<Partial<Record<'strname' | 'intmaxdays', string>>>({});
   const addStageInputRef = useRef<HTMLInputElement>(null);
 
   // ── Notification ──
@@ -543,11 +551,19 @@ export function useHelpdesk() {
   const handleSaveStage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStage) return;
-    const nameTrimmed = editingStage.strname.trim();
-    if (!nameTrimmed) {
-      showError('El nombre de la etapa no puede estar vacío.');
+    const rawDays = editingStage.intmaxdays as unknown;
+    const validation = await validateWithSchema(helpdeskStageValidationSchema, {
+      strname: editingStage.strname || '',
+      intmaxdays:
+        rawDays === '' || rawDays === null || rawDays === undefined ? null : Number(rawDays),
+      stage_type: Number(editingStage.stage_type ?? 0),
+    });
+    if (!validation.isValid) {
+      setEditStageErrors(validation.errors as Partial<Record<'strname' | 'intmaxdays', string>>);
       return;
     }
+    setEditStageErrors({});
+    const nameTrimmed = editingStage.strname.trim();
     const newStageType = Number(editingStage.stage_type ?? 0);
     const updatedStages = stages.map(s => {
       if (s.id === editingStage.id) {
@@ -642,13 +658,22 @@ export function useHelpdesk() {
 
   const handleCreateStage = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nameTrimmed = newStageName.trim();
-    if (!nameTrimmed) return;
-    if (stages.some(s => s.strname.trim().toLowerCase() === nameTrimmed.toLowerCase())) {
-      showError('Ya existe una etapa con este nombre.');
+    const validation = await validateWithSchema(helpdeskStageValidationSchema, {
+      strname: newStageName,
+      intmaxdays: newStageMaxDays.trim() === '' ? null : Number(newStageMaxDays),
+      stage_type: 0,
+    });
+    if (!validation.isValid) {
+      setNewStageErrors(validation.errors as Partial<Record<'strname' | 'intmaxdays', string>>);
       return;
     }
-    const daysLimit = newStageMaxDays.trim() === '' ? null : parseInt(newStageMaxDays, 10);
+    setNewStageErrors({});
+    const nameTrimmed = newStageName.trim();
+    if (stages.some(s => s.strname.trim().toLowerCase() === nameTrimmed.toLowerCase())) {
+      setNewStageErrors({ strname: 'Ya existe una etapa con este nombre.' });
+      return;
+    }
+    const daysLimit = newStageMaxDays.trim() === '' ? null : Math.trunc(Number(newStageMaxDays));
     const newStage: TicketStage = {
       id: `temp-${Date.now()}`,
       strname: nameTrimmed,
@@ -698,10 +723,14 @@ export function useHelpdesk() {
   const handleResolutionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resolutionTicketInfo) return;
-    if (!resolutionNotesTemp.trim()) {
-      showError('Las notas de resolución son obligatorias.');
+    const validation = await validateWithSchema(ticketResolutionValidationSchema, {
+      notas_resolucion: resolutionNotesTemp,
+    });
+    if (!validation.isValid) {
+      setResolutionErrors(validation.errors as Partial<Record<'notas_resolucion', string>>);
       return;
     }
+    setResolutionErrors({});
     const { ticketId, overStageId } = resolutionTicketInfo;
     const targetStage = stages.find(s => s.id === overStageId);
     const original = [...tickets];
@@ -736,6 +765,7 @@ export function useHelpdesk() {
   const handleResolutionCancel = () => {
     setResolutionTicketInfo(null);
     setResolutionNotesTemp('');
+    setResolutionErrors({});
   };
 
   // ── DnD handlers ──
@@ -904,9 +934,13 @@ export function useHelpdesk() {
     setTicketToConvert,
     editingStage,
     setEditingStage,
+    editStageErrors,
+    setEditStageErrors,
     resolutionTicketInfo,
     resolutionNotesTemp,
     setResolutionNotesTemp,
+    resolutionErrors,
+    setResolutionErrors,
     // dnd
     sensors,
     activeTicket,
@@ -920,6 +954,8 @@ export function useHelpdesk() {
     setNewStageName,
     newStageMaxDays,
     setNewStageMaxDays,
+    newStageErrors,
+    setNewStageErrors,
     addStageInputRef,
     // notification
     notification,

@@ -70,6 +70,10 @@ export const provisionTenantValidationSchema = yup.object().shape({
     .optional(),
   billingPeriodMonths: yup
     .number()
+    .typeError('Los meses de facturación deben ser un número entero')
+    .integer('Los meses de facturación deben ser un número entero')
+    .min(1, 'El período mínimo es de 1 mes')
+    .max(60, 'El período máximo permitido es de 60 meses')
     .default(1),
 });
 
@@ -104,6 +108,8 @@ export type TenantGeneralFormData = yup.InferType<typeof tenantGeneralValidation
 export const tenantPlanValidationSchema = yup.object().shape({
   planId: yup
     .number()
+    .typeError('Debes seleccionar un plan válido')
+    .positive('Debes seleccionar un plan válido')
     .required('Debes seleccionar un plan'),
   planApplicationMode: yup
     .string()
@@ -125,9 +131,14 @@ export type TenantPlanFormData = yup.InferType<typeof tenantPlanValidationSchema
 export const tenantEnqueueValidationSchema = yup.object().shape({
   planId: yup
     .number()
+    .typeError('Debes seleccionar un plan válido')
+    .positive('Debes seleccionar un plan válido')
     .required('Debes seleccionar un plan a encolar'),
   periodsCount: yup
     .number()
+    .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? NaN : val))
+    .typeError('La cantidad de períodos debe ser un número entero')
+    .integer('La cantidad de períodos debe ser un número entero')
     .required('La cantidad de períodos es obligatoria')
     .min(1, 'Debe encolar al menos 1 período')
     .max(60, 'El límite máximo es de 60 períodos'),

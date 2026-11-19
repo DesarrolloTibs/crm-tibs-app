@@ -4,6 +4,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, LogIn, ShieldAlert, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import LoginBackground from './LoginBackground';
 import Loader from '@shared/components/Loader';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import { loginValidationSchema, type LoginFormData } from '../schemas/auth.schema';
 import './Login.css';
 
 
@@ -15,6 +18,8 @@ const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [isCapsLockOn, setIsCapsLockOn] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+    const { errors: fieldErrors, setErrors: setFieldErrors, clearError } =
+        useFormValidation<LoginFormData>();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -31,12 +36,23 @@ const Login: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError('');
+
+        const { isValid, errors } = await validateWithSchema(loginValidationSchema, {
+            email,
+            password,
+        });
+        if (!isValid) {
+            setFieldErrors(errors);
+            return;
+        }
+
+        const cleanEmail = email.trim();
+        setLoading(true);
         try {
-            await login(email, password);
+            await login(cleanEmail, password);
             if (rememberMe) {
-                localStorage.setItem('savedEmail', email);
+                localStorage.setItem('savedEmail', cleanEmail);
             } else {
                 localStorage.removeItem('savedEmail');
             }
@@ -72,12 +88,12 @@ const Login: React.FC = () => {
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} noValidate className="space-y-6">
                         <div className="space-y-4">
                             <div className="relative group">
                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Correo Electrónico</label>
                                 <div className="relative">
-                                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-blue-600'}`} size={18} />
+                                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error || fieldErrors.email ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-blue-600'}`} size={18} />
                                     <input
                                         type="email"
                                         placeholder="usuario@empresa.com"
@@ -85,18 +101,22 @@ const Login: React.FC = () => {
                                         onChange={e => {
                                             setEmail(e.target.value);
                                             if (error) setError('');
+                                            clearError('email');
                                         }}
-                                        className={`login-input-premium pl-12 ${error ? 'border-rose-300 bg-rose-50/30' : ''}`}
-                                        style={{ background: '#fff', borderColor: error ? '#fca5a5' : '#e2e8f0' }}
+                                        className={`login-input-premium pl-12 ${error || fieldErrors.email ? 'border-rose-300 bg-rose-50/30' : ''}`}
+                                        style={{ background: '#fff', borderColor: error || fieldErrors.email ? '#fca5a5' : '#e2e8f0' }}
                                         required
                                     />
                                 </div>
+                                {fieldErrors.email && (
+                                    <p className="text-rose-600 text-[11px] font-medium mt-1.5 ml-1">{fieldErrors.email}</p>
+                                )}
                             </div>
 
                             <div className="relative group">
                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Contraseña</label>
                                 <div className="relative">
-                                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-blue-600'}`} size={18} />
+                                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error || fieldErrors.password ? 'text-rose-400' : 'text-slate-400 group-focus-within:text-blue-600'}`} size={18} />
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
@@ -104,10 +124,11 @@ const Login: React.FC = () => {
                                         onChange={e => {
                                             setPassword(e.target.value);
                                             if (error) setError('');
+                                            clearError('password');
                                         }}
                                         onKeyUp={checkCapsLock}
-                                        className={`login-input-premium pl-12 pr-12 ${error ? 'border-rose-300 bg-rose-50/30' : ''}`}
-                                        style={{ background: '#fff', borderColor: error ? '#fca5a5' : '#e2e8f0' }}
+                                        className={`login-input-premium pl-12 pr-12 ${error || fieldErrors.password ? 'border-rose-300 bg-rose-50/30' : ''}`}
+                                        style={{ background: '#fff', borderColor: error || fieldErrors.password ? '#fca5a5' : '#e2e8f0' }}
                                         required
                                     />
                                     <button
@@ -120,6 +141,9 @@ const Login: React.FC = () => {
                                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                     </button>
                                 </div>
+                                {fieldErrors.password && (
+                                    <p className="text-rose-600 text-[11px] font-medium mt-1.5 ml-1">{fieldErrors.password}</p>
+                                )}
                                 {(isCapsLockOn && !error) && (
                                     <div className="flex items-center gap-1.5 mt-2 ml-1 text-amber-600 animate-in fade-in slide-in-from-top-1">
                                         <AlertCircle size={12} className="stroke-[3]" />

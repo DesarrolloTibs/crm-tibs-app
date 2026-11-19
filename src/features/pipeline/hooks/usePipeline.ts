@@ -16,6 +16,8 @@ import type { OpportunityCatalogOption } from '@core/models/OpportunityCatalog';
 import { getMainPipeline, updateMainPipeline } from '@core/services/pipelinesService';
 import { useAuth } from '@features/auth';
 import { useConfigStore } from '@/store/useConfigStore';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import { pipelineStageValidationSchema } from '../schemas/pipeline.schema';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -121,6 +123,7 @@ export function usePipeline() {
   const [activeOpportunity, setActiveOpportunity] = useState<Opportunity | null>(null);
   const [activeStage, setActiveStage] = useState<Stage | null>(null);
   const [editingStage, setEditingStage] = useState<Stage | null>(null);
+  const [editStageErrors, setEditStageErrors] = useState<Partial<Record<'strname' | 'intmaxdays', string>>>({});
   const [foldedStageIds, setFoldedStageIds] = useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem('pipeline_folded_stages') || '[]');
@@ -161,6 +164,7 @@ export function usePipeline() {
   const [isAddingStage, setIsAddingStage] = useState(false);
   const [newStageName, setNewStageName] = useState('');
   const [newStageMaxDays, setNewStageMaxDays] = useState('');
+  const [newStageErrors, setNewStageErrors] = useState<Partial<Record<'strname' | 'intmaxdays', string>>>({});
   const addStageInputRef = useRef<HTMLInputElement>(null);
   const [notification, setNotification] = useState<Notif>(NOTIF_OFF);
 
@@ -608,11 +612,19 @@ export function usePipeline() {
   const handleSaveStage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStage) return;
-    const nameTrimmed = editingStage.strname.trim();
-    if (!nameTrimmed) {
-      showError('El nombre de la etapa no puede estar vacío.');
+    const rawDays = editingStage.intmaxdays as unknown;
+    const validation = await validateWithSchema(pipelineStageValidationSchema, {
+      strname: editingStage.strname || '',
+      intmaxdays:
+        rawDays === '' || rawDays === null || rawDays === undefined ? null : Number(rawDays),
+      stage_type: Number(editingStage.stage_type ?? 0),
+    });
+    if (!validation.isValid) {
+      setEditStageErrors(validation.errors as Partial<Record<'strname' | 'intmaxdays', string>>);
       return;
     }
+    setEditStageErrors({});
+    const nameTrimmed = editingStage.strname.trim();
     const newStageType = Number(editingStage.stage_type ?? 0);
     const updatedStages = stages.map(s => {
       if (s.id === editingStage.id) {
@@ -706,13 +718,22 @@ export function usePipeline() {
 
   const handleCreateStage = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nameTrimmed = newStageName.trim();
-    if (!nameTrimmed) return;
-    if (stages.some(s => s.strname.trim().toLowerCase() === nameTrimmed.toLowerCase())) {
-      showError('Ya existe una etapa con este nombre.');
+    const validation = await validateWithSchema(pipelineStageValidationSchema, {
+      strname: newStageName,
+      intmaxdays: newStageMaxDays.trim() === '' ? null : Number(newStageMaxDays),
+      stage_type: 0,
+    });
+    if (!validation.isValid) {
+      setNewStageErrors(validation.errors as Partial<Record<'strname' | 'intmaxdays', string>>);
       return;
     }
-    const daysLimit = newStageMaxDays.trim() === '' ? null : parseInt(newStageMaxDays, 10);
+    setNewStageErrors({});
+    const nameTrimmed = newStageName.trim();
+    if (stages.some(s => s.strname.trim().toLowerCase() === nameTrimmed.toLowerCase())) {
+      setNewStageErrors({ strname: 'Ya existe una etapa con este nombre.' });
+      return;
+    }
+    const daysLimit = newStageMaxDays.trim() === '' ? null : Math.trunc(Number(newStageMaxDays));
     const newStage: Stage = {
       id: `temp-${Date.now()}`,
       strname: nameTrimmed,
@@ -1117,6 +1138,8 @@ export function usePipeline() {
     activeStage,
     editingStage,
     setEditingStage,
+    editStageErrors,
+    setEditStageErrors,
     foldedStageIds,
     setFoldedStageIds,
     viewMode,
@@ -1170,6 +1193,8 @@ export function usePipeline() {
     setNewStageName,
     newStageMaxDays,
     setNewStageMaxDays,
+    newStageErrors,
+    setNewStageErrors,
     addStageInputRef,
     notification,
     hideNotification,

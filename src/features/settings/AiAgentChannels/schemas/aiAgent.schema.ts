@@ -82,7 +82,8 @@ export const routerPromptValidationSchema = yup.object().shape({
     .string()
     .trim()
     .required('Las directivas e instrucciones de enrutamiento son obligatorias')
-    .min(10, 'El prompt debe tener al menos 10 caracteres para ser descriptivo'),
+    .min(10, 'El prompt debe tener al menos 10 caracteres para ser descriptivo')
+    .max(4000, 'El prompt no puede exceder los 4000 caracteres'),
 });
 
 export type RouterPromptFormData = yup.InferType<typeof routerPromptValidationSchema>;
@@ -114,7 +115,8 @@ export const subAgentValidationSchema = yup.object().shape({
     .string()
     .trim()
     .required('Las instrucciones de comportamiento (Prompt) son obligatorias')
-    .min(10, 'El prompt del sub-agente debe contener al menos 10 caracteres'),
+    .min(10, 'El prompt del sub-agente debe contener al menos 10 caracteres')
+    .max(6000, 'El prompt del sub-agente no puede exceder los 6000 caracteres'),
   temperature: yup
     .number()
     .min(0, 'Temperatura mínima: 0.0')
@@ -125,37 +127,6 @@ export const subAgentValidationSchema = yup.object().shape({
 });
 
 export type SubAgentFormData = yup.InferType<typeof subAgentValidationSchema>;
-
-/**
- * Esquema Yup para Credenciales de WhatsApp Cloud API
- */
-export const whatsappChannelValidationSchema = yup.object().shape({
-  channelName: yup
-    .string()
-    .trim()
-    .required('El nombre descriptivo de la cuenta de WhatsApp es obligatorio')
-    .min(3, 'El nombre debe tener al menos 3 caracteres'),
-  appId: yup.string().trim().nullable(),
-  accountId: yup
-    .string()
-    .trim()
-    .required('El WhatsApp Business Account ID (WABA ID) es obligatorio'),
-  phoneNumberId: yup
-    .string()
-    .trim()
-    .required('El Phone Number ID de WhatsApp Cloud API es obligatorio'),
-  accessToken: yup
-    .string()
-    .trim()
-    .required('El Token de Acceso Permanente es obligatorio'),
-  verifyToken: yup
-    .string()
-    .trim()
-    .required('El Token de Verificación del Webhook es obligatorio')
-    .min(3, 'El Verify Token debe tener al menos 3 caracteres'),
-});
-
-export type WhatsAppChannelFormData = yup.InferType<typeof whatsappChannelValidationSchema>;
 
 /**
  * Filtro de estado para sub-agentes en vistas tabulares

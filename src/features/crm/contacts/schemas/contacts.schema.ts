@@ -1,4 +1,9 @@
 import * as yup from 'yup';
+import {
+  emptyStringToNull,
+  optionalEmailField,
+  optionalPhoneField,
+} from '@shared/utils/yupValidation';
 import type { Client, ClientCategoryType } from '@core/models/Client';
 import { ClientCategory } from '@core/models/Client';
 
@@ -20,29 +25,16 @@ export const contactValidationSchema = yup.object().shape({
     .trim()
     .nullable()
     .notRequired()
-    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
+    .transform(emptyStringToNull)
     .max(60, 'El apellido no puede exceder 60 caracteres'),
-  correo: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
-    .email('Ingresa un correo electrónico corporativo válido'),
-  telefono: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
-    .matches(/^[0-9+\s().-]*$/, 'El formato de teléfono contiene caracteres no permitidos')
-    .max(25, 'El teléfono no puede exceder 25 caracteres'),
+  correo: optionalEmailField(100, 'Ingresa un correo electrónico corporativo válido'),
+  telefono: optionalPhoneField(25),
   puesto: yup
     .string()
     .trim()
     .nullable()
     .notRequired()
-    .transform((curr, orig) => (orig === '' || !curr ? null : curr))
+    .transform(emptyStringToNull)
     .max(80, 'El puesto no puede exceder 80 caracteres'),
   category: yup
     .mixed<ClientCategoryType>()

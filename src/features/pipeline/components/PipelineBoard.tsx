@@ -134,18 +134,31 @@ const PipelineBoard: React.FC = () => {
           stages={p.stages}
           isAdmin={p.isAdmin}
           isAddingStage={p.isAddingStage}
-          setIsAddingStage={p.setIsAddingStage}
+          setIsAddingStage={(val) => {
+            p.setIsAddingStage(val);
+            if (!val) p.setNewStageErrors({});
+          }}
           newStageName={p.newStageName}
-          setNewStageName={p.setNewStageName}
+          setNewStageName={(val) => {
+            p.setNewStageName(val);
+            p.setNewStageErrors((prev) => ({ ...prev, strname: undefined }));
+          }}
           newStageMaxDays={p.newStageMaxDays}
-          setNewStageMaxDays={p.setNewStageMaxDays}
+          setNewStageMaxDays={(val) => {
+            p.setNewStageMaxDays(val);
+            p.setNewStageErrors((prev) => ({ ...prev, intmaxdays: undefined }));
+          }}
+          newStageErrors={p.newStageErrors}
           addStageInputRef={p.addStageInputRef}
           onDragStart={p.handleDragStart}
           onDragEnd={p.handleDragEnd}
           onEditOpportunity={p.openEditModal}
           onDeleteOpportunity={p.openDeleteConfirm}
           onArchiveOpportunity={p.handleArchive}
-          onEditStage={p.setEditingStage}
+          onEditStage={(stage) => {
+            p.setEditStageErrors({});
+            p.setEditingStage(stage);
+          }}
           onDisableStage={p.handleDisableStage}
           onAddOpportunity={p.openCreateModal}
           onCreateStage={p.handleCreateStage}
@@ -180,7 +193,15 @@ const PipelineBoard: React.FC = () => {
         opportunityToDelete={p.opportunityToDelete}
         onConfirmDelete={p.handleDelete}
         editingStage={p.editingStage}
-        setEditingStage={p.setEditingStage}
+        setEditingStage={(val) => {
+          p.setEditingStage(val);
+          if (!val) {
+            p.setEditStageErrors({});
+          } else {
+            p.setEditStageErrors({});
+          }
+        }}
+        editStageErrors={p.editStageErrors}
         onSaveStage={p.handleSaveStage}
         showStagesConfig={p.showStagesConfig}
         setShowStagesConfig={p.setShowStagesConfig}

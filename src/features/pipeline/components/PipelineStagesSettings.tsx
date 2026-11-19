@@ -8,6 +8,9 @@ import Button from '@shared/components/Button';
 import Select from '@shared/components/Select';
 import Switch from '@shared/components/Switch';
 import Input from '@shared/components/Input';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import { pipelineSettingsValidationSchema } from '../schemas/pipeline.schema';
 
 interface Props {
   onSaveSuccess?: () => void;
@@ -15,6 +18,7 @@ interface Props {
 }
 
 const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDetails = false }) => {
+  const { errors, setErrors, clearError } = useFormValidation<Record<string, string>>();
   const [pipelineName, setPipelineName] = useState('');
   const [pipelineDescription, setPipelineDescription] = useState('');
   const [stages, setStages] = useState<Stage[]>([]);
@@ -164,11 +168,22 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!pipelineName.trim()) {
-      showError('El nombre del pipeline no puede estar vacío.');
+    const validation = await validateWithSchema(pipelineSettingsValidationSchema, {
+      pipelineName,
+      pipelineDescription,
+      stages: stages.map(s => ({
+        strname: s.strname,
+        intmaxdays: s.intmaxdays !== undefined && s.intmaxdays !== null ? Number(s.intmaxdays) : null,
+        stage_type: Number(s.stage_type ?? 0),
+      })),
+    });
+
+    if (!validation.isValid) {
+      setErrors(validation.errors);
       return;
     }
 
+    setErrors({});
     setSaving(true);
     try {
       // 1. Debe existir al menos una etapa activa
@@ -290,7 +305,7 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-6">
           {/* Pipeline Details Form */}
           <div className="bg-gray-50/50 border border-gray-100 rounded-xl p-5 flex flex-col gap-4">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Detalles del Pipeline</h3>
@@ -300,7 +315,11 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                 label="Nombre del Pipeline"
                 type="text"
                 value={pipelineName}
-                onChange={e => setPipelineName(e.target.value)}
+                onChange={e => {
+                  setPipelineName(e.target.value);
+                  clearError('pipelineName');
+                }}
+                error={errors.pipelineName}
                 className="bg-white text-sm py-2 rounded-lg"
                 placeholder="Ej. Pipeline Principal"
                 required
@@ -310,7 +329,11 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                 label="Descripción"
                 type="text"
                 value={pipelineDescription}
-                onChange={e => setPipelineDescription(e.target.value)}
+                onChange={e => {
+                  setPipelineDescription(e.target.value);
+                  clearError('pipelineDescription');
+                }}
+                error={errors.pipelineDescription}
                 className="bg-white text-sm py-2 rounded-lg"
                 placeholder="Descripción breve del pipeline"
               />
@@ -389,7 +412,11 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                       size="sm"
                       type="text"
                       value={stage.strname}
-                      onChange={e => updateStageField(idx, 'strname', e.target.value)}
+                      onChange={e => {
+                        updateStageField(idx, 'strname', e.target.value);
+                        clearError(`stages[${idx}].strname`);
+                      }}
+                      error={errors[`stages[${idx}].strname`]}
                       placeholder="Nombre de la etapa…"
                       containerClassName="flex-1 min-w-0"
                       className="text-sm font-medium bg-white rounded-lg"
@@ -405,8 +432,10 @@ const PipelineStagesSettings: React.FC<Props> = ({ onSaveSuccess, onlyPipelineDe
                       value={stage.intmaxdays !== undefined && stage.intmaxdays !== null ? stage.intmaxdays : ''}
                       onChange={e => {
                         const val = e.target.value;
-                        updateStageField(idx, 'intmaxdays', val === '' ? null : parseInt(val, 10));
+                        updateStageField(idx, 'intmaxdays', val === '' ? null : Number(val));
+                        clearError(`stages[${idx}].intmaxdays`);
                       }}
+                      error={errors[`stages[${idx}].intmaxdays`]}
                       containerClassName="w-16 shrink-0"
                       className="text-sm text-center font-medium bg-white rounded-lg !px-2"
                       title="Días límite en etapa (vacío = sin límite)"

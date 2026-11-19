@@ -5,6 +5,9 @@ import Select from '@shared/components/Select';
 import Button from '@shared/components/Button';
 import { useConfigStore } from '@/store/useConfigStore';
 import { useAuth } from '@features/auth';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import { createUserValidationSchema, type UserFormValues } from '../schemas/users.schema';
 
 interface Props {
     initialData?: User;
@@ -15,6 +18,12 @@ interface Props {
 const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     const { selectedTenant } = useConfigStore();
     const { isSuperAdmin } = useAuth();
+    const isEditing = Boolean(initialData);
+
+    const validationSchema = useMemo(
+        () => createUserValidationSchema(isEditing),
+        [isEditing]
+    );
 
     const roleOptions = useMemo(() => {
         if (isSuperAdmin && !selectedTenant) {
@@ -39,6 +48,9 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         ...initialData,
     });
 
+    const { errors, setErrors, clearError, clearErrors } =
+        useFormValidation<UserFormValues>();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (initialData) {
@@ -46,11 +58,29 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                 ...initialData,
                 password: '' // No pre-llenar la contraseña por seguridad
             });
+        } else {
+            setForm({
+                username: '',
+                email: '',
+                password: '',
+                role: (!selectedTenant && isSuperAdmin) ? 'superadmin' : 'executive',
+                isActive: true,
+            });
         }
+        clearErrors();
     }, [initialData]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+        clearError(name as keyof UserFormValues);
+    };
+
+    const handleBlurField = async (field: keyof UserFormValues) => {
+        const result = await validateWithSchema(validationSchema, form);
+        if (!result.isValid && result.errors[field]) {
+            setErrors(prev => ({ ...prev, [field]: result.errors[field] }));
+        }
     };
 
     const handleRoleSelectChange = (option: { value: string; label: string } | null) => {
@@ -58,15 +88,27 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
             ...prev,
             role: (option ? option.value : 'executive') as User['role']
         }));
+        clearError('role');
     };
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isSubmitting) return;
 
-        const dataToSend = { ...form };
+        const { isValid, errors: validationErrors } = await validateWithSchema(
+            validationSchema,
+            form
+        );
+        if (!isValid) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        const dataToSend: User = {
+            ...form,
+            username: form.username.trim(),
+            email: form.email.trim(),
+        };
         // No enviar la contraseña si no se ha modificado en el formulario de edición
         if (initialData && !dataToSend.password) {
             delete dataToSend.password;
@@ -80,9 +122,8 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         }
     };
 
-
     return (
-        <form onSubmit={handleSubmit} className="space-y-8 p-2">
+        <form onSubmit={handleSubmit} noValidate className="space-y-8 p-2">
             <h2 className="text-2xl font-bold text-gray-800">{initialData ? 'Editar' : 'Nuevo'} Usuario</h2>
 
             <fieldset className="space-y-4">
@@ -94,7 +135,10 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                         name="username"
                         value={form.username}
                         onChange={handleChange}
+                        onBlur={() => handleBlurField('username')}
                         placeholder="Ej: jsmith"
+                        maxLength={50}
+                        error={errors.username}
                         required
                     />
                     <Input
@@ -104,7 +148,10 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                         type="email"
                         value={form.email}
                         onChange={handleChange}
+                        onBlur={() => handleBlurField('email')}
                         placeholder="ejemplo@correo.com"
+                        maxLength={100}
+                        error={errors.email}
                         required
                     />
                     <div className="md:col-span-2">
@@ -115,7 +162,10 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                             type="password"
                             value={form.password || ''}
                             onChange={handleChange}
-                            placeholder="••••••••"
+                            onBlur={() => handleBlurField('password')}
+                            placeholder="Mínimo 8 caracteres, letras y números"
+                            maxLength={100}
+                            error={errors.password}
                             required={!initialData}
                         />
                     </div>
@@ -131,6 +181,7 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                             options={roleOptions}
                             value={roleOptions.find(opt => opt.value === form.role)}
                             onChange={handleRoleSelectChange}
+                            error={errors.role}
                         />
                     </div>
                 </div>
@@ -144,7 +195,6 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                     Guardar
                 </Button>
             </div>
-
         </form>
     );
 };

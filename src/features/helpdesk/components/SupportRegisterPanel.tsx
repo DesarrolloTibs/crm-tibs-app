@@ -6,6 +6,12 @@ import Input from '@shared/components/Input';
 import TextArea from '@shared/components/TextArea';
 import Select from '@shared/components/Select';
 import Button from '@shared/components/Button';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import {
+  supportRegisterValidationSchema,
+  type SupportRegisterFormValues,
+} from '../schemas/helpdesk.schema';
 
 const incidenceTypeOptions = [
   { value: 'Soporte Técnico', label: 'Soporte Técnico' },
@@ -21,6 +27,7 @@ interface Props {
 }
 
 const SupportRegisterPanel: React.FC<Props> = ({ activeTabMobile, setActiveTabMobile }) => {
+  const { errors, setErrors, clearError } = useFormValidation<SupportRegisterFormValues>();
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -34,8 +41,18 @@ const SupportRegisterPanel: React.FC<Props> = ({ activeTabMobile, setActiveTabMo
 
   const handleSupportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!contactName.trim() || !contactEmail.trim() || !ticketTitle.trim() || !ticketDescription.trim()) {
-      setSupportError('Por favor, completa los campos requeridos (*).');
+    setSupportError('');
+    const result = await validateWithSchema(supportRegisterValidationSchema, {
+      contactName,
+      contactEmail,
+      contactPhone,
+      companyName,
+      ticketTitle,
+      incidenceType,
+      ticketDescription,
+    });
+    if (!result.isValid) {
+      setErrors(result.errors as Partial<Record<keyof SupportRegisterFormValues, string>>);
       return;
     }
     setSupportLoading(true);
@@ -104,16 +121,16 @@ const SupportRegisterPanel: React.FC<Props> = ({ activeTabMobile, setActiveTabMo
               <h1 className="text-2xl font-black text-slate-900 tracking-tight">Mesa de Soporte</h1>
               <p className="text-blue-600 text-[10px] font-black uppercase tracking-[0.22em] mt-1">Registro de Incidencias</p>
             </div>
-            <form onSubmit={handleSupportSubmit} className="space-y-4 lg:max-h-[65vh] lg:overflow-y-auto pr-1 hide-scrollbar">
-              <Input label="Nombre Completo *" type="text" placeholder="Ej: Juan Pérez" value={contactName} onChange={e => setContactName(e.target.value)} required />
+            <form noValidate onSubmit={handleSupportSubmit} className="space-y-4 lg:max-h-[65vh] lg:overflow-y-auto pr-1 hide-scrollbar">
+              <Input label="Nombre Completo *" type="text" placeholder="Ej: Juan Pérez" value={contactName} onChange={e => { setContactName(e.target.value); clearError('contactName'); }} error={errors.contactName} required />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input label="Correo Electrónico *" type="email" placeholder="correo@empresa.com" value={contactEmail} onChange={e => setContactEmail(e.target.value)} required />
-                <Input label="Teléfono" type="tel" placeholder="5512345678" value={contactPhone} onChange={e => setContactPhone(e.target.value)} />
+                <Input label="Correo Electrónico *" type="email" placeholder="correo@empresa.com" value={contactEmail} onChange={e => { setContactEmail(e.target.value); clearError('contactEmail'); }} error={errors.contactEmail} required />
+                <Input label="Teléfono" type="tel" placeholder="5512345678" value={contactPhone} onChange={e => { setContactPhone(e.target.value); clearError('contactPhone'); }} error={errors.contactPhone} />
               </div>
-              <Input label="Empresa" type="text" placeholder="Empresa S.A." value={companyName} onChange={e => setCompanyName(e.target.value)} />
-              <Input label="Título de Incidencia *" type="text" placeholder="Ej: Falla de carga de catálogo" value={ticketTitle} onChange={e => setTicketTitle(e.target.value)} required />
-              <Select label="Tipo de Incidencia *" options={incidenceTypeOptions} value={incidenceTypeOptions.find(opt => opt.value === incidenceType)} onChange={(val: any) => setIncidenceType(val ? val.value : 'Soporte Técnico')} placeholder="Seleccione el tipo de incidencia..." required />
-              <TextArea label="Descripción del Problema *" placeholder="Por favor describe detalladamente la incidencia..." value={ticketDescription} onChange={e => setTicketDescription(e.target.value)} required />
+              <Input label="Empresa" type="text" placeholder="Empresa S.A." value={companyName} onChange={e => { setCompanyName(e.target.value); clearError('companyName'); }} error={errors.companyName} />
+              <Input label="Título de Incidencia *" type="text" placeholder="Ej: Falla de carga de catálogo" value={ticketTitle} onChange={e => { setTicketTitle(e.target.value); clearError('ticketTitle'); }} error={errors.ticketTitle} required />
+              <Select label="Tipo de Incidencia *" options={incidenceTypeOptions} value={incidenceTypeOptions.find(opt => opt.value === incidenceType)} onChange={(val: any) => { setIncidenceType(val ? val.value : 'Soporte Técnico'); clearError('incidenceType'); }} placeholder="Seleccione el tipo de incidencia..." error={errors.incidenceType} required />
+              <TextArea label="Descripción del Problema *" placeholder="Por favor describe detalladamente la incidencia..." value={ticketDescription} onChange={e => { setTicketDescription(e.target.value); clearError('ticketDescription'); }} error={errors.ticketDescription} required />
               {supportError && (
                 <div className="bg-transparent border border-rose-200 text-rose-600 text-[10px] font-black uppercase tracking-widest text-center py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 animate-in slide-in-from-top-2">
                   <ShieldAlert size={14} className="stroke-[3]" /> {supportError}

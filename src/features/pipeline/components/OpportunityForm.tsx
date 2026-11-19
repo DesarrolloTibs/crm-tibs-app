@@ -24,6 +24,12 @@ import Select from '@shared/components/Select';
 import Button from '@shared/components/Button';
 import Loader from '@shared/components/Loader';
 import StageStepper from '@shared/components/StageStepper';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { validateWithSchema } from '@shared/utils/yupValidation';
+import {
+  opportunityValidationSchema,
+  type OpportunityFormValidationValues,
+} from '../schemas/pipeline.schema';
 
 interface Props {
   initialData?: Opportunity;
@@ -280,8 +286,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
           tipoCambio: Number(newTipoCambio.toFixed(2)),
         };
       });
+      clearError('moneda');
+      clearError('tipoCambio');
     } else {
       setOpportunity({ ...opportunity, [name]: value });
+      clearError(name as keyof OpportunityFormValidationValues);
     }
   };
 
@@ -290,6 +299,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     const sanitizedValue = value.replace(/[^0-9.]/g, '');
     const numericValue = parseFloat(sanitizedValue);
     setOpportunity({ ...opportunity, [name]: isNaN(numericValue) ? '' : sanitizedValue });
+    clearError(name as keyof OpportunityFormValidationValues);
   };
 
   const clientOptions = useMemo(() => clients.map(client => ({
@@ -307,6 +317,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       empresa: selectedClient ? (selectedClient.company?.nombre || selectedClient.empresa || '') : '',
       companyId: selectedClient ? (selectedClient.companyId || null) : null,
     });
+    clearError('cliente_id');
   };
 
   const companyOptions = useMemo(() => companies.map(c => ({
@@ -325,6 +336,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       empresa: selectedComp ? selectedComp.nombre : '',
       contactIds: [],
     }));
+    clearError('companyId');
   };
 
   const companyContactOptions = useMemo<SelectOption[]>(() => {
@@ -376,6 +388,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       ...opportunity,
       ejecutivo_id: selectedOption ? selectedOption.value : '',
     });
+    clearError('ejecutivo_id');
   };
 
   const productOptions = useMemo(() => products.map(product => ({
@@ -405,26 +418,33 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { errors, setErrors, clearError } = useFormValidation<OpportunityFormValidationValues>();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
-    let finalEjecutivoId = opportunity.ejecutivo_id;
+    let finalEjecutivoId = opportunity.ejecutivo_id || '';
     if (!isAdmin && !finalEjecutivoId && user) {
       finalEjecutivoId = user.sub;
     }
 
-    if (!opportunity.nombre_proyecto || !opportunity.description?.trim() || !finalEjecutivoId) {
-        alert('Por favor, completa los campos requeridos.');
-        return;
-    }
-    if (linkType === 'company' && !opportunity.companyId) {
-        alert('Por favor, seleccione una Empresa.');
-        return;
-    }
-    if (linkType === 'contact' && !opportunity.cliente_id) {
-        alert('Por favor, seleccione un Contacto.');
-        return;
+    const valuesToValidate: OpportunityFormValidationValues = {
+      nombre_proyecto: opportunity.nombre_proyecto || '',
+      description: opportunity.description || '',
+      linkType,
+      companyId: linkType === 'company' ? opportunity.companyId || null : null,
+      cliente_id: linkType === 'contact' ? opportunity.cliente_id || null : null,
+      ejecutivo_id: finalEjecutivoId,
+      monto_licenciamiento: opportunity.monto_licenciamiento ?? 0,
+      monto_servicios: opportunity.monto_servicios ?? 0,
+      moneda: opportunity.moneda || 'USD',
+      tipoCambio: opportunity.tipoCambio ?? null,
+    };
+
+    const result = await validateWithSchema(opportunityValidationSchema, valuesToValidate);
+    if (!result.isValid) {
+      setErrors(result.errors as Partial<Record<keyof OpportunityFormValidationValues, string>>);
+      return;
     }
 
     setIsSubmitting(true);
@@ -512,7 +532,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6 p-2 font-sans">
+      <form noValidate onSubmit={handleSubmit} className="space-y-6 p-2 font-sans">
 
         {/* Barra superior de fases de la Oportunidad (stepper idéntico a tickets) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -539,6 +559,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               name="nombre_proyecto"
               value={opportunity.nombre_proyecto}
               onChange={handleChange}
+              error={errors.nombre_proyecto}
               placeholder="Ej: Implementación de CRM para Acme Corp"
               required
             />
@@ -549,6 +570,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               name="description"
               value={opportunity.description}
               onChange={handleChange}
+              error={errors.description}
               placeholder="Añade una descripción detallada de la oportunidad..."
               required
             />
@@ -607,11 +629,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Tipo de Vinculación</label>
               <div className="flex gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
                 <label className="inline-flex items-center cursor-pointer select-none">
-                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="company" checked={linkType === 'company'} onChange={() => setLinkType('company')} />
+                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="company" checked={linkType === 'company'} onChange={() => { setLinkType('company'); clearError('companyId'); clearError('cliente_id'); }} />
                   <span className="ml-2 text-xs font-black text-slate-600 uppercase tracking-wider">Empresa (Cuenta)</span>
                 </label>
                 <label className="inline-flex items-center cursor-pointer select-none">
-                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="contact" checked={linkType === 'contact'} onChange={() => setLinkType('contact')} />
+                  <input type="radio" className="form-radio text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300" name="linkType" value="contact" checked={linkType === 'contact'} onChange={() => { setLinkType('contact'); clearError('companyId'); clearError('cliente_id'); }} />
                   <span className="ml-2 text-xs font-black text-slate-600 uppercase tracking-wider">Contacto Individual</span>
                 </label>
               </div>
@@ -627,6 +649,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                     options={companyOptions}
                     value={selectedCompanyValue}
                     onChange={handleCompanyChange}
+                    error={errors.companyId}
                     placeholder="-- Seleccione una Empresa --"
                     isClearable
                     isSearchable
@@ -660,6 +683,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                     options={clientOptions}
                     value={selectedClientValue}
                     onChange={handleClientChange}
+                    error={errors.cliente_id}
                     placeholder="-- Seleccione un Contacto --"
                     isClearable
                     isSearchable
@@ -677,6 +701,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                     options={executiveOptions}
                     value={selectedExecutiveValue}
                     onChange={handleExecutiveChange}
+                    error={errors.ejecutivo_id}
                     placeholder="-- Asignar a un Ejecutivo --"
                     isClearable
                     isSearchable
@@ -701,6 +726,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               onFocus={handleFocus}
               onBlur={handleBlur}
               onChange={handleCurrencyChange}
+              error={errors.monto_licenciamiento}
               placeholder="0.00"
               className="text-right font-medium"
             />
@@ -714,6 +740,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               onFocus={handleFocus}
               onBlur={handleBlur}
               onChange={handleCurrencyChange}
+              error={errors.monto_servicios}
               placeholder="0.00"
               className="text-right font-medium"
             />
@@ -752,7 +779,10 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                     tipoCambio: Number(newTipoCambio.toFixed(2)),
                   };
                 });
+                clearError('moneda');
+                clearError('tipoCambio');
               }}
+              error={errors.moneda}
               required
             />
 
@@ -767,6 +797,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 onChange={handleCurrencyChange}
+                error={errors.tipoCambio}
                 placeholder="0.00"
                 required={opportunity.moneda === 'USD'}
                 className="text-right font-medium"

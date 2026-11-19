@@ -96,10 +96,7 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
     e.preventDefault();
     clearErrors();
 
-    const normalizedKey = subAgentKey
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9_]/g, '');
+    const normalizedKey = subAgentKey.trim();
 
     const candidateData: SubAgentFormData = {
       key: normalizedKey,
@@ -144,7 +141,7 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 space-y-4 text-left">
+      <form noValidate onSubmit={handleSubmit} className="mt-4 space-y-4 text-left">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Input
@@ -152,9 +149,7 @@ export const AiSubAgentModal: React.FC<AiSubAgentModalProps> = ({
               id="subAgentKey"
               type="text"
               value={subAgentKey}
-              onChange={e =>
-                setSubAgentKey(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))
-              }
+              onChange={e => setSubAgentKey(e.target.value)}
               placeholder="Ej: soporte_tecnico"
               required
               disabled={!!editingSubAgent}
