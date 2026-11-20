@@ -485,6 +485,19 @@ export function usePipeline() {
     );
   };
 
+  const toStagesPayload = (list: Stage[]) =>
+    list.map(s => ({
+      ...(s.id && !s.id.startsWith('temp-') ? { id: s.id } : {}),
+      strname: s.strname.trim(),
+      blnstatus: s.blnstatus,
+      display_order: s.display_order,
+      strcolor: s.strcolor || '#3b82f6',
+      blninitial: s.blninitial,
+      stage_type: Number(s.stage_type ?? 0),
+      intmaxdays:
+        s.intmaxdays !== undefined && s.intmaxdays !== null ? Number(s.intmaxdays) : null,
+    }));
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const opp = opportunities.find(o => o.id === active.id);
@@ -533,16 +546,7 @@ export function usePipeline() {
         setStages(newStages);
         try {
           await updateMainPipeline({
-            stages: newStages.map(s => ({
-              id: s.id,
-              strname: s.strname,
-              blnstatus: s.blnstatus,
-              display_order: s.display_order,
-              strcolor: s.strcolor,
-              blninitial: s.blninitial,
-              pipeline_id: s.pipeline_id,
-              intmaxdays: s.intmaxdays,
-            })),
+            stages: toStagesPayload(newStages),
           });
         } catch {
           showError('No se pudo guardar el nuevo orden de las etapas');
@@ -661,17 +665,7 @@ export function usePipeline() {
     try {
       showLoading('Actualizando etapa...');
       await updateMainPipeline({
-        stages: updatedStages.map(s => ({
-          id: s.id,
-          strname: s.strname.trim(),
-          blnstatus: s.blnstatus,
-          display_order: s.display_order,
-          strcolor: s.strcolor || '#3b82f6',
-          blninitial: s.blninitial,
-          stage_type: Number(s.stage_type ?? 0),
-          pipeline_id: s.pipeline_id,
-          intmaxdays: s.intmaxdays,
-        })),
+        stages: toStagesPayload(updatedStages),
       });
       setEditingStage(null);
       showSuccess('Etapa actualizada correctamente');
@@ -692,17 +686,7 @@ export function usePipeline() {
     try {
       showLoading(`Desactivando etapa "${stageToDisable.strname}"...`);
       await updateMainPipeline({
-        stages: updatedStages.map(s => ({
-          id: s.id,
-          strname: s.strname.trim(),
-          blnstatus: s.blnstatus,
-          display_order: s.display_order,
-          strcolor: s.strcolor || '#3b82f6',
-          blninitial: s.blninitial,
-          stage_type: Number(s.stage_type ?? 0),
-          pipeline_id: s.pipeline_id,
-          intmaxdays: s.intmaxdays,
-        })),
+        stages: toStagesPayload(updatedStages),
       });
       showSuccess(`Etapa "${stageToDisable.strname}" desactivada correctamente`);
       fetchPipelineAndOpportunities();
@@ -749,19 +733,7 @@ export function usePipeline() {
     try {
       showLoading(`Creando etapa "${nameTrimmed}"...`);
       await updateMainPipeline({
-        stages: updatedStages.map(s => {
-          const p: any = {
-            strname: s.strname.trim(),
-            blnstatus: s.blnstatus,
-            display_order: s.display_order,
-            strcolor: s.strcolor || '#3b82f6',
-            blninitial: s.blninitial,
-            stage_type: Number(s.stage_type ?? 0),
-            intmaxdays: s.intmaxdays,
-          };
-          if (s.id && !s.id.startsWith('temp-')) p.id = s.id;
-          return p;
-        }),
+        stages: toStagesPayload(updatedStages),
       });
       showSuccess(`Etapa "${nameTrimmed}" creada correctamente`);
       setNewStageName('');

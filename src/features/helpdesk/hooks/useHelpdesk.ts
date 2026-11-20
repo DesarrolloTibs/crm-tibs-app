@@ -548,6 +548,19 @@ export function useHelpdesk() {
   };
 
   // ── Stage management ──
+  const toStagesPayload = (list: TicketStage[]) =>
+    list.map(s => ({
+      ...(s.id && !s.id.startsWith('temp-') ? { id: s.id } : {}),
+      strname: s.strname.trim(),
+      blnstatus: s.blnstatus,
+      display_order: s.display_order,
+      strcolor: s.strcolor || '#6366f1',
+      blninitial: s.blninitial,
+      stage_type: Number(s.stage_type ?? 0),
+      intmaxdays:
+        s.intmaxdays !== undefined && s.intmaxdays !== null ? Number(s.intmaxdays) : null,
+    }));
+
   const handleSaveStage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStage) return;
@@ -597,19 +610,7 @@ export function useHelpdesk() {
     try {
       showLoading('Actualizando etapa...');
       await updateMainHelpdesk({
-        stages: updatedStages.map(s => ({
-          id: s.id,
-          strname: s.strname.trim(),
-          blnstatus: s.blnstatus,
-          display_order: s.display_order,
-          strcolor: s.strcolor || '#6366f1',
-          blninitial: s.blninitial,
-          stage_type: Number(s.stage_type ?? 0),
-          intmaxdays: s.intmaxdays,
-          helpdesk_id: s.helpdesk_id,
-          dtmcreated: s.dtmcreated,
-          dtmlastmodified: s.dtmlastmodified,
-        })),
+        stages: toStagesPayload(updatedStages),
       });
       setEditingStage(null);
       showSuccess('Etapa actualizada correctamente');
@@ -630,19 +631,7 @@ export function useHelpdesk() {
     try {
       showLoading(`Desactivando etapa "${stageToDisable.strname}"...`);
       await updateMainHelpdesk({
-        stages: updatedStages.map(s => ({
-          id: s.id,
-          strname: s.strname.trim(),
-          blnstatus: s.blnstatus,
-          display_order: s.display_order,
-          strcolor: s.strcolor || '#6366f1',
-          blninitial: s.blninitial,
-          stage_type: Number(s.stage_type ?? 0),
-          intmaxdays: s.intmaxdays,
-          helpdesk_id: s.helpdesk_id,
-          dtmcreated: s.dtmcreated,
-          dtmlastmodified: s.dtmlastmodified,
-        })),
+        stages: toStagesPayload(updatedStages),
       });
       showSuccess(`Etapa "${stageToDisable.strname}" desactivada correctamente`);
       loadData();
@@ -691,19 +680,7 @@ export function useHelpdesk() {
     try {
       showLoading(`Creando etapa "${nameTrimmed}"...`);
       await updateMainHelpdesk({
-        stages: updatedStages.map(s => {
-          const p: any = {
-            strname: s.strname.trim(),
-            blnstatus: s.blnstatus,
-            display_order: s.display_order,
-            strcolor: s.strcolor || '#6366f1',
-            blninitial: s.blninitial,
-            stage_type: Number(s.stage_type ?? 0),
-            intmaxdays: s.intmaxdays,
-          };
-          if (s.id && !s.id.startsWith('temp-')) p.id = s.id;
-          return p;
-        }),
+        stages: toStagesPayload(updatedStages),
       });
       showSuccess(`Etapa "${nameTrimmed}" creada correctamente`);
       setNewStageName('');
@@ -818,18 +795,7 @@ export function useHelpdesk() {
           setStages(newStages);
           try {
             await updateMainHelpdesk({
-              stages: newStages.map(s => ({
-                id: s.id,
-                strname: s.strname,
-                blnstatus: s.blnstatus,
-                display_order: s.display_order,
-                strcolor: s.strcolor,
-                blninitial: s.blninitial,
-                intmaxdays: s.intmaxdays,
-                helpdesk_id: s.helpdesk_id,
-                dtmcreated: s.dtmcreated,
-                dtmlastmodified: s.dtmlastmodified,
-              })),
+              stages: toStagesPayload(newStages),
             });
           } catch {
             showError('No se pudo guardar el nuevo orden de las etapas');

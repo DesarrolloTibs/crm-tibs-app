@@ -46,11 +46,67 @@ export const getMainHelpdesk = async (forceRefresh = false): Promise<Helpdesk> =
   return promise;
 };
 
+export interface UpdateMainHelpdeskStagePayload {
+  id?: string;
+  strname: string;
+  blnstatus: boolean;
+  display_order: number;
+  strcolor?: string | null;
+  blninitial: boolean;
+  intmaxdays?: number | null;
+  bln_show_dashboard?: boolean;
+  stage_type?: number;
+}
+
+export interface UpdateMainHelpdeskPayload {
+  strname?: string;
+  strdescription?: string | null;
+  stages?: UpdateMainHelpdeskStagePayload[];
+}
+
+const sanitizeHelpdeskStage = (
+  stage: Partial<TicketStage> & { bln_show_dashboard?: boolean }
+): UpdateMainHelpdeskStagePayload => {
+  const clean: UpdateMainHelpdeskStagePayload = {
+    strname: (stage.strname || '').trim(),
+    blnstatus: Boolean(stage.blnstatus),
+    display_order: Math.trunc(Number(stage.display_order ?? 0)),
+    strcolor: stage.strcolor ?? '#6366f1',
+    blninitial: Boolean(stage.blninitial),
+    stage_type: Number(stage.stage_type ?? 0),
+    intmaxdays:
+      stage.intmaxdays !== undefined && stage.intmaxdays !== null
+        ? Math.trunc(Number(stage.intmaxdays))
+        : null,
+  };
+
+  if (stage.id && !stage.id.startsWith('temp-')) {
+    clean.id = stage.id;
+  }
+  if (stage.bln_show_dashboard !== undefined) {
+    clean.bln_show_dashboard = Boolean(stage.bln_show_dashboard);
+  }
+
+  return clean;
+};
+
 /**
  * Actualiza la mesa de ayuda principal y su lista de etapas.
  */
-export const updateMainHelpdesk = async (data: Partial<Helpdesk>): Promise<Helpdesk> => {
-  const response = await axiosInstance.patch<Helpdesk>(`${HELPDESKS.HELPDESKS}/main`, data);
+export const updateMainHelpdesk = async (
+  data: Partial<Omit<Helpdesk, 'stages'>> & { stages?: Partial<TicketStage>[] }
+): Promise<Helpdesk> => {
+  const payload: UpdateMainHelpdeskPayload = {};
+  if (data.strname !== undefined) payload.strname = data.strname.trim();
+  if (data.strdescription !== undefined) {
+    payload.strdescription =
+      typeof data.strdescription === 'string' ? data.strdescription.trim() : data.strdescription;
+  }
+  if (Array.isArray(data.stages)) {
+    payload.stages = data.stages.map(sanitizeHelpdeskStage);
+  }
+
+  const response = await axiosInstance.patch<Helpdesk>(`${HELPDESKS.HELPDESKS}/main`, payload);
   clearTicketsCache();
   return response.data;
 };
