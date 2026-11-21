@@ -535,32 +535,16 @@ export const AiAgentChannelsPage: React.FC = () => {
     setIsWhatsAppModalOpen(true);
   };
 
-  const handleSaveChannel = async (payload: any) => {
+  const handleWhatsAppConnected = async () => {
+    setIsWhatsAppModalOpen(false);
+    setEditingChannel(null);
     try {
-      setSaving(true);
-      await saveChannelConfig(payload);
-      setIsWhatsAppModalOpen(false);
-      setEditingChannel(null);
-
-      notify({
-        type: 'success',
-        title: payload.id ? '¡Canal Actualizado!' : '¡Canal Registrado!',
-        message: `El canal de WhatsApp "${payload.name}" fue guardado exitosamente.`,
-      });
-
       setIsLoadingChannels(true);
       const list = await getChannelConfigs();
       setChannelConfigs(Array.isArray(list) ? list : []);
-    } catch (err: any) {
-      console.error('Error al guardar canal:', err);
-      const errorMsg = err.response?.data?.message || 'No se pudo guardar la configuración del canal.';
-      notify({
-        type: 'error',
-        title: 'Error al Guardar',
-        message: Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg,
-      });
+    } catch (err) {
+      console.error('Error al recargar canales tras conectar WhatsApp:', err);
     } finally {
-      setSaving(false);
       setIsLoadingChannels(false);
     }
   };
@@ -823,8 +807,7 @@ export const AiAgentChannelsPage: React.FC = () => {
           setIsWhatsAppModalOpen(false);
           setEditingChannel(null);
         }}
-        onSave={handleSaveChannel}
-        saving={saving}
+        onConnected={handleWhatsAppConnected}
         onNotification={(type, title, message) => notify({ type, title, message })}
       />
 

@@ -2,6 +2,7 @@ import * as yup from 'yup';
 import { emptyStringToNull } from '@shared/utils/yupValidation';
 
 export const opportunityValidationSchema = yup.object().shape({
+  isEditing: yup.boolean().default(false),
   nombre_proyecto: yup
     .string()
     .trim()
@@ -13,7 +14,7 @@ export const opportunityValidationSchema = yup.object().shape({
     .trim()
     .required('La descripción de la oportunidad es obligatoria')
     .min(5, 'La descripción debe tener al menos 5 caracteres')
-    .max(2000, 'La descripción no puede exceder los 2000 caracteres'),
+    .max(1000, 'La descripción no puede exceder los 1000 caracteres'),
   linkType: yup
     .string()
     .oneOf(['company', 'contact'] as const)
@@ -45,13 +46,13 @@ export const opportunityValidationSchema = yup.object().shape({
     .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? 0 : val))
     .typeError('El monto debe ser un número válido')
     .min(0, 'El monto no puede ser negativo')
-    .max(999999999.99, 'El monto excede el límite permitido'),
+    .max(99999999.99, 'El monto excede el límite permitido'),
   monto_servicios: yup
     .number()
     .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? 0 : val))
     .typeError('El monto debe ser un número válido')
     .min(0, 'El monto no puede ser negativo')
-    .max(999999999.99, 'El monto excede el límite permitido'),
+    .max(99999999.99, 'El monto excede el límite permitido'),
   moneda: yup
     .string()
     .oneOf(['USD', 'MXN'] as const, 'Selecciona una moneda válida')
@@ -69,9 +70,26 @@ export const opportunityValidationSchema = yup.object().shape({
           .moreThan(0, 'El tipo de cambio debe ser mayor a 0'),
       otherwise: (schema) => schema.notRequired(),
     }),
+  linea_negocio_id: yup
+    .string()
+    .trim()
+    .when('isEditing', {
+      is: false,
+      then: (schema) => schema.required('Debes seleccionar una opción'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+  tipo_entrega_id: yup
+    .string()
+    .trim()
+    .when('isEditing', {
+      is: false,
+      then: (schema) => schema.required('Debes seleccionar una opción'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
 });
 
 export interface OpportunityFormValidationValues {
+  isEditing?: boolean;
   nombre_proyecto: string;
   description: string;
   linkType: 'company' | 'contact';
@@ -82,6 +100,8 @@ export interface OpportunityFormValidationValues {
   monto_servicios: number | string;
   moneda: string;
   tipoCambio?: number | string | null;
+  linea_negocio_id: string;
+  tipo_entrega_id: string;
 }
 
 export const pipelineStageValidationSchema = yup.object().shape({
@@ -119,19 +139,6 @@ export const pipelineSettingsValidationSchema = yup.object().shape({
     .array()
     .of(pipelineStageValidationSchema)
     .min(1, 'Debe existir al menos una etapa'),
-});
-
-export const reminderValidationSchema = yup.object().shape({
-  title: yup
-    .string()
-    .trim()
-    .required('El título del recordatorio es obligatorio')
-    .min(3, 'El título debe tener al menos 3 caracteres')
-    .max(120, 'El título no puede exceder los 120 caracteres'),
-  date: yup
-    .string()
-    .trim()
-    .required('La fecha y hora del recordatorio son obligatorias'),
 });
 
 export const interactionValidationSchema = yup.object().shape({

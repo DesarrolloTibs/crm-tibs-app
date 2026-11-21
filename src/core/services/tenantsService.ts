@@ -629,9 +629,15 @@ export const getCourtesyOveragesReport = async (): Promise<CourtesyOveragesRepor
 
 export const updateTenant = async (
   tenantId: number,
-  payload: { name?: string; is_active?: boolean; allow_extra?: boolean; logo?: string | null }
+  payload: { name?: string; is_active?: boolean; allow_extra?: boolean; ibm_audio_enabled?: boolean }
 ): Promise<TenantPlanInfo> => {
-  const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}`, payload);
+  const cleanPayload: Record<string, any> = {};
+  if (payload.name !== undefined) cleanPayload.name = payload.name;
+  if (payload.is_active !== undefined) cleanPayload.is_active = payload.is_active;
+  if (payload.allow_extra !== undefined) cleanPayload.allow_extra = payload.allow_extra;
+  if (payload.ibm_audio_enabled !== undefined) cleanPayload.ibm_audio_enabled = payload.ibm_audio_enabled;
+
+  const response = await axiosInstance.put(`${TENANTS.TENANTS}/${tenantId}`, cleanPayload);
   clearTenantsCache();
   const raw = (response.data as any)?.data ?? response.data;
   return raw;

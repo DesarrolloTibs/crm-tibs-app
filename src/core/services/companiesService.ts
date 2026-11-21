@@ -43,25 +43,28 @@ export async function getCompanies(forceRefresh = false): Promise<Company[]> {
  * Los campos vacíos ("") se convierten en null.
  */
 export function sanitizeCompanyPayload(company: Partial<Company>): Partial<Company> {
-  const sanitized: Partial<Company> = { ...company };
+  const sanitized: Partial<Company> = {};
 
-  if (sanitized.nombre !== undefined) {
-    sanitized.nombre = sanitized.nombre.trim();
+  if (company.nombre !== undefined) {
+    sanitized.nombre = company.nombre.trim();
   }
-  if (sanitized.correo !== undefined) {
-    sanitized.correo = typeof sanitized.correo === 'string' ? sanitized.correo.trim() || null : null;
+  if (company.correo !== undefined) {
+    sanitized.correo = typeof company.correo === 'string' ? company.correo.trim() || null : null;
   }
-  if (sanitized.telefono !== undefined) {
-    sanitized.telefono = typeof sanitized.telefono === 'string' ? sanitized.telefono.trim() || null : null;
+  if (company.telefono !== undefined) {
+    sanitized.telefono = typeof company.telefono === 'string' ? company.telefono.trim() || null : null;
   }
-  if (sanitized.website !== undefined) {
-    sanitized.website = typeof sanitized.website === 'string' ? sanitized.website.trim() || null : null;
+  if (company.website !== undefined) {
+    sanitized.website = typeof company.website === 'string' ? company.website.trim() || null : null;
   }
-  if (sanitized.direccion !== undefined) {
-    sanitized.direccion = typeof sanitized.direccion === 'string' ? sanitized.direccion.trim() || null : null;
+  if (company.direccion !== undefined) {
+    sanitized.direccion = typeof company.direccion === 'string' ? company.direccion.trim() || null : null;
   }
-  if (sanitized.ejecutivo_id !== undefined) {
-    sanitized.ejecutivo_id = sanitized.ejecutivo_id || null;
+  if (company.ejecutivo_id !== undefined) {
+    sanitized.ejecutivo_id = company.ejecutivo_id || null;
+  }
+  if (company.estatus !== undefined) {
+    sanitized.estatus = Boolean(company.estatus);
   }
 
   return sanitized;

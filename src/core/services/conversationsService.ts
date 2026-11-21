@@ -100,8 +100,22 @@ export async function getFacebookAuthUrl(channel?: 'facebook' | 'instagram'): Pr
     return response.data;
 }
 
+const sanitizeChannelConfigPayload = (config: any): Record<string, any> => {
+    const payload: Record<string, any> = {};
+    if (config?.id) payload.id = config.id;
+    if (config?.channel !== undefined) payload.channel = config.channel;
+    if (config?.name !== undefined) payload.name = config.name;
+    if (config?.appId !== undefined) payload.appId = config.appId;
+    if (config?.accountId !== undefined) payload.accountId = config.accountId;
+    if (config?.phoneNumberId !== undefined) payload.phoneNumberId = config.phoneNumberId;
+    if (config?.accessToken !== undefined) payload.accessToken = config.accessToken;
+    if (config?.verifyToken !== undefined) payload.verifyToken = config.verifyToken;
+    if (config?.isActive !== undefined) payload.isActive = Boolean(config.isActive);
+    return payload;
+};
+
 export async function saveChannelConfig(config: any): Promise<ChannelConfig> {
-    const response = await axiosInstance.post(`${urlBase}/channels`, config);
+    const response = await axiosInstance.post(`${urlBase}/channels`, sanitizeChannelConfigPayload(config));
     return response.data;
 }
 

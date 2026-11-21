@@ -13,4 +13,3 @@ export { default as PipelineStagesSettings } from './components/PipelineStagesSe
 export { default as PipelineToolbar } from './components/PipelineToolbar';
 export { default as FilesTab } from './components/FilesTab';
 export { default as InteractionsTab } from './components/InteractionsTab';
-export { default as RemindersTab } from './components/RemindersTab';

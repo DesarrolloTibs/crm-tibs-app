@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import { hasAtMostTwoDecimals } from '@shared/utils/yupValidation';
 
 export const expenseValidationSchema = yup.object().shape({
   associationType: yup
@@ -31,7 +32,12 @@ export const expenseValidationSchema = yup.object().shape({
     .typeError('El monto debe ser un número válido')
     .required('El monto es obligatorio')
     .moreThan(0, 'El monto debe ser mayor a $0.00')
-    .max(999999999.99, 'El monto excede el límite permitido'),
+    .max(999999999.99, 'El monto excede el límite permitido')
+    .test(
+      'max-decimals',
+      'El monto puede tener como máximo 2 decimales',
+      hasAtMostTwoDecimals
+    ),
   concepto: yup
     .string()
     .trim()

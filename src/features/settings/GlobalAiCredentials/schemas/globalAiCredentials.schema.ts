@@ -80,7 +80,7 @@ export const globalAiCredentialsValidationSchema = yup.object().shape({
     .trim()
     .required('El nombre del modelo de inferencia es obligatorio')
     .min(2, 'Debe tener al menos 2 caracteres')
-    .max(120, 'No puede exceder los 120 caracteres'),
+    .max(100, 'No puede exceder los 100 caracteres'),
 
   geminiApiKey: yup.string().when('providerId', {
     is: 'gemini',
@@ -114,7 +114,10 @@ export const globalAiCredentialsValidationSchema = yup.object().shape({
           if (!val) return true;
           try {
             const url = new URL(val);
-            return url.protocol === 'http:' || url.protocol === 'https:';
+            return (
+              (url.protocol === 'http:' || url.protocol === 'https:') &&
+              url.hostname.includes('.')
+            );
           } catch {
             return false;
           }
@@ -169,7 +172,7 @@ export const globalAiParametersValidationSchema = yup.object().shape({
     .trim()
     .required('El nombre del modelo es obligatorio')
     .min(2, 'Debe tener al menos 2 caracteres')
-    .max(120, 'El nombre del modelo no puede exceder los 120 caracteres'),
+    .max(100, 'El nombre del modelo no puede exceder los 100 caracteres'),
   maxNewTokens: yup
     .number()
     .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? NaN : val))

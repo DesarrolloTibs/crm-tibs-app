@@ -13,8 +13,7 @@ interface AiWhatsAppChannelModalProps {
   open: boolean;
   editingChannel: ChannelConfig | null;
   onClose: () => void;
-  onSave: (payload: any) => Promise<void>;
-  saving: boolean;
+  onConnected: () => Promise<void> | void;
   onNotification: (type: 'success' | 'error' | 'warning', title: string, message: string) => void;
 }
 
@@ -22,7 +21,7 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
   open,
   editingChannel,
   onClose,
-  onSave,
+  onConnected,
   onNotification,
 }) => {
   const [modalTab, setModalTab] = useState<'credentials' | 'base-template'>('credentials');
@@ -67,7 +66,7 @@ export const AiWhatsAppChannelModal: React.FC<AiWhatsAppChannelModalProps> = ({
                 `Se ha vinculado la línea ${result.verifiedName || result.channelConfig?.name || 'oficial'}.`,
             );
 
-            await onSave(result.channelConfig);
+            await onConnected();
             onClose();
           } catch (backendErr: any) {
             const errorMsg =

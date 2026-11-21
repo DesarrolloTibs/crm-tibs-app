@@ -38,13 +38,32 @@ export async function getUsers(forceRefresh = false): Promise<User[]> {
   return promise;
 }
 
+function sanitizeUserPayload(user: Partial<User>, isUpdate = false): Record<string, any> {
+  const payload: Record<string, any> = {};
+  if (user.username !== undefined) payload.username = user.username.trim();
+  if (user.email !== undefined) payload.email = user.email.trim();
+  if (user.role !== undefined) payload.role = user.role;
+  if (user.isActive !== undefined) payload.isActive = Boolean(user.isActive);
+  if (user.profileImageUrl !== undefined) {
+    payload.profileImageUrl = typeof user.profileImageUrl === 'string'
+      ? user.profileImageUrl.trim() || null
+      : user.profileImageUrl;
+  }
+  if (user.password !== undefined) {
+    if (!isUpdate || user.password !== '') {
+      payload.password = user.password;
+    }
+  }
+  return payload;
+}
+
 export async function createUser(user: Omit<User, 'id'>): Promise<User> {
-    const response = await axiosInstance.post(USERS.USERS, user);
+    const response = await axiosInstance.post(USERS.USERS, sanitizeUserPayload(user, false));
     return response.data;
 }
 
 export async function updateUser(id: string, user: Partial<User>): Promise<User> {
-    const response = await axiosInstance.patch(`${USERS.USERS}/${id}`, user);
+    const response = await axiosInstance.patch(`${USERS.USERS}/${id}`, sanitizeUserPayload(user, true));
     return response.data;
 }
 

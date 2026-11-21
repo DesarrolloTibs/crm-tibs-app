@@ -43,31 +43,37 @@ export async function getClients(forceRefresh = false): Promise<Client[]> {
  * Los campos vacíos ("") se convierten en null.
  */
 export function sanitizeClientPayload(client: Partial<Client>): Partial<Client> {
-  const sanitized: Partial<Client> = { ...client };
+  const sanitized: Partial<Client> = {};
 
-  if (sanitized.nombre !== undefined) {
-    sanitized.nombre = sanitized.nombre.trim();
+  if (client.nombre !== undefined) {
+    sanitized.nombre = client.nombre.trim();
   }
-  if (sanitized.apellido !== undefined) {
-    sanitized.apellido = typeof sanitized.apellido === 'string' ? sanitized.apellido.trim() || null : null;
+  if (client.apellido !== undefined) {
+    sanitized.apellido = typeof client.apellido === 'string' ? client.apellido.trim() || null : null;
   }
-  if (sanitized.correo !== undefined) {
-    sanitized.correo = typeof sanitized.correo === 'string' ? sanitized.correo.trim() || null : null;
+  if (client.correo !== undefined) {
+    sanitized.correo = typeof client.correo === 'string' ? client.correo.trim() || null : null;
   }
-  if (sanitized.telefono !== undefined) {
-    sanitized.telefono = typeof sanitized.telefono === 'string' ? sanitized.telefono.trim() || null : null;
+  if (client.telefono !== undefined) {
+    sanitized.telefono = typeof client.telefono === 'string' ? client.telefono.trim() || null : null;
   }
-  if (sanitized.puesto !== undefined) {
-    sanitized.puesto = typeof sanitized.puesto === 'string' ? sanitized.puesto.trim() || null : null;
+  if (client.puesto !== undefined) {
+    sanitized.puesto = typeof client.puesto === 'string' ? client.puesto.trim() || null : null;
   }
-  if (sanitized.empresa !== undefined) {
-    sanitized.empresa = typeof sanitized.empresa === 'string' ? sanitized.empresa.trim() || null : null;
+  if (client.empresa !== undefined) {
+    sanitized.empresa = typeof client.empresa === 'string' ? client.empresa.trim() || null : null;
   }
-  if (sanitized.companyId !== undefined) {
-    sanitized.companyId = sanitized.companyId || null;
+  if (client.companyId !== undefined) {
+    sanitized.companyId = client.companyId || null;
   }
-  if (sanitized.ejecutivo_id !== undefined) {
-    sanitized.ejecutivo_id = sanitized.ejecutivo_id || null;
+  if (client.ejecutivo_id !== undefined) {
+    sanitized.ejecutivo_id = client.ejecutivo_id || null;
+  }
+  if (client.category !== undefined) {
+    sanitized.category = client.category;
+  }
+  if (client.estatus !== undefined) {
+    sanitized.estatus = Boolean(client.estatus);
   }
 
   return sanitized;

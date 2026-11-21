@@ -11,6 +11,17 @@ export const PHONE_REGEX = /^[0-9+\s().-]*$/;
 export const PASSWORD_STRENGTH_REGEX = /^(?=.*[A-Za-z])(?=.*\d).+$/;
 export const HHMM_TIME_REGEX = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
+/** Valida que un número tenga como máximo 2 posiciones decimales */
+export const hasAtMostTwoDecimals = (val?: number | null): boolean => {
+  if (val === undefined || val === null || Number.isNaN(val)) return true;
+  const str = String(val);
+  if (str.includes('e') || str.includes('E')) {
+    return Math.abs(val * 100 - Math.round(val * 100)) < 1e-8;
+  }
+  const decimalPart = str.split('.')[1];
+  return !decimalPart || decimalPart.length <= 2;
+};
+
 /**
  * Ejecuta un esquema Yup con `abortEarly: false` y devuelve un diccionario `{ campo: mensaje }`.
  */

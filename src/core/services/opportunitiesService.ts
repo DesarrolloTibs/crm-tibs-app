@@ -51,26 +51,80 @@ export const getOpportunities = async (startDate?: string, endDate?: string, sho
   return promise;
 };
 
+const isUuid = (val: any): val is string =>
+  typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+const sanitizeProductItems = (items: any[]): Array<{ productId: string; cantidad?: number }> =>
+  items
+    .filter((item) => isUuid(item?.productId))
+    .map((item) => ({
+      productId: item.productId,
+      ...(item.cantidad !== undefined && !isNaN(Number(item.cantidad))
+        ? { cantidad: Number(item.cantidad) }
+        : {}),
+    }));
+
+const sanitizeCreateOpportunityPayload = (opportunityData: Partial<Opportunity>): Record<string, any> => {
+  const data = opportunityData as any;
+  const payload: Record<string, any> = {};
+
+  if (data.nombre_proyecto !== undefined) payload.nombre_proyecto = String(data.nombre_proyecto).trim();
+  if (data.description !== undefined) payload.description = String(data.description).trim();
+  if (data.moneda !== undefined) payload.moneda = data.moneda;
+  if (data.empresa !== undefined) payload.empresa = data.empresa;
+  if (data.canal_origen !== undefined) payload.canal_origen = data.canal_origen;
+  if (data.priority !== undefined && data.priority !== null && !isNaN(Number(data.priority))) {
+    payload.priority = Number(data.priority);
+  }
+
+  if (data.cliente_id === null || isUuid(data.cliente_id)) payload.cliente_id = data.cliente_id;
+  if (data.companyId === null || isUuid(data.companyId)) payload.companyId = data.companyId;
+  if (isUuid(data.ejecutivo_id)) payload.ejecutivo_id = data.ejecutivo_id;
+  if (isUuid(data.stage_id)) payload.stage_id = data.stage_id;
+  if (isUuid(data.pipeline_id)) payload.pipeline_id = data.pipeline_id;
+  if (data.linea_negocio_id !== undefined) payload.linea_negocio_id = data.linea_negocio_id;
+  if (data.tipo_entrega_id !== undefined) payload.tipo_entrega_id = data.tipo_entrega_id;
+  if (isUuid(data.licenciamiento_id)) payload.licenciamiento_id = data.licenciamiento_id;
+
+  if (data.monto_licenciamiento !== undefined && data.monto_licenciamiento !== null && !isNaN(Number(data.monto_licenciamiento))) {
+    payload.monto_licenciamiento = Number(data.monto_licenciamiento);
+  }
+  if (data.monto_servicios !== undefined && data.monto_servicios !== null && !isNaN(Number(data.monto_servicios))) {
+    payload.monto_servicios = Number(data.monto_servicios);
+  }
+  if (data.monto_total !== undefined && data.monto_total !== null && !isNaN(Number(data.monto_total))) {
+    payload.monto_total = Number(data.monto_total);
+  }
+  if (data.tipoCambio !== undefined && data.tipoCambio !== null && !isNaN(Number(data.tipoCambio))) {
+    payload.tipoCambio = Number(data.tipoCambio);
+  }
+
+  if (data.estimated_closure_date) {
+    payload.estimated_closure_date = data.estimated_closure_date instanceof Date
+      ? data.estimated_closure_date.toISOString()
+      : String(data.estimated_closure_date);
+  }
+  if (data.stage_entered_at) {
+    payload.stage_entered_at = data.stage_entered_at instanceof Date
+      ? data.stage_entered_at.toISOString()
+      : String(data.stage_entered_at);
+  }
+
+  if (Array.isArray(data.contactIds)) payload.contactIds = data.contactIds.filter(isUuid);
+  if (Array.isArray(data.productIds)) payload.productIds = data.productIds.filter(isUuid);
+  if (Array.isArray(data.productItems)) payload.productItems = sanitizeProductItems(data.productItems);
+
+  return payload;
+};
+
 /**
  * Crea una nueva oportunidad.
  * @param opportunityData - Los datos de la oportunidad a crear.
  * @returns Una promesa que se resuelve en la oportunidad creada.
  */
 export const createOpportunity = async (opportunityData: Partial<Opportunity>): Promise<Opportunity> => {
-  const {
-    id: _,
-    cliente: _1,
-    company: _2,
-    contacts: _3,
-    ejecutivo: _4,
-    interactions: _5,
-    reminders: _6,
-    createdAt: _7,
-    files: _8,
-    proposalDocumentPath: _9,
-    ...cleanOpportunity
-  } = opportunityData as any;
-  const response = await axiosInstance.post<Opportunity>(OPPORTUNITIES.OPPORTUNITIES, cleanOpportunity);
+  const payload = sanitizeCreateOpportunityPayload(opportunityData);
+  const response = await axiosInstance.post<Opportunity>(OPPORTUNITIES.OPPORTUNITIES, payload);
   return response.data;
 };
 
@@ -81,8 +135,6 @@ export const createOpportunity = async (opportunityData: Partial<Opportunity>): 
  * @returns Una promesa que se resuelve en la oportunidad actualizada.
  */
 export const updateOpportunity = async (id: string, opportunityData: Partial<Opportunity>): Promise<Opportunity> => {
-  const isUuid = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
-
   const payload: any = {};
   const data = opportunityData as any;
 
@@ -123,7 +175,7 @@ export const updateOpportunity = async (id: string, opportunityData: Partial<Opp
   }
   if (Array.isArray(data.contactIds)) payload.contactIds = data.contactIds.filter(isUuid);
   if (Array.isArray(data.productIds)) payload.productIds = data.productIds.filter(isUuid);
-  if (Array.isArray(data.productItems)) payload.productItems = data.productItems;
+  if (Array.isArray(data.productItems)) payload.productItems = sanitizeProductItems(data.productItems);
 
   const response = await axiosInstance.patch<Opportunity>(`${OPPORTUNITIES.OPPORTUNITIES}/${id}`, payload);
   return response.data;

@@ -33,7 +33,7 @@ export const createUserValidationSchema = (isEditing: boolean) =>
           schema
             .required('La contraseña es obligatoria')
             .min(8, 'La contraseña debe tener al menos 8 caracteres')
-            .max(100, 'La contraseña no puede exceder los 100 caracteres')
+            .max(72, 'La contraseña no puede exceder los 72 caracteres')
             .matches(
               PASSWORD_STRENGTH_REGEX,
               'La contraseña debe incluir al menos una letra y un número'
@@ -42,7 +42,7 @@ export const createUserValidationSchema = (isEditing: boolean) =>
           schema
             .notRequired()
             .min(8, 'Si cambias la contraseña debe tener al menos 8 caracteres')
-            .max(100, 'La contraseña no puede exceder los 100 caracteres')
+            .max(72, 'La contraseña no puede exceder los 72 caracteres')
             .matches(
               PASSWORD_STRENGTH_REGEX,
               'La contraseña debe incluir al menos una letra y un número'

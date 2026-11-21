@@ -43,15 +43,43 @@ export const getProduct = async (id: string): Promise<Product> => {
   return response.data;
 };
 
+const sanitizeProductPayload = (productData: Partial<Product>): Record<string, any> => {
+  const payload: Record<string, any> = {};
+  if (productData.nombre !== undefined) payload.nombre = productData.nombre.trim();
+  if (productData.descripcion !== undefined) {
+    payload.descripcion =
+      typeof productData.descripcion === 'string' ? productData.descripcion.trim() : productData.descripcion;
+  }
+  if (productData.precioBase !== undefined && productData.precioBase !== null) {
+    payload.precioBase = Number(productData.precioBase);
+  }
+  if (productData.status !== undefined) payload.status = Boolean(productData.status);
+  if (productData.imagenPortada !== undefined) {
+    payload.imagenPortada =
+      typeof productData.imagenPortada === 'string'
+        ? productData.imagenPortada.trim() || null
+        : productData.imagenPortada;
+  }
+  if (productData.unidadMedida !== undefined) payload.unidadMedida = productData.unidadMedida.trim();
+  if (productData.observaciones !== undefined) {
+    payload.observaciones =
+      typeof productData.observaciones === 'string'
+        ? productData.observaciones.trim() || null
+        : productData.observaciones;
+  }
+  return payload;
+};
+
 export const createProduct = async (productData: Partial<Product>): Promise<Product> => {
-  const { id: _, createdBy: _1, files: _2, createdAt: _3, ...cleanProduct } = productData as any;
-  const response = await axiosInstance.post<Product>(PRODUCTS.PRODUCTS, cleanProduct);
+  const response = await axiosInstance.post<Product>(PRODUCTS.PRODUCTS, sanitizeProductPayload(productData));
   return response.data;
 };
 
 export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
-  const { id: _, createdBy: _1, files: _2, createdAt: _3, ...cleanProduct } = productData as any;
-  const response = await axiosInstance.patch<Product>(`${PRODUCTS.PRODUCTS}/${id}`, cleanProduct);
+  const response = await axiosInstance.patch<Product>(
+    `${PRODUCTS.PRODUCTS}/${id}`,
+    sanitizeProductPayload(productData)
+  );
   return response.data;
 };
 

@@ -40,12 +40,13 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     }, [isSuperAdmin, selectedTenant]);
 
     const [form, setForm] = useState<User>({
-        username: '',
-        email: '',
+        ...(initialData?.id ? { id: initialData.id } : {}),
+        username: initialData?.username || '',
+        email: initialData?.email || '',
         password: '',
-        role: (!selectedTenant && isSuperAdmin) ? 'superadmin' : 'executive',
-        isActive: true,
-        ...initialData,
+        role: initialData?.role || ((!selectedTenant && isSuperAdmin) ? 'superadmin' : 'executive'),
+        isActive: initialData?.isActive ?? true,
+        ...(initialData?.profileImageUrl !== undefined ? { profileImageUrl: initialData.profileImageUrl } : {}),
     });
 
     const { errors, setErrors, clearError, clearErrors } =
@@ -55,8 +56,13 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
     useEffect(() => {
         if (initialData) {
             setForm({
-                ...initialData,
-                password: '' // No pre-llenar la contraseña por seguridad
+                ...(initialData.id ? { id: initialData.id } : {}),
+                username: initialData.username || '',
+                email: initialData.email || '',
+                password: '', // No pre-llenar la contraseña por seguridad
+                role: initialData.role,
+                isActive: initialData.isActive ?? true,
+                ...(initialData.profileImageUrl !== undefined ? { profileImageUrl: initialData.profileImageUrl } : {}),
             });
         } else {
             setForm({
@@ -105,14 +111,14 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
         }
 
         const dataToSend: User = {
-            ...form,
+            ...(initialData?.id ? { id: initialData.id } : {}),
             username: form.username.trim(),
             email: form.email.trim(),
+            role: form.role,
+            isActive: form.isActive ?? true,
+            ...(form.profileImageUrl !== undefined ? { profileImageUrl: form.profileImageUrl } : {}),
+            ...(form.password ? { password: form.password } : {}),
         };
-        // No enviar la contraseña si no se ha modificado en el formulario de edición
-        if (initialData && !dataToSend.password) {
-            delete dataToSend.password;
-        }
 
         setIsSubmitting(true);
         try {
@@ -164,7 +170,7 @@ const UserForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) => {
                             onChange={handleChange}
                             onBlur={() => handleBlurField('password')}
                             placeholder="Mínimo 8 caracteres, letras y números"
-                            maxLength={100}
+                            maxLength={72}
                             error={errors.password}
                             required={!initialData}
                         />

@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import { emptyStringToNull } from '@shared/utils/yupValidation';
+import { emptyStringToNull, hasAtMostTwoDecimals } from '@shared/utils/yupValidation';
 
 export const productValidationSchema = yup.object().shape({
   nombre: yup
@@ -21,7 +21,12 @@ export const productValidationSchema = yup.object().shape({
     .typeError('El precio base debe ser un valor numérico válido')
     .required('El precio base es obligatorio')
     .min(0, 'El precio base no puede ser negativo')
-    .max(999999999.99, 'El precio base excede el límite permitido'),
+    .max(99999999.99, 'El precio base excede el límite permitido')
+    .test(
+      'max-decimals',
+      'El precio base puede tener como máximo 2 decimales',
+      hasAtMostTwoDecimals
+    ),
   unidadMedida: yup
     .string()
     .trim()

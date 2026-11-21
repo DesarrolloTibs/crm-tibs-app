@@ -29,17 +29,6 @@ export async function getCalendarAuthUrl(provider: 'google' | 'outlook'): Promis
 }
 
 /**
-   Conecta una cuenta de iCloud CalDAV.
- */
-export async function connectICloudCalendar(email: string, appPassword: string): Promise<{ success: boolean; email: string }> {
-  const response = await axiosInstance.post(`${baseUrl}/api/calendar-integrations/connect-icloud`, {
-    email,
-    appPassword,
-  });
-  return response.data;
-}
-
-/**
    Remueve la integración de calendario activa.
  */
 export async function disconnectCalendar(): Promise<{ success: boolean }> {

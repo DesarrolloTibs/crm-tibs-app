@@ -429,6 +429,7 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
     }
 
     const valuesToValidate: OpportunityFormValidationValues = {
+      isEditing: Boolean(initialData && initialData.id),
       nombre_proyecto: opportunity.nombre_proyecto || '',
       description: opportunity.description || '',
       linkType,
@@ -439,6 +440,8 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
       monto_servicios: opportunity.monto_servicios ?? 0,
       moneda: opportunity.moneda || 'USD',
       tipoCambio: opportunity.tipoCambio ?? null,
+      linea_negocio_id: opportunity.linea_negocio_id || '',
+      tipo_entrega_id: opportunity.tipo_entrega_id || '',
     };
 
     const result = await validateWithSchema(opportunityValidationSchema, valuesToValidate);
@@ -827,7 +830,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               name="linea_negocio_id"
               options={blOptions}
               value={blOptions.find(opt => opt.value === opportunity.linea_negocio_id)}
-              onChange={(val: any) => setOpportunity(prev => ({ ...prev, linea_negocio_id: val ? val.value : '' }))}
+              onChange={(val: any) => {
+                setOpportunity(prev => ({ ...prev, linea_negocio_id: val ? val.value : '' }));
+                clearError('linea_negocio_id');
+              }}
+              error={errors.linea_negocio_id}
               required
             />
             <Select
@@ -836,7 +843,11 @@ const OpportunityForm: React.FC<Props> = ({ initialData, onSubmit, onCancel }) =
               name="tipo_entrega_id"
               options={dtOptions}
               value={dtOptions.find(opt => opt.value === opportunity.tipo_entrega_id)}
-              onChange={(val: any) => setOpportunity(prev => ({ ...prev, tipo_entrega_id: val ? val.value : '' }))}
+              onChange={(val: any) => {
+                setOpportunity(prev => ({ ...prev, tipo_entrega_id: val ? val.value : '' }));
+                clearError('tipo_entrega_id');
+              }}
+              error={errors.tipo_entrega_id}
               required
             />
             <Select
